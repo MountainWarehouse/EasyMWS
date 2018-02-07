@@ -6,6 +6,14 @@
     <AssemblyName>MountainWarehouse.EasyMWS</AssemblyName>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>bin\Debug\netstandard2.0\MountainWarehouse.EasyMWS.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>bin\Release\netstandard2.0\MountainWarehouse.EasyMWS.xml</DocumentationFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\MarketplaceWebService\MarketplaceWebService.csproj" />
   </ItemGroup>
