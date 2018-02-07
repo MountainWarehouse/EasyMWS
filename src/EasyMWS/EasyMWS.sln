@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27004.2005
+VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyMWS", "EasyMWS\EasyMWS.csproj", "{1DB34509-44B4-4069-9C66-1BE66CADBB2D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyMWS", "EasyMWS\EasyMWS.csproj", "{1DB34509-44B4-4069-9C66-1BE66CADBB2D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyMWS.Tests", "EasyMWS.Tests\EasyMWS.Tests.csproj", "{641812AD-BD22-4E07-ADBC-0B40EAC133C1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyMWS.Tests", "EasyMWS.Tests\EasyMWS.Tests.csproj", "{641812AD-BD22-4E07-ADBC-0B40EAC133C1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarketplaceWebService", "MarketplaceWebService\MarketplaceWebService.csproj", "{ECD2A225-616A-4CFB-9142-C9EE67968703}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{641812AD-BD22-4E07-ADBC-0B40EAC133C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{641812AD-BD22-4E07-ADBC-0B40EAC133C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{641812AD-BD22-4E07-ADBC-0B40EAC133C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ECD2A225-616A-4CFB-9142-C9EE67968703}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ECD2A225-616A-4CFB-9142-C9EE67968703}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ECD2A225-616A-4CFB-9142-C9EE67968703}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ECD2A225-616A-4CFB-9142-C9EE67968703}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

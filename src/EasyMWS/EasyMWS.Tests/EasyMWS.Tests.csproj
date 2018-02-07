@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EasyMWS\EasyMWS.csproj" />
+    <ProjectReference Include="..\MarketplaceWebService\MarketplaceWebService.csproj" />
   </ItemGroup>
 
 </Project>

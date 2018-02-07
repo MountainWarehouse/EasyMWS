@@ -1,0 +1,119 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="15.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>MarketplaceWebService</RootNamespace>
+    <AssemblyName>MarketplaceWebService</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>2.0</OldToolsVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Web" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="MarketplaceWebService\*.cs" />
+    <Compile Include="MarketplaceWebService\Attributes\*.cs" />
+    <Compile Include="MarketplaceWebService\Model\*.cs" />
+    <Compile Include="MarketplaceWebService\Mock\*.cs" />
+    <Compile Include="MarketplaceWebService\Util\*.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="MarketplaceWebService\Mock\GetReportResponse.xml">
+      <LogicalName>GetReportResponse.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MarketplaceWebService\Mock\GetReportScheduleCountResponse.xml">
+      <LogicalName>GetReportScheduleCountResponse.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MarketplaceWebService\Mock\GetReportRequestListByNextTokenResponse.xml">
+      <LogicalName>GetReportRequestListByNextTokenResponse.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MarketplaceWebService\Mock\UpdateReportAcknowledgementsResponse.xml">
+      <LogicalName>UpdateReportAcknowledgementsResponse.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MarketplaceWebService\Mock\SubmitFeedResponse.xml">
+      <LogicalName>SubmitFeedResponse.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MarketplaceWebService\Mock\GetReportCountResponse.xml">
+      <LogicalName>GetReportCountResponse.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MarketplaceWebService\Mock\GetFeedSubmissionListByNextTokenResponse.xml">
+      <LogicalName>GetFeedSubmissionListByNextTokenResponse.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MarketplaceWebService\Mock\CancelFeedSubmissionsResponse.xml">
+      <LogicalName>CancelFeedSubmissionsResponse.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MarketplaceWebService\Mock\RequestReportResponse.xml">
+      <LogicalName>RequestReportResponse.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MarketplaceWebService\Mock\GetFeedSubmissionCountResponse.xml">
+      <LogicalName>GetFeedSubmissionCountResponse.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MarketplaceWebService\Mock\CancelReportRequestsResponse.xml">
+      <LogicalName>CancelReportRequestsResponse.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MarketplaceWebService\Mock\GetReportListResponse.xml">
+      <LogicalName>GetReportListResponse.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MarketplaceWebService\Mock\GetFeedSubmissionResultResponse.xml">
+      <LogicalName>GetFeedSubmissionResultResponse.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MarketplaceWebService\Mock\GetFeedSubmissionListResponse.xml">
+      <LogicalName>GetFeedSubmissionListResponse.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MarketplaceWebService\Mock\GetReportRequestListResponse.xml">
+      <LogicalName>GetReportRequestListResponse.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MarketplaceWebService\Mock\GetReportScheduleListByNextTokenResponse.xml">
+      <LogicalName>GetReportScheduleListByNextTokenResponse.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MarketplaceWebService\Mock\GetReportListByNextTokenResponse.xml">
+      <LogicalName>GetReportListByNextTokenResponse.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MarketplaceWebService\Mock\ManageReportScheduleResponse.xml">
+      <LogicalName>ManageReportScheduleResponse.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MarketplaceWebService\Mock\GetReportRequestCountResponse.xml">
+      <LogicalName>GetReportRequestCountResponse.xml</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MarketplaceWebService\Mock\GetReportScheduleListResponse.xml">
+      <LogicalName>GetReportScheduleListResponse.xml</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
