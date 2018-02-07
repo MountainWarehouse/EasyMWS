@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>MountainWarehouse.EasyMWS</RootNamespace>
+    <AssemblyName>MountainWarehouse.EasyMWS</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

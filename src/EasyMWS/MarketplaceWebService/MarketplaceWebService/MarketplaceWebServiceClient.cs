@@ -41,7 +41,7 @@ namespace MarketplaceWebService
     * MarketplaceWebServiceClient is an implementation of MarketplaceWebService
     *
     */
-    public class MarketplaceWebServiceClient : MarketplaceWebService
+    public class MarketplaceWebServiceClient : MarketplaceWebService, IMarketplaceWebServiceClient
     {
 
         private String awsAccessKeyId = null;
