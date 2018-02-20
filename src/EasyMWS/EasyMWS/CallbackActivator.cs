@@ -10,21 +10,26 @@ namespace MountainWarehouse.EasyMWS
 	public class CallbackActivator
 	{
 
-		public (string typeName, string methodName, string callbackData) SerializeCallback(
+		public Callback SerializeCallback(
 			Action<Stream, object> callbackMethod, object callbackData)
 		{
 			var type = callbackMethod.Method.DeclaringType;
 			var method = callbackMethod.Method;
+			var dataType = callbackData.GetType();
 
-			return (type.AssemblyQualifiedName, method.Name, JsonConvert.SerializeObject(callbackData));
+			return new Callback(type.AssemblyQualifiedName,
+				method.Name,
+				JsonConvert.SerializeObject(callbackData),
+				dataType.AssemblyQualifiedName);
 		}
 
-		public void CallMethod(string typeName, string methodName)
+		public void CallMethod(Callback callback)
 		{
-			var type = Type.GetType(typeName);
-			var method = type.GetMethods().First(mi => mi.Name == methodName);
+			var type = Type.GetType(callback.TypeName);
+			var method = type.GetMethods().First(mi => mi.Name == callback.MethodName);
+			var dataType = Type.GetType(callback.DataTypeName);
 
-			method.Invoke(null, new object[] {null, null});
+			method.Invoke(null, new object[] {null, JsonConvert.DeserializeObject(callback.Data, dataType)});
 		}
 
 
