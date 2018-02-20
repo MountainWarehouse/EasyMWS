@@ -8,10 +8,11 @@ using NUnit.Framework;
 namespace EasyMWS.Tests
 {
 	[TestFixture]
+	[NonParallelizable] // Uses a static method and static variables
 	public class CallbackActivatorTests
 	{
 		private Stream _passedStream;
-		private bool _called;
+		private static bool _called;
 		private CallbackActivator _callbackActivator;
 
 		[SetUp]
@@ -27,15 +28,19 @@ namespace EasyMWS.Tests
 		[Test]
 		public void SerializeCommand_GeneratesData()
 		{
+			var serialized = _callbackActivator.SerializeCallback(TestMethod, new {foo = "bar"});
+
+			Assert.IsNotNull(serialized.typeName);
+			Assert.IsNotNull(serialized.methodName);
 
 		}
 
 
 
 
-		public static void TestMethod()
+		public static void TestMethod(Stream stream, object callbackData)
 		{
-
+			_called = true;
 		}
 
 
