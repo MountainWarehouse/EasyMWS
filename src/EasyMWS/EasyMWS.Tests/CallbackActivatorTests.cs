@@ -35,7 +35,11 @@ namespace EasyMWS.Tests
 
 		}
 
-
+		[Test]
+		public void CallMethod_CallsMethod()
+		{
+			_callbackActivator.CallMethod("EasyMWS.Tests.CallbackActivatorTests, EasyMWS.Tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "TestMethod");
+		}
 
 
 		public static void TestMethod(Stream stream, object callbackData)
