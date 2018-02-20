@@ -39,6 +39,15 @@ namespace EasyMWS.Tests
 		public void CallMethod_CallsMethod()
 		{
 			_callbackActivator.CallMethod("EasyMWS.Tests.CallbackActivatorTests, EasyMWS.Tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", "TestMethod");
+			Assert.IsTrue(_called);
+		}
+
+		[Test]
+		public void SerializeDeserializeTest()
+		{
+			var serialized = _callbackActivator.SerializeCallback(TestMethod, new { foo = "bar" });
+			_callbackActivator.CallMethod(serialized.typeName, serialized.methodName);
+			Assert.IsTrue(_called);
 		}
 
 
