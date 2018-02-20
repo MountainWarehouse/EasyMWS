@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS
 {
@@ -15,7 +16,7 @@ namespace MountainWarehouse.EasyMWS
 			var type = callbackMethod.Method.DeclaringType;
 			var method = callbackMethod.Method;
 
-			return (type.AssemblyQualifiedName, method.Name, null);
+			return (type.AssemblyQualifiedName, method.Name, JsonConvert.SerializeObject(callbackData));
 		}
 
 		public void CallMethod(string typeName, string methodName)

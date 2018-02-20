@@ -32,7 +32,7 @@ namespace EasyMWS.Tests
 
 			Assert.IsNotNull(serialized.typeName);
 			Assert.IsNotNull(serialized.methodName);
-
+			Assert.IsNotNull(serialized.callbackData);
 		}
 
 		[Test]
