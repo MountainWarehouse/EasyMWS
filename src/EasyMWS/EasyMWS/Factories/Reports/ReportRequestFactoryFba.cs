@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using MarketplaceWebService.Model;
 using MountainWarehouse.EasyMWS.Helpers;
@@ -19,15 +20,20 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		    => (_merchant, _mWsAuthToken)
 			    = (merchant, mWsAuthToken);
 
-	    public RequestReportRequest GenerateRequestForReportGetAfnInventoryData(MwsMarketplaceGroup requestedMarketplacesGroup = null)
-		    => GenerateReportRequest("_GET_AFN_INVENTORY_DATA_", requestedMarketplacesGroup?.GetMarketplacesIdList.ToList());
+	    public RequestReportRequest GenerateRequestForReportGetAfnInventoryData(MwsMarketplaceGroup requestedMarketplaces = null)
+		    => GenerateReportRequest("_GET_AFN_INVENTORY_DATA_", 
+				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
+				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
 
-	    public RequestReportRequest GenerateRequestForReportGetAfnInventoryDataByCountry(MwsMarketplaceGroup requestedMarketplacesGroup = null)
-		    => GenerateReportRequest("_GET_AFN_INVENTORY_DATA_BY_COUNTRY_", requestedMarketplacesGroup?.GetMarketplacesIdList.ToList());
+	    public RequestReportRequest GenerateRequestForReportGetAfnInventoryDataByCountry(MwsMarketplaceGroup requestedMarketplaces = null)
+		    => GenerateReportRequest("_GET_AFN_INVENTORY_DATA_BY_COUNTRY_", 
+				permittedMarketplaces: MwsMarketplaceGroup.AmazonEurope(),
+				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
 
-	    private RequestReportRequest GenerateReportRequest(string reportType, List<string> requestedMarketplaces = null)
+	    private RequestReportRequest GenerateReportRequest(string reportType, List<string> permittedMarketplaces, List<string> requestedMarketplaces = null)
 	    {
-		    var reportRequest = new RequestReportRequest
+		    ValidateMarketplaceCompatibility(reportType, permittedMarketplaces, requestedMarketplaces);
+			var reportRequest = new RequestReportRequest
 		    {
 			    ReportType = reportType,
 			    Merchant = _merchant,
@@ -36,5 +42,20 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		    };
 		    return reportRequest;
 	    }
-    }
+
+	    private void ValidateMarketplaceCompatibility(string reportType, List<string> permittedMarketplaces, List<string> requestedMarketplaces = null)
+	    {
+		    if (requestedMarketplaces == null) return;
+
+		    foreach (var requestedMarketplace in requestedMarketplaces)
+		    {
+			    if (!permittedMarketplaces.Contains(requestedMarketplace))
+			    {
+				    throw new ArgumentException(
+					    $@"The report request for type:'{reportType}', is only available to the following marketplaces:'{permittedMarketplaces.Aggregate((c, n) => $"{c}, {n}")}'.
+The requested marketplace:'{requestedMarketplace}' is not supported by Amazon MWS for the specified report type.");
+			    }
+		    }
+	    }
+	}
 }
