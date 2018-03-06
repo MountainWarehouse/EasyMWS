@@ -18,5 +18,15 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// <param name="marketplaceIdList">Optional group of marketplaces used when submitting a report request.</param>
 		/// <returns></returns>
 		RequestReportRequest GenerateRequestForReportGetAfnInventoryData(List<string> marketplaceIdList = null);
+
+		/// <summary>
+		/// Generate a request object for a MWS report of type : _GET_AFN_INVENTORY_DATA_BY_COUNTRY_ <para />
+		/// Tab-delimited flat file. Contains quantity available for local fulfillment by country, helping Multi-Country Inventory sellers in Europe track their FBA inventory. <para />
+		/// Content updated in near-real time. This report is only available to FBA sellers in European (EU) marketplaces. <para />
+		/// For Seller Central sellers.
+		/// </summary>
+		/// <param name="marketplaceIdList">Optional group of marketplaces used when submitting a report request.</param>
+		/// <returns></returns>
+		RequestReportRequest GenerateRequestForReportGetAfnInventoryDataByCountry(List<string> marketplaceIdList = null);
 	}
 }
