@@ -18,25 +18,21 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 			    = (merchant, mWsAuthToken);
 
 	    public RequestReportRequest GenerateRequestForReportGetAfnInventoryData(List<string> marketplaceIdList = null)
-	    {
-		    return new RequestReportRequest
-		    {
-			    ReportType = "_GET_AFN_INVENTORY_DATA_",
-			    Merchant = _merchant,
-			    MWSAuthToken = _mWsAuthToken,
-			    MarketplaceIdList = marketplaceIdList == null ? null : new IdList {Id = marketplaceIdList}
-		    };
-	    }
+		    => GenerateReportRequest("_GET_AFN_INVENTORY_DATA_", marketplaceIdList);
 
 	    public RequestReportRequest GenerateRequestForReportGetAfnInventoryDataByCountry(List<string> marketplaceIdList = null)
+		    => GenerateReportRequest("_GET_AFN_INVENTORY_DATA_BY_COUNTRY_", marketplaceIdList);
+
+	    private RequestReportRequest GenerateReportRequest(string reportType, List<string> requestedMarketplaces = null)
 	    {
-		    return new RequestReportRequest
+		    var reportRequest = new RequestReportRequest
 		    {
-			    ReportType = "_GET_AFN_INVENTORY_DATA_BY_COUNTRY_",
+			    ReportType = reportType,
 			    Merchant = _merchant,
 			    MWSAuthToken = _mWsAuthToken,
-			    MarketplaceIdList = marketplaceIdList == null ? null : new IdList { Id = marketplaceIdList }
+			    MarketplaceIdList = requestedMarketplaces == null ? null : new IdList {Id = requestedMarketplaces}
 		    };
-		}
+		    return reportRequest;
+	    }
     }
 }
