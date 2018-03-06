@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using MarketplaceWebService.Model;
+using MountainWarehouse.EasyMWS.Helpers;
 
 namespace MountainWarehouse.EasyMWS.Factories.Reports
 {
@@ -17,11 +18,11 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		    => (_merchant, _mWsAuthToken)
 			    = (merchant, mWsAuthToken);
 
-	    public RequestReportRequest GenerateRequestForReportGetAfnInventoryData(List<string> marketplaceIdList = null)
-		    => GenerateReportRequest("_GET_AFN_INVENTORY_DATA_", marketplaceIdList);
+	    public RequestReportRequest GenerateRequestForReportGetAfnInventoryData(MwsMarketplaceGroup requestedMarketplacesGroup = null)
+		    => GenerateReportRequest("_GET_AFN_INVENTORY_DATA_", requestedMarketplacesGroup?.MarketplacesIdList);
 
-	    public RequestReportRequest GenerateRequestForReportGetAfnInventoryDataByCountry(List<string> marketplaceIdList = null)
-		    => GenerateReportRequest("_GET_AFN_INVENTORY_DATA_BY_COUNTRY_", marketplaceIdList);
+	    public RequestReportRequest GenerateRequestForReportGetAfnInventoryDataByCountry(MwsMarketplaceGroup requestedMarketplacesGroup = null)
+		    => GenerateReportRequest("_GET_AFN_INVENTORY_DATA_BY_COUNTRY_", requestedMarketplacesGroup?.MarketplacesIdList);
 
 	    private RequestReportRequest GenerateReportRequest(string reportType, List<string> requestedMarketplaces = null)
 	    {

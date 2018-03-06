@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using MarketplaceWebService.Model;
+using MountainWarehouse.EasyMWS.Helpers;
 
 namespace MountainWarehouse.EasyMWS.Factories.Reports
 {
@@ -15,9 +16,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// Tab-delimited flat file. Content updated in near real-time. For FBA sellers only. <para />
 		/// For Marketplace and Seller Central sellers.
 		/// </summary>
-		/// <param name="marketplaceIdList">Optional group of marketplaces used when submitting a report request.</param>
+		/// <param name="requestedMarketplacesGroup">Optional group of marketplaces used when submitting a report request.</param>
 		/// <returns></returns>
-		RequestReportRequest GenerateRequestForReportGetAfnInventoryData(List<string> marketplaceIdList = null);
+		RequestReportRequest GenerateRequestForReportGetAfnInventoryData(MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_AFN_INVENTORY_DATA_BY_COUNTRY_ <para />
@@ -25,8 +26,8 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// Content updated in near-real time. This report is only available to FBA sellers in European (EU) marketplaces. <para />
 		/// For Seller Central sellers.
 		/// </summary>
-		/// <param name="marketplaceIdList">Optional group of marketplaces used when submitting a report request.</param>
+		/// <param name="requestedMarketplacesGroup">Optional group of marketplaces used when submitting a report request.</param>
 		/// <returns></returns>
-		RequestReportRequest GenerateRequestForReportGetAfnInventoryDataByCountry(List<string> marketplaceIdList = null);
+		RequestReportRequest GenerateRequestForReportGetAfnInventoryDataByCountry(MwsMarketplaceGroup requestedMarketplacesGroup = null);
 	}
 }
