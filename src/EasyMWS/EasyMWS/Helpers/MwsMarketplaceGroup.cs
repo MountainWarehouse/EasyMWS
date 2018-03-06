@@ -101,4 +101,24 @@ Because it the group already contains this marketplace. A marketplace cannot be 
 		    return MwsMarketplace.Brazil + MwsMarketplace.India + MwsMarketplace.China + MwsMarketplace.Japan + MwsMarketplace.Australia;
 	    }
 	}
+
+	/// <summary>
+	/// Extension methods for the ReportMarketPlacesGroupExtensions class
+	/// </summary>
+	public static class MwsMarketplaceGroupExtensions
+	{
+		/// <summary>
+		/// Tries to add a marketplace to the current group. <para />
+		/// When attempting to add a marketplace to a group, please note that a group can only contain marketplaces with the same MWS endpoint as the one setup for the group at initialization.<para />
+		/// Failure in following this convention will result in an InvalidOperationException.<para /> 
+		/// Example: A group initialized with an european marketplace cannot also contain a north-american or asian marketplace.<para/>
+		/// If a report has to be requested for marketplaces belonging to different MWS endpoints, then a request object has to be generated for each different MWS endpoint.
+		/// </summary>
+		/// <returns>The same ReportRequestedMarketplacesGroup object, also containing the newly added marketplace.</returns>
+		public static MwsMarketplaceGroup AddMarketplace(this MwsMarketplaceGroup group, MwsMarketplace marketplace)
+		{
+			group.TryAddMarketplace(marketplace);
+			return group;
+		}
+	}
 }
