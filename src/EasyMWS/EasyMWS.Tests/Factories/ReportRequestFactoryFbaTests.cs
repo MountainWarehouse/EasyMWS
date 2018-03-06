@@ -7,7 +7,7 @@ namespace EasyMWS.Tests.Factories
 {
     public class ReportRequestFactoryFbaTests
     {
-	    private ReportRequestFactoryFba _reportRequestFactoryFBA;
+	    private IReportRequestFactoryFba _reportRequestFactoryFBA;
 
 		[Test]
 		public void
