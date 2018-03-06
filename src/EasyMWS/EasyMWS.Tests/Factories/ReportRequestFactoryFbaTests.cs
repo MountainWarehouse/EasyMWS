@@ -102,6 +102,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetAfnInventoryData();
 
 			Assert.AreEqual("_GET_AFN_INVENTORY_DATA_", reportRequest.ReportRequest.ReportType);
+			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequest.UpdateFrequency);
 		}
 
 		[Test]
@@ -195,6 +196,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetAfnInventoryDataByCountry();
 
 			Assert.AreEqual("_GET_AFN_INVENTORY_DATA_BY_COUNTRY_", reportRequest.ReportRequest.ReportType);
+			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequest.UpdateFrequency);
 		}
 	}
 }
