@@ -1,4 +1,6 @@
-﻿namespace MountainWarehouse.EasyMWS.Helpers
+﻿using System.Collections.Generic;
+
+namespace MountainWarehouse.EasyMWS.Helpers
 {
     public sealed class MwsMarketplace
     {
@@ -24,6 +26,23 @@
 
 	    private MwsMarketplace(string name, string countryCode, string id, MwsEndpoint mwsEndpoint)
 		    => (Name, CountryCode, Id, MwsEndpoint) = (name, countryCode, id, mwsEndpoint);
+
+	    public static List<string> operator +(MwsMarketplace mp1, MwsMarketplace mp2)
+	    {
+		    return new List<string> { mp1.Id, mp2.Id };
+	    }
+
+	    public static List<string> operator +(List<string> list, MwsMarketplace mp)
+	    {
+		    list.Add(mp.Id);
+		    return list;
+	    }
+
+	    public static List<string> operator +(MwsMarketplace mp, List<string> list)
+	    {
+		    list.Add(mp.Id);
+		    return list;
+	    }
 
 		/// <summary>
 		/// The Canada marketplace. Shares the same amazon MWS endpoint with US and Mexico.
@@ -102,7 +121,5 @@
 		/// </summary>
 		public static MwsMarketplace Australia = new MwsMarketplace(
 			"Australia", "AU", "A39IBJ37TRP1C6", MwsEndpoint.Australia);
-
-
 	}
 }
