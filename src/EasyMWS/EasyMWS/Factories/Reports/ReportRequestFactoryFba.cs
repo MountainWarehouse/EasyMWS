@@ -20,17 +20,17 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		    => (_merchant, _mWsAuthToken)
 			    = (merchant, mWsAuthToken);
 
-	    public RequestReportRequest GenerateRequestForReportGetAfnInventoryData(MwsMarketplaceGroup requestedMarketplaces = null)
-		    => GenerateReportRequest("_GET_AFN_INVENTORY_DATA_", 
+	    public ReportRequestWrapper GenerateRequestForReportGetAfnInventoryData(MwsMarketplaceGroup requestedMarketplaces = null)
+		    => GenerateReportRequest("_GET_AFN_INVENTORY_DATA_", ContentUpdateFrequency.NearRealTime,
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
 
-	    public RequestReportRequest GenerateRequestForReportGetAfnInventoryDataByCountry(MwsMarketplaceGroup requestedMarketplaces = null)
-		    => GenerateReportRequest("_GET_AFN_INVENTORY_DATA_BY_COUNTRY_", 
+	    public ReportRequestWrapper GenerateRequestForReportGetAfnInventoryDataByCountry(MwsMarketplaceGroup requestedMarketplaces = null)
+		    => GenerateReportRequest("_GET_AFN_INVENTORY_DATA_BY_COUNTRY_", ContentUpdateFrequency.NearRealTime,
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonEurope(),
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
 
-	    private RequestReportRequest GenerateReportRequest(string reportType, List<string> permittedMarketplaces, List<string> requestedMarketplaces = null)
+	    private ReportRequestWrapper GenerateReportRequest(string reportType, ContentUpdateFrequency reportUpdateFrequency, List<string> permittedMarketplaces, List<string> requestedMarketplaces = null)
 	    {
 		    ValidateMarketplaceCompatibility(reportType, permittedMarketplaces, requestedMarketplaces);
 			var reportRequest = new RequestReportRequest
@@ -40,7 +40,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 			    MWSAuthToken = _mWsAuthToken,
 			    MarketplaceIdList = requestedMarketplaces == null ? null : new IdList {Id = requestedMarketplaces}
 		    };
-		    return reportRequest;
+		    return new ReportRequestWrapper(reportRequest, reportUpdateFrequency);
 	    }
 
 	    private void ValidateMarketplaceCompatibility(string reportType, List<string> permittedMarketplaces, List<string> requestedMarketplaces = null)

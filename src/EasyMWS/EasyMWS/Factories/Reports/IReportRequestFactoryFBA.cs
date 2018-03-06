@@ -18,7 +18,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="requestedMarketplacesGroup">Optional group of marketplaces used when submitting a report request.</param>
 		/// <returns></returns>
-		RequestReportRequest GenerateRequestForReportGetAfnInventoryData(MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestWrapper GenerateRequestForReportGetAfnInventoryData(MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_AFN_INVENTORY_DATA_BY_COUNTRY_ <para />
@@ -28,6 +28,6 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="requestedMarketplacesGroup">Optional group of marketplaces used when submitting a report request.</param>
 		/// <returns></returns>
-		RequestReportRequest GenerateRequestForReportGetAfnInventoryDataByCountry(MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestWrapper GenerateRequestForReportGetAfnInventoryDataByCountry(MwsMarketplaceGroup requestedMarketplacesGroup = null);
 	}
 }
