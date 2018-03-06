@@ -30,5 +30,11 @@
 	    /// </summary>
 	    public static MwsMarketplace US = new MwsMarketplace(
 		    "US", "US", "ATVPDKIKX0DER", "https://mws.amazonservices.com");
+
+	    /// <summary>
+	    ///  The United Kingdom marketplace. Shares the same amazon MWS endpoint with Spain, France, Germany, and Italy marketplaces.
+	    /// </summary>
+	    public static MwsMarketplace UK = new MwsMarketplace(
+		    "UK", "UK", "A1F83G8C2ARO7P", "https://mws-eu.amazonservices.com");
 	}
 }
