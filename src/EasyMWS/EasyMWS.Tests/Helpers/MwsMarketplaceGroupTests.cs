@@ -6,82 +6,258 @@ namespace EasyMWS.Tests.Helpers
 {
     public class MwsMarketplaceGroupTests
     {
-	    [Test]
-	    public void ReportRequestedMarketplacesGroup_Ctor_InitializesMwsAccessEndpoint()
-	    {
-		    var reportRequestedMarketplacesGroup = new MwsMarketplaceGroup(MwsMarketplace.US);
+		[Test]
+		public void MwsMarketplaceGroup_Ctor_InitializesMwsAccessEndpoint()
+		{
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Australia);
 
-		    Assert.AreEqual(MwsMarketplace.US.MwsEndpoint, reportRequestedMarketplacesGroup.MwsEndpoint);
-	    }
+			Assert.AreEqual(MwsMarketplace.Australia.MwsEndpoint.Name, MwsMarketplaceGroup.MwsEndpoint.Name);
+			Assert.AreEqual(MwsMarketplace.Australia.MwsEndpoint.RegionOrMarketPlaceEndpoint, MwsMarketplaceGroup.MwsEndpoint.RegionOrMarketPlaceEndpoint);
+		}
 
 		[Test]
-		public void ReportRequestedMarketplacesGroup_Ctor_AddsMarketplaceIdToInternalMarketplaceIdList()
+		public void MwsMarketplaceGroup_Ctor_AddsMarketplaceIdToInternalMarketplaceIdList()
 		{
-			var reportRequestedMarketplacesGroup = new MwsMarketplaceGroup(MwsMarketplace.US);
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Australia);
 
-			CollectionAssert.Contains(reportRequestedMarketplacesGroup.GetMarketplacesIdList, MwsMarketplace.US.Id);
-			Assert.AreEqual(1, reportRequestedMarketplacesGroup.GetMarketplacesIdList.Count);
+			CollectionAssert.Contains(MwsMarketplaceGroup.GetMarketplacesIdList, MwsMarketplace.Australia.Id);
+			Assert.AreEqual(1, MwsMarketplaceGroup.GetMarketplacesIdList.Count);
 		}
 
 		[Test]
 		public void TryAddMarketplace_TryingToAddAMarketplaceToTheSameGroupTwice_ThrowsInvalidOperationException()
 		{
-			var reportRequestedMarketplacesGroup = new MwsMarketplaceGroup(MwsMarketplace.US);
-			reportRequestedMarketplacesGroup.TryAddMarketplace(MwsMarketplace.Canada);
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.France);
+			MwsMarketplaceGroup.TryAddMarketplace(MwsMarketplace.Germany);
 
 			Assert.Throws<InvalidOperationException>(() =>
-				reportRequestedMarketplacesGroup.TryAddMarketplace(MwsMarketplace.Canada));
+				MwsMarketplaceGroup.TryAddMarketplace(MwsMarketplace.Germany));
 		}
 
-	    [Test]
-	    public void TryAddMarketplace_TryingToAddAMarketplaceToAGroupInitializedWithTheSameMarketplace_ThrowsInvalidOperationException()
-	    {
-		    var reportRequestedMarketplacesGroup = new MwsMarketplaceGroup(MwsMarketplace.US);
+		[Test]
+		public void TryAddMarketplace_TryingToAddAMarketplaceToAGroupInitializedWithTheSameMarketplace_ThrowsInvalidOperationException()
+		{
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.France);
 
-		    Assert.Throws<InvalidOperationException>(() =>
-			    reportRequestedMarketplacesGroup.TryAddMarketplace(MwsMarketplace.US));
-	    }
+			Assert.Throws<InvalidOperationException>(() =>
+				MwsMarketplaceGroup.TryAddMarketplace(MwsMarketplace.France));
+		}
 
-	    [Test]
-	    public void TryAddMarketplace_WithValidMarketplace_AddsMarketplaceIdToInternalMarketplaceIdList_AndLeavesPreviousListContentUnchanged()
-	    {
-		    var reportRequestedMarketplacesGroup = new MwsMarketplaceGroup(MwsMarketplace.Canada);
+		[Test]
+		public void TryAddMarketplace_WithValidMarketplace_AddsMarketplaceIdToInternalMarketplaceIdList()
+		{
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Canada);
 
-		    reportRequestedMarketplacesGroup.TryAddMarketplace(MwsMarketplace.US);
+			MwsMarketplaceGroup.TryAddMarketplace(MwsMarketplace.US);
 
-		    CollectionAssert.Contains(reportRequestedMarketplacesGroup.GetMarketplacesIdList, MwsMarketplace.Canada.Id);
-		    CollectionAssert.Contains(reportRequestedMarketplacesGroup.GetMarketplacesIdList, MwsMarketplace.US.Id);
-		    Assert.AreEqual(2, reportRequestedMarketplacesGroup.GetMarketplacesIdList.Count);
-	    }
+			CollectionAssert.Contains(MwsMarketplaceGroup.GetMarketplacesIdList, MwsMarketplace.Canada.Id);
+			CollectionAssert.Contains(MwsMarketplaceGroup.GetMarketplacesIdList, MwsMarketplace.US.Id);
+			Assert.AreEqual(2, MwsMarketplaceGroup.GetMarketplacesIdList.Count);
+		}
 
-	    [Test]
-	    public void TryAddMarketplace_WithInitialEndpointOfUS_CanAddCanadaMarketplaceId_ToInternalMarketplaceIdList()
-	    {
-		    var reportRequestedMarketplacesGroup = new MwsMarketplaceGroup(MwsMarketplace.US);
+		[Test]
+		public void TryAddMarketplace_WithInitialEndpointOfUS_CanAddCanadaMarketplaceId_ToInternalMarketplaceIdList()
+		{
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US);
 
-		    reportRequestedMarketplacesGroup.TryAddMarketplace(MwsMarketplace.Canada);
+			MwsMarketplaceGroup.TryAddMarketplace(MwsMarketplace.Canada);
 
-		    CollectionAssert.Contains(reportRequestedMarketplacesGroup.GetMarketplacesIdList, MwsMarketplace.US.Id);
-		    CollectionAssert.Contains(reportRequestedMarketplacesGroup.GetMarketplacesIdList, MwsMarketplace.Canada.Id);
-	    }
+			CollectionAssert.Contains(MwsMarketplaceGroup.GetMarketplacesIdList, MwsMarketplace.US.Id);
+			CollectionAssert.Contains(MwsMarketplaceGroup.GetMarketplacesIdList, MwsMarketplace.Canada.Id);
+		}
 
-	    [Test]
-	    public void TryAddMarketplace_WithInitialEndpointOfUS_CannotAddEuropeanMarketplaceId_ThrowsInvalidOperationException()
-	    {
-		    var reportRequestedMarketplacesGroup = new MwsMarketplaceGroup(MwsMarketplace.US);
+		[Test]
+		public void TryAddMarketplace_WithInitialEndpointOfUS_CanAddMexicoMarketplaceId_ToInternalMarketplaceIdList()
+		{
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US);
 
-		    Assert.Throws<InvalidOperationException>(() =>
-			    reportRequestedMarketplacesGroup.TryAddMarketplace(MwsMarketplace.UK));
-	    }
+			MwsMarketplaceGroup.TryAddMarketplace(MwsMarketplace.Mexico);
 
-	    [Test]
-	    public void TryAddMarketplace_WithInitialEndpointOfUK_CannotAddNorthAmericanMarketplaceId_ThrowsInvalidOperationException()
-	    {
-		    var reportRequestedMarketplacesGroup = new MwsMarketplaceGroup(MwsMarketplace.UK);
+			CollectionAssert.Contains(MwsMarketplaceGroup.GetMarketplacesIdList, MwsMarketplace.US.Id);
+			CollectionAssert.Contains(MwsMarketplaceGroup.GetMarketplacesIdList, MwsMarketplace.Mexico.Id);
+		}
 
-		    Assert.Throws<InvalidOperationException>(() =>
-			    reportRequestedMarketplacesGroup.TryAddMarketplace(MwsMarketplace.Canada));
-	    }
+		[Test]
+		public void TryAddMarketplace_WithInitialEndpointOfUS_CannotAddEuropeanMarketplaceId_ThrowsInvalidOperationException()
+		{
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US);
+
+			Assert.Throws<InvalidOperationException>(() =>
+				MwsMarketplaceGroup.TryAddMarketplace(MwsMarketplace.UK));
+		}
+
+		[Test]
+		public void TryAddMarketplace_WithInitialEndpointOfUS_CannotAddNonNorthAmericanMarketplaceId_ThrowsInvalidOperationException()
+		{
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US);
+
+			Assert.Throws<InvalidOperationException>(() =>
+				MwsMarketplaceGroup.TryAddMarketplace(MwsMarketplace.Japan));
+		}
+
+		[Test]
+		public void TryAddMarketplace_WithInitialEndpointOfUK_CanAddEuropeanMarketplaceId_ToInternalMarketplaceIdList()
+		{
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.UK);
+
+			MwsMarketplaceGroup.TryAddMarketplace(MwsMarketplace.Germany);
+
+			CollectionAssert.Contains(MwsMarketplaceGroup.GetMarketplacesIdList, MwsMarketplace.UK.Id);
+			CollectionAssert.Contains(MwsMarketplaceGroup.GetMarketplacesIdList, MwsMarketplace.Germany.Id);
+		}
+
+		[Test]
+		public void TryAddMarketplace_WithInitialEndpointOfUK_CannotAddNorthAmericanMarketplaceId_ThrowsInvalidOperationException()
+		{
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.UK);
+
+			Assert.Throws<InvalidOperationException>(() =>
+				MwsMarketplaceGroup.TryAddMarketplace(MwsMarketplace.Canada));
+		}
+
+		[Test]
+		public void TryAddMarketplace_WithInitialEndpointOfUK_CannotAddNonEuropeanMarketplaceId_ThrowsInvalidOperationException()
+		{
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.UK);
+
+			Assert.Throws<InvalidOperationException>(() =>
+				MwsMarketplaceGroup.TryAddMarketplace(MwsMarketplace.China));
+		}
+
+		[Test]
+		public void TryAddMarketplace_WithInitialEndpointOfJapan_CannotAddEuropeanMarketplaceId_ThrowsInvalidOperationException()
+		{
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Japan);
+
+			Assert.Throws<InvalidOperationException>(() =>
+				MwsMarketplaceGroup.TryAddMarketplace(MwsMarketplace.France));
+		}
+
+		[Test]
+		public void TryAddMarketplace_WithInitialEndpointOfJapan_CannotAddNorthAmericanMarketplaceId_ThrowsInvalidOperationException()
+		{
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Japan);
+
+			Assert.Throws<InvalidOperationException>(() =>
+				MwsMarketplaceGroup.TryAddMarketplace(MwsMarketplace.US));
+		}
+
+		[Test]
+		public void TryAddMarketplace_WithInitialEndpointOfJapan_CannotAddAnotherMarketplaceId_ThrowsInvalidOperationException()
+		{
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Japan);
+
+			Assert.Throws<InvalidOperationException>(() =>
+				MwsMarketplaceGroup.TryAddMarketplace(MwsMarketplace.China));
+		}
+
+		[Test]
+		public void TryAddMarketplace_WithInitialEndpointOfAustralia_CannotAddEuropeanMarketplaceId_ThrowsInvalidOperationException()
+		{
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Australia);
+
+			Assert.Throws<InvalidOperationException>(() =>
+				MwsMarketplaceGroup.TryAddMarketplace(MwsMarketplace.France));
+		}
+
+		[Test]
+		public void TryAddMarketplace_WithInitialEndpointOfAustralia_CannotAddNorthAmericanMarketplaceId_ThrowsInvalidOperationException()
+		{
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Australia);
+
+			Assert.Throws<InvalidOperationException>(() =>
+				MwsMarketplaceGroup.TryAddMarketplace(MwsMarketplace.US));
+		}
+
+		[Test]
+		public void TryAddMarketplace_WithInitialEndpointOfAustralia_CannotAddAnotherMarketplaceId_ThrowsInvalidOperationException()
+		{
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Australia);
+
+			Assert.Throws<InvalidOperationException>(() =>
+				MwsMarketplaceGroup.TryAddMarketplace(MwsMarketplace.China));
+		}
+
+		[Test]
+		public void TryAddMarketplace_WithInitialEndpointOfChina_CannotAddEuropeanMarketplaceId_ThrowsInvalidOperationException()
+		{
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.China);
+
+			Assert.Throws<InvalidOperationException>(() =>
+				MwsMarketplaceGroup.TryAddMarketplace(MwsMarketplace.France));
+		}
+
+		[Test]
+		public void TryAddMarketplace_WithInitialEndpointOfChina_CannotAddNorthAmericanMarketplaceId_ThrowsInvalidOperationException()
+		{
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.China);
+
+			Assert.Throws<InvalidOperationException>(() =>
+				MwsMarketplaceGroup.TryAddMarketplace(MwsMarketplace.US));
+		}
+
+		[Test]
+		public void TryAddMarketplace_WithInitialEndpointOfChina_CannotAddAnotherMarketplaceId_ThrowsInvalidOperationException()
+		{
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.China);
+
+			Assert.Throws<InvalidOperationException>(() =>
+				MwsMarketplaceGroup.TryAddMarketplace(MwsMarketplace.Brazil));
+		}
+
+		[Test]
+		public void TryAddMarketplace_WithInitialEndpointOfIndia_CannotAddEuropeanMarketplaceId_ThrowsInvalidOperationException()
+		{
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.India);
+
+			Assert.Throws<InvalidOperationException>(() =>
+				MwsMarketplaceGroup.TryAddMarketplace(MwsMarketplace.France));
+		}
+
+		[Test]
+		public void TryAddMarketplace_WithInitialEndpointOfIndia_CannotAddNorthAmericanMarketplaceId_ThrowsInvalidOperationException()
+		{
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.India);
+
+			Assert.Throws<InvalidOperationException>(() =>
+				MwsMarketplaceGroup.TryAddMarketplace(MwsMarketplace.US));
+		}
+
+		[Test]
+		public void TryAddMarketplace_WithInitialEndpointOfIndia_CannotAddAnotherMarketplaceId_ThrowsInvalidOperationException()
+		{
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.India);
+
+			Assert.Throws<InvalidOperationException>(() =>
+				MwsMarketplaceGroup.TryAddMarketplace(MwsMarketplace.Brazil));
+		}
+
+		[Test]
+		public void TryAddMarketplace_WithInitialEndpointOfBrazil_CannotAddEuropeanMarketplaceId_ThrowsInvalidOperationException()
+		{
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Brazil);
+
+			Assert.Throws<InvalidOperationException>(() =>
+				MwsMarketplaceGroup.TryAddMarketplace(MwsMarketplace.France));
+		}
+
+		[Test]
+		public void TryAddMarketplace_WithInitialEndpointOfBrazil_CannotAddNorthAmericanMarketplaceId_ThrowsInvalidOperationException()
+		{
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Brazil);
+
+			Assert.Throws<InvalidOperationException>(() =>
+				MwsMarketplaceGroup.TryAddMarketplace(MwsMarketplace.US));
+		}
+
+		[Test]
+		public void TryAddMarketplace_WithInitialEndpointOfBrazil_CannotAddAnotherMarketplaceId_ThrowsInvalidOperationException()
+		{
+			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Brazil);
+
+			Assert.Throws<InvalidOperationException>(() =>
+				MwsMarketplaceGroup.TryAddMarketplace(MwsMarketplace.Australia));
+		}
 
 		[Test]
 		public void AmazonGlobal_Returns_ANotNullOrEmptyList()
