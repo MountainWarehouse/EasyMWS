@@ -13,7 +13,7 @@ namespace EasyMWS.Tests.Helpers
 		    Assert.AreEqual("Canada", marketplace.Name);
 		    Assert.AreEqual("CA", marketplace.CountryCode);
 		    Assert.AreEqual("A2EUQ1WTGCTBG2", marketplace.Id);
-		    Assert.AreEqual("https://mws.amazonservices.com", marketplace.MwsEndpoint);
+		    Assert.AreEqual(MwsEndpoint.NorthAmerica.Name, marketplace.MwsEndpoint.Name);
 	    }
 
 	    [Test]
@@ -24,7 +24,7 @@ namespace EasyMWS.Tests.Helpers
 		    Assert.AreEqual("US", marketplace.Name);
 		    Assert.AreEqual("US", marketplace.CountryCode);
 		    Assert.AreEqual("ATVPDKIKX0DER", marketplace.Id);
-		    Assert.AreEqual("https://mws.amazonservices.com", marketplace.MwsEndpoint);
+		    Assert.AreEqual(MwsEndpoint.NorthAmerica.Name, marketplace.MwsEndpoint.Name);
 	    }
 
 	    [Test]
@@ -35,7 +35,7 @@ namespace EasyMWS.Tests.Helpers
 		    Assert.AreEqual("UK", marketplace.Name);
 		    Assert.AreEqual("UK", marketplace.CountryCode);
 		    Assert.AreEqual("A1F83G8C2ARO7P", marketplace.Id);
-		    Assert.AreEqual("https://mws-eu.amazonservices.com", marketplace.MwsEndpoint);
+		    Assert.AreEqual(MwsEndpoint.Europe.Name, marketplace.MwsEndpoint.Name);
 	    }
 	}
 }

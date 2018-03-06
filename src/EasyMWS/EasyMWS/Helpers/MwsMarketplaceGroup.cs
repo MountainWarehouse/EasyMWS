@@ -14,7 +14,7 @@ namespace MountainWarehouse.EasyMWS.Helpers
 	    /// <summary>
 	    /// The MWS access endpoint identifying this group. This value is set when initializing the object with the MWS endpoint of the marketplace provided to the ctor.
 	    /// </summary>
-	    public readonly string MwsEndpoint;
+	    public readonly MwsEndpoint MwsEndpoint;
 
 		/// <summary>
 		/// Initializes a new marketplace group, and sets the MWS endpoint of this group to the MWS endpoint of the Marketplace provided as parameter.
