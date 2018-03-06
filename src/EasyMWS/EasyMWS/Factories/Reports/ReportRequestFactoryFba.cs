@@ -30,7 +30,12 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonEurope(),
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
 
-	    private ReportRequestWrapper GenerateReportRequest(string reportType, ContentUpdateFrequency reportUpdateFrequency, List<string> permittedMarketplaces, List<string> requestedMarketplaces = null)
+	    public ReportRequestWrapper GenerateRequestForReportGetExcessInventoryData(MwsMarketplaceGroup requestedMarketplacesGroup = null)
+		    => GenerateReportRequest("_GET_EXCESS_INVENTORY_DATA_", ContentUpdateFrequency.NearRealTime,
+			    permittedMarketplaces: MwsMarketplace.US + MwsMarketplace.India + MwsMarketplace.Japan,
+			    requestedMarketplaces: requestedMarketplacesGroup?.GetMarketplacesIdList.ToList());
+
+		private ReportRequestWrapper GenerateReportRequest(string reportType, ContentUpdateFrequency reportUpdateFrequency, List<string> permittedMarketplaces, List<string> requestedMarketplaces = null)
 	    {
 		    ValidateMarketplaceCompatibility(reportType, permittedMarketplaces, requestedMarketplaces);
 			var reportRequest = new RequestReportRequest

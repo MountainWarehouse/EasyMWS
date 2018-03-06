@@ -198,5 +198,129 @@ namespace EasyMWS.Tests.Factories
 			Assert.AreEqual("_GET_AFN_INVENTORY_DATA_BY_COUNTRY_", reportRequest.ReportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequest.UpdateFrequency);
 		}
+
+		[Test]
+		public void
+			GenerateRequestForReportGetExcessInventoryData_WithNoMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
+		{
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
+
+			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetExcessInventoryData();
+
+			Assert.NotNull(reportRequest);
+			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+		}
+
+		[Test]
+		public void
+			GenerateRequestForReportGetExcessInventoryData_WithNullMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
+		{
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
+
+			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetExcessInventoryData(null);
+
+			Assert.NotNull(reportRequest);
+			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+		}
+
+		[Test]
+		public void GenerateRequestForReportGetExcessInventoryData_WithUSMarketplaceProvidedReturnsRequest()
+		{
+			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US);
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
+
+			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetExcessInventoryData(marketplaceGroup);
+
+			Assert.NotNull(reportRequest);
+		}
+
+		[Test]
+		public void GenerateRequestForReportGetExcessInventoryData_WithIndiaMarketplaceProvidedReturnsRequest()
+		{
+			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.India);
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
+
+			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetExcessInventoryData(marketplaceGroup);
+
+			Assert.NotNull(reportRequest);
+		}
+
+		[Test]
+		public void GenerateRequestForReportGetExcessInventoryData_WithJapanMarketplaceProvidedReturnsRequest()
+		{
+			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Japan);
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
+
+			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetExcessInventoryData(marketplaceGroup);
+
+			Assert.NotNull(reportRequest);
+		}
+
+		[Test]
+		public void GenerateRequestForReportGetExcessInventoryData_WithEuropeanMarketplacesProvided_ThrowsArgumentException()
+		{
+			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.UK)
+				.AddMarketplace(MwsMarketplace.France);
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
+
+			Assert.Throws<ArgumentException>(() =>
+				_reportRequestFactoryFBA.GenerateRequestForReportGetExcessInventoryData(marketplaceGroup));
+		}
+
+		[Test]
+		public void
+			GenerateRequestForReportGetExcessInventoryData_WithNorthAmericanNonUSMarketplacesProvided_ThrowsArgumentException()
+		{
+			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Canada)
+				.AddMarketplace(MwsMarketplace.Mexico);
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
+
+			Assert.Throws<ArgumentException>(() =>
+				_reportRequestFactoryFBA.GenerateRequestForReportGetExcessInventoryData(marketplaceGroup));
+		}
+
+		[Test]
+		public void
+			GenerateRequestForReportGetExcessInventoryData_WithInternationalMarketplace_NotIndiaOrJapan_Provided_ThrowsArgumentException()
+		{
+			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Australia);
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
+
+			Assert.Throws<ArgumentException>(() =>
+				_reportRequestFactoryFBA.GenerateRequestForReportGetExcessInventoryData(marketplaceGroup));
+		}
+
+		[Test]
+		public void GenerateRequestForReportGetExcessInventoryData_WithNonNullMerchant_HasMerchantSetCorrectly()
+		{
+			var testMerchant = "testMerchant3465";
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba(testMerchant);
+
+			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetExcessInventoryData();
+
+			Assert.AreEqual(testMerchant, reportRequest.ReportRequest.Merchant);
+		}
+
+		[Test]
+		public void GenerateRequestForReportGetExcessInventoryData_WithNonmWsAuthToken_HasmWsAuthTokenSetCorectly()
+		{
+			var testmWsAuthToken = "mWsAuthToken3456";
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba(mWsAuthToken: testmWsAuthToken);
+
+			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetExcessInventoryData();
+
+			Assert.AreEqual(testmWsAuthToken, reportRequest.ReportRequest.MWSAuthToken);
+		}
+
+		[Test]
+		public void GenerateRequestForReportGetExcessInventoryData_ReturnsReportRequest_WithCorrectType()
+		{
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
+
+			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetExcessInventoryData();
+
+			Assert.AreEqual("_GET_EXCESS_INVENTORY_DATA_", reportRequest.ReportRequest.ReportType);
+			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequest.UpdateFrequency);
+		}
 	}
 }
