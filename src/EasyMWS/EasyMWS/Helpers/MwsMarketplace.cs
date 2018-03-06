@@ -1,6 +1,6 @@
 ﻿namespace MountainWarehouse.EasyMWS.Helpers
 {
-    public class MwsMarketplace
+    public sealed class MwsMarketplace
     {
 	    /// <summary>
 	    /// The name of the current marketplace.
@@ -32,9 +32,15 @@
 		    "US", "US", "ATVPDKIKX0DER", "https://mws.amazonservices.com");
 
 	    /// <summary>
-	    ///  The United Kingdom marketplace. Shares the same amazon MWS endpoint with Spain, France, Germany, and Italy marketplaces.
+	    /// The Canada marketplace. Shares the same amazon MWS endpoint with US and Mexico.
 	    /// </summary>
-	    public static MwsMarketplace UK = new MwsMarketplace(
+	    public static MwsMarketplace Canada = new MwsMarketplace(
+		    "Canada", "CA", "A2EUQ1WTGCTBG2", "https://mws.amazonservices.com");
+
+		/// <summary>
+		///  The United Kingdom marketplace. Shares the same amazon MWS endpoint with Spain, France, Germany, and Italy marketplaces.
+		/// </summary>
+		public static MwsMarketplace UK = new MwsMarketplace(
 		    "UK", "UK", "A1F83G8C2ARO7P", "https://mws-eu.amazonservices.com");
 	}
 }
