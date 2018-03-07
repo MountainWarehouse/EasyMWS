@@ -11,7 +11,7 @@ namespace EasyMWS.Tests.Helpers
     public class ReportRequestPropertiesContainerTests
     {
 	    [Test]
-	    public void ReportRequestPropertiesContainer_RequiredProperties_AreSerializedAndDeserialized_AsExpected()
+	    public void ReportRequestPropertiesContainer_IsSerializedAndDeserialized_AsExpected()
 	    {
 		    var testReportType = "test report type 123";
 		    var testMerchant = "test merchant 123";
