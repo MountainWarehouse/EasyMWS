@@ -29,7 +29,6 @@ namespace MountainWarehouse.EasyMWS.Helpers
 		/// This information can be used to reduce the number of report request made, especially if the requests are redundant.<para/>
 		/// If the content for a report type is only updated Daily by amazon, then it shouldn't be requested on a base more frequent than daily. 
 		/// </summary>
-		[NonSerialized]
 		public ContentUpdateFrequency UpdateFrequency;
 
 		/// <summary>
