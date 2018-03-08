@@ -15,6 +15,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Startup\**" />
+    <EmbeddedResource Remove="Startup\**" />
+    <None Remove="Startup\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
@@ -26,10 +32,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MarketplaceWebService\MarketplaceWebService.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Startup\" />
   </ItemGroup>
 
 </Project>
