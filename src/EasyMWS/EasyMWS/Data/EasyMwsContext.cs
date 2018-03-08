@@ -15,6 +15,6 @@ namespace MountainWarehouse.EasyMWS.Data
 			optionsBuilder.UseSqlServer(configuration["connectionStrings:add:EasyMwsContext:connectionString"]);
 		}
 
-		public DbSet<Report> Reports { get; set; }
+		public DbSet<ReportRequestCallback> ReportRequestCallbacks { get; set; }
 	}
 }

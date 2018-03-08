@@ -5,7 +5,9 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.Storage.Internal;
+using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.Data;
+using MountainWarehouse.EasyMWS.Helpers;
 using System;
 
 namespace MountainWarehouse.EasyMWS.Migrations
@@ -20,16 +22,30 @@ namespace MountainWarehouse.EasyMWS.Migrations
                 .HasAnnotation("ProductVersion", "2.0.1-rtm-125")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-            modelBuilder.Entity("MountainWarehouse.EasyMWS.Data.Report", b =>
+            modelBuilder.Entity("MountainWarehouse.EasyMWS.Data.ReportRequestCallback", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("Name");
+                    b.Property<int>("AmazonRegion");
+
+                    b.Property<int>("ContentUpdateFrequency");
+
+                    b.Property<string>("Data");
+
+                    b.Property<string>("DataTypeName");
+
+                    b.Property<DateTime?>("LastRequested");
+
+                    b.Property<string>("MethodName");
+
+                    b.Property<string>("ReportRequestData");
+
+                    b.Property<string>("TypeName");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Reports");
+                    b.ToTable("ReportRequestCallbacks");
                 });
 #pragma warning restore 612, 618
         }
