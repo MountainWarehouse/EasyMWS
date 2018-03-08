@@ -1,6 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using MountainWarehouse.EasyMWS.Data;
 
+[assembly: InternalsVisibleTo("EasyMWS.Tests")]
+[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 namespace MountainWarehouse.EasyMWS.Services
 {
     internal class ReportRequestCallbackService : IReportRequestCallbackService
