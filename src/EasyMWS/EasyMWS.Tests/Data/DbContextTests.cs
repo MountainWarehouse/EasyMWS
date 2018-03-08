@@ -8,20 +8,20 @@ namespace EasyMWS.Tests.Data
     public class DbContextTests
     {
 	    private EasyMwsContext _dbContext;
-	    private string _testReportType = "test report type #123";
+	    private string _testTypeName = "test report type #123";
 
 	    [SetUp]
 	    public void Setup()
 	    {
 			_dbContext = new EasyMwsContext();
-		    _dbContext.ReportRequestCallbacks.Add(new ReportRequestCallback {ReportType = _testReportType });
+		    _dbContext.ReportRequestCallbacks.Add(new ReportRequestCallback {TypeName = _testTypeName });
 		    _dbContext.SaveChanges();
 	    }
 
 	    [TearDown]
 	    public void TearDown()
 	    {
-		    var testReport = _dbContext.ReportRequestCallbacks.First(r => r.ReportType == _testReportType);
+		    var testReport = _dbContext.ReportRequestCallbacks.First(r => r.TypeName == _testTypeName);
 		    _dbContext.ReportRequestCallbacks.Remove(testReport);
 		    _dbContext.SaveChanges();
 	    }
@@ -29,7 +29,7 @@ namespace EasyMWS.Tests.Data
 	    [Test]
 	    public void OnWhere_ReturnsAnyData()
 	    {
-		    var testId = _dbContext.ReportRequestCallbacks.FirstOrDefault(r => r.ReportType == _testReportType);
+		    var testId = _dbContext.ReportRequestCallbacks.FirstOrDefault(r => r.TypeName == _testTypeName);
 
 			Assert.NotNull(testId);
 	    }

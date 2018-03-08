@@ -14,9 +14,16 @@ namespace MountainWarehouse.EasyMWS.Data
 	    public string DataTypeName { get; set; }
 
 
-	    public string ReportType { get; set; }
 	    public AmazonRegion AmazonRegion { get; set; }
 	    public ContentUpdateFrequency ContentUpdateFrequency { get; set; }
 	    public DateTime? LastRequested { get; set; }
-	}
+	    public string ReportRequestData { get; set; }
+
+	    public ReportRequestCallback()
+	    {
+	    }
+
+	    public ReportRequestCallback(Callback callback) => (TypeName, MethodName, Data, DataTypeName) =
+		    (callback.TypeName, callback.MethodName, callback.Data, callback.DataTypeName);
+    }
 }
