@@ -16,6 +16,8 @@ namespace MountainWarehouse.EasyMWS.Helpers
 
 		public string MwsAuthToken { get; set; }
 
+		public AmazonRegion Region { get; set; }
+
 		#endregion
 
 		#region Optional properties only used by some amazon MWS reports
@@ -42,13 +44,14 @@ namespace MountainWarehouse.EasyMWS.Helpers
 		/// <summary>
 		/// Creates a new RequestReportRequest wrapper object that also contains additional information regarding the request object.
 		/// </summary>
+		/// <param name="region"></param>
 		/// <param name="reportType"></param>
 		/// <param name="merchant"></param>
 		/// <param name="mwsAuthToken"></param>
 		/// <param name="marketplaceIdList"></param>
 		/// <param name="updateFrequency"></param>
-		public ReportRequestPropertiesContainer(string reportType, string merchant, string mwsAuthToken, ContentUpdateFrequency updateFrequency, List<string> marketplaceIdList = null) =>
-			(ReportType, Merchant, MwsAuthToken, MarketplaceIdList, UpdateFrequency) = (reportType, merchant, mwsAuthToken, marketplaceIdList, updateFrequency);
+		public ReportRequestPropertiesContainer(AmazonRegion region, string reportType, string merchant, string mwsAuthToken, ContentUpdateFrequency updateFrequency, List<string> marketplaceIdList = null) =>
+			(Region, ReportType, Merchant, MwsAuthToken, MarketplaceIdList, UpdateFrequency) = (region,reportType, merchant, mwsAuthToken, marketplaceIdList, updateFrequency);
 	}
 
 	/// <summary>

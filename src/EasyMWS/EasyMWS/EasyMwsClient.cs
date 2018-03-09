@@ -1,11 +1,10 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using MarketplaceWebService;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Helpers;
-using MountainWarehouse.EasyMWS.Services;
+using MountainWarehouse.EasyMWS.Repositories;
 using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS
@@ -14,13 +13,13 @@ namespace MountainWarehouse.EasyMWS
 	public class EasyMwsClient
 	{
 		private IMarketplaceWebServiceClient _mwsClient;
-		private IReportRequestCallbackService _reportRequestCallbackService;
+		private IReportRequestCallbackRepo _reportRequestCallbackService;
 		private CallbackActivator _callbackActivator;
 		private AmazonRegion _amazonRegion;
 
 		public AmazonRegion AmazonRegion => _amazonRegion;
 
-		internal EasyMwsClient(AmazonRegion region, string accessKeyId, string mwsSecretAccessKey, IReportRequestCallbackService reportRequestCallbackService) 
+		internal EasyMwsClient(AmazonRegion region, string accessKeyId, string mwsSecretAccessKey, IReportRequestCallbackRepo reportRequestCallbackService) 
 			: this(region, accessKeyId, mwsSecretAccessKey)
 		{
 			_reportRequestCallbackService = reportRequestCallbackService;
@@ -33,7 +32,7 @@ namespace MountainWarehouse.EasyMWS
 		{
 			_amazonRegion = region;
 			_mwsClient = new MarketplaceWebServiceClient(accessKeyId, mwsSecretAccessKey, CreateConfig(region));
-			_reportRequestCallbackService = _reportRequestCallbackService ?? new ReportRequestCallbackService();
+			_reportRequestCallbackService = _reportRequestCallbackService ?? new ReportRequestCallbackRepo();
 			_callbackActivator = new CallbackActivator();
 		}
 

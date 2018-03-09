@@ -12,6 +12,7 @@ namespace EasyMWS.Tests.Helpers
 {
     public class ReportRequestPropertiesContainerTests
     {
+	    private AmazonRegion _region = AmazonRegion.Europe;
 	    private static bool _called;
 	    private CallbackActivator _callbackActivator;
 	    private static ReportRequestPropertiesContainer _callbackData;
@@ -21,7 +22,7 @@ namespace EasyMWS.Tests.Helpers
 	    {
 		    _callbackActivator = new CallbackActivator();
 			_called = false;
-			_callbackData = new ReportRequestPropertiesContainer("", "", "", ContentUpdateFrequency.Daily, new List<string>());
+			_callbackData = new ReportRequestPropertiesContainer(_region, "", "", "", ContentUpdateFrequency.Daily, new List<string>());
 		}
 
 		[Test]
@@ -32,7 +33,7 @@ namespace EasyMWS.Tests.Helpers
 		    var testMwsAuthToken = "test auth token 123";
 			var marketplaceIdList = new List<string>{"asdf1234", "tyui5678", "vbnm4567"};
 		    ContentUpdateFrequency testUpdateFrequency = ContentUpdateFrequency.Daily;
-		    var propertiesContainer = new ReportRequestPropertiesContainer(testReportType, testMerchant, testMwsAuthToken, testUpdateFrequency, marketplaceIdList);
+		    var propertiesContainer = new ReportRequestPropertiesContainer(_region, testReportType, testMerchant, testMwsAuthToken, testUpdateFrequency, marketplaceIdList);
 		    var writeStream = new MemoryStream();
 		    IFormatter formatter = new BinaryFormatter();
 
@@ -58,7 +59,7 @@ namespace EasyMWS.Tests.Helpers
 		    var testMwsAuthToken = "test auth token 123";
 		    var marketplaceIdList = new List<string> { "asdf1234", "tyui5678", "vbnm4567" };
 		    ContentUpdateFrequency testUpdateFrequency = ContentUpdateFrequency.Daily;
-		    var propertiesContainer = new ReportRequestPropertiesContainer(testReportType, testMerchant, testMwsAuthToken, testUpdateFrequency, marketplaceIdList);
+		    var propertiesContainer = new ReportRequestPropertiesContainer(_region, testReportType, testMerchant, testMwsAuthToken, testUpdateFrequency, marketplaceIdList);
 
 			var serialized = _callbackActivator.SerializeCallback(TestMethod, propertiesContainer);
 		    _callbackActivator.CallMethod(serialized);

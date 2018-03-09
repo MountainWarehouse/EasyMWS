@@ -11,7 +11,7 @@ namespace EasyMWS.Tests.Helpers
 		{
 			var MwsMarketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Australia);
 
-			Assert.AreEqual(MwsMarketplace.Australia.MwsEndpoint.Name, MwsMarketplaceGroup.MwsEndpoint.Name);
+			Assert.AreEqual(MwsMarketplace.Australia.MwsEndpoint.Region, MwsMarketplaceGroup.MwsEndpoint.Region);
 			Assert.AreEqual(MwsMarketplace.Australia.MwsEndpoint.RegionOrMarketPlaceEndpoint, MwsMarketplaceGroup.MwsEndpoint.RegionOrMarketPlaceEndpoint);
 		}
 

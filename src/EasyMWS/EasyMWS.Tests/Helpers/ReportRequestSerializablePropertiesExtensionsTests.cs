@@ -1,4 +1,5 @@
 ﻿using System;
+using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
 using NUnit.Framework;
@@ -23,7 +24,7 @@ namespace EasyMWS.Tests.Helpers
 		    var testMwsAuthToken = "testMwsAuthToken1234";
 		    var testMerchant = "testMerchant123";
 		    var testReportType = "_Test_Report_Type_";
-		    var propertiesContainer = new ReportRequestPropertiesContainer(testReportType, testMerchant, testMwsAuthToken, ContentUpdateFrequency.Unknown);
+		    var propertiesContainer = new ReportRequestPropertiesContainer(AmazonRegion.Europe, testReportType, testMerchant, testMwsAuthToken, ContentUpdateFrequency.Unknown);
 
 		    var reportRequest = propertiesContainer.ToMwsClientReportRequest();
 
