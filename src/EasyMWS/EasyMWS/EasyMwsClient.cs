@@ -130,7 +130,7 @@ namespace MountainWarehouse.EasyMWS
 		private void DequeueNonGeneratedReport(AmazonRegion region, string generatedReportId)
 		{
 			var frontOfQueue = _reportRequestCallbackService.GetAll()
-				.Where(rrc => rrc.AmazonRegion == region && rrc.GeneratedReportId == null)
+				.Where(rrc => rrc.AmazonRegion == region && rrc.GeneratedReportId == null && rrc.RequestReportId != null)
 				.OrderBy(rrc => rrc.Id)
 				.FirstOrDefault();
 
