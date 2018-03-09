@@ -16,6 +16,12 @@ namespace MountainWarehouse.EasyMWS.Data
 			optionsBuilder.UseSqlServer(configuration["connectionStrings:add:EasyMwsContext:connectionString"]);
 		}
 
+		protected override void OnModelCreating(ModelBuilder modelBuilder)
+		{
+			modelBuilder.Entity<ReportRequestCallback>()
+				.HasIndex(e => new {e.RequestReportId, e.GeneratedReportId});
+		}
+
 		public DbSet<ReportRequestCallback> ReportRequestCallbacks { get; set; }
 	}
 }

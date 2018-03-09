@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using MountainWarehouse.EasyMWS.Helpers;
 
 namespace MountainWarehouse.EasyMWS.Data
@@ -19,7 +20,13 @@ namespace MountainWarehouse.EasyMWS.Data
 	    public DateTime? LastRequested { get; set; }
 	    public string ReportRequestData { get; set; }
 
-	    public ReportRequestCallback()
+	    /// <summary>The ID that Amazon has given us for this requested report</summary>
+	    public string RequestReportId { get; set; }
+
+	    /// <summary>The ID that Amazon gives us when the report has been generated (required to download the report)</summary>
+		public string GeneratedReportId { get; set; }
+
+		public ReportRequestCallback()
 	    {
 	    }
 
