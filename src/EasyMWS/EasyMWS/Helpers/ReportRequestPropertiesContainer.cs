@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using MarketplaceWebService.Model;
+using MountainWarehouse.EasyMWS.Enums;
 
 namespace MountainWarehouse.EasyMWS.Helpers
 {
@@ -72,16 +73,6 @@ namespace MountainWarehouse.EasyMWS.Helpers
 				MarketplaceIdList = serializablePropertiesObject.MarketplaceIdList == null ? null : new IdList { Id = serializablePropertiesObject.MarketplaceIdList }
 			};
 		}
-	}
-
-	/// <summary>
-	/// Describes how often content is updated for an amazon MWS web service endpoint.
-	/// </summary>
-	public enum ContentUpdateFrequency
-	{
-		NearRealTime,
-		Daily,
-		Unknown
 	}
 }
 

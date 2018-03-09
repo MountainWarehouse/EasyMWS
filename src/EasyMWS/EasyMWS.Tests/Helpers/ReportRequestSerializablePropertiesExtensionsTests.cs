@@ -1,4 +1,5 @@
 ﻿using System;
+using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
 using NUnit.Framework;
 

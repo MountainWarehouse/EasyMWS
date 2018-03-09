@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using MarketplaceWebService.Model;
+using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
 
 namespace MountainWarehouse.EasyMWS.Factories.Reports
