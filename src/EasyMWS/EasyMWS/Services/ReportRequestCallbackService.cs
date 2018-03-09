@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using MountainWarehouse.EasyMWS.Data;
 
@@ -21,5 +22,6 @@ namespace MountainWarehouse.EasyMWS.Services
 		public void Delete(ReportRequestCallback callback) => _dbContext.Remove(callback);
 	    public void SaveChanges() => _dbContext.SaveChanges();
 	    public async Task SaveChangesAsync() => await _dbContext.SaveChangesAsync();
-    }
+		public IQueryable<ReportRequestCallback> GetAll() => _dbContext.ReportRequestCallbacks.AsQueryable();
+	}
 }

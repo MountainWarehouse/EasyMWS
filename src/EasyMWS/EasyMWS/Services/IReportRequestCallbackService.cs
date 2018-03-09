@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using MountainWarehouse.EasyMWS.Data;
 
@@ -12,7 +13,8 @@ namespace MountainWarehouse.EasyMWS.Services
 	    Task CreateAsync(ReportRequestCallback callback);
 	    void Update(ReportRequestCallback callback);
 	    void Delete(ReportRequestCallback callback);
-	    void SaveChanges();
+	    IQueryable<ReportRequestCallback> GetAll();
+		void SaveChanges();
 	    Task SaveChangesAsync();
 
     }
