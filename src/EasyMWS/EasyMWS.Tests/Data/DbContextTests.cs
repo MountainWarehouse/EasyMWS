@@ -27,6 +27,7 @@ namespace EasyMWS.Tests.Data
 	    }
 
 	    [Test]
+        [Ignore("Will only run if sql server is installed on current machine. Quite slow to fail.")]
 	    public void OnWhere_ReturnsAnyData()
 	    {
 		    var testId = _dbContext.Reports.FirstOrDefault(r => r.Name == _testReportName);
