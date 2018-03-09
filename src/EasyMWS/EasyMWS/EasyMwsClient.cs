@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using MarketplaceWebService;
 using MountainWarehouse.EasyMWS.Data;
@@ -101,6 +102,42 @@ namespace MountainWarehouse.EasyMWS
 				ContentUpdateFrequency = reportRequestContainer.UpdateFrequency,
 				ReportRequestData = JsonConvert.SerializeObject(reportRequestContainer)
 			};
+		}
+
+		/// <summary>
+		/// Dequeues the next ReportRequestCallback from the specified region queue of non-requested reports by setting it's RequestReportId value. <para/>
+		/// </summary>
+		/// <param name="region">The region of the Queue to dequeue from.</param>
+		/// <param name="requestReportId">Value to set on the report to dequeue.</param>
+		private void DequeueNonRequestedReport(AmazonRegion region, string requestReportId)
+		{
+			var frontOfQueue = _reportRequestCallbackService.GetAll()
+				.Where(rrc => rrc.AmazonRegion == region && rrc.RequestReportId == null)
+				.OrderBy(rrc => rrc.Id)
+				.FirstOrDefault();
+
+			frontOfQueue.RequestReportId = requestReportId;
+
+			_reportRequestCallbackService.Update(frontOfQueue);
+			_reportRequestCallbackService.SaveChanges();
+		}
+
+		/// <summary>
+		/// Dequeues the next ReportRequestCallback from the specified region queue of non-generated reports by setting it's GeneratedReportId value. <para/>
+		/// </summary>
+		/// <param name="region">The region of the Queue to dequeue from.</param>
+		/// <param name="generatedReportId">Value to set on the report to dequeue.</param>
+		private void DequeueNonGeneratedReport(AmazonRegion region, string generatedReportId)
+		{
+			var frontOfQueue = _reportRequestCallbackService.GetAll()
+				.Where(rrc => rrc.AmazonRegion == region && rrc.GeneratedReportId == null)
+				.OrderBy(rrc => rrc.Id)
+				.FirstOrDefault();
+
+			frontOfQueue.GeneratedReportId = generatedReportId;
+
+			_reportRequestCallbackService.Update(frontOfQueue);
+			_reportRequestCallbackService.SaveChanges();
 		}
 	}
 }
