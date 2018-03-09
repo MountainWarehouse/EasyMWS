@@ -17,6 +17,8 @@ namespace MountainWarehouse.EasyMWS
 		private CallbackActivator _callbackActivator;
 		private AmazonRegion _amazonRegion;
 
+		public AmazonRegion AmazonRegion => _amazonRegion;
+
 		internal EasyMwsClient(AmazonRegion region, string accessKeyId, string mwsSecretAccessKey, IReportRequestCallbackService reportRequestCallbackService) 
 			: this(region, accessKeyId, mwsSecretAccessKey)
 		{
