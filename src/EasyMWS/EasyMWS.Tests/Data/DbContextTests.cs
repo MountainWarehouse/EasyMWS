@@ -8,21 +8,21 @@ namespace EasyMWS.Tests.Data
     public class DbContextTests
     {
 	    private EasyMwsContext _dbContext;
-	    private string _testReportName = "test report name #123";
+	    private string _testTypeName = "test report type #123";
 
 	    [SetUp]
 	    public void Setup()
 	    {
 			_dbContext = new EasyMwsContext();
-		    _dbContext.Reports.Add(new Report {Name = _testReportName });
+		    _dbContext.ReportRequestCallbacks.Add(new ReportRequestCallback {TypeName = _testTypeName });
 		    _dbContext.SaveChanges();
 	    }
 
 	    [TearDown]
 	    public void TearDown()
 	    {
-		    var testReport = _dbContext.Reports.First(r => r.Name == _testReportName);
-		    _dbContext.Reports.Remove(testReport);
+		    var testReport = _dbContext.ReportRequestCallbacks.First(r => r.TypeName == _testTypeName);
+		    _dbContext.ReportRequestCallbacks.Remove(testReport);
 		    _dbContext.SaveChanges();
 	    }
 
@@ -30,7 +30,7 @@ namespace EasyMWS.Tests.Data
         [Ignore("Will only run if sql server is installed on current machine. Quite slow to fail.")]
 	    public void OnWhere_ReturnsAnyData()
 	    {
-		    var testId = _dbContext.Reports.FirstOrDefault(r => r.Name == _testReportName);
+		    var testId = _dbContext.ReportRequestCallbacks.FirstOrDefault(r => r.TypeName == _testTypeName);
 
 			Assert.NotNull(testId);
 	    }
