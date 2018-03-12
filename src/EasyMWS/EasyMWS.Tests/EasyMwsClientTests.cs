@@ -1,12 +1,13 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using MarketplaceWebService;
 using Moq;
 using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
-using MountainWarehouse.EasyMWS.Repositories;
+using MountainWarehouse.EasyMWS.Services;
 using Newtonsoft.Json;
 using NUnit.Framework;
 
@@ -17,9 +18,10 @@ namespace EasyMWS.Tests
 	    private AmazonRegion _region = AmazonRegion.Europe;
 	    private EasyMwsClient _easyMwsClient;
 	    private static bool _called;
-	    private Mock<IReportRequestCallbackRepo> _reportRequestCallbackServiceMock;
+	    private Mock<IReportRequestCallbackService> _reportRequestCallbackServiceMock;
+	    private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
 
-	    public struct CallbackDataTest
+		public struct CallbackDataTest
 	    {
 		    public string Foo;
 	    }
@@ -28,8 +30,9 @@ namespace EasyMWS.Tests
 	    public void SetUp()
 		{
 			_called = false;
-			_reportRequestCallbackServiceMock = new Mock<IReportRequestCallbackRepo>();
-			_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "", "", _reportRequestCallbackServiceMock.Object);
+			_reportRequestCallbackServiceMock = new Mock<IReportRequestCallbackService>();
+			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
+			_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "", "", _reportRequestCallbackServiceMock.Object, _marketplaceWebServiceClientMock.Object);
 		}
 
 	    [Test]
