@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.InteropServices.ComTypes;
+using System.Threading.Tasks;
 using MarketplaceWebService;
 using MarketplaceWebService.Model;
 using Moq;
@@ -93,6 +94,30 @@ namespace EasyMWS.Tests.ReportProcessors
 
 			_marketplaceWebServiceClientMock.Verify(mwsc => mwsc.RequestReport(It.IsAny<RequestReportRequest>()), Times.Once);
 			Assert.AreEqual("Report001", reportId);
+		}
+
+		[Test]
+		public void MoveToNonGeneratedReportsQueue_UpdatesRequestReportId_OnTheCallback()
+		{
+			var reportRequestId = "testReportRequestId";
+
+			 _requestReportProcessor.MoveToNonGeneratedReportsQueue(_reportRequestCallback, reportRequestId);
+
+			Assert.AreEqual("testReportRequestId", _reportRequestCallback.RequestReportId);
+			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+		}
+
+		[Test]
+		public async Task MoveToNonGeneratedReportsQueueAsync_UpdatesRequestReportId_OnTheCallback()
+		{
+			var reportRequestId = "testReportRequestId";
+
+			await _requestReportProcessor.MoveToNonGeneratedReportsQueueAsync(_reportRequestCallback, reportRequestId);
+
+			Assert.AreEqual("testReportRequestId", _reportRequestCallback.RequestReportId);
+			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(x => x.SaveChangesAsync(), Times.Once);
 		}
 	}
 }

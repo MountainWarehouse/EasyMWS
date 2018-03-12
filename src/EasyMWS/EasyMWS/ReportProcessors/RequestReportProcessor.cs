@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Threading.Tasks;
 using MarketplaceWebService;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Helpers;
@@ -39,5 +40,20 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 		   return reportResponse?.RequestReportResult?.ReportRequestInfo?.ReportRequestId;
 		}
 
+	    internal void MoveToNonGeneratedReportsQueue(ReportRequestCallback reportRequestCallback, string reportRequestId)
+	    {
+		    reportRequestCallback.RequestReportId = reportRequestId;
+			_reportRequestCallbackService.Update(reportRequestCallback);
+
+			_reportRequestCallbackService.SaveChanges();
+	    }
+
+	    internal async Task MoveToNonGeneratedReportsQueueAsync(ReportRequestCallback reportRequestCallback, string reportRequestId)
+	    {
+		    reportRequestCallback.RequestReportId = reportRequestId;
+		    _reportRequestCallbackService.Update(reportRequestCallback);
+
+		    await _reportRequestCallbackService.SaveChangesAsync();
+	    }
 	}
 }
