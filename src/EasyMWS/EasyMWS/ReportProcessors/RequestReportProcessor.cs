@@ -15,10 +15,7 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 
 	    internal ReportRequestCallback GetFrontOfNonRequestedReportsQueue(AmazonRegion region)
 	    {
-		    return _reportRequestCallbackService
-			    .GetAll()
-			    .OrderBy(x => x.Id)
-			    .FirstOrDefault(x => x.AmazonRegion == region && x.RequestReportId == null);
+		    return _reportRequestCallbackService.FirstOrDefault(x => x.AmazonRegion == region && x.RequestReportId == null);
 		}
     }
 }

@@ -16,5 +16,11 @@ namespace MountainWarehouse.EasyMWS.Services
 		Task SaveChangesAsync();
 		IQueryable<ReportRequestCallback> GetAll();
 		IQueryable<ReportRequestCallback> Where(Expression<Func<ReportRequestCallback, bool>> predicate);
+		ReportRequestCallback First();
+		ReportRequestCallback FirstOrDefault();
+		ReportRequestCallback FirstOrDefault(Expression<Func<ReportRequestCallback, bool>> predicate);
+		ReportRequestCallback Last();
+		ReportRequestCallback LastOrDefault();
+		ReportRequestCallback LastOrDefault(Expression<Func<ReportRequestCallback, bool>> predicate);
 	}
 }

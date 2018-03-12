@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Repositories;
 
@@ -27,5 +25,13 @@ namespace MountainWarehouse.EasyMWS.Services
 		public IQueryable<ReportRequestCallback> GetAll() => _reportRequestCallbackRepo.GetAll();
 
 		public IQueryable<ReportRequestCallback> Where(Expression<Func<ReportRequestCallback, bool>> predicate) => _reportRequestCallbackRepo.GetAll().Where(predicate);
+
+		public ReportRequestCallback First() => _reportRequestCallbackRepo.GetAll().OrderBy(x => x.Id).First();
+		public ReportRequestCallback FirstOrDefault() => _reportRequestCallbackRepo.GetAll().OrderBy(x => x.Id).FirstOrDefault();
+		public ReportRequestCallback FirstOrDefault(Expression<Func<ReportRequestCallback, bool>> predicate) => _reportRequestCallbackRepo.GetAll().OrderBy(x => x.Id).FirstOrDefault(predicate);
+
+		public ReportRequestCallback Last() => _reportRequestCallbackRepo.GetAll().OrderByDescending(x => x.Id).First();
+		public ReportRequestCallback LastOrDefault() => _reportRequestCallbackRepo.GetAll().OrderByDescending(x => x.Id).FirstOrDefault();
+		public ReportRequestCallback LastOrDefault(Expression<Func<ReportRequestCallback, bool>> predicate) => _reportRequestCallbackRepo.GetAll().OrderByDescending(x => x.Id).FirstOrDefault(predicate);
 	}
 }
