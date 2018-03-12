@@ -9,18 +9,6 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 {
 	public class ReportRequestFactoryFba : IReportRequestFactoryFba
 	{
-		private readonly string _merchant;
-		private readonly string _mWsAuthToken;
-		private readonly AmazonRegion _region;
-
-		/// <summary>
-		/// Creates an instance of the Report Request Factory for amazon FBA reports.
-		/// </summary>
-		/// <param name="merchant">Optional parameter. MerchantId / SellerId</param>
-		/// <param name="mWsAuthToken">MWS request authentication token</param>
-		public ReportRequestFactoryFba(AmazonRegion region, string merchant = null, string mWsAuthToken = null)
-			=> (_region, _merchant, _mWsAuthToken) = (region, merchant, mWsAuthToken);
-
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		public ReportRequestPropertiesContainer GenerateRequestForReportGetAfnInventoryData(
 			MwsMarketplaceGroup requestedMarketplaces = null)
@@ -151,8 +139,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 			List<string> permittedMarketplaces, List<string> requestedMarketplaces = null)
 		{
 			ValidateMarketplaceCompatibility(reportType, permittedMarketplaces, requestedMarketplaces);
-			return new ReportRequestPropertiesContainer(_region, reportType, _merchant, _mWsAuthToken, reportUpdateFrequency,
-				requestedMarketplaces);
+			return new ReportRequestPropertiesContainer(reportType, reportUpdateFrequency, requestedMarketplaces);
 		}
 
 		private void ValidateMarketplaceCompatibility(string reportType, List<string> permittedMarketplaces,

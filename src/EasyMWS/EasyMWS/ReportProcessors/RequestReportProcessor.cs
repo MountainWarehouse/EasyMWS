@@ -1,6 +1,9 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using MarketplaceWebService;
+using MarketplaceWebService.Model;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Services;
@@ -8,7 +11,7 @@ using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS.ReportProcessors
 {
-    internal class RequestReportProcessor
+    internal class RequestReportProcessor : IRequestReportProcessor
     {
 	    private readonly IReportRequestCallbackService _reportRequestCallbackService;
 	    private readonly IMarketplaceWebServiceClient _marketplaceWebServiceClient;
@@ -25,22 +28,22 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 		    _reportRequestCallbackService = _reportRequestCallbackService ?? new ReportRequestCallbackService();
 		}
 
-	    internal ReportRequestCallback GetFrontOfNonRequestedReportsQueue(AmazonRegion region)
+	    public ReportRequestCallback GetNonRequestedReportFromQueue(AmazonRegion region)
 	    {
 		    return _reportRequestCallbackService.FirstOrDefault(x => x.AmazonRegion == region && x.RequestReportId == null);
 		}
 
-	    internal string RequestSingleQueuedReport(ReportRequestCallback reportRequestCallback)
+	    public string RequestSingleQueuedReport(ReportRequestCallback reportRequestCallback, string merchantId)
 	    {
 		    var reportRequestData = JsonConvert.DeserializeObject<ReportRequestPropertiesContainer>(reportRequestCallback.ReportRequestData);
-		    var reportRequest = reportRequestData.ToMwsClientReportRequest();
+		    var reportRequest = reportRequestData.ToMwsClientReportRequest(merchantId);
 
 		    var reportResponse = _marketplaceWebServiceClient.RequestReport(reportRequest);
 
 		   return reportResponse?.RequestReportResult?.ReportRequestInfo?.ReportRequestId;
 		}
 
-	    internal void MoveToNonGeneratedReportsQueue(ReportRequestCallback reportRequestCallback, string reportRequestId)
+	    public void MoveToNonGeneratedReportsQueue(ReportRequestCallback reportRequestCallback, string reportRequestId)
 	    {
 		    reportRequestCallback.RequestReportId = reportRequestId;
 			_reportRequestCallbackService.Update(reportRequestCallback);
@@ -48,12 +51,50 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 			_reportRequestCallbackService.SaveChanges();
 	    }
 
-	    internal async Task MoveToNonGeneratedReportsQueueAsync(ReportRequestCallback reportRequestCallback, string reportRequestId)
+	    public async Task MoveToNonGeneratedReportsQueueAsync(ReportRequestCallback reportRequestCallback, string reportRequestId)
 	    {
 		    reportRequestCallback.RequestReportId = reportRequestId;
 		    _reportRequestCallbackService.Update(reportRequestCallback);
 
 		    await _reportRequestCallbackService.SaveChangesAsync();
 	    }
+
+	    public IEnumerable<ReportRequestCallback> GetAllPendingReport()
+	    {
+		    return _reportRequestCallbackService.Where(rrcs => rrcs.RequestReportId != null && rrcs.GeneratedReportId == null);
+	    }
+
+	    public List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> GetReportRequestListResponse(List<string> requestIdList, string merchant)
+	    {
+
+		    var request = new GetReportRequestListRequest() {ReportRequestIdList = new IdList(), Merchant = merchant};
+		    request.ReportRequestIdList.Id.AddRange(requestIdList);
+		    var response = _marketplaceWebServiceClient.GetReportRequestList(request);
+
+		    var responseInformation = new List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)>();
+
+		    foreach (var reportRequestInfo in response.GetReportRequestListResult.ReportRequestInfo)
+		    {
+			    responseInformation.Add((reportRequestInfo.ReportRequestId, reportRequestInfo.GeneratedReportId, reportRequestInfo.ReportProcessingStatus));
+		    }
+
+		    return responseInformation;
+	    }
+
+	    public void MoveReportsToGeneratedQueue(List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> reportsStatusInformation)
+	    {
+		    var doneReportsInfo = reportsStatusInformation.Where(t => t.ReportProcessingStatus == "_DONE_" && t.GeneratedReportId != null);
+
+		    foreach (var reportInfo in doneReportsInfo)
+		    {
+			    var reportRequestCallback = _reportRequestCallbackService.FirstOrDefault(rrc => rrc.RequestReportId == reportInfo.ReportRequestId);
+			    reportRequestCallback.GeneratedReportId = reportInfo.GeneratedReportId;
+				_reportRequestCallbackService.Update(reportRequestCallback);
+		    }
+
+		    _reportRequestCallbackService.SaveChanges();
+
+		}
+
 	}
 }

@@ -11,13 +11,7 @@ namespace MountainWarehouse.EasyMWS.Helpers
 		#region Properties required for requesting all amazon MWS reports
 
 		public string ReportType { get; set; }
-
-		public string Merchant { get; set; }
-
-		public string MwsAuthToken { get; set; }
-
-		public AmazonRegion Region { get; set; }
-
+		
 		#endregion
 
 		#region Optional properties only used by some amazon MWS reports
@@ -44,14 +38,11 @@ namespace MountainWarehouse.EasyMWS.Helpers
 		/// <summary>
 		/// Creates a new RequestReportRequest wrapper object that also contains additional information regarding the request object.
 		/// </summary>
-		/// <param name="region"></param>
 		/// <param name="reportType"></param>
-		/// <param name="merchant"></param>
-		/// <param name="mwsAuthToken"></param>
 		/// <param name="marketplaceIdList"></param>
 		/// <param name="updateFrequency"></param>
-		public ReportRequestPropertiesContainer(AmazonRegion region, string reportType, string merchant, string mwsAuthToken, ContentUpdateFrequency updateFrequency, List<string> marketplaceIdList = null) =>
-			(Region, ReportType, Merchant, MwsAuthToken, MarketplaceIdList, UpdateFrequency) = (region,reportType, merchant, mwsAuthToken, marketplaceIdList, updateFrequency);
+		public ReportRequestPropertiesContainer(string reportType, ContentUpdateFrequency updateFrequency, List<string> marketplaceIdList = null) =>
+			(ReportType, MarketplaceIdList, UpdateFrequency) = (reportType, marketplaceIdList, updateFrequency);
 	}
 
 	/// <summary>
@@ -63,16 +54,14 @@ namespace MountainWarehouse.EasyMWS.Helpers
 		/// Converts the current container of MWS report request properties into an object of type RequestReportRequest, required for submission by the MWS client. 
 		/// </summary>
 		/// <param name="serializablePropertiesObject"></param>
-		public static RequestReportRequest ToMwsClientReportRequest(this ReportRequestPropertiesContainer serializablePropertiesObject)
+		public static RequestReportRequest ToMwsClientReportRequest(this ReportRequestPropertiesContainer serializablePropertiesObject, string merchantId)
 		{
 			if (serializablePropertiesObject == null) return null;
 
 			return new RequestReportRequest
 			{
-				MWSAuthToken = serializablePropertiesObject.MwsAuthToken,
-				Merchant = serializablePropertiesObject.Merchant,
+				Merchant = merchantId,
 				ReportType = serializablePropertiesObject.ReportType,
-
 				MarketplaceIdList = serializablePropertiesObject.MarketplaceIdList == null ? null : new IdList { Id = serializablePropertiesObject.MarketplaceIdList }
 			};
 		}

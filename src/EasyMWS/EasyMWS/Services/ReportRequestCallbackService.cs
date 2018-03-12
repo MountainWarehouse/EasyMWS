@@ -22,9 +22,9 @@ namespace MountainWarehouse.EasyMWS.Services
 		public void Delete(ReportRequestCallback callback) => _reportRequestCallbackRepo.Delete(callback);
 		public void SaveChanges() => _reportRequestCallbackRepo.SaveChanges();
 		public async Task SaveChangesAsync() => await _reportRequestCallbackRepo.SaveChangesAsync();
-		public IQueryable<ReportRequestCallback> GetAll() => _reportRequestCallbackRepo.GetAll();
+		public IQueryable<ReportRequestCallback> GetAll() => _reportRequestCallbackRepo.GetAll().OrderBy(x => x.Id);
 
-		public IQueryable<ReportRequestCallback> Where(Expression<Func<ReportRequestCallback, bool>> predicate) => _reportRequestCallbackRepo.GetAll().Where(predicate);
+		public IQueryable<ReportRequestCallback> Where(Expression<Func<ReportRequestCallback, bool>> predicate) => _reportRequestCallbackRepo.GetAll().OrderBy(x => x.Id).Where(predicate);
 
 		public ReportRequestCallback First() => _reportRequestCallbackRepo.GetAll().OrderBy(x => x.Id).First();
 		public ReportRequestCallback FirstOrDefault() => _reportRequestCallbackRepo.GetAll().OrderBy(x => x.Id).FirstOrDefault();

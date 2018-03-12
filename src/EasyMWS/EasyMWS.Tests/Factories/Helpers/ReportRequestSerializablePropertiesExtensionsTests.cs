@@ -13,7 +13,7 @@ namespace EasyMWS.Tests.Helpers
 	    {
 		    ReportRequestPropertiesContainer propertiesContainer = null;
 
-		    var reportRequest = propertiesContainer.ToMwsClientReportRequest();
+		    var reportRequest = propertiesContainer.ToMwsClientReportRequest("");
 
 			Assert.IsNull(reportRequest);
 	    }
@@ -21,14 +21,12 @@ namespace EasyMWS.Tests.Helpers
 	    [Test]
 	    public void ToMwsClientReportRequest_WithArgumentContainingRequiredProperties_ReturnsRequestWithTheSamePropertiesSet()
 	    {
-		    var testMwsAuthToken = "testMwsAuthToken1234";
 		    var testMerchant = "testMerchant123";
 		    var testReportType = "_Test_Report_Type_";
-		    var propertiesContainer = new ReportRequestPropertiesContainer(AmazonRegion.Europe, testReportType, testMerchant, testMwsAuthToken, ContentUpdateFrequency.Unknown);
+		    var propertiesContainer = new ReportRequestPropertiesContainer(testReportType, ContentUpdateFrequency.Unknown);
 
-		    var reportRequest = propertiesContainer.ToMwsClientReportRequest();
+		    var reportRequest = propertiesContainer.ToMwsClientReportRequest(testMerchant);
 
-		    Assert.AreEqual(testMwsAuthToken,reportRequest.MWSAuthToken);
 		    Assert.AreEqual(testMerchant, reportRequest.Merchant);
 		    Assert.AreEqual(testReportType, reportRequest.ReportType);
 		    Assert.IsNull(reportRequest.MarketplaceIdList);

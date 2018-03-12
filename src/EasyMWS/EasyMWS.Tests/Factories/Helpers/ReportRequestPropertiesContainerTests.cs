@@ -22,7 +22,7 @@ namespace EasyMWS.Tests.Helpers
 	    {
 		    _callbackActivator = new CallbackActivator();
 			_called = false;
-			_callbackData = new ReportRequestPropertiesContainer(_region, "", "", "", ContentUpdateFrequency.Daily, new List<string>());
+			_callbackData = new ReportRequestPropertiesContainer("", ContentUpdateFrequency.Daily, new List<string>());
 		}
 
 		[Test]
@@ -33,7 +33,7 @@ namespace EasyMWS.Tests.Helpers
 		    var testMwsAuthToken = "test auth token 123";
 			var marketplaceIdList = new List<string>{"asdf1234", "tyui5678", "vbnm4567"};
 		    ContentUpdateFrequency testUpdateFrequency = ContentUpdateFrequency.Daily;
-		    var propertiesContainer = new ReportRequestPropertiesContainer(_region, testReportType, testMerchant, testMwsAuthToken, testUpdateFrequency, marketplaceIdList);
+		    var propertiesContainer = new ReportRequestPropertiesContainer(testReportType, testUpdateFrequency, marketplaceIdList);
 		    var writeStream = new MemoryStream();
 		    IFormatter formatter = new BinaryFormatter();
 
@@ -45,8 +45,6 @@ namespace EasyMWS.Tests.Helpers
 		    ReportRequestPropertiesContainer deserializedPropertiesContainer = (ReportRequestPropertiesContainer) formatter.Deserialize(readStream);
 
 			Assert.AreEqual(propertiesContainer.ReportType, deserializedPropertiesContainer.ReportType);
-		    Assert.AreEqual(propertiesContainer.Merchant, deserializedPropertiesContainer.Merchant);
-		    Assert.AreEqual(propertiesContainer.MwsAuthToken, deserializedPropertiesContainer.MwsAuthToken);
 		    Assert.AreEqual(propertiesContainer.UpdateFrequency, deserializedPropertiesContainer.UpdateFrequency);
 			CollectionAssert.AreEqual(propertiesContainer.MarketplaceIdList, deserializedPropertiesContainer.MarketplaceIdList);
 		}
@@ -59,15 +57,13 @@ namespace EasyMWS.Tests.Helpers
 		    var testMwsAuthToken = "test auth token 123";
 		    var marketplaceIdList = new List<string> { "asdf1234", "tyui5678", "vbnm4567" };
 		    ContentUpdateFrequency testUpdateFrequency = ContentUpdateFrequency.Daily;
-		    var propertiesContainer = new ReportRequestPropertiesContainer(_region, testReportType, testMerchant, testMwsAuthToken, testUpdateFrequency, marketplaceIdList);
+		    var propertiesContainer = new ReportRequestPropertiesContainer(testReportType, testUpdateFrequency, marketplaceIdList);
 
 			var serialized = _callbackActivator.SerializeCallback(TestMethod, propertiesContainer);
 		    _callbackActivator.CallMethod(serialized);
 		    Assert.IsTrue(_called);
 
 			Assert.AreEqual(testReportType, _callbackData.ReportType);
-		    Assert.AreEqual(testMerchant, _callbackData.Merchant);
-		    Assert.AreEqual(testMwsAuthToken, _callbackData.MwsAuthToken);
 		    Assert.AreEqual(testUpdateFrequency, _callbackData.UpdateFrequency);
 		    CollectionAssert.AreEqual(marketplaceIdList, _callbackData.MarketplaceIdList);
 		}

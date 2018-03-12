@@ -26,35 +26,31 @@ namespace EasyMWS.Tests.ReportProcessors
 	public class RequestReportProcessorTests
 	{
 		private AmazonRegion _region = AmazonRegion.Europe;
-		private EasyMwsClient _easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "AccessKeyTest", "SecretAccessKeyTest");
+		private EasyMwsClient _easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", "AccessKeyTest", "SecretAccessKeyTest");
 		private ReportRequestFactoryFba _reportRequestFactoryFba;
 		private RequestReportProcessor _requestReportProcessor;
 		private Mock<IReportRequestCallbackService> _reportRequestCallbackServiceMock;
-		private ReportRequestCallback _reportRequestCallback;
+		private List<ReportRequestCallback> _reportRequestCallback;
 		private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
 
 		[SetUp]
 		public void SetUp()
 		{
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
-			_reportRequestFactoryFba = new ReportRequestFactoryFba(_region);
+			_reportRequestFactoryFba = new ReportRequestFactoryFba();
 			_reportRequestCallbackServiceMock = new Mock<IReportRequestCallbackService>();
 			_requestReportProcessor = new RequestReportProcessor(_marketplaceWebServiceClientMock.Object, _reportRequestCallbackServiceMock.Object);
 			
-			_reportRequestCallback = new ReportRequestCallback
+			_reportRequestCallback = new List<ReportRequestCallback>
 			{
-				AmazonRegion = AmazonRegion.Europe,
-				Data = "[]",
-				ReportRequestData =
-					"{\"UpdateFrequency\":0,\"ReportType\":\"_GET_AFN_INVENTORY_DATA_\",\"Merchant\":null,\"MwsAuthToken\":null,\"Region\":20,\"MarketplaceIdList\":null}",
-				MethodName = "<RequestSingleQueueReport_OneInQueue_SerializesCorrectMerchantId>b__7_0",
-				TypeName =
-					"EasyMWS.Tests.ReportProcessors.RequestReportProcessorTests+<>c, EasyMWS.Tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
-				LastRequested = DateTime.MinValue,
-				DataTypeName =
-					"System.Collections.Generic.List`1[[System.Decimal, System.Private.CoreLib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
-				ContentUpdateFrequency = 0,
-				Id = 1
+				new ReportRequestCallback
+				{
+					AmazonRegion = AmazonRegion.Europe,
+					Id = 1,
+					RequestReportId = null,
+					GeneratedReportId = null,
+					ReportRequestData = "{\"UpdateFrequency\":0,\"ReportType\":\"_GET_AFN_INVENTORY_DATA_\",\"Merchant\":null,\"MwsAuthToken\":null,\"Region\":20,\"MarketplaceIdList\":null}"
+				}
 			};
 
 			var requestReportRequest = new RequestReportResponse
@@ -68,21 +64,64 @@ namespace EasyMWS.Tests.ReportProcessors
 				}
 			};
 
+			var getReportRequestListResponse = new GetReportRequestListResponse
+			{
+				GetReportRequestListResult = new GetReportRequestListResult
+				{
+					ReportRequestInfo = new List<ReportRequestInfo>
+					{
+						new ReportRequestInfo
+						{
+							ReportProcessingStatus = "_DONE_",
+							ReportRequestId = "Report1",
+							GeneratedReportId = "testGeneratedReportId"
+						},
+						new ReportRequestInfo
+						{
+							ReportProcessingStatus = "_CANCELLED_",
+							ReportRequestId = "Report2",
+							GeneratedReportId = null
+						},
+						new ReportRequestInfo
+						{
+							ReportProcessingStatus = "_OTHER_",
+							ReportRequestId = "Report3",
+							GeneratedReportId = null
+						}
+					}
+				}
+			};
+
+			var reportRequestCallbacks = _reportRequestCallback.AsQueryable();
+
+			_reportRequestCallbackServiceMock.Setup(x => x.Where(It.IsAny<Expression<Func<ReportRequestCallback, bool>>>()))
+				.Returns((Expression<Func<ReportRequestCallback, bool>> e) => reportRequestCallbacks.Where(e));
 
 			_marketplaceWebServiceClientMock.Setup(x => x.RequestReport(It.IsAny<RequestReportRequest>()))
 				.Returns(requestReportRequest);
 
+			_marketplaceWebServiceClientMock.Setup(x => x.GetReportRequestList(It.IsAny<GetReportRequestListRequest>()))
+				.Returns(getReportRequestListResponse);
+
 			_reportRequestCallbackServiceMock
 				.Setup(x => x.FirstOrDefault(It.IsAny<Expression<Func<ReportRequestCallback, bool>>>()))
-				.Returns(_reportRequestCallback);
+				.Returns(_reportRequestCallback[0]);
 		}
 
-		// Todo: redo test as not really relevant
 		[Test]
-		public void GetFrontOfNonRequestedReportsQueue_FrontOfQueue()
+		public void GetNonRequestedReportsFromQueue_ReturnListReportNotRequested()
 		{
+			_reportRequestCallback.Add(new ReportRequestCallback
+			{
+				AmazonRegion = AmazonRegion.Europe,
+				Id = 2,
+				RequestReportId = null,
+				GeneratedReportId = null,
+				ReportRequestData = "{\"UpdateFrequency\":0,\"ReportType\":\"_GET_AFN_INVENTORY_DATA_\",\"Merchant\":null,\"MwsAuthToken\":null,\"Region\":20,\"MarketplaceIdList\":null}"
+			});
+
 			var reportRequestCallback =
-				_requestReportProcessor.GetFrontOfNonRequestedReportsQueue(AmazonRegion.Europe);
+				_requestReportProcessor.GetNonRequestedReportFromQueue(AmazonRegion.Europe);
 
 			Assert.AreEqual(1, reportRequestCallback.Id);
 		}
@@ -90,7 +129,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		[Test]
 		public void RequestSingleQueuedReport_OneInQueue_SubmitsToAmazon()
 		{
-			var reportId = _requestReportProcessor.RequestSingleQueuedReport(_reportRequestCallback);
+			var reportId = _requestReportProcessor.RequestSingleQueuedReport(_reportRequestCallback[0], "");
 
 			_marketplaceWebServiceClientMock.Verify(mwsc => mwsc.RequestReport(It.IsAny<RequestReportRequest>()), Times.Once);
 			Assert.AreEqual("Report001", reportId);
@@ -101,9 +140,9 @@ namespace EasyMWS.Tests.ReportProcessors
 		{
 			var reportRequestId = "testReportRequestId";
 
-			 _requestReportProcessor.MoveToNonGeneratedReportsQueue(_reportRequestCallback, reportRequestId);
+			 _requestReportProcessor.MoveToNonGeneratedReportsQueue(_reportRequestCallback[0], reportRequestId);
 
-			Assert.AreEqual("testReportRequestId", _reportRequestCallback.RequestReportId);
+			Assert.AreEqual("testReportRequestId", _reportRequestCallback[0].RequestReportId);
 			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Once);
 			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
 		}
@@ -113,11 +152,79 @@ namespace EasyMWS.Tests.ReportProcessors
 		{
 			var reportRequestId = "testReportRequestId";
 
-			await _requestReportProcessor.MoveToNonGeneratedReportsQueueAsync(_reportRequestCallback, reportRequestId);
+			await _requestReportProcessor.MoveToNonGeneratedReportsQueueAsync(_reportRequestCallback[0], reportRequestId);
 
-			Assert.AreEqual("testReportRequestId", _reportRequestCallback.RequestReportId);
+			Assert.AreEqual("testReportRequestId", _reportRequestCallback[0].RequestReportId);
 			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Once);
 			_reportRequestCallbackServiceMock.Verify(x => x.SaveChangesAsync(), Times.Once);
+		}
+
+		[Test]
+		public void GetAllPendingReport_ReturnListReportRequestId()
+		{
+			// Arrange
+			var data = new List<ReportRequestCallback>
+			{
+				new ReportRequestCallback
+				{
+					AmazonRegion = AmazonRegion.Europe,
+					Id = 2,
+					RequestReportId = "Report1",
+					GeneratedReportId = null
+				},
+				new ReportRequestCallback
+				{
+					AmazonRegion = AmazonRegion.Europe,
+					Id = 3,
+					RequestReportId = "Report2",
+					GeneratedReportId = null
+				},
+				new ReportRequestCallback
+				{
+					AmazonRegion = AmazonRegion.Europe,
+					Id = 4,
+					RequestReportId = "Report3",
+					GeneratedReportId = "GeneratedIdTest1"
+				}
+			};
+			
+			_reportRequestCallback.AddRange(data);
+
+			// Act
+			var listPendingReports = _requestReportProcessor.GetAllPendingReport();
+			
+			// Assert
+			Assert.AreEqual(2, listPendingReports.Count());
+		}
+
+		[Test]
+		public void RequestReportsStatuses_WithMultiplePendingReports_SubmitsAmazonRequest()
+		{
+			var testRequestIdList = new List<string>{ "Report1", "Report2", "Report3" };
+
+			var result = _requestReportProcessor.GetReportRequestListResponse(testRequestIdList, "");
+
+			Assert.AreEqual("testGeneratedReportId", result.First(x => x.ReportRequestId == "Report1").GeneratedReportId);
+			Assert.AreEqual("_DONE_", result.First(x => x.ReportRequestId == "Report1").ReportProcessingStatus);
+			Assert.AreEqual("_CANCELLED_", result.First(x => x.ReportRequestId == "Report2").ReportProcessingStatus);
+			Assert.IsNull(result.First(x => x.ReportRequestId == "Report2").GeneratedReportId);
+		}
+
+		[Test]
+		public void MoveReportsToGeneratedQueue_UpdateGeneratedRequestId()
+		{
+			var data = new List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)>
+			{
+				("Report1", "GeneratedId1", "_DONE_"),
+				("Report2", "GeneratedId2", "_DONE_"),
+				("Report3", null, "_CANCELLED_"),
+				("Report4", null, "_OTHER_")
+			};
+
+			_requestReportProcessor.MoveReportsToGeneratedQueue(data);
+
+			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Exactly(2));
+			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
 		}
 	}
 }

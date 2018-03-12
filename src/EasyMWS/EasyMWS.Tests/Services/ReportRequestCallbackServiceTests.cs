@@ -26,8 +26,7 @@ namespace EasyMWS.Tests.Services
 	    [SetUp]
 	    public void SetUp()
 	    {
-		    var reportRequestPropertiesContainer = new ReportRequestPropertiesContainer(AmazonRegion.Brazil, "_Report_Type_",
-			    "testMerchant123", "testMwsAuthToken456", ContentUpdateFrequency.NearRealTime, new List<string>(MwsMarketplaceGroup.AmazonEurope()));
+		    var reportRequestPropertiesContainer = new ReportRequestPropertiesContainer("_Report_Type_", ContentUpdateFrequency.NearRealTime, new List<string>(MwsMarketplaceGroup.AmazonEurope()));
 
 		    var reportRequestCallback = new List<ReportRequestCallback>
 		    {
@@ -63,8 +62,6 @@ namespace EasyMWS.Tests.Services
 			Assert.AreEqual("testTypeName", reportRequestCallback.TypeName);
 			Assert.AreEqual("testDataTypeName", reportRequestCallback.DataTypeName);
 			Assert.AreEqual("_Report_Type_", reportRequestData.ReportType);
-			Assert.AreEqual("testMerchant123", reportRequestData.Merchant);
-			Assert.AreEqual("testMwsAuthToken456", reportRequestData.MwsAuthToken);
 			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequestData.UpdateFrequency);
 			CollectionAssert.AreEquivalent(new List<string>(MwsMarketplaceGroup.AmazonEurope()), reportRequestData.MarketplaceIdList);
 		}
