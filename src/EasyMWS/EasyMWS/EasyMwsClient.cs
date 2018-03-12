@@ -55,7 +55,7 @@ namespace MountainWarehouse.EasyMWS
 			}
 			// todo: what if we don't get ID back from Amazon?
 			
-			var reportRequestCallbacksPendingReports = _requestReportProcessor.GetAllPendingReport();
+			var reportRequestCallbacksPendingReports = _requestReportProcessor.GetAllPendingReport(_amazonRegion);
 
 			foreach (var reportRequestCallbacksPendingReport in reportRequestCallbacksPendingReports)
 			{

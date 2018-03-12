@@ -10,9 +10,12 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 		string RequestSingleQueuedReport(ReportRequestCallback reportRequestCallback, string merchantId);
 		void MoveToNonGeneratedReportsQueue(ReportRequestCallback reportRequestCallback, string reportRequestId);
 		Task MoveToNonGeneratedReportsQueueAsync(ReportRequestCallback reportRequestCallback, string reportRequestId);
-		IEnumerable<ReportRequestCallback> GetAllPendingReport();
+		IEnumerable<ReportRequestCallback> GetAllPendingReport(AmazonRegion region);
 		List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> GetReportRequestListResponse(List<string> requestIdList, string merchant);
 
 		void MoveReportsToGeneratedQueue(List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> generatedReports);
+
+		void MoveReportsBackToRequestQueue(List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> generatedReports);
+		ReportRequestCallback GetReadyForDownloadReports(AmazonRegion region);
 	}
 }

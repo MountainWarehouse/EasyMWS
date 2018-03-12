@@ -59,9 +59,9 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 		    await _reportRequestCallbackService.SaveChangesAsync();
 	    }
 
-	    public IEnumerable<ReportRequestCallback> GetAllPendingReport()
+	    public IEnumerable<ReportRequestCallback> GetAllPendingReport(AmazonRegion region)
 	    {
-		    return _reportRequestCallbackService.Where(rrcs => rrcs.RequestReportId != null && rrcs.GeneratedReportId == null);
+		    return _reportRequestCallbackService.Where(rrcs => rrcs.AmazonRegion == region && rrcs.RequestReportId != null && rrcs.GeneratedReportId == null);
 	    }
 
 	    public List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> GetReportRequestListResponse(List<string> requestIdList, string merchant)
@@ -96,5 +96,24 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 
 		}
 
+	    public void MoveReportsBackToRequestQueue(List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> reportsStatusInformation)
+	    {
+		    var doneReportsInfo = reportsStatusInformation.Where(t => t.ReportProcessingStatus == "_CANCELLED_");
+
+		    foreach (var reportInfo in doneReportsInfo)
+		    {
+			    var reportRequestCallback = _reportRequestCallbackService.FirstOrDefault(rrc => rrc.RequestReportId == reportInfo.ReportRequestId);
+			    reportRequestCallback.RequestReportId = null;
+			    _reportRequestCallbackService.Update(reportRequestCallback);
+		    }
+
+		    _reportRequestCallbackService.SaveChanges();
+
+	    }
+
+	    public ReportRequestCallback GetReadyForDownloadReports(AmazonRegion region)
+	    {
+		    return _reportRequestCallbackService.FirstOrDefault(rrc => rrc.AmazonRegion == region && rrc.RequestReportId != null && rrc.GeneratedReportId != null);
+	    }
 	}
 }

@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Runtime.InteropServices.ComTypes;
 using System.Threading.Tasks;
 using MarketplaceWebService;
 using MarketplaceWebService.Model;
@@ -11,14 +9,9 @@ using Moq;
 using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Factories.Reports;
-using MountainWarehouse.EasyMWS.Helpers;
-using MountainWarehouse.EasyMWS.Migrations;
 using MountainWarehouse.EasyMWS.ReportProcessors;
-using MountainWarehouse.EasyMWS.Repositories;
 using MountainWarehouse.EasyMWS.Services;
-using Newtonsoft.Json;
 using NUnit.Framework;
-using NUnit.Framework.Internal;
 
 namespace EasyMWS.Tests.ReportProcessors
 {
@@ -28,7 +21,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		private AmazonRegion _region = AmazonRegion.Europe;
 		private EasyMwsClient _easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", "AccessKeyTest", "SecretAccessKeyTest");
 		private ReportRequestFactoryFba _reportRequestFactoryFba;
-		private RequestReportProcessor _requestReportProcessor;
+		private IRequestReportProcessor _requestReportProcessor;
 		private Mock<IReportRequestCallbackService> _reportRequestCallbackServiceMock;
 		private List<ReportRequestCallback> _reportRequestCallback;
 		private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
@@ -105,7 +98,7 @@ namespace EasyMWS.Tests.ReportProcessors
 
 			_reportRequestCallbackServiceMock
 				.Setup(x => x.FirstOrDefault(It.IsAny<Expression<Func<ReportRequestCallback, bool>>>()))
-				.Returns(_reportRequestCallback[0]);
+				.Returns((Expression<Func<ReportRequestCallback, bool>> e) => reportRequestCallbacks.FirstOrDefault(e));
 		}
 
 		[Test]
@@ -185,13 +178,20 @@ namespace EasyMWS.Tests.ReportProcessors
 					Id = 4,
 					RequestReportId = "Report3",
 					GeneratedReportId = "GeneratedIdTest1"
+				},
+				new ReportRequestCallback
+				{
+					AmazonRegion = AmazonRegion.NorthAmerica,
+					Id = 5,
+					RequestReportId = "Report4",
+					GeneratedReportId = null
 				}
 			};
 			
 			_reportRequestCallback.AddRange(data);
 
 			// Act
-			var listPendingReports = _requestReportProcessor.GetAllPendingReport();
+			var listPendingReports = _requestReportProcessor.GetAllPendingReport(_region);
 			
 			// Assert
 			Assert.AreEqual(2, listPendingReports.Count());
@@ -213,6 +213,61 @@ namespace EasyMWS.Tests.ReportProcessors
 		[Test]
 		public void MoveReportsToGeneratedQueue_UpdateGeneratedRequestId()
 		{
+			// Arrange
+			var data = new List<ReportRequestCallback>
+			{
+				new ReportRequestCallback
+				{
+					AmazonRegion = AmazonRegion.Europe,
+					Id = 2,
+					RequestReportId = "Report1",
+					GeneratedReportId = null
+				},
+				new ReportRequestCallback
+				{
+					AmazonRegion = AmazonRegion.Europe,
+					Id = 3,
+					RequestReportId = "Report2",
+					GeneratedReportId = null
+				},
+				new ReportRequestCallback
+				{
+					AmazonRegion = AmazonRegion.Europe,
+					Id = 4,
+					RequestReportId = "Report3",
+					GeneratedReportId = "GeneratedIdTest1"
+				},
+				new ReportRequestCallback
+				{
+					AmazonRegion = AmazonRegion.NorthAmerica,
+					Id = 5,
+					RequestReportId = "Report4",
+					GeneratedReportId = null
+				}
+			};
+
+			_reportRequestCallback.AddRange(data);
+
+			var dataResult = new List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)>
+			{
+				("Report1", "GeneratedId1", "_DONE_"),
+				("Report2", "GeneratedId2", "_DONE_"),
+				("Report3", null, "_CANCELLED_"),
+				("Report4", null, "_OTHER_")
+			};
+
+			_requestReportProcessor.MoveReportsToGeneratedQueue(dataResult);
+
+			Assert.AreEqual("GeneratedId1", _reportRequestCallback.First(x => x.RequestReportId == "Report1").GeneratedReportId);
+			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Exactly(2));
+			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+		}
+
+		[Test]
+		public void MoveReportsBackToRequestQueue_UpdateReportRequestId()
+		{
+			_reportRequestCallback.First().RequestReportId = "Report3";
+
 			var data = new List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)>
 			{
 				("Report1", "GeneratedId1", "_DONE_"),
@@ -221,10 +276,53 @@ namespace EasyMWS.Tests.ReportProcessors
 				("Report4", null, "_OTHER_")
 			};
 
-			_requestReportProcessor.MoveReportsToGeneratedQueue(data);
+			_requestReportProcessor.MoveReportsBackToRequestQueue(data);
 
-			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Exactly(2));
+			Assert.IsNull(_reportRequestCallback.First().RequestReportId);
+			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Once);
 			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+		}
+
+		[Test]
+		public void GetReadyForDownloadReports_ReturnListOfReports_GeneratedIdNotNull()
+		{
+			// Arrange
+			var data = new List<ReportRequestCallback>
+			{
+				new ReportRequestCallback
+				{
+					AmazonRegion = AmazonRegion.Europe,
+					Id = 2,
+					RequestReportId = "Report1",
+					GeneratedReportId = null
+				},
+				new ReportRequestCallback
+				{
+					AmazonRegion = AmazonRegion.Europe,
+					Id = 3,
+					RequestReportId = "Report2",
+					GeneratedReportId = "GeneratedIdTest2"
+				},
+				new ReportRequestCallback
+				{
+					AmazonRegion = AmazonRegion.Europe,
+					Id = 4,
+					RequestReportId = "Report3",
+					GeneratedReportId = "GeneratedIdTest3"
+				},
+				new ReportRequestCallback
+				{
+					AmazonRegion = AmazonRegion.NorthAmerica,
+					Id = 5,
+					RequestReportId = "Report4",
+					GeneratedReportId = null
+				}
+			};
+			_reportRequestCallback.AddRange(data);
+
+			var result = _requestReportProcessor.GetReadyForDownloadReports(_region);
+
+			Assert.AreEqual(3, result.Id);
 		}
 	}
 }
