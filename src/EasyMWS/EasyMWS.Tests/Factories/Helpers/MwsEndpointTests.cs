@@ -1,4 +1,5 @@
-﻿using MountainWarehouse.EasyMWS.Helpers;
+﻿using MountainWarehouse.EasyMWS;
+using MountainWarehouse.EasyMWS.Helpers;
 using NUnit.Framework;
 
 namespace EasyMWS.Tests.Helpers
@@ -10,7 +11,7 @@ namespace EasyMWS.Tests.Helpers
 		{
 			var mwsMarketplaceAccessEndpoint = MwsEndpoint.NorthAmerica;
 
-			Assert.AreEqual("NorthAmerica", mwsMarketplaceAccessEndpoint.Name);
+			Assert.AreEqual(AmazonRegion.NorthAmerica, mwsMarketplaceAccessEndpoint.Region);
 			Assert.AreEqual("https://mws.amazonservices.com", mwsMarketplaceAccessEndpoint.RegionOrMarketPlaceEndpoint);
 		}
 
@@ -19,7 +20,7 @@ namespace EasyMWS.Tests.Helpers
 		{
 			var mwsMarketplaceAccessEndpoint = MwsEndpoint.Brazil;
 
-			Assert.AreEqual("Brazil", mwsMarketplaceAccessEndpoint.Name);
+			Assert.AreEqual(AmazonRegion.Brazil, mwsMarketplaceAccessEndpoint.Region);
 			Assert.AreEqual("https://mws.amazonservices.com", mwsMarketplaceAccessEndpoint.RegionOrMarketPlaceEndpoint);
 		}
 
@@ -28,7 +29,7 @@ namespace EasyMWS.Tests.Helpers
 		{
 			var mwsMarketplaceAccessEndpoint = MwsEndpoint.Europe;
 
-			Assert.AreEqual("Europe", mwsMarketplaceAccessEndpoint.Name);
+			Assert.AreEqual(AmazonRegion.Europe, mwsMarketplaceAccessEndpoint.Region);
 			Assert.AreEqual("https://mws-eu.amazonservices.com", mwsMarketplaceAccessEndpoint.RegionOrMarketPlaceEndpoint);
 		}
 
@@ -37,7 +38,7 @@ namespace EasyMWS.Tests.Helpers
 		{
 			var mwsMarketplaceAccessEndpoint = MwsEndpoint.India;
 
-			Assert.AreEqual("India", mwsMarketplaceAccessEndpoint.Name);
+			Assert.AreEqual(AmazonRegion.India, mwsMarketplaceAccessEndpoint.Region);
 			Assert.AreEqual("https://mws.amazonservices.in", mwsMarketplaceAccessEndpoint.RegionOrMarketPlaceEndpoint);
 		}
 
@@ -46,7 +47,7 @@ namespace EasyMWS.Tests.Helpers
 		{
 			var mwsMarketplaceAccessEndpoint = MwsEndpoint.China;
 
-			Assert.AreEqual("China", mwsMarketplaceAccessEndpoint.Name);
+			Assert.AreEqual(AmazonRegion.China, mwsMarketplaceAccessEndpoint.Region);
 			Assert.AreEqual("https://mws.amazonservices.com.cn", mwsMarketplaceAccessEndpoint.RegionOrMarketPlaceEndpoint);
 		}
 
@@ -55,7 +56,7 @@ namespace EasyMWS.Tests.Helpers
 		{
 			var mwsMarketplaceAccessEndpoint = MwsEndpoint.Japan;
 
-			Assert.AreEqual("Japan", mwsMarketplaceAccessEndpoint.Name);
+			Assert.AreEqual(AmazonRegion.Japan, mwsMarketplaceAccessEndpoint.Region);
 			Assert.AreEqual("https://mws.amazonservices.jp", mwsMarketplaceAccessEndpoint.RegionOrMarketPlaceEndpoint);
 		}
 
@@ -64,7 +65,7 @@ namespace EasyMWS.Tests.Helpers
 		{
 			var mwsMarketplaceAccessEndpoint = MwsEndpoint.Australia;
 
-			Assert.AreEqual("Australia", mwsMarketplaceAccessEndpoint.Name);
+			Assert.AreEqual(AmazonRegion.Australia, mwsMarketplaceAccessEndpoint.Region);
 			Assert.AreEqual("https://mws.amazonservices.com.au", mwsMarketplaceAccessEndpoint.RegionOrMarketPlaceEndpoint);
 		}
 	}

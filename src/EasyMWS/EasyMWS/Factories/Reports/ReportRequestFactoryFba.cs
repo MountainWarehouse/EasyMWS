@@ -2,162 +2,144 @@
 using System.Collections.Generic;
 using System.Linq;
 using MarketplaceWebService.Model;
+using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
 
 namespace MountainWarehouse.EasyMWS.Factories.Reports
 {
 	public class ReportRequestFactoryFba : IReportRequestFactoryFba
 	{
-		private readonly string _merchant;
-		private readonly string _mWsAuthToken;
-
-		/// <summary>
-		/// Creates an instance of the Report Request Factory for amazon FBA reports.
-		/// </summary>
-		/// <param name="merchant">Optional parameter. MerchantId / SellerId</param>
-		/// <param name="mWsAuthToken">MWS request authentication token</param>
-		public ReportRequestFactoryFba(string merchant = null, string mWsAuthToken = null)
-			=> (_merchant, _mWsAuthToken)
-				= (merchant, mWsAuthToken);
-
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		public ReportRequestWrapper GenerateRequestForReportGetAfnInventoryData(
+		public ReportRequestPropertiesContainer GenerateRequestForReportGetAfnInventoryData(
 			MwsMarketplaceGroup requestedMarketplaces = null)
 			=> GenerateReportRequest("_GET_AFN_INVENTORY_DATA_", ContentUpdateFrequency.NearRealTime,
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
 
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		public ReportRequestWrapper GenerateRequestForReportGetAfnInventoryDataByCountry(
+		public ReportRequestPropertiesContainer GenerateRequestForReportGetAfnInventoryDataByCountry(
 			MwsMarketplaceGroup requestedMarketplaces = null)
 			=> GenerateReportRequest("_GET_AFN_INVENTORY_DATA_BY_COUNTRY_", ContentUpdateFrequency.NearRealTime,
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonEurope(),
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
 
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		public ReportRequestWrapper GenerateRequestForReportGetExcessInventoryData(
+		public ReportRequestPropertiesContainer GenerateRequestForReportGetExcessInventoryData(
 			MwsMarketplaceGroup requestedMarketplaces = null)
 			=> GenerateReportRequest("_GET_EXCESS_INVENTORY_DATA_", ContentUpdateFrequency.NearRealTime,
 				permittedMarketplaces: MwsMarketplace.US + MwsMarketplace.India + MwsMarketplace.Japan,
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
 
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		public ReportRequestWrapper GenerateRequestForReportGetFulfillmentCrossBorderInventoryMovementData(
+		public ReportRequestPropertiesContainer GenerateRequestForReportGetFulfillmentCrossBorderInventoryMovementData(
 			MwsMarketplaceGroup requestedMarketplaces = null)
 			=> GenerateReportRequest("_GET_FBA_FULFILLMENT_CROSS_BORDER_INVENTORY_MOVEMENT_DATA_", ContentUpdateFrequency.Daily,
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
 
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		public ReportRequestWrapper GenerateRequestForReportGetFbaFulfillmentCurrentInventoryData(
+		public ReportRequestPropertiesContainer GenerateRequestForReportGetFbaFulfillmentCurrentInventoryData(
 			MwsMarketplaceGroup requestedMarketplaces = null)
 			=> GenerateReportRequest("_GET_FBA_FULFILLMENT_CURRENT_INVENTORY_DATA_", ContentUpdateFrequency.Daily,
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
 
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		public ReportRequestWrapper GenerateRequestForReportGetFbaFulfillmentInboundNoncomplianceData(
+		public ReportRequestPropertiesContainer GenerateRequestForReportGetFbaFulfillmentInboundNoncomplianceData(
 			MwsMarketplaceGroup requestedMarketplaces = null)
 			=> GenerateReportRequest("_GET_FBA_FULFILLMENT_INBOUND_NONCOMPLIANCE_DATA_", ContentUpdateFrequency.Daily,
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
 
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		public ReportRequestWrapper GenerateRequestForReportGetFbaFulfillmentInventoryAdjustmentsData(
+		public ReportRequestPropertiesContainer GenerateRequestForReportGetFbaFulfillmentInventoryAdjustmentsData(
 			MwsMarketplaceGroup requestedMarketplaces = null)
 			=> GenerateReportRequest("_GET_FBA_FULFILLMENT_INVENTORY_ADJUSTMENTS_DATA_", ContentUpdateFrequency.Daily,
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
 
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		public ReportRequestWrapper GenerateRequestForReportGetFbaFulfillmentInventoryHealthData(
+		public ReportRequestPropertiesContainer GenerateRequestForReportGetFbaFulfillmentInventoryHealthData(
 			MwsMarketplaceGroup requestedMarketplaces = null)
 			=> GenerateReportRequest("_GET_FBA_FULFILLMENT_INVENTORY_HEALTH_DATA_", ContentUpdateFrequency.Daily,
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
 
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		public ReportRequestWrapper GenerateRequestForReportGetFbaFulfillmentInventoryReceiptsData(
+		public ReportRequestPropertiesContainer GenerateRequestForReportGetFbaFulfillmentInventoryReceiptsData(
 			MwsMarketplaceGroup requestedMarketplaces = null)
 			=> GenerateReportRequest("_GET_FBA_FULFILLMENT_INVENTORY_RECEIPTS_DATA_", ContentUpdateFrequency.Daily,
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
 
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		public ReportRequestWrapper GenerateRequestForReportGetFbaFulfillmentInventorySummaryData(
+		public ReportRequestPropertiesContainer GenerateRequestForReportGetFbaFulfillmentInventorySummaryData(
 			MwsMarketplaceGroup requestedMarketplaces = null)
 			=> GenerateReportRequest("_GET_FBA_FULFILLMENT_INVENTORY_SUMMARY_DATA_", ContentUpdateFrequency.Daily,
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
 
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		public ReportRequestWrapper GenerateRequestForReportGetFbaFulfillmentMonthlyInventoryData(
+		public ReportRequestPropertiesContainer GenerateRequestForReportGetFbaFulfillmentMonthlyInventoryData(
 			MwsMarketplaceGroup requestedMarketplaces = null)
 			=> GenerateReportRequest("_GET_FBA_FULFILLMENT_MONTHLY_INVENTORY_DATA_", ContentUpdateFrequency.Daily,
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
 
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		public ReportRequestWrapper GenerateRequestForReportGetFbaInventoryAgedData(
+		public ReportRequestPropertiesContainer GenerateRequestForReportGetFbaInventoryAgedData(
 			MwsMarketplaceGroup requestedMarketplaces = null)
 			=> GenerateReportRequest("_GET_FBA_INVENTORY_AGED_DATA_", ContentUpdateFrequency.Daily,
 				permittedMarketplaces: MwsMarketplace.US + MwsMarketplace.India + MwsMarketplace.Japan,
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
 
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		public ReportRequestWrapper GenerateRequestForReportGetFbaMyiAllInventoryData(
+		public ReportRequestPropertiesContainer GenerateRequestForReportGetFbaMyiAllInventoryData(
 			MwsMarketplaceGroup requestedMarketplaces = null)
 			=> GenerateReportRequest("_GET_FBA_MYI_ALL_INVENTORY_DATA_", ContentUpdateFrequency.NearRealTime,
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
 
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		public ReportRequestWrapper GenerateRequestForReportGetFbaMyiUnsuppressedInventoryData(
+		public ReportRequestPropertiesContainer GenerateRequestForReportGetFbaMyiUnsuppressedInventoryData(
 			MwsMarketplaceGroup requestedMarketplaces = null)
 			=> GenerateReportRequest("_GET_FBA_MYI_UNSUPPRESSED_INVENTORY_DATA_", ContentUpdateFrequency.NearRealTime,
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
 
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		public ReportRequestWrapper GenerateRequestForReportGetReservedInventoryData(
+		public ReportRequestPropertiesContainer GenerateRequestForReportGetReservedInventoryData(
 			MwsMarketplaceGroup requestedMarketplaces = null)
 			=> GenerateReportRequest("_GET_RESERVED_INVENTORY_DATA_", ContentUpdateFrequency.NearRealTime,
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
 
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		public ReportRequestWrapper GenerateRequestForReportGetRestockInventoryRecommendationsReport(
+		public ReportRequestPropertiesContainer GenerateRequestForReportGetRestockInventoryRecommendationsReport(
 			MwsMarketplaceGroup requestedMarketplaces = null)
 			=> GenerateReportRequest("_GET_RESTOCK_INVENTORY_RECOMMENDATIONS_REPORT_", ContentUpdateFrequency.NearRealTime,
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
 
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		public ReportRequestWrapper GenerateRequestForReportGetStrandedInventoryLoaderData(
+		public ReportRequestPropertiesContainer GenerateRequestForReportGetStrandedInventoryLoaderData(
 			MwsMarketplaceGroup requestedMarketplaces = null)
 			=> GenerateReportRequest("_GET_STRANDED_INVENTORY_LOADER_DATA_", ContentUpdateFrequency.NearRealTime,
 				permittedMarketplaces: MwsMarketplace.US + MwsMarketplace.India + MwsMarketplace.Japan,
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
 
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		public ReportRequestWrapper GenerateRequestForReportGetStrandedInventoryUiData(
+		public ReportRequestPropertiesContainer GenerateRequestForReportGetStrandedInventoryUiData(
 			MwsMarketplaceGroup requestedMarketplaces = null)
 			=> GenerateReportRequest("_GET_STRANDED_INVENTORY_UI_DATA_", ContentUpdateFrequency.NearRealTime,
 				permittedMarketplaces: MwsMarketplace.US + MwsMarketplace.India + MwsMarketplace.Japan,
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
 
-		private ReportRequestWrapper GenerateReportRequest(string reportType, ContentUpdateFrequency reportUpdateFrequency,
+		private ReportRequestPropertiesContainer GenerateReportRequest(string reportType, ContentUpdateFrequency reportUpdateFrequency,
 			List<string> permittedMarketplaces, List<string> requestedMarketplaces = null)
 		{
 			ValidateMarketplaceCompatibility(reportType, permittedMarketplaces, requestedMarketplaces);
-			var reportRequest = new RequestReportRequest
-			{
-				ReportType = reportType,
-				Merchant = _merchant,
-				MWSAuthToken = _mWsAuthToken,
-				MarketplaceIdList = requestedMarketplaces == null ? null : new IdList {Id = requestedMarketplaces}
-			};
-			return new ReportRequestWrapper(reportRequest, reportUpdateFrequency);
+			return new ReportRequestPropertiesContainer(reportType, reportUpdateFrequency, requestedMarketplaces);
 		}
 
 		private void ValidateMarketplaceCompatibility(string reportType, List<string> permittedMarketplaces,

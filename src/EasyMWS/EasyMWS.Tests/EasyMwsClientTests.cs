@@ -1,10 +1,14 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using EasyMWS.Tests.ReportProcessors;
+using MarketplaceWebService;
 using Moq;
 using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.Data;
+using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
+using MountainWarehouse.EasyMWS.ReportProcessors;
 using MountainWarehouse.EasyMWS.Services;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -13,11 +17,14 @@ namespace EasyMWS.Tests
 {
     public class EasyMwsClientTests
     {
+	    private AmazonRegion _region = AmazonRegion.Europe;
 	    private EasyMwsClient _easyMwsClient;
 	    private static bool _called;
 	    private Mock<IReportRequestCallbackService> _reportRequestCallbackServiceMock;
+	    private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
+	    private Mock<IRequestReportProcessor> _requestReportProcessor;
 
-	    public struct CallbackDataTest
+		public struct CallbackDataTest
 	    {
 		    public string Foo;
 	    }
@@ -27,13 +34,15 @@ namespace EasyMWS.Tests
 		{
 			_called = false;
 			_reportRequestCallbackServiceMock = new Mock<IReportRequestCallbackService>();
-			_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "", "", _reportRequestCallbackServiceMock.Object);
+			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
+			_requestReportProcessor = new Mock<IRequestReportProcessor>();
+			_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", "", "", _reportRequestCallbackServiceMock.Object, _marketplaceWebServiceClientMock.Object, _requestReportProcessor.Object);
 		}
 
 	    [Test]
 	    public void QueueReport_WithNullReportRequestPropertiesContainerArgument_ThrowsArgumentNullException()
 	    {
-		    var reportRequestContainer = new ReportRequestPropertiesContainer("", "", "", ContentUpdateFrequency.Unknown);
+		    var reportRequestContainer = new ReportRequestPropertiesContainer("", ContentUpdateFrequency.Unknown);
 		    var callbackMethod = (Action<Stream, object>) null;
 
 		    Assert.Throws<ArgumentNullException>(() =>
@@ -53,7 +62,7 @@ namespace EasyMWS.Tests
 	    [Test]
 	    public void QueueReport_WithNonEmptyArguments_CallsReportRequestCallbackServiceCreateOnceWithCorrectData()
 	    {
-		    var reportRequestContainer = new ReportRequestPropertiesContainer("testReportType", "testMerchant", "testMwsAuthToken", ContentUpdateFrequency.NearRealTime);
+		    var reportRequestContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.NearRealTime);
 		    var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
 		    ReportRequestCallback createReportRequestCallbackObject = null;
 		    _reportRequestCallbackServiceMock.Setup(rrcsm => rrcsm.Create(It.IsAny<ReportRequestCallback>()))
@@ -75,7 +84,7 @@ namespace EasyMWS.Tests
 	    [Test]
 	    public void QueueReport_WithNonEmptyArguments_CallsReportRequestCallbackServiceSaveChangesOnce()
 	    {
-		    var reportRequestContainer = new ReportRequestPropertiesContainer("", "", "", ContentUpdateFrequency.Unknown);
+		    var reportRequestContainer = new ReportRequestPropertiesContainer("", ContentUpdateFrequency.Unknown);
 		    var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
 
 		    _easyMwsClient.QueueReport(reportRequestContainer, callbackMethod, new CallbackDataTest { Foo = "Bar" });
@@ -86,7 +95,7 @@ namespace EasyMWS.Tests
 	    [Test]
 	    public async Task QueueReport_WithNonEmptyArguments_CallsReportRequestCallbackServiceCreateAsyncOnceWithCorrectData()
 	    {
-		    var reportRequestContainer = new ReportRequestPropertiesContainer("", "", "", ContentUpdateFrequency.Unknown);
+		    var reportRequestContainer = new ReportRequestPropertiesContainer("", ContentUpdateFrequency.Unknown);
 		    var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
 
 		    await _easyMwsClient.QueueReportAsync(reportRequestContainer, callbackMethod, new CallbackDataTest { Foo = "Bar" });
@@ -97,7 +106,7 @@ namespace EasyMWS.Tests
 	    [Test]
 	    public async Task QueueReport_WithNonEmptyArguments_CallsReportRequestCallbackServiceSaveChangesAsyncOnce()
 	    {
-		    var reportRequestContainer = new ReportRequestPropertiesContainer("", "", "", ContentUpdateFrequency.Unknown);
+		    var reportRequestContainer = new ReportRequestPropertiesContainer("", ContentUpdateFrequency.Unknown);
 		    var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
 
 		    await _easyMwsClient.QueueReportAsync(reportRequestContainer, callbackMethod, new CallbackDataTest { Foo = "Bar" });

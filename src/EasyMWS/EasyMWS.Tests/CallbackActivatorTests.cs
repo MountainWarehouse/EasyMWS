@@ -51,7 +51,8 @@ namespace EasyMWS.Tests
 					"EasyMWS.Tests.CallbackActivatorTests, EasyMWS.Tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
 					"TestMethod",
 					"{\"Foo\":\"123\"}",
-					"EasyMWS.Tests.CallbackActivatorTests+CallbackDataTest, EasyMWS.Tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null")
+					"EasyMWS.Tests.CallbackActivatorTests+CallbackDataTest, EasyMWS.Tests, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"),
+				new MemoryStream()
 				);
 			Assert.IsTrue(_called);
 			Assert.AreEqual("123", _callbackData.Foo);
@@ -61,7 +62,8 @@ namespace EasyMWS.Tests
 		public void SerializeDeserializeTest()
 		{
 			var serialized = _callbackActivator.SerializeCallback(TestMethod, new CallbackDataTest { Foo = "bar" });
-			_callbackActivator.CallMethod(serialized);
+
+			_callbackActivator.CallMethod(serialized, new MemoryStream());
 			Assert.IsTrue(_called);
 			Assert.AreEqual("bar", _callbackData.Foo);
 		}

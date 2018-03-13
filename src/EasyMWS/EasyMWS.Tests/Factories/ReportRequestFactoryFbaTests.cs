@@ -1,4 +1,6 @@
 ﻿using System;
+using MountainWarehouse.EasyMWS;
+using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Factories.Reports;
 using MountainWarehouse.EasyMWS.Helpers;
 using NUnit.Framework;
@@ -8,6 +10,18 @@ namespace EasyMWS.Tests.Factories
     public class ReportRequestFactoryFbaTests
     {
 	    private IReportRequestFactoryFba _reportRequestFactoryFBA;
+	    private AmazonRegion _region = AmazonRegion.Europe;
+
+	    [Test]
+	    public void
+			GenerateRequestForReportGetAfnInventoryData_ReturnsTypeReportRequestPropertiesContainer()
+	    {
+		    _reportRequestFactoryFBA = new ReportRequestFactoryFba();
+
+		    var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetAfnInventoryData();
+
+		    Assert.AreEqual(typeof(ReportRequestPropertiesContainer), reportRequest.GetType());
+	    }
 
 		[Test]
 		public void
@@ -18,7 +32,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetAfnInventoryData();
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -30,7 +44,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetAfnInventoryData(null);
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -73,35 +87,13 @@ namespace EasyMWS.Tests.Factories
 		}
 
 		[Test]
-		public void GenerateRequestForReportGetAfnInventoryData_WithNonNullMerchant_HasMerchantSetCorrectly()
-		{
-			var testMerchant = "testMerchant3465";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(testMerchant);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetAfnInventoryData();
-
-			Assert.AreEqual(testMerchant, reportRequest.ReportRequest.Merchant);
-		}
-
-		[Test]
-		public void GenerateRequestForReportGetAfnInventoryData_WithNonmWsAuthToken_HasMwsAuthTokenSetCorrectly()
-		{
-			var testmWsAuthToken = "mWsAuthToken3456";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(mWsAuthToken: testmWsAuthToken);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetAfnInventoryData();
-
-			Assert.AreEqual(testmWsAuthToken, reportRequest.ReportRequest.MWSAuthToken);
-		}
-
-		[Test]
 		public void GenerateRequestForReportGetAfnInventoryData_ReturnsReportRequest_WithCorrectType()
 		{
 			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetAfnInventoryData();
 
-			Assert.AreEqual("_GET_AFN_INVENTORY_DATA_", reportRequest.ReportRequest.ReportType);
+			Assert.AreEqual("_GET_AFN_INVENTORY_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequest.UpdateFrequency);
 		}
 
@@ -114,7 +106,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetAfnInventoryDataByCountry();
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -126,7 +118,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetAfnInventoryDataByCountry(null);
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -167,35 +159,13 @@ namespace EasyMWS.Tests.Factories
 		}
 
 		[Test]
-		public void GenerateRequestForReportGetAfnInventoryDataByCountry_WithNonNullMerchant_HasMerchantSetCorrectly()
-		{
-			var testMerchant = "testMerchant3465";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(testMerchant);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetAfnInventoryDataByCountry();
-
-			Assert.AreEqual(testMerchant, reportRequest.ReportRequest.Merchant);
-		}
-
-		[Test]
-		public void GenerateRequestForReportGetAfnInventoryDataByCountry_WithNonMwsAuthToken_HasMwsAuthTokenSetCorrectly()
-		{
-			var testmWsAuthToken = "mWsAuthToken3456";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(mWsAuthToken: testmWsAuthToken);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetAfnInventoryDataByCountry();
-
-			Assert.AreEqual(testmWsAuthToken, reportRequest.ReportRequest.MWSAuthToken);
-		}
-
-		[Test]
 		public void GenerateRequestForReportGetAfnInventoryDataByCountry_ReturnsReportRequest_WithCorrectType()
 		{
 			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetAfnInventoryDataByCountry();
 
-			Assert.AreEqual("_GET_AFN_INVENTORY_DATA_BY_COUNTRY_", reportRequest.ReportRequest.ReportType);
+			Assert.AreEqual("_GET_AFN_INVENTORY_DATA_BY_COUNTRY_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequest.UpdateFrequency);
 		}
 
@@ -208,7 +178,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetExcessInventoryData();
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -220,7 +190,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetExcessInventoryData(null);
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -291,35 +261,13 @@ namespace EasyMWS.Tests.Factories
 		}
 
 		[Test]
-		public void GenerateRequestForReportGetExcessInventoryData_WithNonNullMerchant_HasMerchantSetCorrectly()
-		{
-			var testMerchant = "testMerchant3465";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(testMerchant);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetExcessInventoryData();
-
-			Assert.AreEqual(testMerchant, reportRequest.ReportRequest.Merchant);
-		}
-
-		[Test]
-		public void GenerateRequestForReportGetExcessInventoryData_WithNonmWsAuthToken_HasmWsAuthTokenSetCorectly()
-		{
-			var testmWsAuthToken = "mWsAuthToken3456";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(mWsAuthToken: testmWsAuthToken);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetExcessInventoryData();
-
-			Assert.AreEqual(testmWsAuthToken, reportRequest.ReportRequest.MWSAuthToken);
-		}
-
-		[Test]
 		public void GenerateRequestForReportGetExcessInventoryData_ReturnsReportRequest_WithCorrectType()
 		{
 			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetExcessInventoryData();
 
-			Assert.AreEqual("_GET_EXCESS_INVENTORY_DATA_", reportRequest.ReportRequest.ReportType);
+			Assert.AreEqual("_GET_EXCESS_INVENTORY_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequest.UpdateFrequency);
 		}
 
@@ -333,7 +281,7 @@ namespace EasyMWS.Tests.Factories
 				_reportRequestFactoryFBA.GenerateRequestForReportGetFulfillmentCrossBorderInventoryMovementData();
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -346,7 +294,7 @@ namespace EasyMWS.Tests.Factories
 				_reportRequestFactoryFBA.GenerateRequestForReportGetFulfillmentCrossBorderInventoryMovementData(null);
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -393,33 +341,7 @@ namespace EasyMWS.Tests.Factories
 
 			Assert.NotNull(reportRequest);
 		}
-
-		[Test]
-		public void
-			GenerateRequestForReportGetFulfillmentCrossBorderInventoryMovementData_WithNonNullMerchant_HasMerchantSetCorectly()
-		{
-			var testMerchant = "testMerchant3465";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(testMerchant);
-
-			var reportRequest =
-				_reportRequestFactoryFBA.GenerateRequestForReportGetFulfillmentCrossBorderInventoryMovementData();
-
-			Assert.AreEqual(testMerchant, reportRequest.ReportRequest.Merchant);
-		}
-
-		[Test]
-		public void
-			GenerateRequestForReportGetFulfillmentCrossBorderInventoryMovementData_WithNonmWsAuthToken_HasmWsAuthTokenSetCorectly()
-		{
-			var testmWsAuthToken = "mWsAuthToken3456";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(mWsAuthToken: testmWsAuthToken);
-
-			var reportRequest =
-				_reportRequestFactoryFBA.GenerateRequestForReportGetFulfillmentCrossBorderInventoryMovementData();
-
-			Assert.AreEqual(testmWsAuthToken, reportRequest.ReportRequest.MWSAuthToken);
-		}
-
+		
 		[Test]
 		public void
 			GenerateRequestForReportGetFulfillmentCrossBorderInventoryMovementData_ReturnsReportRequest_WithCorrectType()
@@ -429,7 +351,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest =
 				_reportRequestFactoryFBA.GenerateRequestForReportGetFulfillmentCrossBorderInventoryMovementData();
 
-			Assert.AreEqual("_GET_FBA_FULFILLMENT_CROSS_BORDER_INVENTORY_MOVEMENT_DATA_", reportRequest.ReportRequest.ReportType);
+			Assert.AreEqual("_GET_FBA_FULFILLMENT_CROSS_BORDER_INVENTORY_MOVEMENT_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.Daily, reportRequest.UpdateFrequency);
 		}
 
@@ -442,7 +364,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentCurrentInventoryData();
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -454,7 +376,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentCurrentInventoryData(null);
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -503,36 +425,13 @@ namespace EasyMWS.Tests.Factories
 		}
 
 		[Test]
-		public void GenerateRequestForReportGetFbaFulfillmentCurrentInventoryData_WithNonNullMerchant_HasMerchantSetCorectly()
-		{
-			var testMerchant = "testMerchant3465";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(testMerchant);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentCurrentInventoryData();
-
-			Assert.AreEqual(testMerchant, reportRequest.ReportRequest.Merchant);
-		}
-
-		[Test]
-		public void
-			GenerateRequestForReportGetFbaFulfillmentCurrentInventoryData_WithNonmWsAuthToken_HasmWsAuthTokenSetCorectly()
-		{
-			var testmWsAuthToken = "mWsAuthToken3456";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(mWsAuthToken: testmWsAuthToken);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentCurrentInventoryData();
-
-			Assert.AreEqual(testmWsAuthToken, reportRequest.ReportRequest.MWSAuthToken);
-		}
-
-		[Test]
 		public void GenerateRequestForReportGetFbaFulfillmentCurrentInventoryData_ReturnsReportRequest_WithCorrectType()
 		{
 			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentCurrentInventoryData();
 
-			Assert.AreEqual("_GET_FBA_FULFILLMENT_CURRENT_INVENTORY_DATA_", reportRequest.ReportRequest.ReportType);
+			Assert.AreEqual("_GET_FBA_FULFILLMENT_CURRENT_INVENTORY_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.Daily, reportRequest.UpdateFrequency);
 		}
 
@@ -545,7 +444,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentInboundNoncomplianceData();
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -557,7 +456,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentInboundNoncomplianceData(null);
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -606,37 +505,13 @@ namespace EasyMWS.Tests.Factories
 		}
 
 		[Test]
-		public void
-			GenerateRequestForReportGetFbaFulfillmentInboundNoncomplianceData_WithNonNullMerchant_HasMerchantSetCorectly()
-		{
-			var testMerchant = "testMerchant3465";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(testMerchant);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentInboundNoncomplianceData();
-
-			Assert.AreEqual(testMerchant, reportRequest.ReportRequest.Merchant);
-		}
-
-		[Test]
-		public void
-			GenerateRequestForReportGetFbaFulfillmentInboundNoncomplianceData_WithNonmWsAuthToken_HasmWsAuthTokenSetCorectly()
-		{
-			var testmWsAuthToken = "mWsAuthToken3456";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(mWsAuthToken: testmWsAuthToken);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentInboundNoncomplianceData();
-
-			Assert.AreEqual(testmWsAuthToken, reportRequest.ReportRequest.MWSAuthToken);
-		}
-
-		[Test]
 		public void GenerateRequestForReportGetFbaFulfillmentInboundNoncomplianceData_ReturnsReportRequest_WithCorrectType()
 		{
 			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentInboundNoncomplianceData();
 
-			Assert.AreEqual("_GET_FBA_FULFILLMENT_INBOUND_NONCOMPLIANCE_DATA_", reportRequest.ReportRequest.ReportType);
+			Assert.AreEqual("_GET_FBA_FULFILLMENT_INBOUND_NONCOMPLIANCE_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.Daily, reportRequest.UpdateFrequency);
 		}
 
@@ -649,7 +524,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentInventoryAdjustmentsData();
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -661,7 +536,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentInventoryAdjustmentsData(null);
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -710,37 +585,13 @@ namespace EasyMWS.Tests.Factories
 		}
 
 		[Test]
-		public void
-			GenerateRequestForReportGetFbaFulfillmentInventoryAdjustmentsData_WithNonNullMerchant_HasMerchantSetCorectly()
-		{
-			var testMerchant = "testMerchant3465";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(testMerchant);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentInventoryAdjustmentsData();
-
-			Assert.AreEqual(testMerchant, reportRequest.ReportRequest.Merchant);
-		}
-
-		[Test]
-		public void
-			GenerateRequestForReportGetFbaFulfillmentInventoryAdjustmentsData_WithNonmWsAuthToken_HasmWsAuthTokenSetCorectly()
-		{
-			var testmWsAuthToken = "mWsAuthToken3456";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(mWsAuthToken: testmWsAuthToken);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentInventoryAdjustmentsData();
-
-			Assert.AreEqual(testmWsAuthToken, reportRequest.ReportRequest.MWSAuthToken);
-		}
-
-		[Test]
 		public void GenerateRequestForReportGetFbaFulfillmentInventoryAdjustmentsData_ReturnsReportRequest_WithCorrectType()
 		{
 			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentInventoryAdjustmentsData();
 
-			Assert.AreEqual("_GET_FBA_FULFILLMENT_INVENTORY_ADJUSTMENTS_DATA_", reportRequest.ReportRequest.ReportType);
+			Assert.AreEqual("_GET_FBA_FULFILLMENT_INVENTORY_ADJUSTMENTS_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.Daily, reportRequest.UpdateFrequency);
 		}
 
@@ -753,7 +604,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentInventoryHealthData();
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -765,7 +616,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentInventoryHealthData(null);
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -814,36 +665,13 @@ namespace EasyMWS.Tests.Factories
 		}
 
 		[Test]
-		public void GenerateRequestForReportGetFbaFulfillmentInventoryHealthData_WithNonNullMerchant_HasMerchantSetCorectly()
-		{
-			var testMerchant = "testMerchant3465";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(testMerchant);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentInventoryHealthData();
-
-			Assert.AreEqual(testMerchant, reportRequest.ReportRequest.Merchant);
-		}
-
-		[Test]
-		public void
-			GenerateRequestForReportGetFbaFulfillmentInventoryHealthData_WithNonmWsAuthToken_HasmWsAuthTokenSetCorectly()
-		{
-			var testmWsAuthToken = "mWsAuthToken3456";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(mWsAuthToken: testmWsAuthToken);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentInventoryHealthData();
-
-			Assert.AreEqual(testmWsAuthToken, reportRequest.ReportRequest.MWSAuthToken);
-		}
-
-		[Test]
 		public void GenerateRequestForReportGetFbaFulfillmentInventoryHealthData_ReturnsReportRequest_WithCorrectType()
 		{
 			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentInventoryHealthData();
 
-			Assert.AreEqual("_GET_FBA_FULFILLMENT_INVENTORY_HEALTH_DATA_", reportRequest.ReportRequest.ReportType);
+			Assert.AreEqual("_GET_FBA_FULFILLMENT_INVENTORY_HEALTH_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.Daily, reportRequest.UpdateFrequency);
 		}
 
@@ -856,7 +684,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentInventoryReceiptsData();
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -868,7 +696,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentInventoryReceiptsData(null);
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -917,37 +745,13 @@ namespace EasyMWS.Tests.Factories
 		}
 
 		[Test]
-		public void
-			GenerateRequestForReportGetFbaFulfillmentInventoryReceiptsData_WithNonNullMerchant_HasMerchantSetCorectly()
-		{
-			var testMerchant = "testMerchant3465";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(testMerchant);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentInventoryReceiptsData();
-
-			Assert.AreEqual(testMerchant, reportRequest.ReportRequest.Merchant);
-		}
-
-		[Test]
-		public void
-			GenerateRequestForReportGetFbaFulfillmentInventoryReceiptsData_WithNonmWsAuthToken_HasmWsAuthTokenSetCorectly()
-		{
-			var testmWsAuthToken = "mWsAuthToken3456";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(mWsAuthToken: testmWsAuthToken);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentInventoryReceiptsData();
-
-			Assert.AreEqual(testmWsAuthToken, reportRequest.ReportRequest.MWSAuthToken);
-		}
-
-		[Test]
 		public void GenerateRequestForReportGetFbaFulfillmentInventoryReceiptsData_ReturnsReportRequest_WithCorrectType()
 		{
 			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentInventoryReceiptsData();
 
-			Assert.AreEqual("_GET_FBA_FULFILLMENT_INVENTORY_RECEIPTS_DATA_", reportRequest.ReportRequest.ReportType);
+			Assert.AreEqual("_GET_FBA_FULFILLMENT_INVENTORY_RECEIPTS_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.Daily, reportRequest.UpdateFrequency);
 		}
 
@@ -960,7 +764,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentInventorySummaryData();
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -972,7 +776,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentInventorySummaryData(null);
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -1020,28 +824,6 @@ namespace EasyMWS.Tests.Factories
 			Assert.NotNull(reportRequest);
 		}
 
-		[Test]
-		public void GenerateRequestForReportGetFbaFulfillmentInventorySummaryData_WithNonNullMerchant_HasMerchantSetCorectly()
-		{
-			var testMerchant = "testMerchant3465";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(testMerchant);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentInventorySummaryData();
-
-			Assert.AreEqual(testMerchant, reportRequest.ReportRequest.Merchant);
-		}
-
-		[Test]
-		public void
-			GenerateRequestForReportGetFbaFulfillmentInventorySummaryData_WithNonmWsAuthToken_HasmWsAuthTokenSetCorectly()
-		{
-			var testmWsAuthToken = "mWsAuthToken3456";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(mWsAuthToken: testmWsAuthToken);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentInventorySummaryData();
-
-			Assert.AreEqual(testmWsAuthToken, reportRequest.ReportRequest.MWSAuthToken);
-		}
 
 		[Test]
 		public void GenerateRequestForReportGetFbaFulfillmentInventorySummaryData_ReturnsReportRequest_WithCorrectType()
@@ -1050,7 +832,7 @@ namespace EasyMWS.Tests.Factories
 
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentInventorySummaryData();
 
-			Assert.AreEqual("_GET_FBA_FULFILLMENT_INVENTORY_SUMMARY_DATA_", reportRequest.ReportRequest.ReportType);
+			Assert.AreEqual("_GET_FBA_FULFILLMENT_INVENTORY_SUMMARY_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.Daily, reportRequest.UpdateFrequency);
 		}
 
@@ -1063,7 +845,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentMonthlyInventoryData();
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -1075,7 +857,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentMonthlyInventoryData(null);
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -1124,36 +906,13 @@ namespace EasyMWS.Tests.Factories
 		}
 
 		[Test]
-		public void GenerateRequestForReportGetFbaFulfillmentMonthlyInventoryData_WithNonNullMerchant_HasMerchantSetCorectly()
-		{
-			var testMerchant = "testMerchant3465";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(testMerchant);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentMonthlyInventoryData();
-
-			Assert.AreEqual(testMerchant, reportRequest.ReportRequest.Merchant);
-		}
-
-		[Test]
-		public void
-			GenerateRequestForReportGetFbaFulfillmentMonthlyInventoryData_WithNonmWsAuthToken_HasmWsAuthTokenSetCorectly()
-		{
-			var testmWsAuthToken = "mWsAuthToken3456";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(mWsAuthToken: testmWsAuthToken);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentMonthlyInventoryData();
-
-			Assert.AreEqual(testmWsAuthToken, reportRequest.ReportRequest.MWSAuthToken);
-		}
-
-		[Test]
 		public void GenerateRequestForReportGetFbaFulfillmentMonthlyInventoryData_ReturnsReportRequest_WithCorrectType()
 		{
 			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaFulfillmentMonthlyInventoryData();
 
-			Assert.AreEqual("_GET_FBA_FULFILLMENT_MONTHLY_INVENTORY_DATA_", reportRequest.ReportRequest.ReportType);
+			Assert.AreEqual("_GET_FBA_FULFILLMENT_MONTHLY_INVENTORY_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.Daily, reportRequest.UpdateFrequency);
 		}
 
@@ -1166,7 +925,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaInventoryAgedData();
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -1178,7 +937,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaInventoryAgedData(null);
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -1252,35 +1011,13 @@ namespace EasyMWS.Tests.Factories
 		}
 
 		[Test]
-		public void GenerateRequestForReportGetFbaInventoryAgedData_WithNonNullMerchant_HasMerchantSetCorectly()
-		{
-			var testMerchant = "testMerchant3465";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(testMerchant);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaInventoryAgedData();
-
-			Assert.AreEqual(testMerchant, reportRequest.ReportRequest.Merchant);
-		}
-
-		[Test]
-		public void GenerateRequestForReportGetFbaInventoryAgedData_WithNonmWsAuthToken_HasmWsAuthTokenSetCorectly()
-		{
-			var testmWsAuthToken = "mWsAuthToken3456";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(mWsAuthToken: testmWsAuthToken);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaInventoryAgedData();
-
-			Assert.AreEqual(testmWsAuthToken, reportRequest.ReportRequest.MWSAuthToken);
-		}
-
-		[Test]
 		public void GenerateRequestForReportGetFbaInventoryAgedData_ReturnsReportRequest_WithCorrectType()
 		{
 			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaInventoryAgedData();
 
-			Assert.AreEqual("_GET_FBA_INVENTORY_AGED_DATA_", reportRequest.ReportRequest.ReportType);
+			Assert.AreEqual("_GET_FBA_INVENTORY_AGED_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.Daily, reportRequest.UpdateFrequency);
 		}
 
@@ -1293,7 +1030,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaMyiAllInventoryData();
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -1305,7 +1042,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaMyiAllInventoryData(null);
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -1348,35 +1085,13 @@ namespace EasyMWS.Tests.Factories
 		}
 
 		[Test]
-		public void GenerateRequestForReportGetFbaMyiAllInventoryData_WithNonNullMerchant_HasMerchantSetCorectly()
-		{
-			var testMerchant = "testMerchant3465";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(testMerchant);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaMyiAllInventoryData();
-
-			Assert.AreEqual(testMerchant, reportRequest.ReportRequest.Merchant);
-		}
-
-		[Test]
-		public void GenerateRequestForReportGetFbaMyiAllInventoryData_WithNonmWsAuthToken_HasmWsAuthTokenSetCorectly()
-		{
-			var testmWsAuthToken = "mWsAuthToken3456";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(mWsAuthToken: testmWsAuthToken);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaMyiAllInventoryData();
-
-			Assert.AreEqual(testmWsAuthToken, reportRequest.ReportRequest.MWSAuthToken);
-		}
-
-		[Test]
 		public void GenerateRequestForReportGetFbaMyiAllInventoryData_ReturnsReportRequest_WithCorrectType()
 		{
 			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaMyiAllInventoryData();
 
-			Assert.AreEqual("_GET_FBA_MYI_ALL_INVENTORY_DATA_", reportRequest.ReportRequest.ReportType);
+			Assert.AreEqual("_GET_FBA_MYI_ALL_INVENTORY_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequest.UpdateFrequency);
 		}
 
@@ -1389,7 +1104,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaMyiUnsuppressedInventoryData();
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -1401,7 +1116,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaMyiUnsuppressedInventoryData(null);
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -1450,36 +1165,13 @@ namespace EasyMWS.Tests.Factories
 		}
 
 		[Test]
-		public void GenerateRequestForReportGetFbaMyiUnsuppressedInventoryData_WithNonNullMerchant_HasMerchantSetCorectly()
-		{
-			var testMerchant = "testMerchant3465";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(testMerchant);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaMyiUnsuppressedInventoryData();
-
-			Assert.AreEqual(testMerchant, reportRequest.ReportRequest.Merchant);
-		}
-
-		[Test]
-		public void
-			GenerateRequestForReportGetFbaMyiUnsuppressedInventoryData_WithNonmWsAuthToken_HasmWsAuthTokenSetCorectly()
-		{
-			var testmWsAuthToken = "mWsAuthToken3456";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(mWsAuthToken: testmWsAuthToken);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaMyiUnsuppressedInventoryData();
-
-			Assert.AreEqual(testmWsAuthToken, reportRequest.ReportRequest.MWSAuthToken);
-		}
-
-		[Test]
 		public void GenerateRequestForReportGetFbaMyiUnsuppressedInventoryData_ReturnsReportRequest_WithCorrectType()
 		{
 			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetFbaMyiUnsuppressedInventoryData();
 
-			Assert.AreEqual("_GET_FBA_MYI_UNSUPPRESSED_INVENTORY_DATA_", reportRequest.ReportRequest.ReportType);
+			Assert.AreEqual("_GET_FBA_MYI_UNSUPPRESSED_INVENTORY_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequest.UpdateFrequency);
 		}
 
@@ -1492,7 +1184,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetReservedInventoryData();
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -1504,7 +1196,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetReservedInventoryData(null);
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -1547,35 +1239,13 @@ namespace EasyMWS.Tests.Factories
 		}
 
 		[Test]
-		public void GenerateRequestForReportGetReservedInventoryData_WithNonNullMerchant_HasMerchantSetCorectly()
-		{
-			var testMerchant = "testMerchant3465";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(testMerchant);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetReservedInventoryData();
-
-			Assert.AreEqual(testMerchant, reportRequest.ReportRequest.Merchant);
-		}
-
-		[Test]
-		public void GenerateRequestForReportGetReservedInventoryData_WithNonmWsAuthToken_HasmWsAuthTokenSetCorectly()
-		{
-			var testmWsAuthToken = "mWsAuthToken3456";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(mWsAuthToken: testmWsAuthToken);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetReservedInventoryData();
-
-			Assert.AreEqual(testmWsAuthToken, reportRequest.ReportRequest.MWSAuthToken);
-		}
-
-		[Test]
 		public void GenerateRequestForReportGetReservedInventoryData_ReturnsReportRequest_WithCorrectType()
 		{
 			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetReservedInventoryData();
 
-			Assert.AreEqual("_GET_RESERVED_INVENTORY_DATA_", reportRequest.ReportRequest.ReportType);
+			Assert.AreEqual("_GET_RESERVED_INVENTORY_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequest.UpdateFrequency);
 		}
 
@@ -1588,7 +1258,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetRestockInventoryRecommendationsReport();
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -1600,7 +1270,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetRestockInventoryRecommendationsReport(null);
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -1649,37 +1319,13 @@ namespace EasyMWS.Tests.Factories
 		}
 
 		[Test]
-		public void
-			GenerateRequestForReportGetRestockInventoryRecommendationsReport_WithNonNullMerchant_HasMerchantSetCorectly()
-		{
-			var testMerchant = "testMerchant3465";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(testMerchant);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetRestockInventoryRecommendationsReport();
-
-			Assert.AreEqual(testMerchant, reportRequest.ReportRequest.Merchant);
-		}
-
-		[Test]
-		public void
-			GenerateRequestForReportGetRestockInventoryRecommendationsReport_WithNonmWsAuthToken_HasmWsAuthTokenSetCorectly()
-		{
-			var testmWsAuthToken = "mWsAuthToken3456";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(mWsAuthToken: testmWsAuthToken);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetRestockInventoryRecommendationsReport();
-
-			Assert.AreEqual(testmWsAuthToken, reportRequest.ReportRequest.MWSAuthToken);
-		}
-
-		[Test]
 		public void GenerateRequestForReportGetRestockInventoryRecommendationsReport_ReturnsReportRequest_WithCorrectType()
 		{
 			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetRestockInventoryRecommendationsReport();
 
-			Assert.AreEqual("_GET_RESTOCK_INVENTORY_RECOMMENDATIONS_REPORT_", reportRequest.ReportRequest.ReportType);
+			Assert.AreEqual("_GET_RESTOCK_INVENTORY_RECOMMENDATIONS_REPORT_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequest.UpdateFrequency);
 		}
 
@@ -1692,7 +1338,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetStrandedInventoryLoaderData();
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -1704,7 +1350,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetStrandedInventoryLoaderData(null);
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -1782,35 +1428,13 @@ namespace EasyMWS.Tests.Factories
 		}
 
 		[Test]
-		public void GenerateRequestForReportGetStrandedInventoryLoaderData_WithNonNullMerchant_HasMerchantSetCorectly()
-		{
-			var testMerchant = "testMerchant3465";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(testMerchant);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetStrandedInventoryLoaderData();
-
-			Assert.AreEqual(testMerchant, reportRequest.ReportRequest.Merchant);
-		}
-
-		[Test]
-		public void GenerateRequestForReportGetStrandedInventoryLoaderData_WithNonmWsAuthToken_HasmWsAuthTokenSetCorectly()
-		{
-			var testmWsAuthToken = "mWsAuthToken3456";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(mWsAuthToken: testmWsAuthToken);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetStrandedInventoryLoaderData();
-
-			Assert.AreEqual(testmWsAuthToken, reportRequest.ReportRequest.MWSAuthToken);
-		}
-
-		[Test]
 		public void GenerateRequestForReportGetStrandedInventoryLoaderData_ReturnsReportRequest_WithCorrectType()
 		{
 			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetStrandedInventoryLoaderData();
 
-			Assert.AreEqual("_GET_STRANDED_INVENTORY_LOADER_DATA_", reportRequest.ReportRequest.ReportType);
+			Assert.AreEqual("_GET_STRANDED_INVENTORY_LOADER_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequest.UpdateFrequency);
 		}
 
@@ -1823,7 +1447,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetStrandedInventoryUiData();
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -1835,7 +1459,7 @@ namespace EasyMWS.Tests.Factories
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetStrandedInventoryUiData(null);
 
 			Assert.NotNull(reportRequest);
-			Assert.IsNull(reportRequest.ReportRequest.MarketplaceIdList);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
@@ -1910,35 +1534,13 @@ namespace EasyMWS.Tests.Factories
 		}
 
 		[Test]
-		public void GenerateRequestForReportGetStrandedInventoryUiData_WithNonNullMerchant_HasMerchantSetCorectly()
-		{
-			var testMerchant = "testMerchant3465";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(testMerchant);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetStrandedInventoryUiData();
-
-			Assert.AreEqual(testMerchant, reportRequest.ReportRequest.Merchant);
-		}
-
-		[Test]
-		public void GenerateRequestForReportGetStrandedInventoryUiData_WithNonmWsAuthToken_HasmWsAuthTokenSetCorectly()
-		{
-			var testmWsAuthToken = "mWsAuthToken3456";
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba(mWsAuthToken: testmWsAuthToken);
-
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetStrandedInventoryUiData();
-
-			Assert.AreEqual(testmWsAuthToken, reportRequest.ReportRequest.MWSAuthToken);
-		}
-
-		[Test]
 		public void GenerateRequestForReportGetStrandedInventoryUiData_ReturnsReportRequest_WithCorrectType()
 		{
 			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetStrandedInventoryUiData();
 
-			Assert.AreEqual("_GET_STRANDED_INVENTORY_UI_DATA_", reportRequest.ReportRequest.ReportType);
+			Assert.AreEqual("_GET_STRANDED_INVENTORY_UI_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequest.UpdateFrequency);
 		}
 	}

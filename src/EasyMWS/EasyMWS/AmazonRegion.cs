@@ -16,6 +16,8 @@ namespace MountainWarehouse.EasyMWS
 
 		Japan = 50,
 
-		Australia = 60
+		Australia = 60,
+
+		Brazil = 70
     }
 }

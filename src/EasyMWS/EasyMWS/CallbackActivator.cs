@@ -23,13 +23,13 @@ namespace MountainWarehouse.EasyMWS
 				dataType.AssemblyQualifiedName);
 		}
 
-		public void CallMethod(Callback callback)
+		public void CallMethod(Callback callback, Stream stream)
 		{
 			var type = Type.GetType(callback.TypeName);
 			var method = type.GetMethods().First(mi => mi.Name == callback.MethodName);
 			var dataType = Type.GetType(callback.DataTypeName);
 
-			method.Invoke(null, new object[] {null, JsonConvert.DeserializeObject(callback.Data, dataType)});
+			method.Invoke(null, new object[] { stream, JsonConvert.DeserializeObject(callback.Data, dataType) });
 		}
 
 

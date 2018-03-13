@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using MountainWarehouse.EasyMWS.Helpers;
+using MountainWarehouse.EasyMWS.Enums;
 
 namespace MountainWarehouse.EasyMWS.Data
 {
