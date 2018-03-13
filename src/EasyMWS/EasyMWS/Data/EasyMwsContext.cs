@@ -12,6 +12,7 @@ namespace MountainWarehouse.EasyMWS.Data
 				.SetBasePath(Directory.GetCurrentDirectory())
 				.AddXmlFile("App.config")
 				.Build();
+
 			optionsBuilder.UseSqlServer(configuration["connectionStrings:add:EasyMwsContext:connectionString"]);
 		}
 

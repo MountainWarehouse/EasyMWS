@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using MarketplaceWebService;
 using MarketplaceWebService.Model;
@@ -64,7 +66,7 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 		    return _reportRequestCallbackService.Where(rrcs => rrcs.AmazonRegion == region && rrcs.RequestReportId != null && rrcs.GeneratedReportId == null);
 	    }
 
-	    public List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> GetReportRequestListResponse(List<string> requestIdList, string merchant)
+	    public List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> GetReportRequestListResponse(IEnumerable<string> requestIdList, string merchant)
 	    {
 
 		    var request = new GetReportRequestListRequest() {ReportRequestIdList = new IdList(), Merchant = merchant};
@@ -114,6 +116,32 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 	    public ReportRequestCallback GetReadyForDownloadReports(AmazonRegion region)
 	    {
 		    return _reportRequestCallbackService.FirstOrDefault(rrc => rrc.AmazonRegion == region && rrc.RequestReportId != null && rrc.GeneratedReportId != null);
+	    }
+
+	    public void DownloadGeneratedReport(ReportRequestCallback reportRequestCallback, string merchantId)
+	    {
+		    using (var reportResultStream = new MemoryStream())
+		    {
+			    var reportContent = new StringBuilder();
+				var getReportRequest = new GetReportRequest
+			    {
+				    ReportId = reportRequestCallback.GeneratedReportId,
+				    Report = reportResultStream,
+				    Merchant = merchantId
+			    };
+
+			    _marketplaceWebServiceClient.GetReport(getReportRequest);
+
+			    var streamReader = new StreamReader(getReportRequest.Report);
+			    while (!streamReader.EndOfStream && streamReader.Peek() != -1)
+			    {
+				    reportContent.Append((char)streamReader.Read());
+			    }
+
+				reportRequestCallback.Data = reportContent.ToString();
+			    _reportRequestCallbackService.Update(reportRequestCallback);
+			    _reportRequestCallbackService.SaveChanges();
+			}
 	    }
 	}
 }

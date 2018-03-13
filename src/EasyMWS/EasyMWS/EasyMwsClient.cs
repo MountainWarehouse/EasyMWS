@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Net.Mail;
 using System.Threading.Tasks;
 using MarketplaceWebService;
 using MountainWarehouse.EasyMWS.Data;
@@ -46,6 +49,17 @@ namespace MountainWarehouse.EasyMWS
 
 		public void Poll()
 		{
+			RequestNextReportInQueueFromAmazon();
+
+			RequestReportStatusesFromAmazon();
+
+			var generatedReportRequestCallback = DownloadNextGeneratedRequestReportInQueueFromAmazon();
+
+			PerformCallback(generatedReportRequestCallback);
+		}
+
+		private void RequestNextReportInQueueFromAmazon()
+		{
 			var reportRequestCallbackReportQueued = _requestReportProcessor.GetNonRequestedReportFromQueue(_amazonRegion);
 
 			var reportRequestId = _requestReportProcessor.RequestSingleQueuedReport(reportRequestCallbackReportQueued, _merchantId);
@@ -54,27 +68,38 @@ namespace MountainWarehouse.EasyMWS
 				_requestReportProcessor.MoveToNonGeneratedReportsQueue(reportRequestCallbackReportQueued, reportRequestId);
 			}
 			// todo: what if we don't get ID back from Amazon?
-			
-			var reportRequestCallbacksPendingReports = _requestReportProcessor.GetAllPendingReport(_amazonRegion);
+		}
 
-			foreach (var reportRequestCallbacksPendingReport in reportRequestCallbacksPendingReports)
+		private ReportRequestCallback DownloadNextGeneratedRequestReportInQueueFromAmazon()
+		{
+			var generatedReportRequest = _requestReportProcessor.GetReadyForDownloadReports(_amazonRegion);
+			if (generatedReportRequest != null)
 			{
-				var reportRequestPropertiesContainer = JsonConvert.DeserializeObject<ReportRequestPropertiesContainer>(reportRequestCallbacksPendingReport.ReportRequestData);
-
-				/* Get statuses:
-					_DONE_: Call update, update GeneratedReportId
-					_CANCELLED_: Call update, update ReportRequestId to NULL
-					_OTHER_: Log/Exception/nothing?
-				*/
+				_requestReportProcessor.DownloadGeneratedReport(generatedReportRequest, _merchantId);
 			}
 
-			/* Loop on ReportRequestId NOT NULL AND GeneratedRequestId NOT NULL:
-			 * Download
-			 */
+			return generatedReportRequest;
+		}
 
-			/*
-			 * Callback
-			 */
+		private void PerformCallback(ReportRequestCallback reportRequestCallback)
+		{
+			var callback = new Callback(reportRequestCallback.TypeName, reportRequestCallback.MethodName,
+				reportRequestCallback.Data, reportRequestCallback.DataTypeName);
+
+			_callbackActivator.CallMethod(callback);
+		}
+
+		private void RequestReportStatusesFromAmazon()
+		{
+			var reportRequestCallbacksPendingReports = _requestReportProcessor.GetAllPendingReport(_amazonRegion).ToList();
+
+			var reportRequestIds = reportRequestCallbacksPendingReports.Select(x => x.RequestReportId);
+
+			var reportRequestStatuses = _requestReportProcessor.GetReportRequestListResponse(reportRequestIds, _merchantId);
+
+			_requestReportProcessor.MoveReportsToGeneratedQueue(reportRequestStatuses);
+			_requestReportProcessor.MoveReportsBackToRequestQueue(reportRequestStatuses);
+
 		}
 
 		#region Helpers for creating the MarketplaceWebServiceClient
@@ -85,22 +110,25 @@ namespace MountainWarehouse.EasyMWS
 			switch (region)
 			{
 				case AmazonRegion.Australia:
-					rootUrl = "https://mws.amazonservices.com.au";
+					rootUrl = MwsEndpoint.Australia.RegionOrMarketPlaceEndpoint;
 					break;
 				case AmazonRegion.China:
-					rootUrl = "https://mws.amazonservices.com.cn";
+					rootUrl = MwsEndpoint.China.RegionOrMarketPlaceEndpoint;
 					break;
 				case AmazonRegion.Europe:
-					rootUrl = "https://mws-eu.amazonservices.com";
+					rootUrl = MwsEndpoint.Europe.RegionOrMarketPlaceEndpoint;
 					break;
 				case AmazonRegion.India:
-					rootUrl = "https://mws.amazonservices.in";
+					rootUrl = MwsEndpoint.India.RegionOrMarketPlaceEndpoint;
 					break;
 				case AmazonRegion.Japan:
-					rootUrl = "https://mws.amazonservices.jp";
+					rootUrl = MwsEndpoint.Japan.RegionOrMarketPlaceEndpoint;
 					break;
 				case AmazonRegion.NorthAmerica:
-					rootUrl = "https://mws.amazonservices.com";
+					rootUrl = MwsEndpoint.NorthAmerica.RegionOrMarketPlaceEndpoint;
+					break;
+				case AmazonRegion.Brazil:
+					rootUrl = MwsEndpoint.Brazil.RegionOrMarketPlaceEndpoint;
 					break;
 				default:
 					throw new ArgumentException($"{region} is unknown - EasyMWS doesn't know the RootURL");

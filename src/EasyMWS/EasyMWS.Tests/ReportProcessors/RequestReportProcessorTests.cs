@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -99,6 +100,9 @@ namespace EasyMWS.Tests.ReportProcessors
 			_reportRequestCallbackServiceMock
 				.Setup(x => x.FirstOrDefault(It.IsAny<Expression<Func<ReportRequestCallback, bool>>>()))
 				.Returns((Expression<Func<ReportRequestCallback, bool>> e) => reportRequestCallbacks.FirstOrDefault(e));
+
+			_marketplaceWebServiceClientMock.Setup(x => x.GetReport(It.IsAny<GetReportRequest>()))
+				.Returns(new GetReportResponse());
 		}
 
 		[Test]
@@ -323,6 +327,35 @@ namespace EasyMWS.Tests.ReportProcessors
 			var result = _requestReportProcessor.GetReadyForDownloadReports(_region);
 
 			Assert.AreEqual(3, result.Id);
+		}
+
+		[Test]
+		public void DownloadGeneratedReport_ShouldDownloadReportFromAmazon_ReturnStream()
+		{
+			// Arrange
+			var merchantId = "testMerchantId";
+
+			var reportRequestCallback = new ReportRequestCallback
+			{
+				Data = null,
+				AmazonRegion = AmazonRegion.Europe,
+				Id = 4,
+				RequestReportId = "Report3",
+				GeneratedReportId = "GeneratedIdTest1"
+			};
+
+			_reportRequestCallback.Add(reportRequestCallback);
+
+			// Act
+			var testData = _reportRequestCallback.Find(x => x.GeneratedReportId == "GeneratedIdTest1");
+			_requestReportProcessor.DownloadGeneratedReport(testData, merchantId);
+
+			// Assert
+			_marketplaceWebServiceClientMock.Verify(x => x.GetReport(It.IsAny<GetReportRequest>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+
+			Assert.IsNotNull(testData.Data);
 		}
 	}
 }
