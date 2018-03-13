@@ -56,13 +56,18 @@ namespace MountainWarehouse.EasyMWS
 			var generatedReportRequestCallback = DownloadNextGeneratedRequestReportInQueueFromAmazon();
 
 			PerformCallback(generatedReportRequestCallback);
+
+			DequeueReport(generatedReportRequestCallback);
 		}
 
 		private void RequestNextReportInQueueFromAmazon()
 		{
 			var reportRequestCallbackReportQueued = _requestReportProcessor.GetNonRequestedReportFromQueue(_amazonRegion);
 
-			var reportRequestId = _requestReportProcessor.RequestSingleQueuedReport(reportRequestCallbackReportQueued, _merchantId);
+			if (reportRequestCallbackReportQueued == null)
+				return;
+
+				var reportRequestId = _requestReportProcessor.RequestSingleQueuedReport(reportRequestCallbackReportQueued, _merchantId);
 			if (!string.IsNullOrEmpty(reportRequestId))
 			{
 				_requestReportProcessor.MoveToNonGeneratedReportsQueue(reportRequestCallbackReportQueued, reportRequestId);
@@ -93,6 +98,9 @@ namespace MountainWarehouse.EasyMWS
 		{
 			var reportRequestCallbacksPendingReports = _requestReportProcessor.GetAllPendingReport(_amazonRegion).ToList();
 
+			if (!reportRequestCallbacksPendingReports.Any())
+				return;
+
 			var reportRequestIds = reportRequestCallbacksPendingReports.Select(x => x.RequestReportId);
 
 			var reportRequestStatuses = _requestReportProcessor.GetReportRequestListResponse(reportRequestIds, _merchantId);
@@ -100,6 +108,11 @@ namespace MountainWarehouse.EasyMWS
 			_requestReportProcessor.MoveReportsToGeneratedQueue(reportRequestStatuses);
 			_requestReportProcessor.MoveReportsBackToRequestQueue(reportRequestStatuses);
 
+		}
+
+		private void DequeueReport(ReportRequestCallback reportRequestCallback)
+		{
+			_requestReportProcessor.DequeueReportRequestCallback(reportRequestCallback);
 		}
 
 		#region Helpers for creating the MarketplaceWebServiceClient

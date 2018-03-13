@@ -19,5 +19,6 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 		void MoveReportsBackToRequestQueue(List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> generatedReports);
 		ReportRequestCallback GetReadyForDownloadReports(AmazonRegion region);
 		void DownloadGeneratedReport(ReportRequestCallback reportRequestCallback, string merchantId);
+		void DequeueReportRequestCallback(ReportRequestCallback reportRequestCallback);
 	}
 }

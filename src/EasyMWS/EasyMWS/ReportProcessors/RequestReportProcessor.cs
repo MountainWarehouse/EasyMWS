@@ -143,5 +143,10 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 			    _reportRequestCallbackService.SaveChanges();
 			}
 	    }
+
+	    public void DequeueReportRequestCallback(ReportRequestCallback reportRequestCallback)
+	    {
+		    _reportRequestCallbackService.Delete(reportRequestCallback);
+	    }
 	}
 }
