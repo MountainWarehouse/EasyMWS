@@ -60,7 +60,7 @@ namespace EasyMWS.Tests.Helpers
 		    var propertiesContainer = new ReportRequestPropertiesContainer(testReportType, testUpdateFrequency, marketplaceIdList);
 
 			var serialized = _callbackActivator.SerializeCallback(TestMethod, propertiesContainer);
-		    _callbackActivator.CallMethod(serialized);
+		    _callbackActivator.CallMethod(serialized, new MemoryStream());
 		    Assert.IsTrue(_called);
 
 			Assert.AreEqual(testReportType, _callbackData.ReportType);

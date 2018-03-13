@@ -55,9 +55,7 @@ namespace MountainWarehouse.EasyMWS
 
 			var generatedReportRequestCallback = DownloadNextGeneratedRequestReportInQueueFromAmazon();
 
-			PerformCallback(generatedReportRequestCallback);
-
-			DequeueReport(generatedReportRequestCallback);
+			PerformCallback(generatedReportRequestCallback.reportRequestCallback, generatedReportRequestCallback.stream);
 		}
 
 		private void RequestNextReportInQueueFromAmazon()
@@ -67,7 +65,8 @@ namespace MountainWarehouse.EasyMWS
 			if (reportRequestCallbackReportQueued == null)
 				return;
 
-				var reportRequestId = _requestReportProcessor.RequestSingleQueuedReport(reportRequestCallbackReportQueued, _merchantId);
+			var reportRequestId = _requestReportProcessor.RequestSingleQueuedReport(reportRequestCallbackReportQueued, _merchantId);
+
 			if (!string.IsNullOrEmpty(reportRequestId))
 			{
 				_requestReportProcessor.MoveToNonGeneratedReportsQueue(reportRequestCallbackReportQueued, reportRequestId);
@@ -75,23 +74,28 @@ namespace MountainWarehouse.EasyMWS
 			// todo: what if we don't get ID back from Amazon?
 		}
 
-		private ReportRequestCallback DownloadNextGeneratedRequestReportInQueueFromAmazon()
+		private (ReportRequestCallback reportRequestCallback, Stream stream) DownloadNextGeneratedRequestReportInQueueFromAmazon()
 		{
 			var generatedReportRequest = _requestReportProcessor.GetReadyForDownloadReports(_amazonRegion);
-			if (generatedReportRequest != null)
-			{
-				_requestReportProcessor.DownloadGeneratedReport(generatedReportRequest, _merchantId);
-			}
 
-			return generatedReportRequest;
+			if (generatedReportRequest == null)
+				return (null, null);
+			
+			var stream = _requestReportProcessor.DownloadGeneratedReport(generatedReportRequest, _merchantId);
+			
+			return (generatedReportRequest, stream);
 		}
 
-		private void PerformCallback(ReportRequestCallback reportRequestCallback)
+		private void PerformCallback(ReportRequestCallback reportRequestCallback, Stream stream)
 		{
+			if (reportRequestCallback == null || stream == null) return;
+
 			var callback = new Callback(reportRequestCallback.TypeName, reportRequestCallback.MethodName,
 				reportRequestCallback.Data, reportRequestCallback.DataTypeName);
 
-			_callbackActivator.CallMethod(callback);
+			_callbackActivator.CallMethod(callback, stream);
+
+			DequeueReport(reportRequestCallback);
 		}
 
 		private void RequestReportStatusesFromAmazon()

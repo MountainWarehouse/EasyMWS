@@ -118,35 +118,32 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 		    return _reportRequestCallbackService.FirstOrDefault(rrc => rrc.AmazonRegion == region && rrc.RequestReportId != null && rrc.GeneratedReportId != null);
 	    }
 
-	    public void DownloadGeneratedReport(ReportRequestCallback reportRequestCallback, string merchantId)
+	    public Stream DownloadGeneratedReport(ReportRequestCallback reportRequestCallback, string merchantId)
 	    {
-		    using (var reportResultStream = new MemoryStream())
+		    var reportResultStream = new MemoryStream();
+		    var reportContent = new StringBuilder();
+		    var getReportRequest = new GetReportRequest
 		    {
-			    var reportContent = new StringBuilder();
-				var getReportRequest = new GetReportRequest
-			    {
-				    ReportId = reportRequestCallback.GeneratedReportId,
-				    Report = reportResultStream,
-				    Merchant = merchantId
-			    };
+			    ReportId = reportRequestCallback.GeneratedReportId,
+			    Report = reportResultStream,
+			    Merchant = merchantId
+		    };
 
-			    _marketplaceWebServiceClient.GetReport(getReportRequest);
+		    _marketplaceWebServiceClient.GetReport(getReportRequest);
 
-			    var streamReader = new StreamReader(getReportRequest.Report);
-			    while (!streamReader.EndOfStream && streamReader.Peek() != -1)
-			    {
-				    reportContent.Append((char)streamReader.Read());
-			    }
+		    var streamReader = new StreamReader(getReportRequest.Report);
+		    while (!streamReader.EndOfStream && streamReader.Peek() != -1)
+		    {
+			    reportContent.Append((char) streamReader.Read());
+		    }
 
-				reportRequestCallback.Data = reportContent.ToString();
-			    _reportRequestCallbackService.Update(reportRequestCallback);
-			    _reportRequestCallbackService.SaveChanges();
-			}
+		    return getReportRequest.Report;
 	    }
 
 	    public void DequeueReportRequestCallback(ReportRequestCallback reportRequestCallback)
 	    {
 		    _reportRequestCallbackService.Delete(reportRequestCallback);
+			_reportRequestCallbackService.SaveChanges();
 	    }
 	}
 }

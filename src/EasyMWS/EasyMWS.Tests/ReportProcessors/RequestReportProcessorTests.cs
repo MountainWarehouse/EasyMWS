@@ -348,14 +348,11 @@ namespace EasyMWS.Tests.ReportProcessors
 
 			// Act
 			var testData = _reportRequestCallback.Find(x => x.GeneratedReportId == "GeneratedIdTest1");
-			_requestReportProcessor.DownloadGeneratedReport(testData, merchantId);
+			var result = _requestReportProcessor.DownloadGeneratedReport(testData, merchantId);
 
 			// Assert
 			_marketplaceWebServiceClientMock.Verify(x => x.GetReport(It.IsAny<GetReportRequest>()), Times.Once);
-			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Once);
-			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
-
-			Assert.IsNotNull(testData.Data);
+			Assert.IsNotNull(result);
 		}
 	}
 }
