@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace MountainWarehouse.EasyMWS.Data
 {
-	public class EasyMwsContext : DbContext
+	internal class EasyMwsContext : DbContext
 	{
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
@@ -40,6 +40,6 @@ namespace MountainWarehouse.EasyMWS.Data
 				.HasIndex(e => new {e.RequestReportId, e.GeneratedReportId});
 		}
 
-		public DbSet<ReportRequestCallback> ReportRequestCallbacks { get; set; }
+		internal DbSet<ReportRequestCallback> ReportRequestCallbacks { get; set; }
 	}
 }

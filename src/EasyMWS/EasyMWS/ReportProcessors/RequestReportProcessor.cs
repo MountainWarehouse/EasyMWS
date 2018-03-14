@@ -23,7 +23,7 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 		    _reportRequestCallbackService = reportRequestCallbackService;
 		}
 
-		public RequestReportProcessor(IMarketplaceWebServiceClient marketplaceWebServiceClient)
+	    internal RequestReportProcessor(IMarketplaceWebServiceClient marketplaceWebServiceClient)
 	    {
 		    _marketplaceWebServiceClient = marketplaceWebServiceClient;
 		    _reportRequestCallbackService = _reportRequestCallbackService ?? new ReportRequestCallbackService();

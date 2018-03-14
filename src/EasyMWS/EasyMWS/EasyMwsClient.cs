@@ -56,6 +56,18 @@ namespace MountainWarehouse.EasyMWS
 			PerformCallback(generatedReportRequestCallback.reportRequestCallback, generatedReportRequestCallback.stream);
 		}
 
+		public void QueueReport(ReportRequestPropertiesContainer reportRequestContainer, Action<Stream, object> callbackMethod, object callbackData)
+		{
+			_reportRequestCallbackService.Create(GetSerializedReportRequestCallback(reportRequestContainer, callbackMethod, callbackData));
+			_reportRequestCallbackService.SaveChanges();
+		}
+
+		public async Task QueueReportAsync(ReportRequestPropertiesContainer reportRequestContainer, Action<Stream, object> callbackMethod, object callbackData)
+		{
+			await _reportRequestCallbackService.CreateAsync(GetSerializedReportRequestCallback(reportRequestContainer, callbackMethod, callbackData));
+			await _reportRequestCallbackService.SaveChangesAsync();
+		}
+
 		private void RequestNextReportInQueueFromAmazon()
 		{
 			var reportRequestCallbackReportQueued = _requestReportProcessor.GetNonRequestedReportFromQueue(_amazonRegion);
@@ -117,6 +129,21 @@ namespace MountainWarehouse.EasyMWS
 			_requestReportProcessor.DequeueReportRequestCallback(reportRequestCallback);
 		}
 
+		private ReportRequestCallback GetSerializedReportRequestCallback(
+			ReportRequestPropertiesContainer reportRequestContainer, Action<Stream, object> callbackMethod, object callbackData)
+		{
+			if (reportRequestContainer == null || callbackMethod == null) throw new ArgumentNullException();
+			var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
+
+			return new ReportRequestCallback(serializedCallback)
+			{
+				AmazonRegion = _amazonRegion,
+				LastRequested = DateTime.MinValue,
+				ContentUpdateFrequency = reportRequestContainer.UpdateFrequency,
+				ReportRequestData = JsonConvert.SerializeObject(reportRequestContainer)
+			};
+		}
+
 		#region Helpers for creating the MarketplaceWebServiceClient
 
 		private MarketplaceWebServiceConfig CreateConfig(AmazonRegion region)
@@ -160,31 +187,5 @@ namespace MountainWarehouse.EasyMWS
 
 		#endregion
 
-		public void QueueReport(ReportRequestPropertiesContainer reportRequestContainer, Action<Stream, object> callbackMethod, object callbackData)
-		{
-			_reportRequestCallbackService.Create(GetSerializedReportRequestCallback(reportRequestContainer, callbackMethod, callbackData));
-			_reportRequestCallbackService.SaveChanges();
-		}
-
-		public async Task QueueReportAsync(ReportRequestPropertiesContainer reportRequestContainer, Action<Stream, object> callbackMethod, object callbackData)
-		{
-			await _reportRequestCallbackService.CreateAsync(GetSerializedReportRequestCallback(reportRequestContainer, callbackMethod, callbackData));
-			await _reportRequestCallbackService.SaveChangesAsync();
-		}
-
-		private ReportRequestCallback GetSerializedReportRequestCallback(
-			ReportRequestPropertiesContainer reportRequestContainer, Action<Stream, object> callbackMethod, object callbackData)
-		{
-			if(reportRequestContainer == null || callbackMethod == null) throw new ArgumentNullException();
-			var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
-
-			return new ReportRequestCallback(serializedCallback)
-			{
-				AmazonRegion = _amazonRegion,
-				LastRequested = DateTime.MinValue,
-				ContentUpdateFrequency = reportRequestContainer.UpdateFrequency,
-				ReportRequestData = JsonConvert.SerializeObject(reportRequestContainer)
-			};
-		}
 	}
 }
