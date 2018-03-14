@@ -44,27 +44,5 @@ namespace MountainWarehouse.EasyMWS.Helpers
 		public ReportRequestPropertiesContainer(string reportType, ContentUpdateFrequency updateFrequency, List<string> marketplaceIdList = null) =>
 			(ReportType, MarketplaceIdList, UpdateFrequency) = (reportType, marketplaceIdList, updateFrequency);
 	}
-
-	/// <summary>
-	/// Extension methods for the ReportRequestPropertiesContainer class
-	/// </summary>
-	public static class ReportRequestSerializablePropertiesExtensions
-	{
-		/// <summary>
-		/// Converts the current container of MWS report request properties into an object of type RequestReportRequest, required for submission by the MWS client. 
-		/// </summary>
-		/// <param name="serializablePropertiesObject"></param>
-		public static RequestReportRequest ToMwsClientReportRequest(this ReportRequestPropertiesContainer serializablePropertiesObject, string merchantId)
-		{
-			if (serializablePropertiesObject == null) return null;
-
-			return new RequestReportRequest
-			{
-				Merchant = merchantId,
-				ReportType = serializablePropertiesObject.ReportType,
-				MarketplaceIdList = serializablePropertiesObject.MarketplaceIdList == null ? null : new IdList { Id = serializablePropertiesObject.MarketplaceIdList }
-			};
-		}
-	}
 }
 
