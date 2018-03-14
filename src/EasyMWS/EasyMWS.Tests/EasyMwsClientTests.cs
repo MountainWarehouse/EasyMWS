@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using EasyMWS.Tests.ReportProcessors;
 using MarketplaceWebService;
 using Moq;
 using MountainWarehouse.EasyMWS;

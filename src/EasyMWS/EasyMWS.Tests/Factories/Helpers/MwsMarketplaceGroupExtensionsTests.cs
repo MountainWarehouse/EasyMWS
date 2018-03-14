@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using MountainWarehouse.EasyMWS.Helpers;
 using NUnit.Framework;
 

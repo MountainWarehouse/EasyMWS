@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using MarketplaceWebService.Model;
 using MountainWarehouse.EasyMWS.Enums;
 
 namespace MountainWarehouse.EasyMWS.Helpers
