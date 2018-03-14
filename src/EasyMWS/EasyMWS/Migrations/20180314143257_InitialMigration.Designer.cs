@@ -7,14 +7,14 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.Storage.Internal;
 using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.Data;
-using MountainWarehouse.EasyMWS.Helpers;
+using MountainWarehouse.EasyMWS.Enums;
 using System;
 
 namespace MountainWarehouse.EasyMWS.Migrations
 {
     [DbContext(typeof(EasyMwsContext))]
-    [Migration("20180309104042_AddedAmazonReportIDColumnsToReportRequestCallback")]
-    partial class AddedAmazonReportIDColumnsToReportRequestCallback
+    [Migration("20180314143257_InitialMigration")]
+    partial class InitialMigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -45,6 +45,8 @@ namespace MountainWarehouse.EasyMWS.Migrations
                     b.Property<string>("ReportRequestData");
 
                     b.Property<string>("RequestReportId");
+
+                    b.Property<int>("RequestRetryCount");
 
                     b.Property<string>("TypeName");
 

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace MountainWarehouse.EasyMWS.Migrations
 {
-    public partial class InitialCreate : Migration
+    public partial class InitialMigration : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -19,15 +19,23 @@ namespace MountainWarehouse.EasyMWS.Migrations
                     ContentUpdateFrequency = table.Column<int>(nullable: false),
                     Data = table.Column<string>(nullable: true),
                     DataTypeName = table.Column<string>(nullable: true),
+                    GeneratedReportId = table.Column<string>(nullable: true),
                     LastRequested = table.Column<DateTime>(nullable: true),
                     MethodName = table.Column<string>(nullable: true),
-                    ReportType = table.Column<string>(nullable: true),
+                    ReportRequestData = table.Column<string>(nullable: true),
+                    RequestReportId = table.Column<string>(nullable: true),
+                    RequestRetryCount = table.Column<int>(nullable: false),
                     TypeName = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ReportRequestCallbacks", x => x.Id);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ReportRequestCallbacks_RequestReportId_GeneratedReportId",
+                table: "ReportRequestCallbacks",
+                columns: new[] { "RequestReportId", "GeneratedReportId" });
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

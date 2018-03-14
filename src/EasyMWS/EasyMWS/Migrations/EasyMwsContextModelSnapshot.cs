@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.Storage.Internal;
 using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.Data;
-using MountainWarehouse.EasyMWS.Helpers;
+using MountainWarehouse.EasyMWS.Enums;
 using System;
 
 namespace MountainWarehouse.EasyMWS.Migrations
@@ -44,6 +44,8 @@ namespace MountainWarehouse.EasyMWS.Migrations
                     b.Property<string>("ReportRequestData");
 
                     b.Property<string>("RequestReportId");
+
+                    b.Property<int>("RequestRetryCount");
 
                     b.Property<string>("TypeName");
 
