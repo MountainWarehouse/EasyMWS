@@ -25,7 +25,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		private ReportRequestFactoryFba _reportRequestFactoryFba;
 		private IRequestReportProcessor _requestReportProcessor;
 		private Mock<IReportRequestCallbackService> _reportRequestCallbackServiceMock;
-		private List<ReportRequestCallback> _reportRequestCallback;
+		private List<ReportRequestCallback> _reportRequestCallbacks;
 		private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
 
 		[SetUp]
@@ -36,7 +36,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			_reportRequestCallbackServiceMock = new Mock<IReportRequestCallbackService>();
 			_requestReportProcessor = new RequestReportProcessor(_marketplaceWebServiceClientMock.Object, _reportRequestCallbackServiceMock.Object, EasyMwsOptions.Defaults);
 			
-			_reportRequestCallback = new List<ReportRequestCallback>
+			_reportRequestCallbacks = new List<ReportRequestCallback>
 			{
 				new ReportRequestCallback
 				{
@@ -87,7 +87,7 @@ namespace EasyMWS.Tests.ReportProcessors
 				}
 			};
 
-			var reportRequestCallbacks = _reportRequestCallback.AsQueryable();
+			var reportRequestCallbacks = _reportRequestCallbacks.AsQueryable();
 
 			_reportRequestCallbackServiceMock.Setup(x => x.Where(It.IsAny<Expression<Func<ReportRequestCallback, bool>>>()))
 				.Returns((Expression<Func<ReportRequestCallback, bool>> e) => reportRequestCallbacks.Where(e));
@@ -109,7 +109,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		[Test]
 		public void GetNonRequestedReportsFromQueue_ReturnListReportNotRequested()
 		{
-			_reportRequestCallback.Add(new ReportRequestCallback
+			_reportRequestCallbacks.Add(new ReportRequestCallback
 			{
 				AmazonRegion = AmazonRegion.Europe,
 				Id = 2,
@@ -127,7 +127,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		[Test]
 		public void RequestSingleQueuedReport_OneInQueue_SubmitsToAmazon()
 		{
-			var reportId = _requestReportProcessor.RequestSingleQueuedReport(_reportRequestCallback[0], "");
+			var reportId = _requestReportProcessor.RequestSingleQueuedReport(_reportRequestCallbacks[0], "");
 
 			_marketplaceWebServiceClientMock.Verify(mwsc => mwsc.RequestReport(It.IsAny<RequestReportRequest>()), Times.Once);
 			Assert.AreEqual("Report001", reportId);
@@ -138,9 +138,9 @@ namespace EasyMWS.Tests.ReportProcessors
 		{
 			var reportRequestId = "testReportRequestId";
 
-			 _requestReportProcessor.MoveToNonGeneratedReportsQueue(_reportRequestCallback[0], reportRequestId);
+			 _requestReportProcessor.MoveToNonGeneratedReportsQueue(_reportRequestCallbacks[0], reportRequestId);
 
-			Assert.AreEqual("testReportRequestId", _reportRequestCallback[0].RequestReportId);
+			Assert.AreEqual("testReportRequestId", _reportRequestCallbacks[0].RequestReportId);
 			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Once);
 			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
 		}
@@ -181,7 +181,7 @@ namespace EasyMWS.Tests.ReportProcessors
 				}
 			};
 			
-			_reportRequestCallback.AddRange(data);
+			_reportRequestCallbacks.AddRange(data);
 
 			// Act
 			var listPendingReports = _requestReportProcessor.GetAllPendingReport(_region);
@@ -239,7 +239,7 @@ namespace EasyMWS.Tests.ReportProcessors
 				}
 			};
 
-			_reportRequestCallback.AddRange(data);
+			_reportRequestCallbacks.AddRange(data);
 
 			var dataResult = new List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)>
 			{
@@ -251,7 +251,7 @@ namespace EasyMWS.Tests.ReportProcessors
 
 			_requestReportProcessor.MoveReportsToGeneratedQueue(dataResult);
 
-			Assert.AreEqual("GeneratedId1", _reportRequestCallback.First(x => x.RequestReportId == "Report1").GeneratedReportId);
+			Assert.AreEqual("GeneratedId1", _reportRequestCallbacks.First(x => x.RequestReportId == "Report1").GeneratedReportId);
 			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Exactly(2));
 			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
 		}
@@ -259,7 +259,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		[Test]
 		public void MoveReportsBackToRequestQueue_UpdateReportRequestId()
 		{
-			_reportRequestCallback.First().RequestReportId = "Report3";
+			_reportRequestCallbacks.First().RequestReportId = "Report3";
 
 			var data = new List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)>
 			{
@@ -271,7 +271,7 @@ namespace EasyMWS.Tests.ReportProcessors
 
 			_requestReportProcessor.MoveReportsBackToRequestQueue(data);
 
-			Assert.IsNull(_reportRequestCallback.First().RequestReportId);
+			Assert.IsNull(_reportRequestCallbacks.First().RequestReportId);
 			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Once);
 			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
 		}
@@ -311,7 +311,7 @@ namespace EasyMWS.Tests.ReportProcessors
 					GeneratedReportId = null
 				}
 			};
-			_reportRequestCallback.AddRange(data);
+			_reportRequestCallbacks.AddRange(data);
 
 			var result = _requestReportProcessor.GetReadyForDownloadReports(_region);
 
@@ -333,15 +333,41 @@ namespace EasyMWS.Tests.ReportProcessors
 				GeneratedReportId = "GeneratedIdTest1"
 			};
 
-			_reportRequestCallback.Add(reportRequestCallback);
+			_reportRequestCallbacks.Add(reportRequestCallback);
 
 			// Act
-			var testData = _reportRequestCallback.Find(x => x.GeneratedReportId == "GeneratedIdTest1");
+			var testData = _reportRequestCallbacks.Find(x => x.GeneratedReportId == "GeneratedIdTest1");
 			var result = _requestReportProcessor.DownloadGeneratedReport(testData, merchantId);
 
 			// Assert
 			_marketplaceWebServiceClientMock.Verify(x => x.GetReport(It.IsAny<GetReportRequest>()), Times.Once);
 			Assert.IsNotNull(result);
+		}
+
+		[Test]
+		public void AllocateReportRequestForRetry_CalledOnce_IncrementsRequestRetryCountCorrectly()
+		{
+			Assert.AreEqual(0, _reportRequestCallbacks.First().RequestRetryCount);
+
+			_requestReportProcessor.AllocateReportRequestForRetry(_reportRequestCallbacks.First());
+
+			Assert.AreEqual(1, _reportRequestCallbacks.First().RequestRetryCount);
+			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+		}
+
+		[Test]
+		public void AllocateReportRequestForRetry_CalledMultipleTimes_IncrementsRequestRetryCountCorrectly()
+		{
+			Assert.AreEqual(0, _reportRequestCallbacks.First().RequestRetryCount);
+
+			_requestReportProcessor.AllocateReportRequestForRetry(_reportRequestCallbacks.First());
+			_requestReportProcessor.AllocateReportRequestForRetry(_reportRequestCallbacks.First());
+			_requestReportProcessor.AllocateReportRequestForRetry(_reportRequestCallbacks.First());
+
+			Assert.AreEqual(3, _reportRequestCallbacks.First().RequestRetryCount);
+			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Exactly(3));
+			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Exactly(3));
 		}
 	}
 }

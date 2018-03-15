@@ -70,11 +70,18 @@ namespace MountainWarehouse.EasyMWS
 
 			var reportRequestId = _requestReportProcessor.RequestSingleQueuedReport(reportRequestCallbackReportQueued, _merchantId);
 
-			if (!string.IsNullOrEmpty(reportRequestId))
+			reportRequestCallbackReportQueued.LastRequested = DateTime.UtcNow;
+			_reportRequestCallbackService.Update(reportRequestCallbackReportQueued);
+			_reportRequestCallbackService.SaveChanges();
+
+			if (string.IsNullOrEmpty(reportRequestId))
+			{
+				_requestReportProcessor.AllocateReportRequestForRetry(reportRequestCallbackReportQueued);
+			}
+			else
 			{
 				_requestReportProcessor.MoveToNonGeneratedReportsQueue(reportRequestCallbackReportQueued, reportRequestId);
 			}
-			// todo: what if we don't get ID back from Amazon?
 		}
 
 		private (ReportRequestCallback reportRequestCallback, Stream stream) DownloadNextGeneratedRequestReportInQueueFromAmazon()

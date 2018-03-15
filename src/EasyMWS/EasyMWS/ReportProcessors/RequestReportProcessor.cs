@@ -139,5 +139,13 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 		    _reportRequestCallbackService.Delete(reportRequestCallback);
 			_reportRequestCallbackService.SaveChanges();
 	    }
+
+	    public void AllocateReportRequestForRetry(ReportRequestCallback reportRequestCallback)
+	    {
+			reportRequestCallback.RequestRetryCount++;
+
+		    _reportRequestCallbackService.Update(reportRequestCallback);
+		    _reportRequestCallbackService.SaveChanges();
+		}
 	}
 }
