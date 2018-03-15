@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using EasyMWS.Tests.ReportProcessors;
 using MarketplaceWebService;
 using Moq;
 using MountainWarehouse.EasyMWS;
@@ -96,28 +95,6 @@ namespace EasyMWS.Tests
 		    _easyMwsClient.QueueReport(reportRequestContainer, callbackMethod, new CallbackDataTest { Foo = "Bar" });
 
 		    _reportRequestCallbackServiceMock.Verify(rrcsm => rrcsm.SaveChanges(), Times.Once);
-	    }
-
-	    [Test]
-	    public async Task QueueReport_WithNonEmptyArguments_CallsReportRequestCallbackServiceCreateAsyncOnceWithCorrectData()
-	    {
-		    var reportRequestContainer = new ReportRequestPropertiesContainer("", ContentUpdateFrequency.Unknown);
-		    var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
-
-		    await _easyMwsClient.QueueReportAsync(reportRequestContainer, callbackMethod, new CallbackDataTest { Foo = "Bar" });
-
-		    _reportRequestCallbackServiceMock.Verify(rrcsm => rrcsm.CreateAsync(It.IsAny<ReportRequestCallback>()), Times.Once);
-	    }
-
-	    [Test]
-	    public async Task QueueReport_WithNonEmptyArguments_CallsReportRequestCallbackServiceSaveChangesAsyncOnce()
-	    {
-		    var reportRequestContainer = new ReportRequestPropertiesContainer("", ContentUpdateFrequency.Unknown);
-		    var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
-
-		    await _easyMwsClient.QueueReportAsync(reportRequestContainer, callbackMethod, new CallbackDataTest { Foo = "Bar" });
-
-		    _reportRequestCallbackServiceMock.Verify(rrcsm => rrcsm.SaveChangesAsync(), Times.Once);
 	    }
 
 	    [Test]

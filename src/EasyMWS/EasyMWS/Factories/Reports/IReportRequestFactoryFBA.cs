@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using MarketplaceWebService.Model;
 using MountainWarehouse.EasyMWS.Helpers;
 
 namespace MountainWarehouse.EasyMWS.Factories.Reports

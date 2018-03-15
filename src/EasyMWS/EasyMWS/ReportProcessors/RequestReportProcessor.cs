@@ -25,7 +25,7 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 		    _reportRequestCallbackService = reportRequestCallbackService;
 		}
 
-		public RequestReportProcessor(IMarketplaceWebServiceClient marketplaceWebServiceClient, EasyMwsOptions options)
+		internal RequestReportProcessor(IMarketplaceWebServiceClient marketplaceWebServiceClient, EasyMwsOptions options)
 	    {
 		    _marketplaceWebServiceClient = marketplaceWebServiceClient;
 		    _reportRequestCallbackService = _reportRequestCallbackService ?? new ReportRequestCallbackService();
@@ -94,9 +94,14 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 	    public string RequestSingleQueuedReport(ReportRequestCallback reportRequestCallback, string merchantId)
 	    {
 		    var reportRequestData = JsonConvert.DeserializeObject<ReportRequestPropertiesContainer>(reportRequestCallback.ReportRequestData);
-		    var reportRequest = reportRequestData.ToMwsClientReportRequest(merchantId);
+			var reportRequest = new RequestReportRequest
+			{
+				Merchant = merchantId,
+				ReportType = reportRequestData.ReportType,
+				MarketplaceIdList = reportRequestData.MarketplaceIdList == null ? null : new IdList { Id = reportRequestData.MarketplaceIdList }
+			};
 
-		    var reportResponse = _marketplaceWebServiceClient.RequestReport(reportRequest);
+			var reportResponse = _marketplaceWebServiceClient.RequestReport(reportRequest);
 
 		   return reportResponse?.RequestReportResult?.ReportRequestInfo?.ReportRequestId;
 		}

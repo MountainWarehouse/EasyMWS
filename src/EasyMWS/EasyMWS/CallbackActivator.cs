@@ -1,16 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS
 {
-	public class CallbackActivator
+	internal class CallbackActivator
 	{
 
-		public Callback SerializeCallback(
+		internal Callback SerializeCallback(
 			Action<Stream, object> callbackMethod, object callbackData)
 		{
 			var type = callbackMethod.Method.DeclaringType;
@@ -23,7 +21,7 @@ namespace MountainWarehouse.EasyMWS
 				dataType.AssemblyQualifiedName);
 		}
 
-		public void CallMethod(Callback callback, Stream stream)
+		internal void CallMethod(Callback callback, Stream stream)
 		{
 			var type = Type.GetType(callback.TypeName);
 			var method = type.GetMethods().First(mi => mi.Name == callback.MethodName);

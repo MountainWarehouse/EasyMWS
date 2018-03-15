@@ -5,23 +5,33 @@ using Microsoft.Extensions.Configuration;
 
 namespace MountainWarehouse.EasyMWS.Data
 {
-	public class EasyMwsContext : DbContext
+	internal class EasyMwsContext : DbContext
 	{
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
 			try
 			{
-				IConfigurationRoot configuration = new ConfigurationBuilder()
-					.SetBasePath(Directory.GetCurrentDirectory())
-					.AddXmlFile("App.config")
-					.Build();
-
-				optionsBuilder.UseSqlServer(configuration["connectionStrings:add:EasyMwsContext:connectionString"]);
+				ConfigureDbContextForDotNetCore(optionsBuilder);
 			}
 			catch
 			{
-				optionsBuilder.UseSqlServer(ConfigurationManager.ConnectionStrings["EasyMwsContext"].ConnectionString);
+				ConfigureDbContextForDotNetFramework(optionsBuilder);
 			}
+		}
+
+		private void ConfigureDbContextForDotNetCore(DbContextOptionsBuilder optionsBuilder)
+		{
+			IConfigurationRoot configuration = new ConfigurationBuilder()
+				.SetBasePath(Directory.GetCurrentDirectory())
+				.AddXmlFile("App.config")
+				.Build();
+
+			optionsBuilder.UseSqlServer(configuration["connectionStrings:add:EasyMwsContext:connectionString"]);
+		}
+
+		private void ConfigureDbContextForDotNetFramework(DbContextOptionsBuilder optionsBuilder)
+		{
+			optionsBuilder.UseSqlServer(ConfigurationManager.ConnectionStrings["EasyMwsContext"].ConnectionString);
 		}
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -30,6 +40,6 @@ namespace MountainWarehouse.EasyMWS.Data
 				.HasIndex(e => new {e.RequestReportId, e.GeneratedReportId});
 		}
 
-		public DbSet<ReportRequestCallback> ReportRequestCallbacks { get; set; }
+		internal DbSet<ReportRequestCallback> ReportRequestCallbacks { get; set; }
 	}
 }
