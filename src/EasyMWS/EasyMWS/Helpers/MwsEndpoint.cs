@@ -15,25 +15,25 @@
 		/// </summary>
 		public readonly AmazonRegion Region;
 
-		public static MwsEndpoint NorthAmerica =
+		internal static MwsEndpoint NorthAmerica =
 			new MwsEndpoint("https://mws.amazonservices.com", AmazonRegion.NorthAmerica);
 
-		public static MwsEndpoint Brazil =
+		internal static MwsEndpoint Brazil =
 			new MwsEndpoint("https://mws.amazonservices.com", AmazonRegion.Brazil);
 
-		public static MwsEndpoint Europe =
+		internal static MwsEndpoint Europe =
 			new MwsEndpoint("https://mws-eu.amazonservices.com", AmazonRegion.Europe);
 
-		public static MwsEndpoint India =
+		internal static MwsEndpoint India =
 			new MwsEndpoint("https://mws.amazonservices.in", AmazonRegion.India);
 
-		public static MwsEndpoint China =
+		internal static MwsEndpoint China =
 			new MwsEndpoint("https://mws.amazonservices.com.cn", AmazonRegion.China);
 
-		public static MwsEndpoint Japan =
+		internal static MwsEndpoint Japan =
 			new MwsEndpoint("https://mws.amazonservices.jp", AmazonRegion.Japan);
 
-		public static MwsEndpoint Australia =
+		internal static MwsEndpoint Australia =
 			new MwsEndpoint("https://mws.amazonservices.com.au", AmazonRegion.Australia);
 	}
 }

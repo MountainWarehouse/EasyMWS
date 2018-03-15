@@ -1,22 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace MountainWarehouse.EasyMWS
+﻿namespace MountainWarehouse.EasyMWS
 {
-    public class Callback
+	internal class Callback
     {
-	    public Callback(string typeName,
+	    internal Callback(string typeName,
 		    string methodName,
 		    string data,
 		    string dataTypeName) =>
 		    (TypeName, MethodName, Data, DataTypeName) =
 		    (typeName, methodName, data, dataTypeName);
 
-		public string TypeName { get; }
-		public string MethodName { get; }
-		public string Data { get; }
-		public string DataTypeName { get; }
+	    internal string TypeName { get; }
+	    internal string MethodName { get; }
+	    internal string Data { get; }
+	    internal string DataTypeName { get; }
 
     }
 }
