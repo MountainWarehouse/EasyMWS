@@ -22,6 +22,7 @@ namespace MountainWarehouse.EasyMWS
 		private string _merchantId;
 		private AmazonRegion _amazonRegion;
 		private IRequestReportProcessor _requestReportProcessor;
+		private EasyMwsOptions _options;
 
 		public AmazonRegion AmazonRegion => _amazonRegion;
 
@@ -37,14 +38,16 @@ namespace MountainWarehouse.EasyMWS
 		/// <param name="merchantId"></param>
 		/// <param name="accessKeyId">Your specific access key</param>
 		/// <param name="mwsSecretAccessKey">Your specific secret access key</param>
-		public EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey)
+		/// <param name="options">Configuration options for EasyMwsClient</param>
+		public EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, EasyMwsOptions options = null)
 		{
+			_options = options ?? EasyMwsOptions.Defaults;
 			_merchantId = merchantId;
 			_amazonRegion = region;
 			_mwsClient = new MarketplaceWebServiceClient(accessKeyId, mwsSecretAccessKey, CreateConfig(region));
 			_reportRequestCallbackService = _reportRequestCallbackService ?? new ReportRequestCallbackService();
 			_callbackActivator = new CallbackActivator();
-			_requestReportProcessor = new RequestReportProcessor(_mwsClient, _reportRequestCallbackService);
+			_requestReportProcessor = new RequestReportProcessor(_mwsClient, _reportRequestCallbackService, _options);
 		}
 
 		public void Poll()

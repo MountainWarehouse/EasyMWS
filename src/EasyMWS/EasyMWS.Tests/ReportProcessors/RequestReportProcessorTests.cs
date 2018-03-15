@@ -10,6 +10,7 @@ using Moq;
 using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Factories.Reports;
+using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.ReportProcessors;
 using MountainWarehouse.EasyMWS.Services;
 using NUnit.Framework;
@@ -33,7 +34,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_reportRequestFactoryFba = new ReportRequestFactoryFba();
 			_reportRequestCallbackServiceMock = new Mock<IReportRequestCallbackService>();
-			_requestReportProcessor = new RequestReportProcessor(_marketplaceWebServiceClientMock.Object, _reportRequestCallbackServiceMock.Object);
+			_requestReportProcessor = new RequestReportProcessor(_marketplaceWebServiceClientMock.Object, _reportRequestCallbackServiceMock.Object, EasyMwsOptions.Defaults);
 			
 			_reportRequestCallback = new List<ReportRequestCallback>
 			{

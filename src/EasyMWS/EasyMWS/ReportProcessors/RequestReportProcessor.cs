@@ -17,23 +17,25 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
     {
 	    private readonly IReportRequestCallbackService _reportRequestCallbackService;
 	    private readonly IMarketplaceWebServiceClient _marketplaceWebServiceClient;
+	    private readonly EasyMwsOptions _options;
 
-	    internal RequestReportProcessor(IMarketplaceWebServiceClient marketplaceWebServiceClient,
-		    IReportRequestCallbackService reportRequestCallbackService) : this(marketplaceWebServiceClient)
+		internal RequestReportProcessor(IMarketplaceWebServiceClient marketplaceWebServiceClient,
+		    IReportRequestCallbackService reportRequestCallbackService, EasyMwsOptions options) : this(marketplaceWebServiceClient, options)
 	    {
 		    _reportRequestCallbackService = reportRequestCallbackService;
 		}
 
-		public RequestReportProcessor(IMarketplaceWebServiceClient marketplaceWebServiceClient)
+		public RequestReportProcessor(IMarketplaceWebServiceClient marketplaceWebServiceClient, EasyMwsOptions options)
 	    {
 		    _marketplaceWebServiceClient = marketplaceWebServiceClient;
 		    _reportRequestCallbackService = _reportRequestCallbackService ?? new ReportRequestCallbackService();
-		}
+		    _options = options;
+	    }
 
 	    public ReportRequestCallback GetNonRequestedReportFromQueue(AmazonRegion region)
 	    {
 		    return _reportRequestCallbackService.FirstOrDefault(x => x.AmazonRegion == region && x.RequestReportId == null);
-		}
+	    }
 
 	    public string RequestSingleQueuedReport(ReportRequestCallback reportRequestCallback, string merchantId)
 	    {
