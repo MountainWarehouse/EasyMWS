@@ -27,20 +27,23 @@ namespace EasyMWS.Tests.ReportProcessors
 		private Mock<IReportRequestCallbackService> _reportRequestCallbackServiceMock;
 		private List<ReportRequestCallback> _reportRequestCallbacks;
 		private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
+		private EasyMwsOptions _easyMwsOptions;
 
 		[SetUp]
 		public void SetUp()
 		{
+			_easyMwsOptions = EasyMwsOptions.Defaults;
+
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_reportRequestFactoryFba = new ReportRequestFactoryFba();
 			_reportRequestCallbackServiceMock = new Mock<IReportRequestCallbackService>();
-			_requestReportProcessor = new RequestReportProcessor(_marketplaceWebServiceClientMock.Object, _reportRequestCallbackServiceMock.Object, EasyMwsOptions.Defaults);
+			_requestReportProcessor = new RequestReportProcessor(_marketplaceWebServiceClientMock.Object, _reportRequestCallbackServiceMock.Object, _easyMwsOptions);
 			
 			_reportRequestCallbacks = new List<ReportRequestCallback>
 			{
 				new ReportRequestCallback
 				{
-					AmazonRegion = AmazonRegion.Europe,
+					AmazonRegion = AmazonRegion.China,
 					Id = 1,
 					RequestReportId = null,
 					GeneratedReportId = null,
@@ -92,6 +95,8 @@ namespace EasyMWS.Tests.ReportProcessors
 			_reportRequestCallbackServiceMock.Setup(x => x.Where(It.IsAny<Expression<Func<ReportRequestCallback, bool>>>()))
 				.Returns((Expression<Func<ReportRequestCallback, bool>> e) => reportRequestCallbacks.Where(e));
 
+			_reportRequestCallbackServiceMock.Setup(x => x.GetAll()).Returns(reportRequestCallbacks);
+
 			_marketplaceWebServiceClientMock.Setup(x => x.RequestReport(It.IsAny<RequestReportRequest>()))
 				.Returns(requestReportRequest);
 
@@ -107,21 +112,154 @@ namespace EasyMWS.Tests.ReportProcessors
 		}
 
 		[Test]
-		public void GetNonRequestedReportsFromQueue_ReturnListReportNotRequested()
+		public void GetNonRequestedReportsFromQueue_ReturnsFirstReportRequestFromQueueForGivenRegion_AndSkipsReportRequestsForDifferentRegions()
 		{
-			_reportRequestCallbacks.Add(new ReportRequestCallback
-			{
-				AmazonRegion = AmazonRegion.Europe,
-				Id = 2,
-				RequestReportId = null,
-				GeneratedReportId = null,
-				ReportRequestData = "{\"UpdateFrequency\":0,\"ReportType\":\"_GET_AFN_INVENTORY_DATA_\",\"Merchant\":null,\"MwsAuthToken\":null,\"Region\":20,\"MarketplaceIdList\":null}"
-			});
+			var testRegion = AmazonRegion.Europe;
+			var reportRequestWithDifferentRegion = new ReportRequestCallback { AmazonRegion = AmazonRegion.Australia, Id = 2, RequestReportId = null, RequestRetryCount = 0};
+			var reportRequestWithCorrectRegion1 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, Id = 3, RequestReportId = null, RequestRetryCount = 0 };
+			var reportRequestWithCorrectRegion2 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, Id = 4, RequestReportId = null, RequestRetryCount = 0 };
+
+
+			_reportRequestCallbacks.Add(reportRequestWithDifferentRegion);
+			_reportRequestCallbacks.Add(reportRequestWithCorrectRegion1);
+			_reportRequestCallbacks.Add(reportRequestWithCorrectRegion2);
 
 			var reportRequestCallback =
-				_requestReportProcessor.GetNonRequestedReportFromQueue(AmazonRegion.Europe);
+				_requestReportProcessor.GetNonRequestedReportFromQueue(testRegion);
 
-			Assert.AreEqual(1, reportRequestCallback.Id);
+			Assert.AreEqual(reportRequestWithCorrectRegion1.Id, reportRequestCallback.Id);
+		}
+
+		[Test]
+		public void GetNonRequestedReportsFromQueue_ReturnsFirstReportRequestFromQueueWithNullRequestReportId_AndSkipsReportRequestsWithNonNullRequestReportId()
+		{
+			var testRegion = AmazonRegion.Europe;
+			var reportRequestWithDifferentRegion = new ReportRequestCallback { AmazonRegion = AmazonRegion.Australia, Id = 2, RequestReportId = null, RequestRetryCount = 0 };
+			var reportRequestWithNonNullRequestReportId = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, Id = 3, RequestReportId = "testRequestReportId", RequestRetryCount = 0 };
+			var reportRequestWithNonNullRequestReportId1 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, Id = 4, RequestReportId = null, RequestRetryCount = 0 };
+			var reportRequestWithNonNullRequestReportId2 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, Id = 5, RequestReportId = null, RequestRetryCount = 0 };
+
+
+			_reportRequestCallbacks.Add(reportRequestWithDifferentRegion);
+			_reportRequestCallbacks.Add(reportRequestWithNonNullRequestReportId);
+			_reportRequestCallbacks.Add(reportRequestWithNonNullRequestReportId1);
+			_reportRequestCallbacks.Add(reportRequestWithNonNullRequestReportId2);
+
+			var reportRequestCallback =
+				_requestReportProcessor.GetNonRequestedReportFromQueue(testRegion);
+
+			Assert.AreEqual(reportRequestWithNonNullRequestReportId1.Id, reportRequestCallback.Id);
+		}
+
+		[Test]
+		public void GetNonRequestedReportsFromQueue_ReturnsFirstReportRequestFromQueueWithNoRequestRetryCount_AndSkipsReportRequestsWithRequestRetryPeriodIncomplete()
+		{
+			var testRegion = AmazonRegion.Europe;
+			var reportRequestWithRequestRetryPeriodIncomplete = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, Id = 2, RequestReportId = null, RequestRetryCount = 1, LastRequested = DateTime.UtcNow.AddHours(-1)};
+			_easyMwsOptions.TimeToWaitBeforeFirstRetry = TimeSpan.FromHours(2);
+			_easyMwsOptions.TimeToWaitBetweenRetries = TimeSpan.FromHours(2);
+			_requestReportProcessor = new RequestReportProcessor(_marketplaceWebServiceClientMock.Object, _reportRequestCallbackServiceMock.Object, _easyMwsOptions);
+			var reportRequestWithNoRequestRetryCount1 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, Id = 3, RequestReportId = null, RequestRetryCount = 0, LastRequested = DateTime.MinValue };
+			var reportRequestWithNoRequestRetryCount2 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, Id = 4, RequestReportId = null, RequestRetryCount = 0, LastRequested = DateTime.MinValue };
+
+			_reportRequestCallbacks.Add(reportRequestWithRequestRetryPeriodIncomplete);
+			_reportRequestCallbacks.Add(reportRequestWithNoRequestRetryCount1);
+			_reportRequestCallbacks.Add(reportRequestWithNoRequestRetryCount2);
+
+			var reportRequestCallback =
+				_requestReportProcessor.GetNonRequestedReportFromQueue(testRegion);
+
+			Assert.AreEqual(reportRequestWithNoRequestRetryCount1.Id, reportRequestCallback.Id);
+		}
+
+		[Test]
+		public void GetNonRequestedReportsFromQueue_ReturnsFirstReportRequestFromQueueWithCompleteRetryPeriod_AndSkipsReportRequestsWithRequestRetryPeriodIncomplete()
+		{
+			var testRegion = AmazonRegion.Europe;
+			var reportRequestWithRequestRetryPeriodIncomplete = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, Id = 2, RequestReportId = null, RequestRetryCount = 1, LastRequested = DateTime.UtcNow.AddMinutes(-30) };
+			_easyMwsOptions.TimeToWaitBeforeFirstRetry = TimeSpan.FromHours(1);
+			_easyMwsOptions.TimeToWaitBetweenRetries = TimeSpan.FromHours(1);
+			_requestReportProcessor = new RequestReportProcessor(_marketplaceWebServiceClientMock.Object, _reportRequestCallbackServiceMock.Object, _easyMwsOptions);
+			var reportRequestWithNoRetryPeriodComplete1 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, Id = 3, RequestReportId = null, RequestRetryCount = 0, LastRequested = DateTime.UtcNow.AddMinutes(-61) };
+			var reportRequestWithNoRetryPeriodComplete2 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, Id = 4, RequestReportId = null, RequestRetryCount = 0, LastRequested = DateTime.UtcNow.AddMinutes(-61) };
+
+			_reportRequestCallbacks.Add(reportRequestWithRequestRetryPeriodIncomplete);
+			_reportRequestCallbacks.Add(reportRequestWithNoRetryPeriodComplete1);
+			_reportRequestCallbacks.Add(reportRequestWithNoRetryPeriodComplete2);
+
+			var reportRequestCallback =
+				_requestReportProcessor.GetNonRequestedReportFromQueue(testRegion);
+
+			Assert.AreEqual(reportRequestWithNoRetryPeriodComplete1.Id, reportRequestCallback.Id);
+		}
+
+		[Test]
+		public void GetNonRequestedReportsFromQueue_WithConfiguredTimeToWaitBeforeFirstRetry_AndInitialRetryCount_ReturnsReportRequestWithTheExpectedCompleteRetryPeriod()
+		{
+			var reportRequestWithRequestRetryPeriodIncomplete = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, Id = 2, RequestReportId = null, RequestRetryCount = 1, LastRequested = DateTime.UtcNow.AddMinutes(-59) };
+			_easyMwsOptions.TimeToWaitBeforeFirstRetry = TimeSpan.FromMinutes(60);
+			_easyMwsOptions.TimeToWaitBetweenRetries = TimeSpan.FromMinutes(1);
+			_requestReportProcessor = new RequestReportProcessor(_marketplaceWebServiceClientMock.Object, _reportRequestCallbackServiceMock.Object, _easyMwsOptions);
+			var reportRequestWithNoRetryPeriodComplete1 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, Id = 3, RequestReportId = null, RequestRetryCount = 1, LastRequested = DateTime.UtcNow.AddMinutes(-61) };
+			var reportRequestWithNoRetryPeriodComplete2 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, Id = 4, RequestReportId = null, RequestRetryCount = 1, LastRequested = DateTime.UtcNow.AddMinutes(-61) };
+
+			_reportRequestCallbacks.Add(reportRequestWithRequestRetryPeriodIncomplete);
+			_reportRequestCallbacks.Add(reportRequestWithNoRetryPeriodComplete1);
+			_reportRequestCallbacks.Add(reportRequestWithNoRetryPeriodComplete2);
+
+			var reportRequestCallback = _requestReportProcessor.GetNonRequestedReportFromQueue(AmazonRegion.Europe);
+
+			Assert.AreEqual(reportRequestWithNoRetryPeriodComplete1.Id, reportRequestCallback.Id);
+		}
+
+		[Test]
+		public void GetNonRequestedReportsFromQueue_WithRetryPeriodTypeConfiguredAsArithmeticProgression_AndNonInitialRetryCount_ReturnsReportRequestWithTheExpectedCompleteRetryPeriod()
+		{
+			var reportRequestWithRequestRetryPeriodIncomplete = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, Id = 2, RequestReportId = null, RequestRetryCount = 5, LastRequested = DateTime.UtcNow.AddMinutes(-59) };
+			_easyMwsOptions.TimeToWaitBeforeFirstRetry = TimeSpan.FromMinutes(1);
+			_easyMwsOptions.TimeToWaitBetweenRetries = TimeSpan.FromMinutes(60);
+			_easyMwsOptions.MaxRequestRetryCount = 10;
+			_easyMwsOptions.RetryPeriodType = RetryPeriodType.ArithmeticProgression;
+			_requestReportProcessor = new RequestReportProcessor(_marketplaceWebServiceClientMock.Object, _reportRequestCallbackServiceMock.Object, _easyMwsOptions);
+			var reportRequestWithNoRetryPeriodComplete1 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, Id = 3, RequestReportId = null, RequestRetryCount = 5, LastRequested = DateTime.UtcNow.AddMinutes(-61) };
+			var reportRequestWithNoRetryPeriodComplete2 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, Id = 4, RequestReportId = null, RequestRetryCount = 5, LastRequested = DateTime.UtcNow.AddMinutes(-61) };
+
+			_reportRequestCallbacks.Add(reportRequestWithRequestRetryPeriodIncomplete);
+			_reportRequestCallbacks.Add(reportRequestWithNoRetryPeriodComplete1);
+			_reportRequestCallbacks.Add(reportRequestWithNoRetryPeriodComplete2);
+
+			var reportRequestCallback = _requestReportProcessor.GetNonRequestedReportFromQueue(AmazonRegion.Europe);
+
+			Assert.AreEqual(reportRequestWithNoRetryPeriodComplete1.Id, reportRequestCallback.Id);
+		}
+
+		[Test]
+		public void GetNonRequestedReportsFromQueue_WithRetryPeriodTypeConfiguredAsGeometricProgression_AndNonInitialRetryCount_ReturnsReportRequestWithTheExpectedCompleteRetryPeriod()
+		{
+			var testRequestRetryCount = 5;
+			var minutesBetweenRetries = 60;
+			var reportRequestWithRequestRetryPeriodIncomplete = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, Id = 2, RequestReportId = null,
+				RequestRetryCount = testRequestRetryCount, LastRequested = DateTime.UtcNow.AddMinutes(-61) };
+			_easyMwsOptions.TimeToWaitBeforeFirstRetry = TimeSpan.FromMinutes(1);
+			_easyMwsOptions.TimeToWaitBetweenRetries = TimeSpan.FromMinutes(minutesBetweenRetries);
+			_easyMwsOptions.MaxRequestRetryCount = 10;
+			_easyMwsOptions.RetryPeriodType = RetryPeriodType.GeometricProgression;
+			_requestReportProcessor = new RequestReportProcessor(_marketplaceWebServiceClientMock.Object, _reportRequestCallbackServiceMock.Object, _easyMwsOptions);
+			var reportRequestWithNoRetryPeriodComplete1 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, Id = 3, RequestReportId = null,
+				RequestRetryCount = testRequestRetryCount, LastRequested = DateTime.UtcNow.AddMinutes(-59) };
+			var reportRequestWithNoRetryPeriodComplete2 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, Id = 4, RequestReportId = null,
+				RequestRetryCount = testRequestRetryCount, LastRequested = DateTime.UtcNow.AddMinutes(-(testRequestRetryCount * minutesBetweenRetries - 1)) };
+			var reportRequestWithNoRetryPeriodComplete3 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, Id = 5, RequestReportId = null,
+				RequestRetryCount = testRequestRetryCount, LastRequested = DateTime.UtcNow.AddMinutes(-(testRequestRetryCount * minutesBetweenRetries - 1)) };
+
+			_reportRequestCallbacks.Add(reportRequestWithRequestRetryPeriodIncomplete);
+			_reportRequestCallbacks.Add(reportRequestWithNoRetryPeriodComplete1);
+			_reportRequestCallbacks.Add(reportRequestWithNoRetryPeriodComplete2);
+			_reportRequestCallbacks.Add(reportRequestWithNoRetryPeriodComplete3);
+
+			var reportRequestCallback = _requestReportProcessor.GetNonRequestedReportFromQueue(AmazonRegion.Europe);
+
+			Assert.AreEqual(reportRequestWithNoRetryPeriodComplete2.Id, reportRequestCallback.Id);
 		}
 
 		[Test]

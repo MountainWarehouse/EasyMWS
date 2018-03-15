@@ -34,7 +34,61 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 
 	    public ReportRequestCallback GetNonRequestedReportFromQueue(AmazonRegion region)
 	    {
-		    return _reportRequestCallbackService.FirstOrDefault(x => x.AmazonRegion == region && x.RequestReportId == null);
+		    return _reportRequestCallbackService.GetAll()
+			    .FirstOrDefault(rrc => 
+					rrc.AmazonRegion == region 
+					&& rrc.RequestReportId == null 
+					&& !IsReportRequestWithRetryPeriodNotComplete(rrc));
+	    }
+
+	    private bool IsReportRequestWithRetryPeriodNotComplete(ReportRequestCallback reportRequest)
+	    {
+		    return reportRequest.RequestRetryCount != 0 && !IsRetryPeriodComplete(reportRequest);
+	    }
+
+	    private bool IsRetryPeriodComplete(ReportRequestCallback reportRequest)
+	    {
+		    if (reportRequest.RequestRetryCount <= 0) return true;
+
+		    if (reportRequest.RequestRetryCount == 1)
+		    {
+			    var timeOfNextRetry = reportRequest.LastRequested.Add(_options.TimeToWaitBeforeFirstRetry);
+			    if (DateTime.Compare(timeOfNextRetry, DateTime.UtcNow) < 0)
+			    {
+				    return true;
+			    }
+		    }
+
+		    if (reportRequest.RequestRetryCount > 1)
+		    {
+			    var retryPeriodType = _options.RetryPeriodType;
+			    switch (retryPeriodType)
+			    {
+				    case RetryPeriodType.ArithmeticProgression:
+				    {
+					    var timeOfNextRetry = reportRequest.LastRequested.Add(_options.TimeToWaitBetweenRetries);
+					    if (DateTime.Compare(timeOfNextRetry, DateTime.UtcNow) < 0)
+					    {
+						    return true;
+					    }
+					    break;
+				    }
+				    case RetryPeriodType.GeometricProgression:
+				    {
+					    var timeOfNextRetry = reportRequest.LastRequested.Add(
+						    TimeSpan.FromTicks(_options.TimeToWaitBetweenRetries.Ticks * (reportRequest.RequestRetryCount - 1)));
+					    if (DateTime.Compare(timeOfNextRetry, DateTime.UtcNow) < 0)
+					    {
+						    return true;
+					    }
+					    break;
+				    }
+				    default:
+					    throw new ArgumentOutOfRangeException("Retry period type not supported!");
+			    }
+		    }
+
+		    return false;
 	    }
 
 	    public string RequestSingleQueuedReport(ReportRequestCallback reportRequestCallback, string merchantId)
@@ -147,5 +201,5 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 		    _reportRequestCallbackService.Update(reportRequestCallback);
 		    _reportRequestCallbackService.SaveChanges();
 		}
-	}
+    }
 }
