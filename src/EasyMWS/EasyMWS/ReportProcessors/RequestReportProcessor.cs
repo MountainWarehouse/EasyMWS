@@ -53,14 +53,6 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 			_reportRequestCallbackService.SaveChanges();
 	    }
 
-	    public async Task MoveToNonGeneratedReportsQueueAsync(ReportRequestCallback reportRequestCallback, string reportRequestId)
-	    {
-		    reportRequestCallback.RequestReportId = reportRequestId;
-		    _reportRequestCallbackService.Update(reportRequestCallback);
-
-		    await _reportRequestCallbackService.SaveChangesAsync();
-	    }
-
 	    public IEnumerable<ReportRequestCallback> GetAllPendingReport(AmazonRegion region)
 	    {
 		    return _reportRequestCallbackService.Where(rrcs => rrcs.AmazonRegion == region && rrcs.RequestReportId != null && rrcs.GeneratedReportId == null);

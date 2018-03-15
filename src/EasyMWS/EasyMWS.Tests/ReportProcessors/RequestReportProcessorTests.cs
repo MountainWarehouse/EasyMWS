@@ -145,18 +145,6 @@ namespace EasyMWS.Tests.ReportProcessors
 		}
 
 		[Test]
-		public async Task MoveToNonGeneratedReportsQueueAsync_UpdatesRequestReportId_OnTheCallback()
-		{
-			var reportRequestId = "testReportRequestId";
-
-			await _requestReportProcessor.MoveToNonGeneratedReportsQueueAsync(_reportRequestCallback[0], reportRequestId);
-
-			Assert.AreEqual("testReportRequestId", _reportRequestCallback[0].RequestReportId);
-			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Once);
-			_reportRequestCallbackServiceMock.Verify(x => x.SaveChangesAsync(), Times.Once);
-		}
-
-		[Test]
 		public void GetAllPendingReport_ReturnListReportRequestId()
 		{
 			// Arrange
