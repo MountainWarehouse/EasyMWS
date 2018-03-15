@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using EasyMWS.Tests.ReportProcessors;
 using MarketplaceWebService;
@@ -23,6 +25,7 @@ namespace EasyMWS.Tests
 	    private Mock<IReportRequestCallbackService> _reportRequestCallbackServiceMock;
 	    private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
 	    private Mock<IRequestReportProcessor> _requestReportProcessor;
+	    private readonly int ConfiguredMaxNumberOrReportRequestRetries = 2;
 
 		public struct CallbackDataTest
 	    {
@@ -32,11 +35,14 @@ namespace EasyMWS.Tests
 		[SetUp]
 	    public void SetUp()
 		{
+			var options = EasyMwsOptions.Defaults;
+			options.MaxRequestRetryCount = ConfiguredMaxNumberOrReportRequestRetries;
+
 			_called = false;
 			_reportRequestCallbackServiceMock = new Mock<IReportRequestCallbackService>();
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_requestReportProcessor = new Mock<IRequestReportProcessor>();
-			_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", "", "", _reportRequestCallbackServiceMock.Object, _marketplaceWebServiceClientMock.Object, _requestReportProcessor.Object);
+			_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", "", "", _reportRequestCallbackServiceMock.Object, _marketplaceWebServiceClientMock.Object, _requestReportProcessor.Object, options);
 		}
 
 	    [Test]
@@ -204,5 +210,24 @@ namespace EasyMWS.Tests
 
 		    _requestReportProcessor.Verify(rrp => rrp.AllocateReportRequestForRetry(It.IsAny<ReportRequestCallback>()), Times.Once);
 	    }
+
+	    [Test]
+	    public void Poll_DeletesReportRequests_WithRetryCountAboveMaxRequestRetryCount()
+	    {
+			var testReportRequestCallbacks = new List<ReportRequestCallback>
+			{
+				new ReportRequestCallback { Id = 1, RequestRetryCount = 0 },
+				new ReportRequestCallback { Id = 2, RequestRetryCount = 1 },
+				new ReportRequestCallback { Id = 3, RequestRetryCount = 2 },
+				new ReportRequestCallback { Id = 4, RequestRetryCount = 3 },
+				new ReportRequestCallback { Id = 5, RequestRetryCount = 4 },
+				new ReportRequestCallback { Id = 5, RequestRetryCount = 5 }
+			}.AsQueryable();
+		    _reportRequestCallbackServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(testReportRequestCallbacks);
+
+		    _easyMwsClient.Poll();
+		    _reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestCallback>()), Times.Exactly(3));
+		    _reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.AtLeastOnce);
+		}
 	}
 }

@@ -4,7 +4,7 @@ namespace MountainWarehouse.EasyMWS.Helpers
 {
     public class EasyMwsOptions
     {
-	    public int RequestRetryCount { get; set; }
+	    public int MaxRequestRetryCount { get; set; }
 
 	    public RetryPeriodType RetryPeriodType { get; set; }
 
@@ -13,7 +13,7 @@ namespace MountainWarehouse.EasyMWS.Helpers
 
 		public static EasyMwsOptions Defaults = new EasyMwsOptions
 		{
-			RequestRetryCount = 3,
+			MaxRequestRetryCount = 3,
 			RetryPeriodType = RetryPeriodType.GeometricProgression,
 			TimeToWaitBeforeFirstRetry = TimeSpan.FromMinutes(15),
 			TimeToWaitBetweenRetries = TimeSpan.FromHours(1)
