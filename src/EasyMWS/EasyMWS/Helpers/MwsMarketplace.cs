@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace MountainWarehouse.EasyMWS.Helpers
 {
@@ -44,7 +45,17 @@ namespace MountainWarehouse.EasyMWS.Helpers
 		    return list;
 	    }
 
-		/// <summary>
+	    public static string GetMarketplaceCountryCode(string marketplaceId)
+	    {
+		    var mwsMarketplaces = new List<MwsMarketplace>{Australia, Brazil, Canada, China, France, Germany, India, Italy, Japan, Mexico, Spain, UK, US};
+		    foreach (var marketplace in mwsMarketplaces)
+		    {
+			    if (marketplace.Id == marketplaceId) return marketplace.CountryCode;
+		    }
+		    throw new ArgumentException($"No marketplace was found for the requested marketplace id {marketplaceId}");
+	    }
+
+	    /// <summary>
 		/// The Canada marketplace. Shares the same amazon MWS endpoint with US and Mexico.
 		/// </summary>
 		public static MwsMarketplace Canada = new MwsMarketplace(

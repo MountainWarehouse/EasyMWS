@@ -7,8 +7,8 @@ using NUnit.Framework;
 
 namespace EasyMWS.Tests.Factories
 {
-    public class ReportRequestFactoryFbaTests
-    {
+    public class ReportRequestFactoryFbaInventoryTests
+	{
 	    private IReportRequestFactoryFba _reportRequestFactoryFBA;
 	    private AmazonRegion _region = AmazonRegion.Europe;
 
