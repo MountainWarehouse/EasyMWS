@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace MountainWarehouse.EasyMWS.Data
 {
@@ -6,9 +7,11 @@ namespace MountainWarehouse.EasyMWS.Data
     {
 		[Key]
 	    public int Id { get; set; }
+	    public int RequestRetryCount { get; set; }
+	    public DateTime LastSubmitted { get; set; }
 
-	    #region Serialized callback data necessary to invoke a method with it's argument values.
-	    public string TypeName { get; set; }
+		#region Serialized callback data necessary to invoke a method with it's argument values.
+		public string TypeName { get; set; }
 	    public string MethodName { get; set; }
 	    public string Data { get; set; }
 	    public string DataTypeName { get; set; }
