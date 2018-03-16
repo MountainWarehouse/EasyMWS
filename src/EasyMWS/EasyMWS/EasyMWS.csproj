@@ -11,6 +11,7 @@
     <Authors>Rob Church, Guillaume Mabile, Gabriel Cazan</Authors>
     <Company>Mountain Warehouse</Company>
     <Product>EasyMWS</Product>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

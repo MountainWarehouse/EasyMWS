@@ -95,9 +95,15 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 				MarketplaceIdList = reportRequestData.MarketplaceIdList == null ? null : new IdList { Id = reportRequestData.MarketplaceIdList }
 			};
 
-			var reportResponse = _marketplaceWebServiceClient.RequestReport(reportRequest);
-
-		   return reportResponse?.RequestReportResult?.ReportRequestInfo?.ReportRequestId;
+		    try
+		    {
+			    var reportResponse = _marketplaceWebServiceClient.RequestReport(reportRequest);
+			    return reportResponse?.RequestReportResult?.ReportRequestInfo?.ReportRequestId;
+			}
+		    catch (Exception)
+		    {
+				return null;
+		    }
 		}
 
 	    public void MoveToNonGeneratedReportsQueue(ReportRequestCallback reportRequestCallback, string reportRequestId)
