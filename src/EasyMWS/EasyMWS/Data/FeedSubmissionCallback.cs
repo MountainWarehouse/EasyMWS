@@ -7,7 +7,7 @@ namespace MountainWarehouse.EasyMWS.Data
     {
 		[Key]
 	    public int Id { get; set; }
-	    public int RequestRetryCount { get; set; }
+	    public int SubmissionRetryCount { get; set; }
 	    public DateTime LastSubmitted { get; set; }
 
 		#region Serialized callback data necessary to invoke a method with it's argument values.

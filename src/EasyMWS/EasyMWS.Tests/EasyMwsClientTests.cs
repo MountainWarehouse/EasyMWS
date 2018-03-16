@@ -26,6 +26,7 @@ namespace EasyMWS.Tests
 	    private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
 	    private Mock<IRequestReportProcessor> _requestReportProcessor;
 	    private readonly int ConfiguredMaxNumberOrReportRequestRetries = 2;
+	    private readonly int ConfiguredMaxNumberOrFeedSubmissionRetries = 2;
 
 		public struct CallbackDataTest
 	    {
@@ -37,6 +38,7 @@ namespace EasyMWS.Tests
 		{
 			var options = EasyMwsOptions.Defaults;
 			options.ReportRequestMaxRetryCount = ConfiguredMaxNumberOrReportRequestRetries;
+			options.FeedSubmissionMaxRetryCount = ConfiguredMaxNumberOrFeedSubmissionRetries;
 
 			_called = false;
 			_reportRequestCallbackServiceMock = new Mock<IReportRequestCallbackService>();
@@ -158,7 +160,7 @@ namespace EasyMWS.Tests
 
 		#endregion
 
-		#region Poll tests
+		#region PollReports tests
 
 		[Test]
 		public void Poll_CallsOnce_GetNonRequestedReportFromQueue()
@@ -252,7 +254,7 @@ namespace EasyMWS.Tests
 		}
 
 		[Test]
-		public void Poll_DeletesReportRequests_WithRetryCountAboveMaxRequestRetryCount()
+		public void Poll_DeletesReportRequests_WithRetryCountAboveMaxRetryCount()
 		{
 			var testReportRequestCallbacks = new List<ReportRequestCallback>
 			{
@@ -268,6 +270,29 @@ namespace EasyMWS.Tests
 			_easyMwsClient.Poll();
 			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestCallback>()), Times.Exactly(3));
 			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.AtLeastOnce);
+		}
+
+		#endregion
+
+		#region PollFeeds tests
+
+		[Test]
+		public void Poll_DeletesFeedSubmissions_WithRetryCountAboveMaxRetryCount()
+		{
+			var testFeedSubmissionCallbacks = new List<FeedSubmissionCallback>
+			{
+				new FeedSubmissionCallback { Id = 1, SubmissionRetryCount = 0 },
+				new FeedSubmissionCallback { Id = 2, SubmissionRetryCount = 1 },
+				new FeedSubmissionCallback { Id = 3, SubmissionRetryCount = 2 },
+				new FeedSubmissionCallback { Id = 4, SubmissionRetryCount = 3 },
+				new FeedSubmissionCallback { Id = 5, SubmissionRetryCount = 4 },
+				new FeedSubmissionCallback { Id = 5, SubmissionRetryCount = 5 }
+			}.AsQueryable();
+			_feedSubmissionCallbackServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(testFeedSubmissionCallbacks);
+
+			_easyMwsClient.Poll();
+			_feedSubmissionCallbackServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionCallback>()), Times.Exactly(3));
+			_feedSubmissionCallbackServiceMock.Verify(x => x.SaveChanges(), Times.AtLeastOnce);
 		}
 
 		#endregion

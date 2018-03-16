@@ -106,11 +106,18 @@ namespace MountainWarehouse.EasyMWS
 		private void PollFeeds()
 		{
 			CleanUpFeedSubmissionQueue();
+			_feedSubmissionCallbackService.SaveChanges();
 		}
 
 		private void CleanUpFeedSubmissionQueue()
 		{
-			
+			var expiredFeedSubmission = _feedSubmissionCallbackService.GetAll()
+				.Where(rrc => rrc.SubmissionRetryCount > _options.FeedSubmissionMaxRetryCount);
+
+			foreach (var feedSubmission in expiredFeedSubmission)
+			{
+				_feedSubmissionCallbackService.Delete(feedSubmission);
+			}
 		}
 
 		private void RequestNextReportInQueueFromAmazon()
@@ -138,7 +145,7 @@ namespace MountainWarehouse.EasyMWS
 		private void CleanUpReportRequestQueue()
 		{
 			var expiredReportRequests = _reportRequestCallbackService.GetAll()
-				.Where(rrc => rrc.RequestRetryCount > _options.MaxRequestRetryCount);
+				.Where(rrc => rrc.RequestRetryCount > _options.ReportRequestMaxRetryCount);
 
 			foreach (var reportRequest in expiredReportRequests)
 			{
