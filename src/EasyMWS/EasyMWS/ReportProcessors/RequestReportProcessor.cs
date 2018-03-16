@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using MarketplaceWebService;
 using MarketplaceWebService.Model;
 using MountainWarehouse.EasyMWS.Data;
@@ -38,15 +37,10 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 			    .FirstOrDefault(rrc => 
 					rrc.AmazonRegion == region 
 					&& rrc.RequestReportId == null 
-					&& !IsReportRequestWithRetryPeriodNotComplete(rrc));
+					&& IsReportToBeProcessed(rrc));
 	    }
 
-	    private bool IsReportRequestWithRetryPeriodNotComplete(ReportRequestCallback reportRequest)
-	    {
-		    return reportRequest.RequestRetryCount != 0 && !IsRetryPeriodComplete(reportRequest);
-	    }
-
-	    private bool IsRetryPeriodComplete(ReportRequestCallback reportRequest)
+	    private bool IsReportToBeProcessed(ReportRequestCallback reportRequest)
 	    {
 		    if (reportRequest.RequestRetryCount <= 0) return true;
 
@@ -109,9 +103,8 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 	    public void MoveToNonGeneratedReportsQueue(ReportRequestCallback reportRequestCallback, string reportRequestId)
 	    {
 		    reportRequestCallback.RequestReportId = reportRequestId;
+		    reportRequestCallback.RequestRetryCount = 0;
 			_reportRequestCallbackService.Update(reportRequestCallback);
-
-			_reportRequestCallbackService.SaveChanges();
 	    }
 
 	    public IEnumerable<ReportRequestCallback> GetAllPendingReport(AmazonRegion region)
@@ -146,9 +139,6 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 			    reportRequestCallback.GeneratedReportId = reportInfo.GeneratedReportId;
 				_reportRequestCallbackService.Update(reportRequestCallback);
 		    }
-
-		    _reportRequestCallbackService.SaveChanges();
-
 		}
 
 	    public void MoveReportsBackToRequestQueue(List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> reportsStatusInformation)
@@ -159,11 +149,10 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 		    {
 			    var reportRequestCallback = _reportRequestCallbackService.FirstOrDefault(rrc => rrc.RequestReportId == reportInfo.ReportRequestId);
 			    reportRequestCallback.RequestReportId = null;
+			    reportRequestCallback.RequestRetryCount++;
+
 			    _reportRequestCallbackService.Update(reportRequestCallback);
 		    }
-
-		    _reportRequestCallbackService.SaveChanges();
-
 	    }
 
 	    public ReportRequestCallback GetReadyForDownloadReports(AmazonRegion region)
@@ -196,7 +185,6 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 	    public void DequeueReportRequestCallback(ReportRequestCallback reportRequestCallback)
 	    {
 		    _reportRequestCallbackService.Delete(reportRequestCallback);
-			_reportRequestCallbackService.SaveChanges();
 	    }
 
 	    public void AllocateReportRequestForRetry(ReportRequestCallback reportRequestCallback)
@@ -204,7 +192,6 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 			reportRequestCallback.RequestRetryCount++;
 
 		    _reportRequestCallbackService.Update(reportRequestCallback);
-		    _reportRequestCallbackService.SaveChanges();
 		}
     }
 }

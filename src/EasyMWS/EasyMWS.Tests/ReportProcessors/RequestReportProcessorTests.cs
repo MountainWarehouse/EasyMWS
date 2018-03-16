@@ -279,7 +279,6 @@ namespace EasyMWS.Tests.ReportProcessors
 
 			Assert.AreEqual("testReportRequestId", _reportRequestCallbacks[0].RequestReportId);
 			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Once);
-			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
 		}
 
 		[Test]
@@ -390,7 +389,6 @@ namespace EasyMWS.Tests.ReportProcessors
 
 			Assert.AreEqual("GeneratedId1", _reportRequestCallbacks.First(x => x.RequestReportId == "Report1").GeneratedReportId);
 			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Exactly(2));
-			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
 		}
 
 		[Test]
@@ -409,8 +407,8 @@ namespace EasyMWS.Tests.ReportProcessors
 			_requestReportProcessor.MoveReportsBackToRequestQueue(data);
 
 			Assert.IsNull(_reportRequestCallbacks.First().RequestReportId);
+			Assert.IsTrue(_reportRequestCallbacks.First().RequestRetryCount > 0);
 			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Once);
-			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
 		}
 
 		[Test]
@@ -490,7 +488,6 @@ namespace EasyMWS.Tests.ReportProcessors
 
 			Assert.AreEqual(1, _reportRequestCallbacks.First().RequestRetryCount);
 			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Once);
-			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
 		}
 
 		[Test]
@@ -504,7 +501,6 @@ namespace EasyMWS.Tests.ReportProcessors
 
 			Assert.AreEqual(3, _reportRequestCallbacks.First().RequestRetryCount);
 			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Exactly(3));
-			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Exactly(3));
 		}
 	}
 }

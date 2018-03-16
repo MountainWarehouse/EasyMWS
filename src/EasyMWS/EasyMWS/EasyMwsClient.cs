@@ -71,6 +71,8 @@ namespace MountainWarehouse.EasyMWS
 			var generatedReportRequestCallback = DownloadNextGeneratedRequestReportInQueueFromAmazon();
 
 			PerformCallback(generatedReportRequestCallback.reportRequestCallback, generatedReportRequestCallback.stream);
+
+			_reportRequestCallbackService.SaveChanges();
 		}
 
 		private void CleanUpReportRequestQueue()
@@ -82,8 +84,6 @@ namespace MountainWarehouse.EasyMWS
 			{
 				_reportRequestCallbackService.Delete(reportRequest);
 			}
-
-			_reportRequestCallbackService.SaveChanges();
 		}
 
 		/// <summary>
@@ -109,8 +109,7 @@ namespace MountainWarehouse.EasyMWS
 
 			reportRequestCallbackReportQueued.LastRequested = DateTime.UtcNow;
 			_reportRequestCallbackService.Update(reportRequestCallbackReportQueued);
-			_reportRequestCallbackService.SaveChanges();
-
+			
 			if (string.IsNullOrEmpty(reportRequestId))
 			{
 				_requestReportProcessor.AllocateReportRequestForRetry(reportRequestCallbackReportQueued);
