@@ -4,22 +4,25 @@ using System.Collections.Generic;
 
 namespace MountainWarehouse.EasyMWS.Migrations
 {
-    public partial class ReportRequestCallback_AddRequestDataRemoveReportType : Migration
+    public partial class MakeLastRequestedDateRequired : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameColumn(
-                name: "ReportType",
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "LastRequested",
                 table: "ReportRequestCallbacks",
-                newName: "ReportRequestData");
+                nullable: false,
+                oldClrType: typeof(DateTime),
+                oldNullable: true);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameColumn(
-                name: "ReportRequestData",
+            migrationBuilder.AlterColumn<DateTime>(
+                name: "LastRequested",
                 table: "ReportRequestCallbacks",
-                newName: "ReportType");
+                nullable: true,
+                oldClrType: typeof(DateTime));
         }
     }
 }

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using MarketplaceWebService;
 using Moq;
@@ -22,6 +24,7 @@ namespace EasyMWS.Tests
 	    private Mock<IReportRequestCallbackService> _reportRequestCallbackServiceMock;
 	    private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
 	    private Mock<IRequestReportProcessor> _requestReportProcessor;
+	    private readonly int ConfiguredMaxNumberOrReportRequestRetries = 2;
 
 		public struct CallbackDataTest
 	    {
@@ -31,11 +34,14 @@ namespace EasyMWS.Tests
 		[SetUp]
 	    public void SetUp()
 		{
+			var options = EasyMwsOptions.Defaults;
+			options.MaxRequestRetryCount = ConfiguredMaxNumberOrReportRequestRetries;
+
 			_called = false;
 			_reportRequestCallbackServiceMock = new Mock<IReportRequestCallbackService>();
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_requestReportProcessor = new Mock<IRequestReportProcessor>();
-			_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", "", "", _reportRequestCallbackServiceMock.Object, _marketplaceWebServiceClientMock.Object, _requestReportProcessor.Object);
+			_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", "", "", _reportRequestCallbackServiceMock.Object, _marketplaceWebServiceClientMock.Object, _requestReportProcessor.Object, options);
 		}
 
 	    [Test]
@@ -90,5 +96,115 @@ namespace EasyMWS.Tests
 
 		    _reportRequestCallbackServiceMock.Verify(rrcsm => rrcsm.SaveChanges(), Times.Once);
 	    }
+
+	    [Test]
+	    public void Poll_CallsOnce_GetNonRequestedReportFromQueue()
+	    {
+			_easyMwsClient.Poll();
+
+		    _requestReportProcessor.Verify(rrp => rrp.GetNonRequestedReportFromQueue(It.IsAny<AmazonRegion>()), Times.Once);
+		}
+
+		[Test]
+	    public void Poll_WithGetNonRequestedReportFromQueueReturningNull_DoesNotRequestAReportFromAmazon()
+		{
+			_requestReportProcessor.Setup(rrp => rrp.GetNonRequestedReportFromQueue(It.IsAny<AmazonRegion>())).Returns((ReportRequestCallback)null);
+
+			_easyMwsClient.Poll();
+
+			_requestReportProcessor.Verify(rrp => rrp.RequestSingleQueuedReport(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()), Times.Never);
+	    }
+
+	    [Test]
+	    public void Poll_WithGetNonRequestedReportFromQueueReturningNotNull_RequestsAReportFromAmazon()
+	    {
+		    _requestReportProcessor.Setup(rrp => rrp.GetNonRequestedReportFromQueue(It.IsAny<AmazonRegion>())).Returns(new ReportRequestCallback());
+
+		    _easyMwsClient.Poll();
+
+		    _requestReportProcessor.Verify(rrp => rrp.RequestSingleQueuedReport(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()), Times.Once);
+	    }
+
+	    [Test]
+	    public void Poll_WithGetNonRequestedReportFromQueueReturningNotNull_UpdatesLastRequestedPropertyForProcessedReportRequest()
+	    {
+		    ReportRequestCallback testReportRequestCallback = null;
+
+			_requestReportProcessor.Setup(rrp => rrp.GetNonRequestedReportFromQueue(It.IsAny<AmazonRegion>()))
+				.Returns(new ReportRequestCallback { LastRequested = DateTime.MinValue });
+		    _reportRequestCallbackServiceMock.Setup(rrcsm => rrcsm.Update(It.IsAny<ReportRequestCallback>()))
+			    .Callback((ReportRequestCallback arg) =>
+			    {
+				    testReportRequestCallback = arg;
+			    });
+
+			_easyMwsClient.Poll();
+
+		    Assert.IsTrue(DateTime.UtcNow - testReportRequestCallback.LastRequested < TimeSpan.FromHours(1));
+		    _reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.AtLeastOnce);
+		    _reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.AtLeastOnce);
+		}
+
+	    [Test]
+	    public void Poll_WithRequestReportAmazonResponseNotNull_CallsOnce_MoveToNonGeneratedReportsQueue()
+	    {
+		    _requestReportProcessor.Setup(rrp => rrp.GetNonRequestedReportFromQueue(It.IsAny<AmazonRegion>()))
+			    .Returns(new ReportRequestCallback { LastRequested = DateTime.MinValue });
+		    _requestReportProcessor.Setup(rrp =>
+				    rrp.RequestSingleQueuedReport(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()))
+			    .Returns("testReportRequestId");
+
+			_easyMwsClient.Poll();
+
+		    _requestReportProcessor.Verify(rrp => rrp.MoveToNonGeneratedReportsQueue(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()), Times.Once);
+		}
+
+	    [Test]
+	    public void Poll_WithRequestReportAmazonResponseNull_CallsOnce_AllocateReportRequestForRetry()
+	    {
+		    _requestReportProcessor.Setup(rrp => rrp.GetNonRequestedReportFromQueue(It.IsAny<AmazonRegion>()))
+			    .Returns(new ReportRequestCallback { LastRequested = DateTime.MinValue });
+		    _requestReportProcessor.Setup(rrp =>
+				    rrp.RequestSingleQueuedReport(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()))
+			    .Returns((string)null);
+
+		    _easyMwsClient.Poll();
+
+		    _requestReportProcessor.Verify(rrp => rrp.AllocateReportRequestForRetry(It.IsAny<ReportRequestCallback>()), Times.Once);
+	    }
+
+	    [Test]
+	    public void Poll_WithRequestReportAmazonResponseEmpty_CallsOnce_AllocateReportRequestForRetry()
+	    {
+		    _requestReportProcessor.Setup(rrp => rrp.GetNonRequestedReportFromQueue(It.IsAny<AmazonRegion>()))
+			    .Returns(new ReportRequestCallback { LastRequested = DateTime.MinValue });
+		    _requestReportProcessor.Setup(rrp =>
+				    rrp.RequestSingleQueuedReport(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()))
+			    .Returns(string.Empty);
+
+
+		    _easyMwsClient.Poll();
+
+		    _requestReportProcessor.Verify(rrp => rrp.AllocateReportRequestForRetry(It.IsAny<ReportRequestCallback>()), Times.Once);
+	    }
+
+	    [Test]
+	    public void Poll_DeletesReportRequests_WithRetryCountAboveMaxRequestRetryCount()
+	    {
+			var testReportRequestCallbacks = new List<ReportRequestCallback>
+			{
+				new ReportRequestCallback { Id = 1, RequestRetryCount = 0 },
+				new ReportRequestCallback { Id = 2, RequestRetryCount = 1 },
+				new ReportRequestCallback { Id = 3, RequestRetryCount = 2 },
+				new ReportRequestCallback { Id = 4, RequestRetryCount = 3 },
+				new ReportRequestCallback { Id = 5, RequestRetryCount = 4 },
+				new ReportRequestCallback { Id = 5, RequestRetryCount = 5 }
+			}.AsQueryable();
+		    _reportRequestCallbackServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(testReportRequestCallbacks);
+
+		    _easyMwsClient.Poll();
+		    _reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestCallback>()), Times.Exactly(3));
+		    _reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.AtLeastOnce);
+		}
 	}
 }

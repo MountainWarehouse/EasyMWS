@@ -7,14 +7,14 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.Storage.Internal;
 using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.Data;
-using MountainWarehouse.EasyMWS.Helpers;
+using MountainWarehouse.EasyMWS.Enums;
 using System;
 
 namespace MountainWarehouse.EasyMWS.Migrations
 {
     [DbContext(typeof(EasyMwsContext))]
-    [Migration("20180308115015_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20180314143257_InitialMigration")]
+    partial class InitialMigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -36,15 +36,23 @@ namespace MountainWarehouse.EasyMWS.Migrations
 
                     b.Property<string>("DataTypeName");
 
+                    b.Property<string>("GeneratedReportId");
+
                     b.Property<DateTime?>("LastRequested");
 
                     b.Property<string>("MethodName");
 
-                    b.Property<string>("ReportType");
+                    b.Property<string>("ReportRequestData");
+
+                    b.Property<string>("RequestReportId");
+
+                    b.Property<int>("RequestRetryCount");
 
                     b.Property<string>("TypeName");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("RequestReportId", "GeneratedReportId");
 
                     b.ToTable("ReportRequestCallbacks");
                 });

@@ -20,11 +20,12 @@ namespace MountainWarehouse.EasyMWS
 		private string _merchantId;
 		private AmazonRegion _amazonRegion;
 		private IRequestReportProcessor _requestReportProcessor;
+		private EasyMwsOptions _options;
 
 		public AmazonRegion AmazonRegion => _amazonRegion;
 
-		internal EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, IReportRequestCallbackService reportRequestCallbackService, IMarketplaceWebServiceClient marketplaceWebServiceClient, IRequestReportProcessor requestReportProcessor) 
-			: this(region, merchantId, accessKeyId, mwsSecretAccessKey)
+		internal EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, IReportRequestCallbackService reportRequestCallbackService, IMarketplaceWebServiceClient marketplaceWebServiceClient, IRequestReportProcessor requestReportProcessor, EasyMwsOptions options = null) 
+			: this(region, merchantId, accessKeyId, mwsSecretAccessKey, options)
 		{
 			_reportRequestCallbackService = reportRequestCallbackService;
 			_requestReportProcessor = requestReportProcessor;
@@ -35,14 +36,16 @@ namespace MountainWarehouse.EasyMWS
 		/// <param name="merchantId"></param>
 		/// <param name="accessKeyId">Your specific access key</param>
 		/// <param name="mwsSecretAccessKey">Your specific secret access key</param>
-		public EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey)
+		/// <param name="options">Configuration options for EasyMwsClient</param>
+		public EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, EasyMwsOptions options = null)
 		{
+			_options = options ?? EasyMwsOptions.Defaults;
 			_merchantId = merchantId;
 			_amazonRegion = region;
 			_mwsClient = new MarketplaceWebServiceClient(accessKeyId, mwsSecretAccessKey, CreateConfig(region));
 			_reportRequestCallbackService = _reportRequestCallbackService ?? new ReportRequestCallbackService();
 			_callbackActivator = new CallbackActivator();
-			_requestReportProcessor = new RequestReportProcessor(_mwsClient, _reportRequestCallbackService);
+			_requestReportProcessor = new RequestReportProcessor(_mwsClient, _reportRequestCallbackService, _options);
 		}
 
 		/// <summary>
@@ -59,6 +62,8 @@ namespace MountainWarehouse.EasyMWS
 		/// </summary>
 		public void Poll()
 		{
+			CleanUpReportRequestQueue();
+
 			RequestNextReportInQueueFromAmazon();
 
 			RequestReportStatusesFromAmazon();
@@ -66,6 +71,19 @@ namespace MountainWarehouse.EasyMWS
 			var generatedReportRequestCallback = DownloadNextGeneratedRequestReportInQueueFromAmazon();
 
 			PerformCallback(generatedReportRequestCallback.reportRequestCallback, generatedReportRequestCallback.stream);
+
+			_reportRequestCallbackService.SaveChanges();
+		}
+
+		private void CleanUpReportRequestQueue()
+		{
+			var expiredReportRequests = _reportRequestCallbackService.GetAll()
+				.Where(rrc => rrc.RequestRetryCount > _options.MaxRequestRetryCount);
+
+			foreach (var reportRequest in expiredReportRequests)
+			{
+				_reportRequestCallbackService.Delete(reportRequest);
+			}
 		}
 
 		/// <summary>
@@ -89,11 +107,17 @@ namespace MountainWarehouse.EasyMWS
 
 			var reportRequestId = _requestReportProcessor.RequestSingleQueuedReport(reportRequestCallbackReportQueued, _merchantId);
 
-			if (!string.IsNullOrEmpty(reportRequestId))
+			reportRequestCallbackReportQueued.LastRequested = DateTime.UtcNow;
+			_reportRequestCallbackService.Update(reportRequestCallbackReportQueued);
+			
+			if (string.IsNullOrEmpty(reportRequestId))
+			{
+				_requestReportProcessor.AllocateReportRequestForRetry(reportRequestCallbackReportQueued);
+			}
+			else
 			{
 				_requestReportProcessor.MoveToNonGeneratedReportsQueue(reportRequestCallbackReportQueued, reportRequestId);
 			}
-			// todo: what if we don't get ID back from Amazon?
 		}
 
 		private (ReportRequestCallback reportRequestCallback, Stream stream) DownloadNextGeneratedRequestReportInQueueFromAmazon()

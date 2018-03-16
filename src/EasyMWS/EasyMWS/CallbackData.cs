@@ -1,6 +1,6 @@
 ﻿namespace MountainWarehouse.EasyMWS
 {
-	internal class Callback
+	public class Callback
     {
 	    internal Callback(string typeName,
 		    string methodName,
