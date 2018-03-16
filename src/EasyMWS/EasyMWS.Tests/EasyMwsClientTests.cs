@@ -36,7 +36,7 @@ namespace EasyMWS.Tests
 	    public void SetUp()
 		{
 			var options = EasyMwsOptions.Defaults;
-			options.MaxRequestRetryCount = ConfiguredMaxNumberOrReportRequestRetries;
+			options.ReportRequestMaxRetryCount = ConfiguredMaxNumberOrReportRequestRetries;
 
 			_called = false;
 			_reportRequestCallbackServiceMock = new Mock<IReportRequestCallbackService>();

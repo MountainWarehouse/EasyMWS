@@ -105,6 +105,11 @@ namespace MountainWarehouse.EasyMWS
 
 		private void PollFeeds()
 		{
+			CleanUpFeedSubmissionQueue();
+		}
+
+		private void CleanUpFeedSubmissionQueue()
+		{
 			
 		}
 

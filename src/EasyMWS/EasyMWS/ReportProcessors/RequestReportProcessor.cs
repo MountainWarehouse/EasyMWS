@@ -46,7 +46,7 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 
 		    if (reportRequest.RequestRetryCount == 1)
 		    {
-			    var timeOfNextRetry = reportRequest.LastRequested.Add(_options.TimeToWaitBeforeFirstRetry);
+			    var timeOfNextRetry = reportRequest.LastRequested.Add(_options.ReportRequestRetryInitialDelay);
 			    if (DateTime.Compare(timeOfNextRetry, DateTime.UtcNow) < 0)
 			    {
 				    return true;
@@ -55,12 +55,12 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 
 		    if (reportRequest.RequestRetryCount > 1)
 		    {
-			    var retryPeriodType = _options.RetryPeriodType;
+			    var retryPeriodType = _options.ReportRequestRetryType;
 			    switch (retryPeriodType)
 			    {
 				    case RetryPeriodType.ArithmeticProgression:
 				    {
-					    var timeOfNextRetry = reportRequest.LastRequested.Add(_options.TimeToWaitBetweenRetries);
+					    var timeOfNextRetry = reportRequest.LastRequested.Add(_options.ReportRequestRetryInterval);
 					    if (DateTime.Compare(timeOfNextRetry, DateTime.UtcNow) < 0)
 					    {
 						    return true;
@@ -70,7 +70,7 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 				    case RetryPeriodType.GeometricProgression:
 				    {
 					    var timeOfNextRetry = reportRequest.LastRequested.Add(
-						    TimeSpan.FromTicks(_options.TimeToWaitBetweenRetries.Ticks * (reportRequest.RequestRetryCount - 1)));
+						    TimeSpan.FromTicks(_options.ReportRequestRetryInterval.Ticks * (reportRequest.RequestRetryCount - 1)));
 					    if (DateTime.Compare(timeOfNextRetry, DateTime.UtcNow) < 0)
 					    {
 						    return true;
