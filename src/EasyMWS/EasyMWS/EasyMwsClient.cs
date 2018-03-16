@@ -65,17 +65,8 @@ namespace MountainWarehouse.EasyMWS
 		/// </summary>
 		public void Poll()
 		{
-			CleanUpReportRequestQueue();
-
-			RequestNextReportInQueueFromAmazon();
-
-			RequestReportStatusesFromAmazon();
-
-			var generatedReportRequestCallback = DownloadNextGeneratedRequestReportInQueueFromAmazon();
-
-			PerformCallback(generatedReportRequestCallback.reportRequestCallback, generatedReportRequestCallback.stream);
-
-			_reportRequestCallbackService.SaveChanges();
+			PollReports();
+			PollFeeds();
 		}
 
 		/// <summary>
@@ -100,6 +91,21 @@ namespace MountainWarehouse.EasyMWS
 		{
 			_feedSubmissionCallbackService.Create(GetSerializedFeedSubmissionCallback(feedSubmissionContainer, callbackMethod, callbackData));
 			_feedSubmissionCallbackService.SaveChanges();
+		}
+
+		private void PollReports()
+		{
+			CleanUpReportRequestQueue();
+			RequestNextReportInQueueFromAmazon();
+			RequestReportStatusesFromAmazon();
+			var generatedReportRequestCallback = DownloadNextGeneratedRequestReportInQueueFromAmazon();
+			PerformCallback(generatedReportRequestCallback.reportRequestCallback, generatedReportRequestCallback.stream);
+			_reportRequestCallbackService.SaveChanges();
+		}
+
+		private void PollFeeds()
+		{
+			
 		}
 
 		private void RequestNextReportInQueueFromAmazon()
