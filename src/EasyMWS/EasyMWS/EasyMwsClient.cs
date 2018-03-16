@@ -106,7 +106,13 @@ namespace MountainWarehouse.EasyMWS
 		private void PollFeeds()
 		{
 			CleanUpFeedSubmissionQueue();
+			SubmitNextFeedInQueueToAmazon();
 			_feedSubmissionCallbackService.SaveChanges();
+		}
+
+		private void SubmitNextFeedInQueueToAmazon()
+		{
+
 		}
 
 		private void CleanUpFeedSubmissionQueue()

@@ -20,8 +20,6 @@ namespace EasyMWS.Tests.ReportProcessors
 	public class RequestReportProcessorTests
 	{
 		private AmazonRegion _region = AmazonRegion.Europe;
-		private EasyMwsClient _easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", "AccessKeyTest", "SecretAccessKeyTest");
-		private ReportRequestFactoryFba _reportRequestFactoryFba;
 		private IRequestReportProcessor _requestReportProcessor;
 		private Mock<IReportRequestCallbackService> _reportRequestCallbackServiceMock;
 		private List<ReportRequestCallback> _reportRequestCallbacks;
@@ -34,7 +32,6 @@ namespace EasyMWS.Tests.ReportProcessors
 			_easyMwsOptions = EasyMwsOptions.Defaults;
 
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
-			_reportRequestFactoryFba = new ReportRequestFactoryFba();
 			_reportRequestCallbackServiceMock = new Mock<IReportRequestCallbackService>();
 			_requestReportProcessor = new RequestReportProcessor(_marketplaceWebServiceClientMock.Object, _reportRequestCallbackServiceMock.Object, _easyMwsOptions);
 			
@@ -135,19 +132,19 @@ namespace EasyMWS.Tests.ReportProcessors
 			var testRegion = AmazonRegion.Europe;
 			var reportRequestWithDifferentRegion = new ReportRequestCallback { AmazonRegion = AmazonRegion.Australia, Id = 2, RequestReportId = null, RequestRetryCount = 0 };
 			var reportRequestWithNonNullRequestReportId = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, Id = 3, RequestReportId = "testRequestReportId", RequestRetryCount = 0 };
-			var reportRequestWithNonNullRequestReportId1 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, Id = 4, RequestReportId = null, RequestRetryCount = 0 };
-			var reportRequestWithNonNullRequestReportId2 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, Id = 5, RequestReportId = null, RequestRetryCount = 0 };
+			var reportRequestWithNullRequestReportId1 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, Id = 4, RequestReportId = null, RequestRetryCount = 0 };
+			var reportRequestWithNullRequestReportId2 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, Id = 5, RequestReportId = null, RequestRetryCount = 0 };
 
 
 			_reportRequestCallbacks.Add(reportRequestWithDifferentRegion);
 			_reportRequestCallbacks.Add(reportRequestWithNonNullRequestReportId);
-			_reportRequestCallbacks.Add(reportRequestWithNonNullRequestReportId1);
-			_reportRequestCallbacks.Add(reportRequestWithNonNullRequestReportId2);
+			_reportRequestCallbacks.Add(reportRequestWithNullRequestReportId1);
+			_reportRequestCallbacks.Add(reportRequestWithNullRequestReportId2);
 
 			var reportRequestCallback =
 				_requestReportProcessor.GetNonRequestedReportFromQueue(testRegion);
 
-			Assert.AreEqual(reportRequestWithNonNullRequestReportId1.Id, reportRequestCallback.Id);
+			Assert.AreEqual(reportRequestWithNullRequestReportId1.Id, reportRequestCallback.Id);
 		}
 
 		[Test]
