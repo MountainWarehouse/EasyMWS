@@ -8,6 +8,7 @@ using MarketplaceWebService.Model;
 using Moq;
 using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.Data;
+using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Factories.Reports;
 using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.ReportProcessors;

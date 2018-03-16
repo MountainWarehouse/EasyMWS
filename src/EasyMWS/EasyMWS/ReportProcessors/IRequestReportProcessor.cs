@@ -2,6 +2,7 @@
 using System.IO;
 using System.Threading.Tasks;
 using MountainWarehouse.EasyMWS.Data;
+using MountainWarehouse.EasyMWS.Enums;
 
 namespace MountainWarehouse.EasyMWS.ReportProcessors
 {

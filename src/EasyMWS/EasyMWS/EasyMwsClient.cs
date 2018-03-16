@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using MarketplaceWebService;
 using MountainWarehouse.EasyMWS.Data;
+using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.ReportProcessors;
 using MountainWarehouse.EasyMWS.Services;
