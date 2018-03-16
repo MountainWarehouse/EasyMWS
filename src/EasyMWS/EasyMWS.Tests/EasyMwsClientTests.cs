@@ -137,7 +137,7 @@ namespace EasyMWS.Tests
 			_easyMwsClient.QueueFeed(propertiesContainer, callbackMethod, new CallbackDataTest { Foo = "Bar" });
 
 			_feedSubmissionCallbackServiceMock.Verify(rrcsm => rrcsm.Create(It.IsAny<FeedSubmissionCallback>()), Times.Once);
-			Assert.AreEqual(JsonConvert.SerializeObject(propertiesContainer), feedSubmissionCallback.ReportRequestData);
+			Assert.AreEqual(JsonConvert.SerializeObject(propertiesContainer), feedSubmissionCallback.FeedSubmissionData);
 			Assert.AreEqual(AmazonRegion.Europe, feedSubmissionCallback.AmazonRegion);
 			Assert.NotNull(feedSubmissionCallback.TypeName);
 			Assert.NotNull(feedSubmissionCallback.Data);

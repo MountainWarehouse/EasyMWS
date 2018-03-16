@@ -204,7 +204,7 @@ namespace MountainWarehouse.EasyMWS
 			return new FeedSubmissionCallback(serializedCallback)
 			{
 				AmazonRegion = _amazonRegion,
-				ReportRequestData = JsonConvert.SerializeObject(propertiesContainer)
+				FeedSubmissionData = JsonConvert.SerializeObject(propertiesContainer)
 			};
 		}
 
