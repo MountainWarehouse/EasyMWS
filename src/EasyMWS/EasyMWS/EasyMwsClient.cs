@@ -16,6 +16,7 @@ namespace MountainWarehouse.EasyMWS
 	{
 		private IMarketplaceWebServiceClient _mwsClient;
 		private IReportRequestCallbackService _reportRequestCallbackService;
+		private IFeedSubmissionCallbackService _feedSubmissionCallbackService;
 		private CallbackActivator _callbackActivator;
 		private string _merchantId;
 		private AmazonRegion _amazonRegion;
@@ -24,10 +25,11 @@ namespace MountainWarehouse.EasyMWS
 
 		public AmazonRegion AmazonRegion => _amazonRegion;
 
-		internal EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, IReportRequestCallbackService reportRequestCallbackService, IMarketplaceWebServiceClient marketplaceWebServiceClient, IRequestReportProcessor requestReportProcessor, EasyMwsOptions options = null) 
+		internal EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, IFeedSubmissionCallbackService feedSubmissionCallbackService, IReportRequestCallbackService reportRequestCallbackService, IMarketplaceWebServiceClient marketplaceWebServiceClient, IRequestReportProcessor requestReportProcessor, EasyMwsOptions options = null) 
 			: this(region, merchantId, accessKeyId, mwsSecretAccessKey, options)
 		{
 			_reportRequestCallbackService = reportRequestCallbackService;
+			_feedSubmissionCallbackService = feedSubmissionCallbackService;
 			_requestReportProcessor = requestReportProcessor;
 			_mwsClient = marketplaceWebServiceClient;
 		}
@@ -44,6 +46,7 @@ namespace MountainWarehouse.EasyMWS
 			_amazonRegion = region;
 			_mwsClient = new MarketplaceWebServiceClient(accessKeyId, mwsSecretAccessKey, CreateConfig(region));
 			_reportRequestCallbackService = _reportRequestCallbackService ?? new ReportRequestCallbackService();
+			_feedSubmissionCallbackService = _feedSubmissionCallbackService ?? new FeedSubmissionCallbackService();
 			_callbackActivator = new CallbackActivator();
 			_requestReportProcessor = new RequestReportProcessor(_mwsClient, _reportRequestCallbackService, _options);
 		}
@@ -95,7 +98,8 @@ namespace MountainWarehouse.EasyMWS
 		/// <param name="callbackData"></param>
 		public void QueueFeed(FeedSubmissionPropertiesContainer feedSubmissionContainer, Action<Stream, object> callbackMethod, object callbackData)
 		{
-			
+			_feedSubmissionCallbackService.Create(GetSerializedFeedSubmissionCallback(feedSubmissionContainer, callbackMethod, callbackData));
+			_feedSubmissionCallbackService.SaveChanges();
 		}
 
 		private void RequestNextReportInQueueFromAmazon()
@@ -188,6 +192,19 @@ namespace MountainWarehouse.EasyMWS
 				LastRequested = DateTime.MinValue,
 				ContentUpdateFrequency = reportRequestContainer.UpdateFrequency,
 				ReportRequestData = JsonConvert.SerializeObject(reportRequestContainer)
+			};
+		}
+
+		private FeedSubmissionCallback GetSerializedFeedSubmissionCallback(
+			FeedSubmissionPropertiesContainer propertiesContainer, Action<Stream, object> callbackMethod, object callbackData)
+		{
+			if (propertiesContainer == null || callbackMethod == null) throw new ArgumentNullException();
+			var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
+
+			return new FeedSubmissionCallback(serializedCallback)
+			{
+				AmazonRegion = _amazonRegion,
+				ReportRequestData = JsonConvert.SerializeObject(propertiesContainer)
 			};
 		}
 
