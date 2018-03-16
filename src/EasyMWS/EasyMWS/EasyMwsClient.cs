@@ -1,11 +1,11 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using MarketplaceWebService;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
+using MountainWarehouse.EasyMWS.Logging;
 using MountainWarehouse.EasyMWS.ReportProcessors;
 using MountainWarehouse.EasyMWS.Services;
 using Newtonsoft.Json;
@@ -22,11 +22,13 @@ namespace MountainWarehouse.EasyMWS
 		private AmazonRegion _amazonRegion;
 		private IRequestReportProcessor _requestReportProcessor;
 		private EasyMwsOptions _options;
+		private IEasyMwsLogger _logger;
+
 
 		public AmazonRegion AmazonRegion => _amazonRegion;
 
-		internal EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, IReportRequestCallbackService reportRequestCallbackService, IMarketplaceWebServiceClient marketplaceWebServiceClient, IRequestReportProcessor requestReportProcessor, EasyMwsOptions options = null) 
-			: this(region, merchantId, accessKeyId, mwsSecretAccessKey, options)
+		internal EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, IReportRequestCallbackService reportRequestCallbackService, IMarketplaceWebServiceClient marketplaceWebServiceClient, IRequestReportProcessor requestReportProcessor, IEasyMwsLogger easyMwsLogger, EasyMwsOptions options = null) 
+			: this(region, merchantId, accessKeyId, mwsSecretAccessKey, easyMwsLogger, options)
 		{
 			_reportRequestCallbackService = reportRequestCallbackService;
 			_requestReportProcessor = requestReportProcessor;
@@ -37,8 +39,9 @@ namespace MountainWarehouse.EasyMWS
 		/// <param name="merchantId"></param>
 		/// <param name="accessKeyId">Your specific access key</param>
 		/// <param name="mwsSecretAccessKey">Your specific secret access key</param>
+		/// <param name="easyMwsLogger">An optional IEasyMwsLogger instance that can provide access to logs.</param>
 		/// <param name="options">Configuration options for EasyMwsClient</param>
-		public EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, EasyMwsOptions options = null)
+		public EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, IEasyMwsLogger easyMwsLogger = null, EasyMwsOptions options = null)
 		{
 			_options = options ?? EasyMwsOptions.Defaults;
 			_merchantId = merchantId;
@@ -47,6 +50,7 @@ namespace MountainWarehouse.EasyMWS
 			_reportRequestCallbackService = _reportRequestCallbackService ?? new ReportRequestCallbackService();
 			_callbackActivator = new CallbackActivator();
 			_requestReportProcessor = new RequestReportProcessor(_mwsClient, _reportRequestCallbackService, _options);
+			_logger = easyMwsLogger;
 		}
 
 		/// <summary>
@@ -63,17 +67,25 @@ namespace MountainWarehouse.EasyMWS
 		/// </summary>
 		public void Poll()
 		{
-			CleanUpReportRequestQueue();
+			_logger.Info("Polling operation has been triggered!");
+			try
+			{
+				CleanUpReportRequestQueue();
 
-			RequestNextReportInQueueFromAmazon();
+				RequestNextReportInQueueFromAmazon();
 
-			RequestReportStatusesFromAmazon();
+				RequestReportStatusesFromAmazon();
 
-			var generatedReportRequestCallback = DownloadNextGeneratedRequestReportInQueueFromAmazon();
+				var generatedReportRequestCallback = DownloadNextGeneratedRequestReportInQueueFromAmazon();
 
-			PerformCallback(generatedReportRequestCallback.reportRequestCallback, generatedReportRequestCallback.stream);
+				PerformCallback(generatedReportRequestCallback.reportRequestCallback, generatedReportRequestCallback.stream);
 
-			_reportRequestCallbackService.SaveChanges();
+				_reportRequestCallbackService.SaveChanges();
+			}
+			catch (Exception e)
+			{
+				_logger.Error(e.Message, e);
+			}
 		}
 
 		private void CleanUpReportRequestQueue()
@@ -95,8 +107,17 @@ namespace MountainWarehouse.EasyMWS
 		/// <param name="callbackData">An object any argument(s) needed to invoke the delegate 'callbackMethod'</param>
 		public void QueueReport(ReportRequestPropertiesContainer reportRequestContainer, Action<Stream, object> callbackMethod, object callbackData)
 		{
-			_reportRequestCallbackService.Create(GetSerializedReportRequestCallback(reportRequestContainer, callbackMethod, callbackData));
-			_reportRequestCallbackService.SaveChanges();
+			_logger.Info($"Attempting to queue report request for report type '{reportRequestContainer?.ReportType}'...");
+			try
+			{
+				_reportRequestCallbackService.Create(GetSerializedReportRequestCallback(reportRequestContainer, callbackMethod, callbackData));
+				_reportRequestCallbackService.SaveChanges();
+			}
+			catch (Exception e)
+			{
+				_logger.Error($"QueueReport operation failed for report type '{reportRequestContainer?.ReportType}'! See attached exception details for more information.", e);
+			}
+
 		}
 
 		private void RequestNextReportInQueueFromAmazon()
