@@ -87,6 +87,17 @@ namespace MountainWarehouse.EasyMWS
 			_reportRequestCallbackService.SaveChanges();
 		}
 
+		/// <summary>
+		/// Add a new FeedSubmissionRequest to a queue of feeds to be submitted to amazon, with the final result of obtaining of posting the feed data to amazon and obtaining a response.
+		/// </summary>
+		/// <param name="feedSubmissionContainer"></param>
+		/// <param name="callbackMethod"></param>
+		/// <param name="callbackData"></param>
+		public void QueueFeed(FeedSubmissionPropertiesContainer feedSubmissionContainer, Action<Stream, object> callbackMethod, object callbackData)
+		{
+			
+		}
+
 		private void RequestNextReportInQueueFromAmazon()
 		{
 			var reportRequestCallbackReportQueued = _requestReportProcessor.GetNonRequestedReportFromQueue(_amazonRegion);
