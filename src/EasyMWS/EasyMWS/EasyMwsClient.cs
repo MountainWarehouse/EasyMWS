@@ -75,17 +75,6 @@ namespace MountainWarehouse.EasyMWS
 			_reportRequestCallbackService.SaveChanges();
 		}
 
-		private void CleanUpReportRequestQueue()
-		{
-			var expiredReportRequests = _reportRequestCallbackService.GetAll()
-				.Where(rrc => rrc.RequestRetryCount > _options.MaxRequestRetryCount);
-
-			foreach (var reportRequest in expiredReportRequests)
-			{
-				_reportRequestCallbackService.Delete(reportRequest);
-			}
-		}
-
 		/// <summary>
 		/// Add a new ReportRequest to a queue of requests that are going to be processed, with the final result of trying to download the respective report from Amazon.
 		/// </summary>
@@ -117,6 +106,17 @@ namespace MountainWarehouse.EasyMWS
 			else
 			{
 				_requestReportProcessor.MoveToNonGeneratedReportsQueue(reportRequestCallbackReportQueued, reportRequestId);
+			}
+		}
+
+		private void CleanUpReportRequestQueue()
+		{
+			var expiredReportRequests = _reportRequestCallbackService.GetAll()
+				.Where(rrc => rrc.RequestRetryCount > _options.MaxRequestRetryCount);
+
+			foreach (var reportRequest in expiredReportRequests)
+			{
+				_reportRequestCallbackService.Delete(reportRequest);
 			}
 		}
 
