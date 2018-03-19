@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using MarketplaceWebService;
 using Moq;
 using MountainWarehouse.EasyMWS;
@@ -19,6 +20,8 @@ namespace EasyMWS.Tests.ReportProcessors
 	    private EasyMwsOptions _easyMwsOptions;
 		private Mock<IFeedSubmissionCallbackService> _feedSubmissionCallbackServiceMock;
 	    private List<FeedSubmissionCallback> _feedSubmissionCallbacks;
+	    private string _merchantId = "TestMerchantId";
+	    private AmazonRegion _region = AmazonRegion.Europe;
 
 		[SetUp]
 	    public void Setup()
@@ -39,10 +42,14 @@ namespace EasyMWS.Tests.ReportProcessors
 				}
 			};
 
-		    _feedSubmissionCallbackServiceMock.Setup(x => x.GetAll()).Returns(_feedSubmissionCallbacks.AsQueryable());
+			_feedSubmissionCallbackServiceMock.Setup(x => x.GetAll()).Returns(_feedSubmissionCallbacks.AsQueryable());
+
+		    _feedSubmissionCallbackServiceMock.Setup(x => x.Where(It.IsAny<Expression<Func<FeedSubmissionCallback, bool>>>()))
+			    .Returns((Expression<Func<FeedSubmissionCallback, bool>> e) => _feedSubmissionCallbacks.AsQueryable().Where(e));
+
 		}
 
-	    [Test]
+		[Test]
 	    public void GetNextFeedToSubmitFromQueue_ReturnsFirstFeedSubmissionFromQueueWithNullFeedSubmissionId_AndSkipsEntriesWithNonNullFeedSubmissionId()
 	    {
 		    var testMerchantId = "test merchant id";
@@ -158,5 +165,132 @@ namespace EasyMWS.Tests.ReportProcessors
 			Assert.AreEqual(3, _feedSubmissionCallbacks.First().SubmissionRetryCount);
 		    _feedSubmissionCallbackServiceMock.Verify(x => x.Update(It.IsAny<FeedSubmissionCallback>()), Times.Exactly(3));
 	    }
+
+		[Test]
+		public void GetAllSubmittedFeeds_ReturnsListOfSubmittedFeeds_ForGivenMerchant()
+		{
+			// Arrange
+			var testMerchantId2 = "test merchant id 2";
+			var data = new List<FeedSubmissionCallback>
+			{
+				new FeedSubmissionCallback
+				{
+					AmazonRegion = AmazonRegion.Europe, MerchantId = testMerchantId2,
+					Id = 2,
+					FeedSubmissionId = "FeedSubmissionId1",
+					ResultReceived = false
+				},
+				new FeedSubmissionCallback
+				{
+					AmazonRegion = AmazonRegion.Europe, MerchantId = testMerchantId2,
+					Id = 3,
+					FeedSubmissionId = "FeedSubmissionId2",
+					ResultReceived = false
+				},
+				new FeedSubmissionCallback
+				{
+					AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId,
+					Id = 4,
+					FeedSubmissionId = "FeedSubmissionId3",
+					ResultReceived = false
+				},
+				new FeedSubmissionCallback
+				{
+					AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId,
+					Id = 5,
+					FeedSubmissionId = "FeedSubmissionId4",
+					ResultReceived = false
+				},
+				new FeedSubmissionCallback
+				{
+					AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId,
+					Id = 6,
+					FeedSubmissionId = null,
+					ResultReceived = false
+				},
+				new FeedSubmissionCallback
+				{
+					AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId,
+					Id = 6,
+					FeedSubmissionId = "FeedSubmissionId5",
+					ResultReceived = true
+				},
+				new FeedSubmissionCallback
+				{
+					AmazonRegion = AmazonRegion.NorthAmerica, MerchantId = _merchantId,
+					Id = 7,
+					FeedSubmissionId = "FeedSubmissionId6",
+					ResultReceived = false
+				}
+			};
+
+			_feedSubmissionCallbacks.AddRange(data);
+
+			// Act
+			var listSubmittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeeds(_region, _merchantId);
+
+			// Assert
+			Assert.AreEqual(2, listSubmittedFeeds.Count());
+			Assert.IsTrue(listSubmittedFeeds.Count(sf => sf.Id == 4 || sf.Id == 5) == 2);
+		}
+
+		[Test]
+		public void GetAllSubmittedFeeds_CalledWithNullMerchantId_ReturnsNull()
+		{
+			var data = new List<FeedSubmissionCallback>
+			{
+				new FeedSubmissionCallback
+				{
+					AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId,
+					Id = 2,
+					FeedSubmissionId = "FeedSubmissionId1",
+					ResultReceived = false
+				},
+				new FeedSubmissionCallback
+				{
+					AmazonRegion = AmazonRegion.Europe, MerchantId = null,
+					Id = 3,
+					FeedSubmissionId = "FeedSubmissionId2",
+					ResultReceived = false
+				},
+				new FeedSubmissionCallback
+				{
+					AmazonRegion = AmazonRegion.Europe, MerchantId = null,
+					Id = 2,
+					FeedSubmissionId = "FeedSubmissionId3",
+					ResultReceived = false
+				},
+				new FeedSubmissionCallback
+				{
+					AmazonRegion = AmazonRegion.Europe, MerchantId = null,
+					Id = 3,
+					FeedSubmissionId = "FeedSubmissionId4",
+					ResultReceived = false
+				},
+				new FeedSubmissionCallback
+				{
+					AmazonRegion = AmazonRegion.Europe, MerchantId = null,
+					Id = 4,
+					FeedSubmissionId = "FeedSubmissionId5",
+					ResultReceived = true
+				},
+				new FeedSubmissionCallback
+				{
+					AmazonRegion = AmazonRegion.NorthAmerica, MerchantId = null,
+					Id = 5,
+					FeedSubmissionId = "FeedSubmissionId6",
+					ResultReceived = false
+				}
+			};
+
+			_feedSubmissionCallbacks.AddRange(data);
+
+			// Act
+			var listOfSubmittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeeds(_region, null);
+
+			// Assert
+			Assert.IsEmpty(listOfSubmittedFeeds);
+
+		}
 	}
 }

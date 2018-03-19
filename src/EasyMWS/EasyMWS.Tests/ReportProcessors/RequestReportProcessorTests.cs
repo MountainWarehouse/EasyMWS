@@ -365,28 +365,28 @@ namespace EasyMWS.Tests.ReportProcessors
 				new ReportRequestCallback
 				{
 					AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId,
-					Id = 2,
+					Id = 4,
 					RequestReportId = "Report1",
 					GeneratedReportId = null
 				},
 				new ReportRequestCallback
 				{
 					AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId,
-					Id = 3,
+					Id = 5,
 					RequestReportId = "Report2",
 					GeneratedReportId = null
 				},
 				new ReportRequestCallback
 				{
 					AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId,
-					Id = 4,
+					Id = 6,
 					RequestReportId = "Report3",
 					GeneratedReportId = "GeneratedIdTest1"
 				},
 				new ReportRequestCallback
 				{
 					AmazonRegion = AmazonRegion.NorthAmerica, MerchantId = _merchantId,
-					Id = 5,
+					Id = 7,
 					RequestReportId = "Report4",
 					GeneratedReportId = null
 				}
@@ -399,6 +399,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			
 			// Assert
 			Assert.AreEqual(2, listPendingReports.Count());
+			Assert.IsTrue(listPendingReports.Count(sf => sf.Id == 4 || sf.Id == 5) == 2);
 		}
 
 		[Test]

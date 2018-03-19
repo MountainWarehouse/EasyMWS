@@ -1,4 +1,5 @@
-﻿using MountainWarehouse.EasyMWS.Data;
+﻿using System.Collections.Generic;
+using MountainWarehouse.EasyMWS.Data;
 
 namespace MountainWarehouse.EasyMWS.ReportProcessors
 {
@@ -8,5 +9,6 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 	    string SubmitSingleQueuedFeedToAmazon(FeedSubmissionCallback feedSubmission, string merchantId);
 	    void AllocateFeedSubmissionForRetry(FeedSubmissionCallback feedSubmission);
 	    void MoveToQueueOfSubmittedFeeds(FeedSubmissionCallback feedSubmission, string feedSubmissionId);
-    }
+		IEnumerable<FeedSubmissionCallback> GetAllSubmittedFeeds(AmazonRegion region, string merchantId);
+	}
 }
