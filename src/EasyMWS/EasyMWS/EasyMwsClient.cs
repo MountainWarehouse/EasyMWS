@@ -219,8 +219,7 @@ namespace MountainWarehouse.EasyMWS
 
 			var feedSubmissionResults = _feedSubmissionProcessor.GetFeedSubmissionResults(feedSubmissionIdList, _merchantId);
 
-			_feedSubmissionProcessor.MoveFeedsToProcessedQueue(feedSubmissionResults);
-			_feedSubmissionProcessor.ReturnFeedsToProcessingRetryQueue(feedSubmissionResults);
+			_feedSubmissionProcessor.MoveFeedsToQueuesAccordingToProcessingStatus(feedSubmissionResults);
 		}
 
 		private void RequestReportStatusesFromAmazon()
@@ -275,7 +274,7 @@ namespace MountainWarehouse.EasyMWS
 				MerchantId = _merchantId,
 				LastSubmitted = DateTime.MinValue,
 				IsProcessingComplete = false,
-				IsStatusDone = false,
+				HasErrors = false,
 				SubmissionErrorData = null,
 				SubmissionRetryCount = 0,
 				FeedSubmissionId = null,

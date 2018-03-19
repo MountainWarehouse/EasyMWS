@@ -48,6 +48,9 @@ namespace EasyMWS.Tests.ReportProcessors
 		    _feedSubmissionCallbackServiceMock.Setup(x => x.Where(It.IsAny<Expression<Func<FeedSubmissionCallback, bool>>>()))
 			    .Returns((Expression<Func<FeedSubmissionCallback, bool>> e) => _feedSubmissionCallbacks.AsQueryable().Where(e));
 
+			_feedSubmissionCallbackServiceMock
+				.Setup(x => x.FirstOrDefault(It.IsAny<Expression<Func<FeedSubmissionCallback, bool>>>()))
+			    .Returns((Expression<Func<FeedSubmissionCallback, bool>> e) => _feedSubmissionCallbacks.AsQueryable().FirstOrDefault(e));
 		}
 
 		[Test]
@@ -332,5 +335,90 @@ namespace EasyMWS.Tests.ReportProcessors
 		    Assert.AreEqual("_OTHER_", result.First(x => x.FeedSubmissionId == "feed3").FeedProcessingStatus);
 			Assert.AreEqual("_CANCELLED_", result.First(x => x.FeedSubmissionId == "feed2").FeedProcessingStatus);
 	    }
+
+	    [Test]
+	    public void MoveFeedsToQueuesAccordingToProcessingStatus_MovesFeedToProcessingCompleteQueue_IfProcessingStatusIsDone()
+	    {
+		    var data = new List<FeedSubmissionCallback>
+		    {
+			    new FeedSubmissionCallback{FeedSubmissionId = "testId", IsProcessingComplete = false, SubmissionRetryCount = 0}
+		    };
+
+			_feedSubmissionCallbacks.AddRange(data);
+
+		    var resultsInfo = new List<(string FeedSubmissionId, string FeedProcessingStatus)>
+		    {
+				("testId", "_DONE_")
+			};
+
+			_feedSubmissionProcessor.MoveFeedsToQueuesAccordingToProcessingStatus(resultsInfo);
+
+			Assert.IsTrue(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").IsProcessingComplete);
+			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").SubmissionRetryCount);
+			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionCallback>()), Times.Once);
+		    _feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionCallback>()), Times.Never);
+		}
+
+	    [Test]
+	    public void MoveFeedsToQueuesAccordingToProcessingStatus_ReturnsFeedToRetryGetResultsQueue_IfProcessingStatusIsAsExpected()
+	    {
+		    var data = new List<FeedSubmissionCallback>
+		    {
+			    new FeedSubmissionCallback{FeedSubmissionId = "testId1", IsProcessingComplete = false, SubmissionRetryCount = 0},
+			    new FeedSubmissionCallback{FeedSubmissionId = "testId2", IsProcessingComplete = false, SubmissionRetryCount = 0},
+			    new FeedSubmissionCallback{FeedSubmissionId = "testId3", IsProcessingComplete = false, SubmissionRetryCount = 0},
+			    new FeedSubmissionCallback{FeedSubmissionId = "testId4", IsProcessingComplete = false, SubmissionRetryCount = 0},
+			    new FeedSubmissionCallback{FeedSubmissionId = "testId5", IsProcessingComplete = false, SubmissionRetryCount = 0}
+			};
+
+		    _feedSubmissionCallbacks.AddRange(data);
+
+		    var resultsInfo = new List<(string FeedSubmissionId, string FeedProcessingStatus)>
+		    {
+			    ("testId1", "_AWAITING_ASYNCHRONOUS_REPLY_"),
+			    ("testId2", "_IN_PROGRESS_"),
+			    ("testId3", "_IN_SAFETY_NET_"),
+			    ("testId4", "_SUBMITTED_"),
+			    ("testId5", "_UNCONFIRMED_")
+			};
+
+		    _feedSubmissionProcessor.MoveFeedsToQueuesAccordingToProcessingStatus(resultsInfo);
+
+		    Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId1").IsProcessingComplete);
+		    Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId1").SubmissionRetryCount);
+		    Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId2").IsProcessingComplete);
+		    Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId2").SubmissionRetryCount);
+		    Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId3").IsProcessingComplete);
+		    Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId3").SubmissionRetryCount);
+		    Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId4").IsProcessingComplete);
+		    Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId4").SubmissionRetryCount);
+		    Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId5").IsProcessingComplete);
+		    Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId5").SubmissionRetryCount);
+			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionCallback>()), Times.Exactly(5));
+		    _feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionCallback>()), Times.Never);
+		}
+
+	    [Test]
+	    public void MoveFeedsToQueuesAccordingToProcessingStatus_RemovesFeedFromDb_IfProcessingStatusIsCancelledOrUnknown()
+	    {
+		    var data = new List<FeedSubmissionCallback>
+		    {
+			    new FeedSubmissionCallback{FeedSubmissionId = "testId", IsProcessingComplete = false, SubmissionRetryCount = 0},
+			    new FeedSubmissionCallback{FeedSubmissionId = "testId2", IsProcessingComplete = false, SubmissionRetryCount = 0}
+			};
+
+		    _feedSubmissionCallbacks.AddRange(data);
+
+		    var resultsInfo = new List<(string FeedSubmissionId, string FeedProcessingStatus)>
+		    {
+			    ("testId", "_CANCELLED_"),
+			    ("testId2", "_SOME_MADE_UP_STATUS_")
+			};
+
+		    _feedSubmissionProcessor.MoveFeedsToQueuesAccordingToProcessingStatus(resultsInfo);
+
+		    _feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionCallback>()), Times.Never);
+		    _feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionCallback>()), Times.Exactly(2));
+		}
 	}
 }

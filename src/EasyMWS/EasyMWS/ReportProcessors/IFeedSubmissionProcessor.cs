@@ -14,7 +14,6 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 	    List<(string FeedSubmissionId, string FeedProcessingStatus)> GetFeedSubmissionResults(
 		    IEnumerable<string> feedSubmissionIdList, string merchant);
 
-	    void MoveFeedsToProcessedQueue(List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses);
-	    void ReturnFeedsToProcessingRetryQueue(List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses);
-	}
+	   void MoveFeedsToQueuesAccordingToProcessingStatus(List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses);
+	   }
 }

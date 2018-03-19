@@ -94,14 +94,35 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 			return responseInfo;
 		}
 
-		public void MoveFeedsToProcessedQueue(List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses)
+		public void MoveFeedsToQueuesAccordingToProcessingStatus(List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses)
 		{
-			throw new NotImplementedException();
-		}
+			foreach (var feedInfo in feedProcessingStatuses)
+			{
+				var feedSubmissionCallback = _feedSubmissionCallbackService.FirstOrDefault(fsc => fsc.FeedSubmissionId == feedInfo.FeedSubmissionId);
 
-		public void ReturnFeedsToProcessingRetryQueue(List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses)
-		{
-			throw new NotImplementedException();
+				if (feedInfo.FeedProcessingStatus == "_DONE_")
+				{
+					feedSubmissionCallback.IsProcessingComplete = true;
+					feedSubmissionCallback.SubmissionRetryCount = 0;
+					_feedSubmissionCallbackService.Update(feedSubmissionCallback);
+				} else if (feedInfo.FeedProcessingStatus == "_AWAITING_ASYNCHRONOUS_REPLY_"
+				           || feedInfo.FeedProcessingStatus == "_IN_PROGRESS_"
+				           || feedInfo.FeedProcessingStatus == "_IN_SAFETY_NET_"
+				           || feedInfo.FeedProcessingStatus == "_SUBMITTED_"
+				           || feedInfo.FeedProcessingStatus == "_UNCONFIRMED_")
+				{
+					feedSubmissionCallback.IsProcessingComplete = false;
+					feedSubmissionCallback.SubmissionRetryCount++;
+					_feedSubmissionCallbackService.Update(feedSubmissionCallback);
+				} else if (feedInfo.FeedProcessingStatus == "_CANCELLED_")
+				{
+					_feedSubmissionCallbackService.Delete(feedSubmissionCallback);
+				}
+				else
+				{
+					_feedSubmissionCallbackService.Delete(feedSubmissionCallback);
+				}
+			}
 		}
 
 		private bool IsFeedReadyForSubmission(FeedSubmissionCallback feedSubmission)

@@ -27,7 +27,7 @@ namespace MountainWarehouse.EasyMWS.Data
 
 	    public string FeedSubmissionId { get; set; }
 	    public bool IsProcessingComplete { get; set; }
-	    public bool IsStatusDone { get; set; }
+	    public bool HasErrors { get; set; }
 	    public string SubmissionErrorData { get; set; }
 
 	    #endregion
