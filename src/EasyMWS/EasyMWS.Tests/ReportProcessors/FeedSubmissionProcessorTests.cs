@@ -123,5 +123,40 @@ namespace EasyMWS.Tests.ReportProcessors
 	    {
 		    Assert.Throws<ArgumentNullException>(() => _feedSubmissionProcessor.SubmitSingleQueuedFeedToAmazon(new FeedSubmissionCallback(), string.Empty));
 	    }
+
+	    [Test]
+	    public void MoveToQueueOfSubmittedFeeds_UpdatesFeedSubmissionId_OnTheCallback()
+	    {
+		    var testFeedSubmissionId = "testFeedSubmissionId";
+
+		    _feedSubmissionProcessor.MoveToQueueOfSubmittedFeeds(_feedSubmissionCallbacks[0], testFeedSubmissionId);
+
+		    Assert.AreEqual("testFeedSubmissionId", _feedSubmissionCallbacks[0].FeedSubmissionId);
+		    _feedSubmissionCallbackServiceMock.Verify(x => x.Update(It.IsAny<FeedSubmissionCallback>()), Times.Once);
+	    }
+
+	    [Test]
+	    public void AllocateFeedSubmissionForRetry_CalledOnce_IncrementsRequestRetryCountCorrectly()
+	    {
+		    Assert.AreEqual(0, _feedSubmissionCallbacks.First().SubmissionRetryCount);
+
+		    _feedSubmissionProcessor.AllocateFeedSubmissionForRetry(_feedSubmissionCallbacks.First());
+
+		    Assert.AreEqual(1, _feedSubmissionCallbacks.First().SubmissionRetryCount);
+		    _feedSubmissionCallbackServiceMock.Verify(x => x.Update(It.IsAny<FeedSubmissionCallback>()), Times.Once);
+	    }
+
+	    [Test]
+		public void AllocateFeedSubmissionForRetry_CalledMultipleTimes_IncrementsRequestRetryCountCorrectly()
+	    {
+		    Assert.AreEqual(0, _feedSubmissionCallbacks.First().SubmissionRetryCount);
+
+		    _feedSubmissionProcessor.AllocateFeedSubmissionForRetry(_feedSubmissionCallbacks.First());
+		    _feedSubmissionProcessor.AllocateFeedSubmissionForRetry(_feedSubmissionCallbacks.First());
+		    _feedSubmissionProcessor.AllocateFeedSubmissionForRetry(_feedSubmissionCallbacks.First());
+
+			Assert.AreEqual(3, _feedSubmissionCallbacks.First().SubmissionRetryCount);
+		    _feedSubmissionCallbackServiceMock.Verify(x => x.Update(It.IsAny<FeedSubmissionCallback>()), Times.Exactly(3));
+	    }
 	}
 }

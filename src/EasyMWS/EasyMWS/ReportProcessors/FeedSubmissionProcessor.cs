@@ -60,12 +60,15 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 
 		public void AllocateFeedSubmissionForRetry(FeedSubmissionCallback feedSubmission)
 		{
-			throw new NotImplementedException();
+			feedSubmission.SubmissionRetryCount++;
+			_feedSubmissionCallbackService.Update(feedSubmission);
 		}
 
 		public void MoveToQueueOfSubmittedFeeds(FeedSubmissionCallback feedSubmission, string feedSubmissionId)
 		{
-			throw new NotImplementedException();
+			feedSubmission.FeedSubmissionId = feedSubmissionId;
+			feedSubmission.SubmissionRetryCount = 0;
+			_feedSubmissionCallbackService.Update(feedSubmission);
 		}
 
 		private bool IsFeedReadyForSubmission(FeedSubmissionCallback feedSubmission)
