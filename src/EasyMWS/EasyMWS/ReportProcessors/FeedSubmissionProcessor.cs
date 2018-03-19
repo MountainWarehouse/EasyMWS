@@ -75,7 +75,7 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 			string.IsNullOrEmpty(merchantId) ? new List<FeedSubmissionCallback>().AsEnumerable() : _feedSubmissionCallbackService.Where(
 				rrcs => rrcs.AmazonRegion == region && rrcs.MerchantId == merchantId
 				        && rrcs.FeedSubmissionId != null
-						&& rrcs.ResultReceived == false
+						&& rrcs.IsProcessingComplete == false
 				);
 
 		public List<(string FeedSubmissionId, string FeedProcessingStatus)> GetFeedSubmissionResults(IEnumerable<string> feedSubmissionIdList, string merchant)

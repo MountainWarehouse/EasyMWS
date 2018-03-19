@@ -179,49 +179,49 @@ namespace EasyMWS.Tests.ReportProcessors
 					AmazonRegion = AmazonRegion.Europe, MerchantId = testMerchantId2,
 					Id = 2,
 					FeedSubmissionId = "FeedSubmissionId1",
-					ResultReceived = false
+					IsProcessingComplete = false
 				},
 				new FeedSubmissionCallback
 				{
 					AmazonRegion = AmazonRegion.Europe, MerchantId = testMerchantId2,
 					Id = 3,
 					FeedSubmissionId = "FeedSubmissionId2",
-					ResultReceived = false
+					IsProcessingComplete = false
 				},
 				new FeedSubmissionCallback
 				{
 					AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId,
 					Id = 4,
 					FeedSubmissionId = "FeedSubmissionId3",
-					ResultReceived = false
+					IsProcessingComplete = false
 				},
 				new FeedSubmissionCallback
 				{
 					AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId,
 					Id = 5,
 					FeedSubmissionId = "FeedSubmissionId4",
-					ResultReceived = false
+					IsProcessingComplete = false
 				},
 				new FeedSubmissionCallback
 				{
 					AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId,
 					Id = 6,
 					FeedSubmissionId = null,
-					ResultReceived = false
+					IsProcessingComplete = false
 				},
 				new FeedSubmissionCallback
 				{
 					AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId,
 					Id = 6,
 					FeedSubmissionId = "FeedSubmissionId5",
-					ResultReceived = true
+					IsProcessingComplete = true
 				},
 				new FeedSubmissionCallback
 				{
 					AmazonRegion = AmazonRegion.NorthAmerica, MerchantId = _merchantId,
 					Id = 7,
 					FeedSubmissionId = "FeedSubmissionId6",
-					ResultReceived = false
+					IsProcessingComplete = false
 				}
 			};
 
@@ -245,42 +245,42 @@ namespace EasyMWS.Tests.ReportProcessors
 					AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId,
 					Id = 2,
 					FeedSubmissionId = "FeedSubmissionId1",
-					ResultReceived = false
+					IsProcessingComplete = false
 				},
 				new FeedSubmissionCallback
 				{
 					AmazonRegion = AmazonRegion.Europe, MerchantId = null,
 					Id = 3,
 					FeedSubmissionId = "FeedSubmissionId2",
-					ResultReceived = false
+					IsProcessingComplete = false
 				},
 				new FeedSubmissionCallback
 				{
 					AmazonRegion = AmazonRegion.Europe, MerchantId = null,
 					Id = 2,
 					FeedSubmissionId = "FeedSubmissionId3",
-					ResultReceived = false
+					IsProcessingComplete = false
 				},
 				new FeedSubmissionCallback
 				{
 					AmazonRegion = AmazonRegion.Europe, MerchantId = null,
 					Id = 3,
 					FeedSubmissionId = "FeedSubmissionId4",
-					ResultReceived = false
+					IsProcessingComplete = false
 				},
 				new FeedSubmissionCallback
 				{
 					AmazonRegion = AmazonRegion.Europe, MerchantId = null,
 					Id = 4,
 					FeedSubmissionId = "FeedSubmissionId5",
-					ResultReceived = true
+					IsProcessingComplete = true
 				},
 				new FeedSubmissionCallback
 				{
 					AmazonRegion = AmazonRegion.NorthAmerica, MerchantId = null,
 					Id = 5,
 					FeedSubmissionId = "FeedSubmissionId6",
-					ResultReceived = false
+					IsProcessingComplete = false
 				}
 			};
 
