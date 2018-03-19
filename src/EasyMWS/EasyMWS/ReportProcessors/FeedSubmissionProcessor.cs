@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using MarketplaceWebService;
+using MarketplaceWebService.Model;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Services;
+using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS.ReportProcessors
 {
@@ -34,6 +36,27 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 				.FirstOrDefault(fscs => fscs.AmazonRegion == region && fscs.MerchantId == merchantId
 				&& fscs.FeedSubmissionId == null
 				&& IsFeedReadyForSubmission(fscs));
+
+		public string SubmitSingleQueuedFeedToAmazon(FeedSubmissionCallback feedSubmission, string merchantId)
+		{
+			if(feedSubmission == null || string.IsNullOrEmpty(merchantId))
+				throw new ArgumentNullException("Cannot submit queued feed to amazon due to missing feed submission information or empty merchant ID");
+
+			var feedSubmissionData = JsonConvert.DeserializeObject<FeedSubmissionPropertiesContainer>(feedSubmission.FeedSubmissionData);
+			var submitFeedRequest = new SubmitFeedRequest
+			{
+				Merchant = merchantId,
+				FeedType = feedSubmissionData.FeedType,
+				FeedContent = StreamHelper.CreateNewMemoryStream(feedSubmissionData.FeedContent),
+				MarketplaceIdList = feedSubmissionData.MarketplaceIdList == null ? null : new IdList { Id = feedSubmissionData.MarketplaceIdList },
+				PurgeAndReplace = feedSubmissionData.PurgeAndReplace ?? false,
+				ContentMD5 = feedSubmissionData.ContentMD5Value
+			};
+
+			var response = _marketplaceWebServiceClient.SubmitFeed(submitFeedRequest);
+
+			return response?.SubmitFeedResult?.FeedSubmissionInfo?.FeedSubmissionId;
+		}
 
 		private bool IsFeedReadyForSubmission(FeedSubmissionCallback feedSubmission)
 		{
