@@ -239,6 +239,9 @@ namespace MountainWarehouse.EasyMWS
 				MerchantId = _merchantId,
 				LastRequested = DateTime.MinValue,
 				ContentUpdateFrequency = reportRequestContainer.UpdateFrequency,
+				RequestReportId = null,
+				GeneratedReportId = null,
+				RequestRetryCount = 0,
 				ReportRequestData = JsonConvert.SerializeObject(reportRequestContainer)
 			};
 		}
@@ -252,7 +255,14 @@ namespace MountainWarehouse.EasyMWS
 			return new FeedSubmissionCallback(serializedCallback)
 			{
 				AmazonRegion = _amazonRegion,
-				FeedSubmissionData = JsonConvert.SerializeObject(propertiesContainer)
+				MerchantId = _merchantId,
+				LastSubmitted = DateTime.MinValue,
+				ResultReceived = false,
+				ResultIsSuccess = false,
+				SubmissionErrorData = null,
+				SubmissionRetryCount = 0,
+				FeedSubmissionId = null,
+				FeedSubmissionData = JsonConvert.SerializeObject(propertiesContainer),
 			};
 		}
 
