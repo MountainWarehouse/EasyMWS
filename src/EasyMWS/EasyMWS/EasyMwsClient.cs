@@ -25,12 +25,13 @@ namespace MountainWarehouse.EasyMWS
 
 		public AmazonRegion AmazonRegion => _amazonRegion;
 
-		internal EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, IFeedSubmissionCallbackService feedSubmissionCallbackService, IReportRequestCallbackService reportRequestCallbackService, IMarketplaceWebServiceClient marketplaceWebServiceClient, IRequestReportProcessor requestReportProcessor, EasyMwsOptions options = null) 
+		internal EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, IFeedSubmissionCallbackService feedSubmissionCallbackService, IReportRequestCallbackService reportRequestCallbackService, IMarketplaceWebServiceClient marketplaceWebServiceClient, IRequestReportProcessor requestReportProcessor, IFeedSubmissionProcessor feedSubmissionProcessor, EasyMwsOptions options = null) 
 			: this(region, merchantId, accessKeyId, mwsSecretAccessKey, options)
 		{
 			_reportRequestCallbackService = reportRequestCallbackService;
 			_feedSubmissionCallbackService = feedSubmissionCallbackService;
 			_requestReportProcessor = requestReportProcessor;
+			_feedSubmissionProcessor = feedSubmissionProcessor;
 			_mwsClient = marketplaceWebServiceClient;
 		}
 
@@ -52,6 +53,7 @@ namespace MountainWarehouse.EasyMWS
 			_feedSubmissionCallbackService = _feedSubmissionCallbackService ?? new FeedSubmissionCallbackService();
 			_callbackActivator = new CallbackActivator();
 			_requestReportProcessor = new RequestReportProcessor(_mwsClient, _reportRequestCallbackService, _options);
+			_feedSubmissionProcessor = new FeedSubmissionProcessor(_mwsClient, _feedSubmissionCallbackService, _options);
 		}
 
 		/// <summary>
