@@ -32,7 +32,7 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 	    }
 
 	    public ReportRequestCallback GetNonRequestedReportFromQueue(AmazonRegion region, string merchantId) =>
-		    merchantId == null ? null :_reportRequestCallbackService.GetAll()
+		    string.IsNullOrEmpty(merchantId) ? null :_reportRequestCallbackService.GetAll()
 			    .FirstOrDefault(rrc =>
 				    rrc.AmazonRegion == region && rrc.MerchantId == merchantId
 				    && rrc.RequestReportId == null
@@ -85,7 +85,10 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 
 	    public string RequestSingleQueuedReport(ReportRequestCallback reportRequestCallback, string merchantId)
 	    {
-		    var reportRequestData = JsonConvert.DeserializeObject<ReportRequestPropertiesContainer>(reportRequestCallback.ReportRequestData);
+		    if (reportRequestCallback == null || string.IsNullOrEmpty(merchantId))
+			    throw new ArgumentNullException("Cannot submit queued feed to amazon due to missing feed submission information or empty merchant ID");
+
+			var reportRequestData = JsonConvert.DeserializeObject<ReportRequestPropertiesContainer>(reportRequestCallback.ReportRequestData);
 			var reportRequest = new RequestReportRequest
 			{
 				Merchant = merchantId,
@@ -106,7 +109,7 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 	    }
 
 	    public IEnumerable<ReportRequestCallback> GetAllPendingReport(AmazonRegion region, string merchantId) =>
-		    merchantId == null ? new List<ReportRequestCallback>().AsEnumerable() : _reportRequestCallbackService.Where(
+		    string.IsNullOrEmpty(merchantId) ? new List<ReportRequestCallback>().AsEnumerable() : _reportRequestCallbackService.Where(
 			    rrcs => rrcs.AmazonRegion == region && rrcs.MerchantId == merchantId
 			            && rrcs.RequestReportId != null
 			            && rrcs.GeneratedReportId == null);
@@ -155,7 +158,7 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 	    }
 
 	    public ReportRequestCallback GetReadyForDownloadReports(AmazonRegion region, string merchantId) =>
-		    merchantId == null ? null : _reportRequestCallbackService.FirstOrDefault(
+		    string.IsNullOrEmpty(merchantId) ? null : _reportRequestCallbackService.FirstOrDefault(
 			    rrc => rrc.AmazonRegion == region && rrc.MerchantId == merchantId
 			           && rrc.RequestReportId != null
 			           && rrc.GeneratedReportId != null);

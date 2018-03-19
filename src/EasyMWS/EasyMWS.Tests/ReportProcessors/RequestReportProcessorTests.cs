@@ -304,9 +304,27 @@ namespace EasyMWS.Tests.ReportProcessors
 		}
 
 		[Test]
+		public void RequestSingleQueuedReport_CalledWithNullReportRequestCallback_ThrowsArgumentNullException()
+		{
+			Assert.Throws<ArgumentNullException>(() => _requestReportProcessor.RequestSingleQueuedReport(null, "testMerchantId"));
+		}
+
+		[Test]
+		public void RequestSingleQueuedReport_CalledWithNullMerchantId_ThrowsArgumentNullException()
+		{
+			Assert.Throws<ArgumentNullException>(() => _requestReportProcessor.RequestSingleQueuedReport(new ReportRequestCallback(), null));
+		}
+
+		[Test]
+		public void RequestSingleQueuedReport_CalledWithEmptyMerchantId_ThrowsArgumentNullException()
+		{
+			Assert.Throws<ArgumentNullException>(() => _requestReportProcessor.RequestSingleQueuedReport(new ReportRequestCallback(), string.Empty));
+		}
+
+		[Test]
 		public void RequestSingleQueuedReport_OneInQueue_SubmitsToAmazon()
 		{
-			var reportId = _requestReportProcessor.RequestSingleQueuedReport(_reportRequestCallbacks[0], "");
+			var reportId = _requestReportProcessor.RequestSingleQueuedReport(_reportRequestCallbacks[0], "testMerchantId");
 
 			_marketplaceWebServiceClientMock.Verify(mwsc => mwsc.RequestReport(It.IsAny<RequestReportRequest>()), Times.Once);
 			Assert.AreEqual("Report001", reportId);

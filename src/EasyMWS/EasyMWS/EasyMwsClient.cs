@@ -21,6 +21,7 @@ namespace MountainWarehouse.EasyMWS
 		private string _merchantId;
 		private AmazonRegion _amazonRegion;
 		private IRequestReportProcessor _requestReportProcessor;
+		private IFeedSubmissionProcessor _feedSubmissionProcessor;
 		private EasyMwsOptions _options;
 
 		public AmazonRegion AmazonRegion => _amazonRegion;
@@ -42,7 +43,7 @@ namespace MountainWarehouse.EasyMWS
 		/// <param name="options">Configuration options for EasyMwsClient</param>
 		public EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, EasyMwsOptions options = null)
 		{
-			if(merchantId == null || accessKeyId == null || mwsSecretAccessKey == null)
+			if(string.IsNullOrEmpty(merchantId) || accessKeyId == null || mwsSecretAccessKey == null)
 				throw new ArgumentNullException("One or more required parameters provided to initialize the EasyMwsClient were null.");
 
 			_options = options ?? EasyMwsOptions.Defaults;

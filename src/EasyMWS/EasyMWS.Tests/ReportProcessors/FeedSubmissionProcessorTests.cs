@@ -105,5 +105,23 @@ namespace EasyMWS.Tests.ReportProcessors
 
 		    Assert.IsNull(feedSubmissionCallback);
 		}
+
+	    [Test]
+	    public void SubmitSingleQueuedFeedToAmazon_CalledWithNullFeedSubmissionCallback_ThrowsArgumentNullException()
+	    {
+		    Assert.Throws<ArgumentNullException>(()=> _feedSubmissionProcessor.SubmitSingleQueuedFeedToAmazon(null, "testMerchantId"));
+	    }
+
+	    [Test]
+	    public void SubmitSingleQueuedFeedToAmazon_CalledWithNullMerchantId_ThrowsArgumentNullException()
+	    {
+		    Assert.Throws<ArgumentNullException>(() => _feedSubmissionProcessor.SubmitSingleQueuedFeedToAmazon(new FeedSubmissionCallback(), null));
+	    }
+
+	    [Test]
+	    public void SubmitSingleQueuedFeedToAmazon_CalledWithEmptyMerchantId_ThrowsArgumentNullException()
+	    {
+		    Assert.Throws<ArgumentNullException>(() => _feedSubmissionProcessor.SubmitSingleQueuedFeedToAmazon(new FeedSubmissionCallback(), string.Empty));
+	    }
 	}
 }

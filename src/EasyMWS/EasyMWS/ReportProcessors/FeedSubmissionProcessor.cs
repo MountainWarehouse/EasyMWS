@@ -30,7 +30,7 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 		}
 
 		public FeedSubmissionCallback GetNextFeedToSubmitFromQueue(AmazonRegion region, string merchantId) =>
-			merchantId == null ? null : _feedSubmissionCallbackService.GetAll()
+			string.IsNullOrEmpty(merchantId) ? null : _feedSubmissionCallbackService.GetAll()
 				.FirstOrDefault(fscs => fscs.AmazonRegion == region && fscs.MerchantId == merchantId
 				&& fscs.FeedSubmissionId == null
 				&& IsFeedReadyForSubmission(fscs));
