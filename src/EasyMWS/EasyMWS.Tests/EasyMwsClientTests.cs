@@ -9,6 +9,7 @@ using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
+using MountainWarehouse.EasyMWS.Logging;
 using MountainWarehouse.EasyMWS.ReportProcessors;
 using MountainWarehouse.EasyMWS.Services;
 using Newtonsoft.Json;
@@ -25,6 +26,7 @@ namespace EasyMWS.Tests
 	    private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
 	    private Mock<IRequestReportProcessor> _requestReportProcessor;
 	    private readonly int ConfiguredMaxNumberOrReportRequestRetries = 2;
+	    private Mock<IEasyMwsLogger> _loggerMock;
 
 		public struct CallbackDataTest
 	    {
@@ -41,28 +43,49 @@ namespace EasyMWS.Tests
 			_reportRequestCallbackServiceMock = new Mock<IReportRequestCallbackService>();
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_requestReportProcessor = new Mock<IRequestReportProcessor>();
-			_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", "", "", _reportRequestCallbackServiceMock.Object, _marketplaceWebServiceClientMock.Object, _requestReportProcessor.Object, options);
+			_loggerMock = new Mock<IEasyMwsLogger>();
+			_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", "", "", _reportRequestCallbackServiceMock.Object, _marketplaceWebServiceClientMock.Object, _requestReportProcessor.Object, _loggerMock.Object ,options);
 		}
 
 	    [Test]
-	    public void QueueReport_WithNullReportRequestPropertiesContainerArgument_ThrowsArgumentNullException()
+	    public void QueueReport_WithNullReportRequestPropertiesContainerArgument_LogsErrorForArgumentNullException()
 	    {
 		    var reportRequestContainer = new ReportRequestPropertiesContainer("", ContentUpdateFrequency.Unknown);
 		    var callbackMethod = (Action<Stream, object>) null;
+		    var loggedMessage = string.Empty;
+		    var loggedException = (Exception)null;
+		    _loggerMock.Setup(lm => lm.Error(It.IsAny<string>(), It.IsAny<Exception>())).Callback((string m, Exception ex) =>
+		    {
+			    loggedMessage = m;
+			    loggedException = ex;
+		    });
 
-		    Assert.Throws<ArgumentNullException>(() =>
-			    _easyMwsClient.QueueReport(reportRequestContainer, callbackMethod, new CallbackDataTest{Foo = "Bar"}));
-	    }
+		    _easyMwsClient.QueueReport(reportRequestContainer, callbackMethod, new CallbackDataTest { Foo = "Bar" });
+
+		    _loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<Exception>()), Times.Once);
+		    Assert.IsTrue(loggedMessage.Contains("QueueReport operation failed"));
+		    Assert.IsTrue(loggedException is ArgumentNullException);
+		}
 
 	    [Test]
-	    public void QueueReport_WithNullCallbackMethodArgument_ThrowsArgumentNullException()
+	    public void QueueReport_WithNullCallbackMethodArgument_LogsErrorForArgumentNullException()
 	    {
 		    ReportRequestPropertiesContainer reportRequestContainer = null;
 		    var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
+		    var loggedMessage = string.Empty;
+		    var loggedException = (Exception)null;
+		    _loggerMock.Setup(lm => lm.Error(It.IsAny<string>(), It.IsAny<Exception>())).Callback((string m, Exception ex) =>
+		    {
+			    loggedMessage = m;
+			    loggedException = ex;
+		    });
 
-		    Assert.Throws<ArgumentNullException>(() =>
-			    _easyMwsClient.QueueReport(reportRequestContainer, callbackMethod, new CallbackDataTest { Foo = "Bar" }));
-	    }
+		    _easyMwsClient.QueueReport(reportRequestContainer, callbackMethod, new CallbackDataTest { Foo = "Bar" });
+
+		    _loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<Exception>()), Times.Once);
+		    Assert.IsTrue(loggedMessage.Contains("QueueReport operation failed"));
+		    Assert.IsTrue(loggedException is ArgumentNullException);
+		}
 
 	    [Test]
 	    public void QueueReport_WithNonEmptyArguments_CallsReportRequestCallbackServiceCreateOnceWithCorrectData()
