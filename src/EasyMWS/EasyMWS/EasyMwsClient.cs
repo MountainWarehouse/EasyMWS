@@ -35,12 +35,15 @@ namespace MountainWarehouse.EasyMWS
 		}
 
 		/// <param name="region">The region of the account</param>
-		/// <param name="merchantId"></param>
-		/// <param name="accessKeyId">Your specific access key</param>
-		/// <param name="mwsSecretAccessKey">Your specific secret access key</param>
+		/// <param name="merchantId">Seller ID. Required parameter.</param>
+		/// <param name="accessKeyId">Your specific access key. Required parameter.</param>
+		/// <param name="mwsSecretAccessKey">Your specific secret access key. Required parameter.</param>
 		/// <param name="options">Configuration options for EasyMwsClient</param>
 		public EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, EasyMwsOptions options = null)
 		{
+			if(merchantId == null || accessKeyId == null || mwsSecretAccessKey == null)
+				throw new ArgumentNullException("One or more required parameters provided to initialize the EasyMwsClient were null.");
+
 			_options = options ?? EasyMwsOptions.Defaults;
 			_merchantId = merchantId;
 			_amazonRegion = region;
@@ -128,7 +131,7 @@ namespace MountainWarehouse.EasyMWS
 
 		private void RequestNextReportInQueueFromAmazon()
 		{
-			var reportRequestCallbackReportQueued = _requestReportProcessor.GetNonRequestedReportFromQueue(_amazonRegion);
+			var reportRequestCallbackReportQueued = _requestReportProcessor.GetNonRequestedReportFromQueue(_amazonRegion, _merchantId);
 
 			if (reportRequestCallbackReportQueued == null)
 				return;
@@ -161,7 +164,7 @@ namespace MountainWarehouse.EasyMWS
 
 		private (ReportRequestCallback reportRequestCallback, Stream stream) DownloadNextGeneratedRequestReportInQueueFromAmazon()
 		{
-			var generatedReportRequest = _requestReportProcessor.GetReadyForDownloadReports(_amazonRegion);
+			var generatedReportRequest = _requestReportProcessor.GetReadyForDownloadReports(_amazonRegion, _merchantId);
 
 			if (generatedReportRequest == null)
 				return (null, null);
@@ -185,7 +188,7 @@ namespace MountainWarehouse.EasyMWS
 
 		private void RequestReportStatusesFromAmazon()
 		{
-			var reportRequestCallbacksPendingReports = _requestReportProcessor.GetAllPendingReport(_amazonRegion).ToList();
+			var reportRequestCallbacksPendingReports = _requestReportProcessor.GetAllPendingReport(_amazonRegion, _merchantId).ToList();
 
 			if (!reportRequestCallbacksPendingReports.Any())
 				return;
@@ -213,6 +216,7 @@ namespace MountainWarehouse.EasyMWS
 			return new ReportRequestCallback(serializedCallback)
 			{
 				AmazonRegion = _amazonRegion,
+				MerchantId = _merchantId,
 				LastRequested = DateTime.MinValue,
 				ContentUpdateFrequency = reportRequestContainer.UpdateFrequency,
 				ReportRequestData = JsonConvert.SerializeObject(reportRequestContainer)
