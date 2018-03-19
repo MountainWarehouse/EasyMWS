@@ -116,7 +116,6 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 
 		public List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> GetReportRequestListResponse(IEnumerable<string> requestIdList, string merchant)
 	    {
-
 		    var request = new GetReportRequestListRequest() {ReportRequestIdList = new IdList(), Merchant = merchant};
 		    request.ReportRequestIdList.Id.AddRange(requestIdList);
 		    var response = _marketplaceWebServiceClient.GetReportRequestList(request);

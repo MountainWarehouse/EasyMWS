@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -113,6 +114,7 @@ namespace MountainWarehouse.EasyMWS
 		{
 			CleanUpFeedSubmissionQueue();
 			SubmitNextFeedInQueueToAmazon();
+			RequestFeedSubmissionStatusesFromAmazon();
 			_feedSubmissionCallbackService.SaveChanges();
 		}
 
@@ -204,6 +206,21 @@ namespace MountainWarehouse.EasyMWS
 			_callbackActivator.CallMethod(callback, stream);
 
 			DequeueReport(reportRequestCallback);
+		}
+
+		private void RequestFeedSubmissionStatusesFromAmazon()
+		{
+			var submittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeeds(_amazonRegion, _merchantId).ToList();
+
+			if (!submittedFeeds.Any())
+				return;
+
+			var feedSubmissionIdList = submittedFeeds.Select(x => x.FeedSubmissionId);
+
+			var feedSubmissionResults = _feedSubmissionProcessor.GetFeedSubmissionResults(feedSubmissionIdList, _merchantId);
+
+			_feedSubmissionProcessor.MoveFeedsToProcessedQueue(feedSubmissionResults);
+			_feedSubmissionProcessor.ReturnFeedsToProcessingRetryQueue(feedSubmissionResults);
 		}
 
 		private void RequestReportStatusesFromAmazon()

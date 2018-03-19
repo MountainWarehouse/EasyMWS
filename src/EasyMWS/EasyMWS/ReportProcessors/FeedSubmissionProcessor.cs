@@ -78,6 +78,32 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 						&& rrcs.ResultReceived == false
 				);
 
+		public List<(string FeedSubmissionId, string FeedProcessingStatus)> GetFeedSubmissionResults(IEnumerable<string> feedSubmissionIdList, string merchant)
+		{
+			var request = new GetFeedSubmissionListRequest() {FeedSubmissionIdList = new IdList(), Merchant = merchant};
+			request.FeedSubmissionIdList.Id.AddRange(feedSubmissionIdList);
+			var response = _marketplaceWebServiceClient.GetFeedSubmissionList(request);
+
+			var responseInfo = new List<(string FeedSubmissionId, string IsProcessingComplete)>();
+
+			foreach (var feedSubmissionInfo in response.GetFeedSubmissionListResult.FeedSubmissionInfo)
+			{
+				responseInfo.Add((feedSubmissionInfo.FeedSubmissionId, feedSubmissionInfo.FeedProcessingStatus));
+			}
+
+			return responseInfo;
+		}
+
+		public void MoveFeedsToProcessedQueue(List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void ReturnFeedsToProcessingRetryQueue(List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses)
+		{
+			throw new NotImplementedException();
+		}
+
 		private bool IsFeedReadyForSubmission(FeedSubmissionCallback feedSubmission)
 		{
 			return true;

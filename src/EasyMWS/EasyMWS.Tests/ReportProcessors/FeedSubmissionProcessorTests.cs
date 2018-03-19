@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using MarketplaceWebService;
+using MarketplaceWebService.Model;
 using Moq;
 using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.Data;
@@ -292,5 +293,44 @@ namespace EasyMWS.Tests.ReportProcessors
 			Assert.IsEmpty(listOfSubmittedFeeds);
 
 		}
+
+	    [Test]
+	    public void RequestReportsStatuses_WithMultiplePendingReports_SubmitsAmazonRequest()
+	    {
+		    var getFeedSubmissionListResponse = new GetFeedSubmissionListResponse
+		    {
+			    GetFeedSubmissionListResult = new GetFeedSubmissionListResult
+				{
+					FeedSubmissionInfo = new List<FeedSubmissionInfo>
+				    {
+					    new FeedSubmissionInfo
+						{
+							FeedProcessingStatus = "_DONE_",
+							FeedSubmissionId = "feed1"
+					    },
+					    new FeedSubmissionInfo
+						{
+							FeedProcessingStatus = "_CANCELLED_",
+							FeedSubmissionId = "feed2"
+						},
+					    new FeedSubmissionInfo
+						{
+							FeedProcessingStatus = "_OTHER_",
+							FeedSubmissionId = "feed3"
+
+						}
+				    }
+			    }
+		    };
+			var testRequestIdList = new List<string> { "Report1", "Report2", "Report3" };
+		    _marketplaceWebServiceClientMock.Setup(x => x.GetFeedSubmissionList(It.IsAny<GetFeedSubmissionListRequest>()))
+			    .Returns(getFeedSubmissionListResponse);
+
+			var result = _feedSubmissionProcessor.GetFeedSubmissionResults(testRequestIdList, "");
+
+		    Assert.AreEqual("_DONE_", result.First(x => x.FeedSubmissionId == "feed1").FeedProcessingStatus);
+		    Assert.AreEqual("_OTHER_", result.First(x => x.FeedSubmissionId == "feed3").FeedProcessingStatus);
+			Assert.AreEqual("_CANCELLED_", result.First(x => x.FeedSubmissionId == "feed2").FeedProcessingStatus);
+	    }
 	}
 }
