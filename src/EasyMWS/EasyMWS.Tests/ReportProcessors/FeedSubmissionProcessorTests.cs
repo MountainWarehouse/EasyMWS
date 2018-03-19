@@ -45,9 +45,10 @@ namespace EasyMWS.Tests.ReportProcessors
 	    [Test]
 	    public void GetNextFeedToSubmitFromQueue_ReturnsFirstFeedSubmissionFromQueueWithNullFeedSubmissionId_AndSkipsEntriesWithNonNullFeedSubmissionId()
 	    {
-		    var feedSubmissionWithNonNullFeedSubmissionId1 = new FeedSubmissionCallback { AmazonRegion = AmazonRegion.Europe, Id = 2, FeedSubmissionId = "testSubmissionId2", SubmissionRetryCount = 0 };
-		    var feedSubmissionWithNullFeedSubmissionId1 = new FeedSubmissionCallback { AmazonRegion = AmazonRegion.Europe, Id = 3, FeedSubmissionId = null, SubmissionRetryCount = 0 };
-		    var feedSubmissionWithNullFeedSubmissionId2 = new FeedSubmissionCallback { AmazonRegion = AmazonRegion.Europe, Id = 4, FeedSubmissionId = null, SubmissionRetryCount = 0 };
+		    var testMerchantId = "test merchant id";
+		    var feedSubmissionWithNonNullFeedSubmissionId1 = new FeedSubmissionCallback { AmazonRegion = AmazonRegion.Europe, MerchantId = testMerchantId, Id = 2, FeedSubmissionId = "testSubmissionId2", SubmissionRetryCount = 0 };
+		    var feedSubmissionWithNullFeedSubmissionId1 = new FeedSubmissionCallback { AmazonRegion = AmazonRegion.Europe, MerchantId = testMerchantId, Id = 3, FeedSubmissionId = null, SubmissionRetryCount = 0 };
+		    var feedSubmissionWithNullFeedSubmissionId2 = new FeedSubmissionCallback { AmazonRegion = AmazonRegion.Europe, MerchantId = testMerchantId, Id = 4, FeedSubmissionId = null, SubmissionRetryCount = 0 };
 
 
 		    _feedSubmissionCallbacks.Add(feedSubmissionWithNonNullFeedSubmissionId1);
@@ -55,17 +56,54 @@ namespace EasyMWS.Tests.ReportProcessors
 		    _feedSubmissionCallbacks.Add(feedSubmissionWithNullFeedSubmissionId2);
 
 		    var feedSubmissionCallback =
-			    _feedSubmissionProcessor.GetNextFeedToSubmitFromQueue();
+			    _feedSubmissionProcessor.GetNextFeedToSubmitFromQueue(AmazonRegion.Europe, testMerchantId);
 
 			Assert.IsNotNull(feedSubmissionCallback);
 		    Assert.AreEqual(feedSubmissionWithNullFeedSubmissionId1.Id, feedSubmissionCallback.Id);
 	    }
 
 	    [Test]
-	    public void GetNextFeedToSubmitFromQueue_ReturnsFirstFeedSubmissionFromQueueWithAnyRegionSet()
+	    public void GetNextFeedToSubmitFromQueue_ReturnsFirstFeedSubmissionFromQueueForGivenRegionAndMerchantId()
 	    {
-			throw new ApplicationException(@"Need to do refactor so that stuff is returned to clients that submitted it (region, merchantId) and not other clients !!!
-				Fix this for both Reports and Feeds");
+		    var merchantId1 = "test merchant id 1";
+		    var merchantId2 = "test merchant id 2";
+		    var feedSubmissionWithDifferentRegion = new FeedSubmissionCallback { AmazonRegion = AmazonRegion.Europe, MerchantId = merchantId1, Id = 2, FeedSubmissionId = null, SubmissionRetryCount = 0 };
+		    var feedSubmissionWithSameRegionButDifferentMerchantId = new FeedSubmissionCallback { AmazonRegion = AmazonRegion.Australia, MerchantId = merchantId1, Id = 2, FeedSubmissionId = null, SubmissionRetryCount = 0 };
+		    var feedSubmissionWithSameRegionAndMerchantId1 = new FeedSubmissionCallback { AmazonRegion = AmazonRegion.Australia, MerchantId = merchantId2, Id = 3, FeedSubmissionId = null, SubmissionRetryCount = 0 };
+		    var feedSubmissionWithSameRegionAndMerchantId2 = new FeedSubmissionCallback { AmazonRegion = AmazonRegion.Australia, MerchantId = merchantId2, Id = 4, FeedSubmissionId = null, SubmissionRetryCount = 0 };
+
+
+			_feedSubmissionCallbacks.Add(feedSubmissionWithDifferentRegion);
+		    _feedSubmissionCallbacks.Add(feedSubmissionWithSameRegionButDifferentMerchantId);
+		    _feedSubmissionCallbacks.Add(feedSubmissionWithSameRegionAndMerchantId1);
+		    _feedSubmissionCallbacks.Add(feedSubmissionWithSameRegionAndMerchantId2);
+
+			var feedSubmissionCallback =
+			    _feedSubmissionProcessor.GetNextFeedToSubmitFromQueue(AmazonRegion.Australia, merchantId2);
+
+		    Assert.IsNotNull(feedSubmissionCallback);
+		    Assert.AreEqual(feedSubmissionWithSameRegionAndMerchantId1.Id, feedSubmissionCallback.Id);
+		}
+
+	    [Test]
+	    public void GetNextFeedToSubmitFromQueue_CalledWithNullMerchantId_ReturnsNull()
+	    {
+			var testMerchantId = "test merchant id";
+		    var feedSubmissionWithNonNullFeedSubmissionId1 = new FeedSubmissionCallback { AmazonRegion = AmazonRegion.Europe, MerchantId = testMerchantId, Id = 2, FeedSubmissionId = "testSubmissionId2", SubmissionRetryCount = 0 };
+		    var feedSubmissionWithNullFeedSubmissionId1 = new FeedSubmissionCallback { AmazonRegion = AmazonRegion.Europe, MerchantId = testMerchantId, Id = 3, FeedSubmissionId = null, SubmissionRetryCount = 0 };
+		    var feedSubmissionWithNullFeedSubmissionId2 = new FeedSubmissionCallback { AmazonRegion = AmazonRegion.Europe, MerchantId = testMerchantId, Id = 4, FeedSubmissionId = null, SubmissionRetryCount = 0 };
+			var feedSubmissionWithNullMerchant = new FeedSubmissionCallback { AmazonRegion = AmazonRegion.Europe, MerchantId = null, Id = 5, FeedSubmissionId = null, SubmissionRetryCount = 0 };
+
+
+			_feedSubmissionCallbacks.Add(feedSubmissionWithNonNullFeedSubmissionId1);
+		    _feedSubmissionCallbacks.Add(feedSubmissionWithNullFeedSubmissionId1);
+		    _feedSubmissionCallbacks.Add(feedSubmissionWithNullFeedSubmissionId2);
+		    _feedSubmissionCallbacks.Add(feedSubmissionWithNullMerchant);
+
+			var feedSubmissionCallback =
+			    _feedSubmissionProcessor.GetNextFeedToSubmitFromQueue(AmazonRegion.Europe, null);
+
+		    Assert.IsNull(feedSubmissionCallback);
 		}
 	}
 }

@@ -29,9 +29,11 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 			_options = options;
 		}
 
-		public FeedSubmissionCallback GetNextFeedToSubmitFromQueue() =>
-			_feedSubmissionCallbackService.GetAll()
-				.FirstOrDefault(fscs => fscs.FeedSubmissionId == null && IsFeedReadyForSubmission(fscs));
+		public FeedSubmissionCallback GetNextFeedToSubmitFromQueue(AmazonRegion region, string merchantId) =>
+			merchantId == null ? null : _feedSubmissionCallbackService.GetAll()
+				.FirstOrDefault(fscs => fscs.AmazonRegion == region && fscs.MerchantId == merchantId
+				&& fscs.FeedSubmissionId == null
+				&& IsFeedReadyForSubmission(fscs));
 
 		private bool IsFeedReadyForSubmission(FeedSubmissionCallback feedSubmission)
 		{

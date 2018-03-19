@@ -4,6 +4,6 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 {
     internal interface IFeedSubmissionProcessor
     {
-	    FeedSubmissionCallback GetNextFeedToSubmitFromQueue();
+	    FeedSubmissionCallback GetNextFeedToSubmitFromQueue(AmazonRegion region, string merchantId);
     }
 }
