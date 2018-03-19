@@ -58,6 +58,16 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 			return response?.SubmitFeedResult?.FeedSubmissionInfo?.FeedSubmissionId;
 		}
 
+		public void AllocateFeedSubmissionForRetry(FeedSubmissionCallback feedSubmission)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void MoveToQueueOfSubmittedFeeds(FeedSubmissionCallback feedSubmission, string feedSubmissionId)
+		{
+			throw new NotImplementedException();
+		}
+
 		private bool IsFeedReadyForSubmission(FeedSubmissionCallback feedSubmission)
 		{
 			return true;

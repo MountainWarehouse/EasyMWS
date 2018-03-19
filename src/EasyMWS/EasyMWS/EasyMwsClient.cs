@@ -116,11 +116,6 @@ namespace MountainWarehouse.EasyMWS
 			_feedSubmissionCallbackService.SaveChanges();
 		}
 
-		private void SubmitNextFeedInQueueToAmazon()
-		{
-
-		}
-
 		private void CleanUpFeedSubmissionQueue()
 		{
 			var expiredFeedSubmission = _feedSubmissionCallbackService.GetAll()
@@ -129,6 +124,28 @@ namespace MountainWarehouse.EasyMWS
 			foreach (var feedSubmission in expiredFeedSubmission)
 			{
 				_feedSubmissionCallbackService.Delete(feedSubmission);
+			}
+		}
+
+		private void SubmitNextFeedInQueueToAmazon()
+		{
+			var feedSubmission = _feedSubmissionProcessor.GetNextFeedToSubmitFromQueue(_amazonRegion, _merchantId);
+
+			if(feedSubmission == null)
+				return;
+
+			var feedSubmissionId = _feedSubmissionProcessor.SubmitSingleQueuedFeedToAmazon(feedSubmission, _merchantId);
+
+			feedSubmission.LastSubmitted = DateTime.UtcNow;
+			_feedSubmissionCallbackService.Update(feedSubmission);
+
+			if (string.IsNullOrEmpty(feedSubmissionId))
+			{
+				_feedSubmissionProcessor.AllocateFeedSubmissionForRetry(feedSubmission);
+			}
+			else
+			{
+				_feedSubmissionProcessor.MoveToQueueOfSubmittedFeeds(feedSubmission, feedSubmissionId);	
 			}
 		}
 

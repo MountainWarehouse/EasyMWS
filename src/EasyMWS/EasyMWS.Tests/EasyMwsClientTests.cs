@@ -306,6 +306,97 @@ namespace EasyMWS.Tests
 		#region PollFeeds tests
 
 		[Test]
+		public void Poll_CallsOnce_GetNextFeedToSubmitFromQueue()
+		{
+			_easyMwsClient.Poll();
+
+			_feedSubmissionProcessorMock.Verify(rrp => rrp.GetNextFeedToSubmitFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()), Times.Once);
+		}
+
+		[Test]
+		public void Poll_WithGetNextFeedToSubmitFromQueueReturningNull_DoesNotSubmitFeedToAmazon()
+		{
+			_feedSubmissionProcessorMock.Setup(rrp => rrp.GetNextFeedToSubmitFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>())).Returns((FeedSubmissionCallback)null);
+
+			_easyMwsClient.Poll();
+
+			_feedSubmissionProcessorMock.Verify(rrp => rrp.MoveToQueueOfSubmittedFeeds(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()), Times.Never);
+		}
+
+		[Test]
+		public void Poll_WithGetNextFeedToSubmitFromQueueReturningNotNull_DoesSubmitFeedToAmazon()
+		{
+			_feedSubmissionProcessorMock.Setup(rrp => rrp.GetNextFeedToSubmitFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>())).Returns(new FeedSubmissionCallback());
+
+			_easyMwsClient.Poll();
+
+			_feedSubmissionProcessorMock.Verify(rrp => rrp.SubmitSingleQueuedFeedToAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()), Times.Once);
+		}
+
+		[Test]
+		public void Poll_WithGetNextFeedToSubmitFromQueueReturningNotNull_UpdatesLastSubmittedPropertyForProcessedFeedSubmission()
+		{
+			FeedSubmissionCallback feedSubmissionCallback = null;
+
+			_feedSubmissionProcessorMock.Setup(rrp => rrp.GetNextFeedToSubmitFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Returns(new FeedSubmissionCallback { LastSubmitted = DateTime.MinValue });
+			_feedSubmissionCallbackServiceMock.Setup(rrcsm => rrcsm.Update(It.IsAny<FeedSubmissionCallback>()))
+				.Callback((FeedSubmissionCallback arg) =>
+				{
+					feedSubmissionCallback = arg;
+				});
+
+			_easyMwsClient.Poll();
+
+			Assert.IsTrue(DateTime.UtcNow - feedSubmissionCallback.LastSubmitted < TimeSpan.FromHours(1));
+			_feedSubmissionCallbackServiceMock.Verify(x => x.Update(It.IsAny<FeedSubmissionCallback>()), Times.AtLeastOnce);
+			_feedSubmissionCallbackServiceMock.Verify(x => x.SaveChanges(), Times.AtLeastOnce);
+		}
+
+		[Test]
+		public void Poll_WithSubmitSingleQueuedFeedToAmazonResponseNotNull_CallsOnce_MoveToQueueOfSubmittedFeeds()
+		{
+			_feedSubmissionProcessorMock.Setup(rrp => rrp.GetNextFeedToSubmitFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Returns(new FeedSubmissionCallback { LastSubmitted = DateTime.MinValue });
+			_feedSubmissionProcessorMock.Setup(rrp =>
+					rrp.SubmitSingleQueuedFeedToAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
+				.Returns("testFeedSubmissionId");
+
+			_easyMwsClient.Poll();
+
+			_feedSubmissionProcessorMock.Verify(rrp => rrp.MoveToQueueOfSubmittedFeeds(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()), Times.Once);
+		}
+
+		[Test]
+		public void Poll_WithSubmitSingleQueuedFeedToAmazonResponseNull_CallsOnce_AllocateFeedSubmissionForRetry()
+		{
+			_feedSubmissionProcessorMock.Setup(rrp => rrp.GetNextFeedToSubmitFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Returns(new FeedSubmissionCallback { LastSubmitted = DateTime.MinValue });
+			_feedSubmissionProcessorMock.Setup(rrp =>
+					rrp.SubmitSingleQueuedFeedToAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
+				.Returns((string)null);
+
+			_easyMwsClient.Poll();
+
+			_feedSubmissionProcessorMock.Verify(rrp => rrp.AllocateFeedSubmissionForRetry(It.IsAny<FeedSubmissionCallback>()), Times.Once);
+		}
+
+		[Test]
+		public void Poll_WithSubmitSingleQueuedFeedToAmazonResponseEmpty_CallsOnce_AllocateFeedSubmissionForRetry()
+		{
+			_feedSubmissionProcessorMock.Setup(rrp => rrp.GetNextFeedToSubmitFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Returns(new FeedSubmissionCallback { LastSubmitted = DateTime.MinValue });
+			_feedSubmissionProcessorMock.Setup(rrp =>
+					rrp.SubmitSingleQueuedFeedToAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
+				.Returns(string.Empty);
+
+
+			_easyMwsClient.Poll();
+
+			_feedSubmissionProcessorMock.Verify(rrp => rrp.AllocateFeedSubmissionForRetry(It.IsAny<FeedSubmissionCallback>()), Times.Once);
+		}
+
+		[Test]
 		public void Poll_DeletesFeedSubmissions_WithRetryCountAboveMaxRetryCount()
 		{
 			var testFeedSubmissionCallbacks = new List<FeedSubmissionCallback>
