@@ -24,6 +24,8 @@ namespace MountainWarehouse.EasyMWS.Helpers
 		/// Example: &amp;MarketplaceIdList.Id.1=A13V1IB3VIYZZH &amp;MarketplaceIdList.Id.2=A1PA6795UKMFR9<para />
 		/// </summary>
 		public List<string> MarketplaceIdList { get; set; }
+		public DateTime? StartDate { get; set; }
+		public DateTime? EndDate { get; set; }
 
 		#endregion
 
@@ -48,8 +50,8 @@ namespace MountainWarehouse.EasyMWS.Helpers
 		/// <param name="reportType"></param>
 		/// <param name="marketplaceIdList"></param>
 		/// <param name="updateFrequency"></param>
-		public ReportRequestPropertiesContainer(string reportType, ContentUpdateFrequency updateFrequency, List<string> marketplaceIdList = null) =>
-			(ReportType, MarketplaceIdList, UpdateFrequency) = (reportType, marketplaceIdList, updateFrequency);
+		public ReportRequestPropertiesContainer(string reportType, ContentUpdateFrequency updateFrequency, List<string> marketplaceIdList = null, DateTime? startDate = null, DateTime? endDate = null) =>
+			(ReportType, MarketplaceIdList, UpdateFrequency, StartDate, EndDate) = (reportType, marketplaceIdList, updateFrequency, startDate, endDate);
 	}
 }
 

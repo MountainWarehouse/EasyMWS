@@ -147,5 +147,96 @@ namespace EasyMWS.Tests.Helpers
 			Assert.AreEqual("A39IBJ37TRP1C6", marketplace.Id);
 			Assert.AreEqual(MwsEndpoint.Australia, marketplace.MwsEndpoint);
 		}
+
+	    [Test]
+	    public void GetMarketplaceCountryCode_ForCanadaMarketplaceId_ReturnsCA()
+	    {
+		    var countryCode = MwsMarketplace.GetMarketplaceCountryCode(MwsMarketplace.Canada.Id);
+			Assert.AreEqual(MwsMarketplace.Canada.CountryCode, countryCode);
+	    }
+
+	    [Test]
+	    public void GetMarketplaceCountryCode_ForUSMarketplaceId_ReturnsUS()
+	    {
+		    var countryCode = MwsMarketplace.GetMarketplaceCountryCode(MwsMarketplace.US.Id);
+		    Assert.AreEqual(MwsMarketplace.US.CountryCode, countryCode);
+	    }
+
+	    [Test]
+	    public void GetMarketplaceCountryCode_ForMexicoMarketplaceId_ReturnsMexico()
+	    {
+		    var countryCode = MwsMarketplace.GetMarketplaceCountryCode(MwsMarketplace.Mexico.Id);
+		    Assert.AreEqual(MwsMarketplace.Mexico.CountryCode, countryCode);
+	    }
+
+	    [Test]
+	    public void GetMarketplaceCountryCode_ForSpainMarketplaceId_ReturnsSpain()
+	    {
+		    var countryCode = MwsMarketplace.GetMarketplaceCountryCode(MwsMarketplace.Spain.Id);
+		    Assert.AreEqual(MwsMarketplace.Spain.CountryCode, countryCode);
+	    }
+
+	    [Test]
+	    public void GetMarketplaceCountryCode_ForUKMarketplaceId_ReturnsUK()
+	    {
+		    var countryCode = MwsMarketplace.GetMarketplaceCountryCode(MwsMarketplace.UK.Id);
+		    Assert.AreEqual(MwsMarketplace.UK.CountryCode, countryCode);
+	    }
+
+	    [Test]
+	    public void GetMarketplaceCountryCode_ForFranceMarketplaceId_ReturnsFrance()
+	    {
+		    var countryCode = MwsMarketplace.GetMarketplaceCountryCode(MwsMarketplace.France.Id);
+		    Assert.AreEqual(MwsMarketplace.France.CountryCode, countryCode);
+	    }
+
+	    [Test]
+	    public void GetMarketplaceCountryCode_ForGermanyMarketplaceId_ReturnsGermany()
+	    {
+		    var countryCode = MwsMarketplace.GetMarketplaceCountryCode(MwsMarketplace.Germany.Id);
+		    Assert.AreEqual(MwsMarketplace.Germany.CountryCode, countryCode);
+	    }
+
+	    [Test]
+	    public void GetMarketplaceCountryCode_ForItalyMarketplaceId_ReturnsItaly()
+	    {
+		    var countryCode = MwsMarketplace.GetMarketplaceCountryCode(MwsMarketplace.Italy.Id);
+		    Assert.AreEqual(MwsMarketplace.Italy.CountryCode, countryCode);
+	    }
+
+	    [Test]
+	    public void GetMarketplaceCountryCode_ForBrazilMarketplaceId_ReturnsBrazil()
+	    {
+		    var countryCode = MwsMarketplace.GetMarketplaceCountryCode(MwsMarketplace.Brazil.Id);
+		    Assert.AreEqual(MwsMarketplace.Brazil.CountryCode, countryCode);
+	    }
+
+	    [Test]
+	    public void GetMarketplaceCountryCode_ForIndiaMarketplaceId_ReturnsIndia()
+	    {
+		    var countryCode = MwsMarketplace.GetMarketplaceCountryCode(MwsMarketplace.India.Id);
+		    Assert.AreEqual(MwsMarketplace.India.CountryCode, countryCode);
+	    }
+
+	    [Test]
+	    public void GetMarketplaceCountryCode_ForChinaMarketplaceId_ReturnsChina()
+	    {
+		    var countryCode = MwsMarketplace.GetMarketplaceCountryCode(MwsMarketplace.China.Id);
+		    Assert.AreEqual(MwsMarketplace.China.CountryCode, countryCode);
+	    }
+
+	    [Test]
+	    public void GetMarketplaceCountryCode_ForJapanMarketplaceId_ReturnsJapan()
+	    {
+		    var countryCode = MwsMarketplace.GetMarketplaceCountryCode(MwsMarketplace.Japan.Id);
+		    Assert.AreEqual(MwsMarketplace.Japan.CountryCode, countryCode);
+	    }
+
+	    [Test]
+	    public void GetMarketplaceCountryCode_ForAustraliaMarketplaceId_ReturnsAustralia()
+	    {
+		    var countryCode = MwsMarketplace.GetMarketplaceCountryCode(MwsMarketplace.Australia.Id);
+		    Assert.AreEqual(MwsMarketplace.Australia.CountryCode, countryCode);
+	    }
 	}
 }

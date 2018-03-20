@@ -8,6 +8,8 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 {
 	public class ReportRequestFactoryFba : IReportRequestFactoryFba
 	{
+		#region FBA Inventory Reports
+
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		public ReportRequestPropertiesContainer GenerateRequestForReportGetAfnInventoryData(
 			MwsMarketplaceGroup requestedMarketplaces = null)
@@ -134,11 +136,28 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 				permittedMarketplaces: MwsMarketplace.US + MwsMarketplace.India + MwsMarketplace.Japan,
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
 
+		#endregion
+
+		#region FBA Payment Reports
+
+		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
+		public ReportRequestPropertiesContainer GenerateRequestForReportFbaFeePreviewReport(DateTime startDate, DateTime? endDate,
+			MwsMarketplaceGroup requestedMarketplaces = null)
+			=> GenerateReportRequest("_GET_FBA_ESTIMATED_FBA_FEES_TXT_DATA_", ContentUpdateFrequency.AtLeast72Hours,
+				permittedMarketplaces: MwsMarketplaceGroup.AmazonEurope() + MwsMarketplace.US + MwsMarketplace.Canada + MwsMarketplace.Mexico,
+				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList(),
+				startDate: startDate, endDate: endDate ?? DateTime.UtcNow);
+
+		#endregion
+
+
+		#region Private Behaviour
+
 		private ReportRequestPropertiesContainer GenerateReportRequest(string reportType, ContentUpdateFrequency reportUpdateFrequency,
-			List<string> permittedMarketplaces, List<string> requestedMarketplaces = null)
+			List<string> permittedMarketplaces, List<string> requestedMarketplaces = null, DateTime? startDate = null, DateTime? endDate = null)
 		{
 			ValidateMarketplaceCompatibility(reportType, permittedMarketplaces, requestedMarketplaces);
-			return new ReportRequestPropertiesContainer(reportType, reportUpdateFrequency, requestedMarketplaces);
+			return new ReportRequestPropertiesContainer(reportType, reportUpdateFrequency, requestedMarketplaces, startDate, endDate);
 		}
 
 		private void ValidateMarketplaceCompatibility(string reportType, List<string> permittedMarketplaces,
@@ -150,13 +169,19 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 			{
 				if (!permittedMarketplaces.Contains(requestedMarketplace))
 				{
+					var permittedMarketplacesCountryCodes = permittedMarketplaces.Select(MwsMarketplace.GetMarketplaceCountryCode);
+
 					throw new ArgumentException(
 						$@"The report request for type:'{reportType}', is only available to the following marketplaces:'{
-								permittedMarketplaces.Aggregate((c, n) => $"{c}, {n}")
+								permittedMarketplacesCountryCodes.Aggregate((c, n) => $"{c}, {n}")
 							}'.
-The requested marketplace:'{requestedMarketplace}' is not supported by Amazon MWS for the specified report type.");
+The requested marketplace:'{MwsMarketplace.GetMarketplaceCountryCode(requestedMarketplace)}' is not supported by Amazon MWS for the specified report type.");
 				}
 			}
 		}
+
+		
+
+		#endregion
 	}
 }
