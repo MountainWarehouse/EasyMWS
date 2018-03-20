@@ -13,9 +13,10 @@ using System;
 namespace MountainWarehouse.EasyMWS.Migrations
 {
     [DbContext(typeof(EasyMwsContext))]
-    partial class EasyMwsContextModelSnapshot : ModelSnapshot
+    [Migration("20180316170044_AddedRetryLogicRelatedFieldsToFeedsTable")]
+    partial class AddedRetryLogicRelatedFieldsToFeedsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -37,19 +38,11 @@ namespace MountainWarehouse.EasyMWS.Migrations
 
                     b.Property<string>("FeedSubmissionId");
 
-                    b.Property<bool>("HasErrors");
-
-                    b.Property<bool>("IsProcessingComplete");
-
                     b.Property<DateTime>("LastSubmitted");
-
-                    b.Property<string>("MerchantId");
 
                     b.Property<string>("MethodName");
 
-                    b.Property<string>("SubmissionErrorData");
-
-                    b.Property<int>("SubmissionRetryCount");
+                    b.Property<int>("RequestRetryCount");
 
                     b.Property<string>("TypeName");
 
@@ -76,8 +69,6 @@ namespace MountainWarehouse.EasyMWS.Migrations
                     b.Property<string>("GeneratedReportId");
 
                     b.Property<DateTime>("LastRequested");
-
-                    b.Property<string>("MerchantId");
 
                     b.Property<string>("MethodName");
 

@@ -9,12 +9,20 @@ namespace MountainWarehouse.EasyMWS.Helpers
 	{
 		#region Properties required for requesting all amazon MWS reports
 
+		/// <summary>
+		/// A value of the ReportType that indicates the type of report to request.
+		/// </summary>
 		public string ReportType { get; set; }
-		
+
 		#endregion
 
 		#region Optional properties only used by some amazon MWS reports
 
+		/// <summary>
+		/// A list of one or more marketplace IDs for the marketplaces you are registered to sell in. <para />
+		/// The resulting report will include information for all marketplaces you specify. <para />
+		/// Example: &amp;MarketplaceIdList.Id.1=A13V1IB3VIYZZH &amp;MarketplaceIdList.Id.2=A1PA6795UKMFR9<para />
+		/// </summary>
 		public List<string> MarketplaceIdList { get; set; }
 
 		#endregion

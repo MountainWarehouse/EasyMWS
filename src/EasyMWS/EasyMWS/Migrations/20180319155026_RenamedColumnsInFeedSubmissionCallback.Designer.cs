@@ -13,9 +13,10 @@ using System;
 namespace MountainWarehouse.EasyMWS.Migrations
 {
     [DbContext(typeof(EasyMwsContext))]
-    partial class EasyMwsContextModelSnapshot : ModelSnapshot
+    [Migration("20180319155026_RenamedColumnsInFeedSubmissionCallback")]
+    partial class RenamedColumnsInFeedSubmissionCallback
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -37,9 +38,9 @@ namespace MountainWarehouse.EasyMWS.Migrations
 
                     b.Property<string>("FeedSubmissionId");
 
-                    b.Property<bool>("HasErrors");
-
                     b.Property<bool>("IsProcessingComplete");
+
+                    b.Property<bool>("IsStatusDone");
 
                     b.Property<DateTime>("LastSubmitted");
 

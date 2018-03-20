@@ -31,63 +31,20 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 		    _options = options;
 	    }
 
-	    public ReportRequestCallback GetNonRequestedReportFromQueue(AmazonRegion region)
-	    {
-		    return _reportRequestCallbackService.GetAll()
-			    .FirstOrDefault(rrc => 
-					rrc.AmazonRegion == region 
-					&& rrc.RequestReportId == null 
-					&& IsReportToBeProcessed(rrc));
-	    }
-
-	    private bool IsReportToBeProcessed(ReportRequestCallback reportRequest)
-	    {
-		    if (reportRequest.RequestRetryCount <= 0) return true;
-
-		    if (reportRequest.RequestRetryCount == 1)
-		    {
-			    var timeOfNextRetry = reportRequest.LastRequested.Add(_options.TimeToWaitBeforeFirstRetry);
-			    if (DateTime.Compare(timeOfNextRetry, DateTime.UtcNow) < 0)
-			    {
-				    return true;
-			    }
-		    }
-
-		    if (reportRequest.RequestRetryCount > 1)
-		    {
-			    var retryPeriodType = _options.RetryPeriodType;
-			    switch (retryPeriodType)
-			    {
-				    case RetryPeriodType.ArithmeticProgression:
-				    {
-					    var timeOfNextRetry = reportRequest.LastRequested.Add(_options.TimeToWaitBetweenRetries);
-					    if (DateTime.Compare(timeOfNextRetry, DateTime.UtcNow) < 0)
-					    {
-						    return true;
-					    }
-					    break;
-				    }
-				    case RetryPeriodType.GeometricProgression:
-				    {
-					    var timeOfNextRetry = reportRequest.LastRequested.Add(
-						    TimeSpan.FromTicks(_options.TimeToWaitBetweenRetries.Ticks * (reportRequest.RequestRetryCount - 1)));
-					    if (DateTime.Compare(timeOfNextRetry, DateTime.UtcNow) < 0)
-					    {
-						    return true;
-					    }
-					    break;
-				    }
-				    default:
-					    throw new ArgumentOutOfRangeException("Retry period type not supported!");
-			    }
-		    }
-
-		    return false;
-	    }
-
+	    public ReportRequestCallback GetNonRequestedReportFromQueue(AmazonRegion region, string merchantId) =>
+		    string.IsNullOrEmpty(merchantId) ? null : _reportRequestCallbackService.GetAll()
+				    .FirstOrDefault(rrc => rrc.AmazonRegion == region && rrc.MerchantId == merchantId
+					    && rrc.RequestReportId == null
+					    && RetryIntervalHelper.IsRetryPeriodAwaited(rrc.LastRequested, rrc.RequestRetryCount,
+						    _options.ReportRequestRetryInitialDelay, _options.ReportRequestRetryInterval, _options.ReportRequestRetryType)
+				    );
+		
 	    public string RequestSingleQueuedReport(ReportRequestCallback reportRequestCallback, string merchantId)
 	    {
-		    var reportRequestData = JsonConvert.DeserializeObject<ReportRequestPropertiesContainer>(reportRequestCallback.ReportRequestData);
+		    if (reportRequestCallback == null || string.IsNullOrEmpty(merchantId))
+			    throw new ArgumentNullException("Cannot submit queued feed to amazon due to missing feed submission information or empty merchant ID");
+
+			var reportRequestData = JsonConvert.DeserializeObject<ReportRequestPropertiesContainer>(reportRequestCallback.ReportRequestData);
 			var reportRequest = new RequestReportRequest
 			{
 				Merchant = merchantId,
@@ -113,14 +70,14 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 			_reportRequestCallbackService.Update(reportRequestCallback);
 	    }
 
-	    public IEnumerable<ReportRequestCallback> GetAllPendingReport(AmazonRegion region)
-	    {
-		    return _reportRequestCallbackService.Where(rrcs => rrcs.AmazonRegion == region && rrcs.RequestReportId != null && rrcs.GeneratedReportId == null);
-	    }
+	    public IEnumerable<ReportRequestCallback> GetAllPendingReport(AmazonRegion region, string merchantId) =>
+		    string.IsNullOrEmpty(merchantId) ? new List<ReportRequestCallback>().AsEnumerable() : _reportRequestCallbackService.Where(
+			    rrcs => rrcs.AmazonRegion == region && rrcs.MerchantId == merchantId
+			            && rrcs.RequestReportId != null
+			            && rrcs.GeneratedReportId == null);
 
-	    public List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> GetReportRequestListResponse(IEnumerable<string> requestIdList, string merchant)
+		public List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> GetReportRequestListResponse(IEnumerable<string> requestIdList, string merchant)
 	    {
-
 		    var request = new GetReportRequestListRequest() {ReportRequestIdList = new IdList(), Merchant = merchant};
 		    request.ReportRequestIdList.Id.AddRange(requestIdList);
 		    var response = _marketplaceWebServiceClient.GetReportRequestList(request);
@@ -161,12 +118,13 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 		    }
 	    }
 
-	    public ReportRequestCallback GetReadyForDownloadReports(AmazonRegion region)
-	    {
-		    return _reportRequestCallbackService.FirstOrDefault(rrc => rrc.AmazonRegion == region && rrc.RequestReportId != null && rrc.GeneratedReportId != null);
-	    }
+	    public ReportRequestCallback GetReadyForDownloadReports(AmazonRegion region, string merchantId) =>
+		    string.IsNullOrEmpty(merchantId) ? null : _reportRequestCallbackService.FirstOrDefault(
+			    rrc => rrc.AmazonRegion == region && rrc.MerchantId == merchantId
+			           && rrc.RequestReportId != null
+			           && rrc.GeneratedReportId != null);
 
-	    public Stream DownloadGeneratedReport(ReportRequestCallback reportRequestCallback, string merchantId)
+		public Stream DownloadGeneratedReport(ReportRequestCallback reportRequestCallback, string merchantId)
 	    {
 		    var reportResultStream = new MemoryStream();
 		    var reportContent = new StringBuilder();
