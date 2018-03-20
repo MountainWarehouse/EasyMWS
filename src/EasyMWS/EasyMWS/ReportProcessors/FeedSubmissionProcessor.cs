@@ -34,7 +34,7 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 		public FeedSubmissionCallback GetNextFeedToSubmitFromQueue(AmazonRegion region, string merchantId) =>
 			string.IsNullOrEmpty(merchantId) ? null : _feedSubmissionCallbackService.GetAll()
 				.FirstOrDefault(fscs => fscs.AmazonRegion == region && fscs.MerchantId == merchantId
-				&& fscs.FeedSubmissionId == null
+				&& IsFeedInASubmitFeedQueue(fscs)
 				&& IsFeedReadyForSubmission(fscs));
 
 		public string SubmitSingleQueuedFeedToAmazon(FeedSubmissionCallback feedSubmission, string merchantId)
@@ -127,7 +127,19 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 
 		private bool IsFeedReadyForSubmission(FeedSubmissionCallback feedSubmission)
 		{
-			return true;
+			var isInInitialRetryStateAndReadyForRetry = feedSubmission.SubmissionRetryCount > 0
+			        && RetryIntervalHelper.IsRetryPeriodAwaited(feedSubmission.LastSubmitted, 
+					feedSubmission.SubmissionRetryCount, _options.FeedInitialSubmissionRetryInitialDelay, 
+					_options.FeedInitialSubmissionRetryInterval, RetryPeriodType.ArithmeticProgression);
+
+			var isNotInRetryState = feedSubmission.SubmissionRetryCount == 0;
+
+			return isInInitialRetryStateAndReadyForRetry || isNotInRetryState;
+		}
+
+		private bool IsFeedInASubmitFeedQueue(FeedSubmissionCallback feedSubmission)
+		{
+			return feedSubmission.FeedSubmissionId == null;
 		}
 	}
 }

@@ -32,57 +32,13 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 	    }
 
 	    public ReportRequestCallback GetNonRequestedReportFromQueue(AmazonRegion region, string merchantId) =>
-		    string.IsNullOrEmpty(merchantId) ? null :_reportRequestCallbackService.GetAll()
-			    .FirstOrDefault(rrc =>
-				    rrc.AmazonRegion == region && rrc.MerchantId == merchantId
-				    && rrc.RequestReportId == null
-				    && IsReportToBeProcessed(rrc));
-
-		private bool IsReportToBeProcessed(ReportRequestCallback reportRequest)
-	    {
-		    if (reportRequest.RequestRetryCount <= 0) return true;
-
-		    if (reportRequest.RequestRetryCount == 1)
-		    {
-			    var timeOfNextRetry = reportRequest.LastRequested.Add(_options.ReportRequestRetryInitialDelay);
-			    if (DateTime.Compare(timeOfNextRetry, DateTime.UtcNow) < 0)
-			    {
-				    return true;
-			    }
-		    }
-
-		    if (reportRequest.RequestRetryCount > 1)
-		    {
-			    var retryPeriodType = _options.ReportRequestRetryType;
-			    switch (retryPeriodType)
-			    {
-				    case RetryPeriodType.ArithmeticProgression:
-				    {
-					    var timeOfNextRetry = reportRequest.LastRequested.Add(_options.ReportRequestRetryInterval);
-					    if (DateTime.Compare(timeOfNextRetry, DateTime.UtcNow) < 0)
-					    {
-						    return true;
-					    }
-					    break;
-				    }
-				    case RetryPeriodType.GeometricProgression:
-				    {
-					    var timeOfNextRetry = reportRequest.LastRequested.Add(
-						    TimeSpan.FromTicks(_options.ReportRequestRetryInterval.Ticks * (reportRequest.RequestRetryCount - 1)));
-					    if (DateTime.Compare(timeOfNextRetry, DateTime.UtcNow) < 0)
-					    {
-						    return true;
-					    }
-					    break;
-				    }
-				    default:
-					    throw new ArgumentOutOfRangeException("Retry period type not supported!");
-			    }
-		    }
-
-		    return false;
-	    }
-
+		    string.IsNullOrEmpty(merchantId) ? null : _reportRequestCallbackService.GetAll()
+				    .FirstOrDefault(rrc => rrc.AmazonRegion == region && rrc.MerchantId == merchantId
+					    && rrc.RequestReportId == null
+					    && RetryIntervalHelper.IsRetryPeriodAwaited(rrc.LastRequested, rrc.RequestRetryCount,
+						    _options.ReportRequestRetryInitialDelay, _options.ReportRequestRetryInterval, _options.ReportRequestRetryType)
+				    );
+		
 	    public string RequestSingleQueuedReport(ReportRequestCallback reportRequestCallback, string merchantId)
 	    {
 		    if (reportRequestCallback == null || string.IsNullOrEmpty(merchantId))
