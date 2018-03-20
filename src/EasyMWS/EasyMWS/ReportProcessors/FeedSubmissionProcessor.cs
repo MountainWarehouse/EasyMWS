@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using MarketplaceWebService;
@@ -125,6 +126,34 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 					_feedSubmissionCallbackService.Delete(feedSubmissionCallback);
 				}
 			}
+		}
+
+		public FeedSubmissionCallback GetNextFeedFromProcessingCompleteQueue(AmazonRegion region, string merchant)
+			=> string.IsNullOrEmpty(merchant) ? null : _feedSubmissionCallbackService.FirstOrDefault(
+				ffscs => ffscs.AmazonRegion == region && ffscs.MerchantId == merchant
+				&& ffscs.FeedSubmissionId != null
+				&& ffscs.IsProcessingComplete == true);
+
+		public (string processingReport, string md5Checksum) QueryFeedProcessingReport(FeedSubmissionCallback feedSubmissionCallback, string merchant)
+		{
+			var reportResultStream = new MemoryStream();
+			var reportContent = new StringBuilder();
+			var request = new GetFeedSubmissionResultRequest
+			{
+				FeedSubmissionId = feedSubmissionCallback.FeedSubmissionId,
+				Merchant = merchant,
+				FeedSubmissionResult = reportResultStream
+			};
+
+			var response = _marketplaceWebServiceClient.GetFeedSubmissionResult(new GetFeedSubmissionResultRequest());
+
+			var streamReader = new StreamReader(request.FeedSubmissionResult);
+			while (!streamReader.EndOfStream && streamReader.Peek() != -1)
+			{
+				reportContent.Append((char)streamReader.Read());
+			}
+
+			return (reportContent.ToString(), response.GetFeedSubmissionResultResult.ContentMD5);
 		}
 
 		private bool IsFeedReadyForSubmission(FeedSubmissionCallback feedSubmission)

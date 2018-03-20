@@ -120,6 +120,7 @@ namespace MountainWarehouse.EasyMWS
 			CleanUpFeedSubmissionQueue();
 			SubmitNextFeedInQueueToAmazon();
 			RequestFeedSubmissionStatusesFromAmazon();
+			var amazonProcessingReport = RequestNextFeedSubmissionInQueueFromAmazon();
 			_feedSubmissionCallbackService.SaveChanges();
 		}
 
@@ -187,6 +188,20 @@ namespace MountainWarehouse.EasyMWS
 			{
 				_reportRequestCallbackService.Delete(reportRequest);
 			}
+		}
+
+		private string RequestNextFeedSubmissionInQueueFromAmazon()
+		{
+			var nextFeedWithProcessingComplete = _feedSubmissionProcessor.GetNextFeedFromProcessingCompleteQueue(_amazonRegion, _merchantId);
+
+			if (nextFeedWithProcessingComplete == null) return null;
+
+			var processingReportInfo = _feedSubmissionProcessor.QueryFeedProcessingReport(nextFeedWithProcessingComplete, _merchantId);
+
+			// TODO: If feed processing report Content-MD5 hash doesn't match the hash sent by amazon, retry up to 3 times.
+			// log a warning for each hash miss-match, and recommend to the user to notify Amazon that a corrupted body was received.
+
+			return processingReportInfo.processingReport;
 		}
 
 		private (ReportRequestCallback reportRequestCallback, Stream stream) DownloadNextGeneratedRequestReportInQueueFromAmazon()
