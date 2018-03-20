@@ -116,10 +116,12 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 					_feedSubmissionCallbackService.Update(feedSubmissionCallback);
 				} else if (feedInfo.FeedProcessingStatus == "_CANCELLED_")
 				{
+					// TODO: log that the feed has been removed from Queue. investigate if it's worth it to move the feed to the initial queue.
 					_feedSubmissionCallbackService.Delete(feedSubmissionCallback);
 				}
 				else
 				{
+					// TODO: log that the feed has been removed from Queue. investigate if it's worth it to move the feed to the initial queue.
 					_feedSubmissionCallbackService.Delete(feedSubmissionCallback);
 				}
 			}
