@@ -44,19 +44,23 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 				throw new ArgumentNullException("Cannot submit queued feed to amazon due to missing feed submission information or empty merchant ID");
 
 			var feedSubmissionData = JsonConvert.DeserializeObject<FeedSubmissionPropertiesContainer>(feedSubmission.FeedSubmissionData);
-			var submitFeedRequest = new SubmitFeedRequest
+
+			using (var stream = StreamHelper.CreateNewMemoryStream(feedSubmissionData.FeedContent))
 			{
-				Merchant = merchantId,
-				FeedType = feedSubmissionData.FeedType,
-				FeedContent = StreamHelper.CreateNewMemoryStream(feedSubmissionData.FeedContent),
-				MarketplaceIdList = feedSubmissionData.MarketplaceIdList == null ? null : new IdList { Id = feedSubmissionData.MarketplaceIdList },
-				PurgeAndReplace = feedSubmissionData.PurgeAndReplace ?? false,
-				ContentMD5 = feedSubmissionData.ContentMD5Value
-			};
+				var submitFeedRequest = new SubmitFeedRequest
+				{
+					Merchant = merchantId,
+					FeedType = feedSubmissionData.FeedType,
+					FeedContent = stream,
+					MarketplaceIdList = feedSubmissionData.MarketplaceIdList == null ? null : new IdList {Id = feedSubmissionData.MarketplaceIdList},
+					PurgeAndReplace = feedSubmissionData.PurgeAndReplace ?? false,
+					ContentMD5 = feedSubmissionData.ContentMD5Value
+				};
 
-			var response = _marketplaceWebServiceClient.SubmitFeed(submitFeedRequest);
+				var response = _marketplaceWebServiceClient.SubmitFeed(submitFeedRequest);
 
-			return response?.SubmitFeedResult?.FeedSubmissionInfo?.FeedSubmissionId;
+				return response?.SubmitFeedResult?.FeedSubmissionInfo?.FeedSubmissionId;
+			}
 		}
 
 		public void AllocateFeedSubmissionForRetry(FeedSubmissionCallback feedSubmission)
@@ -113,12 +117,13 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 				           || feedInfo.FeedProcessingStatus == "_UNCONFIRMED_")
 				{
 					feedSubmissionCallback.IsProcessingComplete = false;
-					feedSubmissionCallback.SubmissionRetryCount++;
 					_feedSubmissionCallbackService.Update(feedSubmissionCallback);
 				} else if (feedInfo.FeedProcessingStatus == "_CANCELLED_")
 				{
+					feedSubmissionCallback.IsProcessingComplete = false;
+					feedSubmissionCallback.SubmissionRetryCount++;
+					_feedSubmissionCallbackService.Update(feedSubmissionCallback);
 					// TODO: log that the feed has been removed from Queue. investigate if it's worth it to move the feed to the initial queue.
-					_feedSubmissionCallbackService.Delete(feedSubmissionCallback);
 				}
 				else
 				{
