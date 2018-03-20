@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using MountainWarehouse.EasyMWS.Data;
 
 namespace MountainWarehouse.EasyMWS.ReportProcessors
@@ -18,7 +19,7 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 			List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses);
 
 		FeedSubmissionCallback GetNextFeedFromProcessingCompleteQueue(AmazonRegion region, string merchant);
-		(string processingReport, string md5Checksum) QueryFeedProcessingReport(FeedSubmissionCallback feedSubmissionCallback, string merchant);
-
+		(Stream processingReport, string md5Checksum) QueryFeedProcessingReport(FeedSubmissionCallback feedSubmissionCallback, string merchant);
+		void DequeueFeedSubmissionCallback(FeedSubmissionCallback feedSubmissionCallback);
 	}
 }

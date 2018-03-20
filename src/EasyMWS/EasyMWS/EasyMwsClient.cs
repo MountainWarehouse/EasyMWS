@@ -121,6 +121,7 @@ namespace MountainWarehouse.EasyMWS
 			SubmitNextFeedInQueueToAmazon();
 			RequestFeedSubmissionStatusesFromAmazon();
 			var amazonProcessingReport = RequestNextFeedSubmissionInQueueFromAmazon();
+			PerformCallback(amazonProcessingReport.feedSubmissionCallback, amazonProcessingReport.reportContent);
 			_feedSubmissionCallbackService.SaveChanges();
 		}
 
@@ -190,18 +191,18 @@ namespace MountainWarehouse.EasyMWS
 			}
 		}
 
-		private string RequestNextFeedSubmissionInQueueFromAmazon()
+		private (FeedSubmissionCallback feedSubmissionCallback, Stream reportContent) RequestNextFeedSubmissionInQueueFromAmazon()
 		{
 			var nextFeedWithProcessingComplete = _feedSubmissionProcessor.GetNextFeedFromProcessingCompleteQueue(_amazonRegion, _merchantId);
 
-			if (nextFeedWithProcessingComplete == null) return null;
+			if (nextFeedWithProcessingComplete == null) return (null, null);
 
 			var processingReportInfo = _feedSubmissionProcessor.QueryFeedProcessingReport(nextFeedWithProcessingComplete, _merchantId);
 
 			// TODO: If feed processing report Content-MD5 hash doesn't match the hash sent by amazon, retry up to 3 times.
 			// log a warning for each hash miss-match, and recommend to the user to notify Amazon that a corrupted body was received.
 
-			return processingReportInfo.processingReport;
+			return (nextFeedWithProcessingComplete, processingReportInfo.processingReport);
 		}
 
 		private (ReportRequestCallback reportRequestCallback, Stream stream) DownloadNextGeneratedRequestReportInQueueFromAmazon()
@@ -226,6 +227,18 @@ namespace MountainWarehouse.EasyMWS
 			_callbackActivator.CallMethod(callback, stream);
 
 			DequeueReport(reportRequestCallback);
+		}
+
+		private void PerformCallback(FeedSubmissionCallback feedSubmissionCallback, Stream stream)
+		{
+			if (feedSubmissionCallback == null || stream == null) return;
+
+			var callback = new Callback(feedSubmissionCallback.TypeName, feedSubmissionCallback.MethodName,
+				feedSubmissionCallback.Data, feedSubmissionCallback.DataTypeName);
+
+			_callbackActivator.CallMethod(callback, stream);
+
+			_feedSubmissionProcessor.DequeueFeedSubmissionCallback(feedSubmissionCallback);
 		}
 
 		private void RequestFeedSubmissionStatusesFromAmazon()

@@ -134,10 +134,9 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 				&& ffscs.FeedSubmissionId != null
 				&& ffscs.IsProcessingComplete == true);
 
-		public (string processingReport, string md5Checksum) QueryFeedProcessingReport(FeedSubmissionCallback feedSubmissionCallback, string merchant)
+		public (Stream processingReport, string md5Checksum) QueryFeedProcessingReport(FeedSubmissionCallback feedSubmissionCallback, string merchant)
 		{
 			var reportResultStream = new MemoryStream();
-			var reportContent = new StringBuilder();
 			var request = new GetFeedSubmissionResultRequest
 			{
 				FeedSubmissionId = feedSubmissionCallback.FeedSubmissionId,
@@ -145,15 +144,14 @@ namespace MountainWarehouse.EasyMWS.ReportProcessors
 				FeedSubmissionResult = reportResultStream
 			};
 
-			var response = _marketplaceWebServiceClient.GetFeedSubmissionResult(new GetFeedSubmissionResultRequest());
+			var response = _marketplaceWebServiceClient.GetFeedSubmissionResult(request);
 
-			var streamReader = new StreamReader(request.FeedSubmissionResult);
-			while (!streamReader.EndOfStream && streamReader.Peek() != -1)
-			{
-				reportContent.Append((char)streamReader.Read());
-			}
+			return (reportResultStream, response.GetFeedSubmissionResultResult.ContentMD5);
+		}
 
-			return (reportContent.ToString(), response.GetFeedSubmissionResultResult.ContentMD5);
+		public void DequeueFeedSubmissionCallback(FeedSubmissionCallback feedSubmissionCallback)
+		{
+			_feedSubmissionCallbackService.Delete(feedSubmissionCallback);
 		}
 
 		private bool IsFeedReadyForSubmission(FeedSubmissionCallback feedSubmission)
