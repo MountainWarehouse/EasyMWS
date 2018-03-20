@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MountainWarehouse.EasyMWS.Helpers
 {
@@ -48,12 +49,13 @@ namespace MountainWarehouse.EasyMWS.Helpers
 	    public static string GetMarketplaceCountryCode(string marketplaceId)
 	    {
 		    var mwsMarketplaces = new List<MwsMarketplace>{Australia, Brazil, Canada, China, France, Germany, India, Italy, Japan, Mexico, Spain, UK, US};
-		    foreach (var marketplace in mwsMarketplaces)
-		    {
-			    if (marketplace.Id == marketplaceId) return marketplace.CountryCode;
-		    }
-		    throw new ArgumentException($"No marketplace was found for the requested marketplace id {marketplaceId}");
-	    }
+			var marketplace = mwsMarketplaces.FirstOrDefault(x => x.Id == marketplaceId);
+
+		    if (marketplace == null)
+			    throw new ArgumentException($"No marketplace was found for the requested marketplace id {marketplaceId}");
+
+		    return marketplace.CountryCode;
+		}
 
 	    /// <summary>
 		/// The Canada marketplace. Shares the same amazon MWS endpoint with US and Mexico.
