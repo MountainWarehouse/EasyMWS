@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Helpers;
+using MountainWarehouse.EasyMWS.Logging;
 using MountainWarehouse.EasyMWS.ReportProcessors;
 using MountainWarehouse.EasyMWS.Services;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
@@ -22,11 +23,13 @@ namespace MountainWarehouse.EasyMWS
 		private IRequestReportProcessor _requestReportProcessor;
 		private IFeedSubmissionProcessor _feedSubmissionProcessor;
 		private EasyMwsOptions _options;
+		private IEasyMwsLogger _logger;
+
 
 		public AmazonRegion AmazonRegion => _amazonRegion;
 
-		internal EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, IFeedSubmissionCallbackService feedSubmissionCallbackService, IReportRequestCallbackService reportRequestCallbackService, IMarketplaceWebServiceClient marketplaceWebServiceClient, IRequestReportProcessor requestReportProcessor, IFeedSubmissionProcessor feedSubmissionProcessor, EasyMwsOptions options = null) 
-			: this(region, merchantId, accessKeyId, mwsSecretAccessKey, options)
+		internal EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, IFeedSubmissionCallbackService feedSubmissionCallbackService, IReportRequestCallbackService reportRequestCallbackService, IMarketplaceWebServiceClient marketplaceWebServiceClient, IRequestReportProcessor requestReportProcessor, IFeedSubmissionProcessor feedSubmissionProcessor, IEasyMwsLogger easyMwsLogger, EasyMwsOptions options = null) 
+			: this(region, merchantId, accessKeyId, mwsSecretAccessKey, easyMwsLogger, options)
 		{
 			_reportRequestCallbackService = reportRequestCallbackService;
 			_feedSubmissionCallbackService = feedSubmissionCallbackService;
@@ -39,11 +42,12 @@ namespace MountainWarehouse.EasyMWS
 		/// <param name="merchantId">Seller ID. Required parameter.</param>
 		/// <param name="accessKeyId">Your specific access key. Required parameter.</param>
 		/// <param name="mwsSecretAccessKey">Your specific secret access key. Required parameter.</param>
+		/// <param name="easyMwsLogger">An optional IEasyMwsLogger instance that can provide access to logs. It is strongly recommended to use a logger implementation already existing in the EasyMws package.</param>
 		/// <param name="options">Configuration options for EasyMwsClient</param>
-		public EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, EasyMwsOptions options = null)
+		public EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, IEasyMwsLogger easyMwsLogger = null, EasyMwsOptions options = null)
 		{
 			if(string.IsNullOrEmpty(merchantId) || accessKeyId == null || mwsSecretAccessKey == null)
-				throw new ArgumentNullException("One or more required parameters provided to initialize the EasyMwsClient were null.");
+				throw new ArgumentNullException("One or more required parameters provided to initialize the EasyMwsClient were null or empty.");
 
 			_options = options ?? EasyMwsOptions.Defaults;
 			_merchantId = merchantId;
@@ -54,6 +58,7 @@ namespace MountainWarehouse.EasyMWS
 			_callbackActivator = new CallbackActivator();
 			_requestReportProcessor = new RequestReportProcessor(_mwsClient, _reportRequestCallbackService, _options);
 			_feedSubmissionProcessor = new FeedSubmissionProcessor(_mwsClient, _feedSubmissionCallbackService, _options);
+			_logger = easyMwsLogger ?? new EasyMwsLogger(isEnabled: false);
 		}
 
 		/// <summary>
@@ -70,13 +75,21 @@ namespace MountainWarehouse.EasyMWS
 		/// </summary>
 		public void Poll()
 		{
-			//TODO: For each request of any kind made to amazon, record RequestId and Timestamp. Either retain these for 30 days (config option On/Off) and/or return this info to the caller.
-			//For more info see: https://docs.developer.amazonservices.com/en_US/dev_guide/DG_ResponseFormat.html
+			_logger.Info("Polling operation has been triggered!");
+			try
+			{
+				//TODO: For each request of any kind made to amazon, record RequestId and Timestamp. Either retain these for 30 days (config option On/Off) and/or return this info to the caller.
+				//For more info see: https://docs.developer.amazonservices.com/en_US/dev_guide/DG_ResponseFormat.html
 
-			//TODO: Whenever an amazon request is unsuccessful, log the error, the RequestId and Timestamp found on ErrorResponse. (and take additional appropriate action if it's the case)
-			// In order to access this information, I believe MarketplaceWebServiceException has to be caught. Request info can be found on the ResponseHeaderMetadata property of the ex.
-			PollReports();
-			PollFeeds();
+				//TODO: Whenever an amazon request is unsuccessful, log the error, the RequestId and Timestamp found on ErrorResponse. (and take additional appropriate action if it's the case)
+				// In order to access this information, I believe MarketplaceWebServiceException has to be caught. Request info can be found on the ResponseHeaderMetadata property of the ex.
+				PollReports();
+				PollFeeds();
+			}
+			catch (Exception e)
+			{
+				_logger.Error(e.Message, e);
+			}
 		}
 
 		/// <summary>

@@ -7,6 +7,7 @@ using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
+using MountainWarehouse.EasyMWS.Logging;
 using MountainWarehouse.EasyMWS.ReportProcessors;
 using MountainWarehouse.EasyMWS.Services;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
@@ -27,6 +28,7 @@ namespace EasyMWS.Tests
 	    private Mock<IFeedSubmissionProcessor> _feedSubmissionProcessorMock;
 		private readonly int ConfiguredMaxNumberOrReportRequestRetries = 2;
 	    private readonly int ConfiguredMaxNumberOrFeedSubmissionRetries = 2;
+	    private Mock<IEasyMwsLogger> _loggerMock;
 
 		public struct CallbackDataTest
 	    {
@@ -46,7 +48,8 @@ namespace EasyMWS.Tests
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_requestReportProcessor = new Mock<IRequestReportProcessor>();
 			_feedSubmissionProcessorMock = new Mock<IFeedSubmissionProcessor>();
-			_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", "", "", _feedSubmissionCallbackServiceMock.Object, _reportRequestCallbackServiceMock.Object, _marketplaceWebServiceClientMock.Object, _requestReportProcessor.Object, _feedSubmissionProcessorMock.Object, options);
+			_loggerMock = new Mock<IEasyMwsLogger>();
+			_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", "", "", _feedSubmissionCallbackServiceMock.Object, _reportRequestCallbackServiceMock.Object, _marketplaceWebServiceClientMock.Object, _requestReportProcessor.Object, _feedSubmissionProcessorMock.Object, _loggerMock.Object, options);
 		}
 
 		#region QueueReport tests
@@ -169,7 +172,7 @@ namespace EasyMWS.Tests
 		    Assert.Throws<ArgumentNullException>(() =>
 			    _easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, null, "", "",
 				    _feedSubmissionCallbackServiceMock.Object, _reportRequestCallbackServiceMock.Object,
-				    _marketplaceWebServiceClientMock.Object, _requestReportProcessor.Object, _feedSubmissionProcessorMock.Object, EasyMwsOptions.Defaults));
+				    _marketplaceWebServiceClientMock.Object, _requestReportProcessor.Object, _feedSubmissionProcessorMock.Object, _loggerMock.Object, EasyMwsOptions.Defaults));
 	    }
 
 	    [Test]
@@ -178,7 +181,7 @@ namespace EasyMWS.Tests
 		    Assert.Throws<ArgumentNullException>(() =>
 			    _easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", null, "",
 				    _feedSubmissionCallbackServiceMock.Object, _reportRequestCallbackServiceMock.Object,
-				    _marketplaceWebServiceClientMock.Object, _requestReportProcessor.Object, _feedSubmissionProcessorMock.Object, EasyMwsOptions.Defaults));
+				    _marketplaceWebServiceClientMock.Object, _requestReportProcessor.Object, _feedSubmissionProcessorMock.Object, _loggerMock.Object, EasyMwsOptions.Defaults));
 	    }
 
 	    [Test]
@@ -187,7 +190,7 @@ namespace EasyMWS.Tests
 		    Assert.Throws<ArgumentNullException>(() =>
 			    _easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", "", null,
 				    _feedSubmissionCallbackServiceMock.Object, _reportRequestCallbackServiceMock.Object,
-				    _marketplaceWebServiceClientMock.Object, _requestReportProcessor.Object, _feedSubmissionProcessorMock.Object, EasyMwsOptions.Defaults));
+				    _marketplaceWebServiceClientMock.Object, _requestReportProcessor.Object, _feedSubmissionProcessorMock.Object, _loggerMock.Object, EasyMwsOptions.Defaults));
 	    }
 
 		[Test]
