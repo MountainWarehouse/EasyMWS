@@ -50,7 +50,7 @@ namespace MountainWarehouse.EasyMWS
 			_reportRequestCallbackService = _reportRequestCallbackService ?? new ReportRequestCallbackService();
 			_callbackActivator = new CallbackActivator();
 			_requestReportProcessor = new RequestReportProcessor(_mwsClient, _reportRequestCallbackService, _options);
-			_logger = easyMwsLogger;
+			_logger = easyMwsLogger ?? new EasyMwsLogger(isEnabled: false);
 		}
 
 		/// <summary>
