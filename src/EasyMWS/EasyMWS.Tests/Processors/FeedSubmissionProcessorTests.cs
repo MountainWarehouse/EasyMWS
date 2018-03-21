@@ -12,7 +12,7 @@ using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService.Model;
 using NUnit.Framework;
 
-namespace EasyMWS.Tests.ReportProcessors
+namespace EasyMWS.Tests.Processors
 {
 	public class FeedSubmissionProcessorTests
 	{

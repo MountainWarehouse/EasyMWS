@@ -1,41 +1,30 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
-using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Logging;
 using MountainWarehouse.EasyMWS.Processors;
-using MountainWarehouse.EasyMWS.Services;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
-using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS
 {
 	/// <summary>Client for Amazon Marketplace Web Services</summary>
 	public class EasyMwsClient
 	{
-		private IMarketplaceWebServiceClient _mwsClient;
-		private IReportRequestCallbackService _reportRequestCallbackService;
-		private IFeedSubmissionCallbackService _feedSubmissionCallbackService;
-		private CallbackActivator _callbackActivator;
-		private string _merchantId;
-		private AmazonRegion _amazonRegion;
-		private IRequestReportProcessor _requestReportProcessor;
-		private IFeedSubmissionProcessor _feedSubmissionProcessor;
-		private EasyMwsOptions _options;
+		private readonly EasyMwsOptions _options;
+		private readonly AmazonRegion _amazonRegion;
+		private readonly string _merchantId;
+		private readonly IQueueingProcessor<ReportRequestPropertiesContainer> _reportProcessor;
+		private readonly IQueueingProcessor<FeedSubmissionPropertiesContainer> _feedProcessor;
 		private IEasyMwsLogger _logger;
 
-
-		public AmazonRegion AmazonRegion => _amazonRegion;
-
-		internal EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, IFeedSubmissionCallbackService feedSubmissionCallbackService, IReportRequestCallbackService reportRequestCallbackService, IMarketplaceWebServiceClient marketplaceWebServiceClient, IRequestReportProcessor requestReportProcessor, IFeedSubmissionProcessor feedSubmissionProcessor, IEasyMwsLogger easyMwsLogger, EasyMwsOptions options = null) 
+		internal EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey,
+			IQueueingProcessor<ReportRequestPropertiesContainer> reportProcessor,
+			IQueueingProcessor<FeedSubmissionPropertiesContainer> feedProcessor, IEasyMwsLogger easyMwsLogger,
+			EasyMwsOptions options)
 			: this(region, merchantId, accessKeyId, mwsSecretAccessKey, easyMwsLogger, options)
 		{
-			_reportRequestCallbackService = reportRequestCallbackService;
-			_feedSubmissionCallbackService = feedSubmissionCallbackService;
-			_requestReportProcessor = requestReportProcessor;
-			_feedSubmissionProcessor = feedSubmissionProcessor;
-			_mwsClient = marketplaceWebServiceClient;
+			_reportProcessor = reportProcessor;
+			_feedProcessor = feedProcessor;
 		}
 
 		/// <param name="region">The region of the account</param>
@@ -44,32 +33,38 @@ namespace MountainWarehouse.EasyMWS
 		/// <param name="mwsSecretAccessKey">Your specific secret access key. Required parameter.</param>
 		/// <param name="easyMwsLogger">An optional IEasyMwsLogger instance that can provide access to logs. It is strongly recommended to use a logger implementation already existing in the EasyMws package.</param>
 		/// <param name="options">Configuration options for EasyMwsClient</param>
-		public EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, IEasyMwsLogger easyMwsLogger = null, EasyMwsOptions options = null)
+		public EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey,
+			IEasyMwsLogger easyMwsLogger = null, EasyMwsOptions options = null)
 		{
-			if(string.IsNullOrEmpty(merchantId) || accessKeyId == null || mwsSecretAccessKey == null)
-				throw new ArgumentNullException("One or more required parameters provided to initialize the EasyMwsClient were null or empty.");
+			if (string.IsNullOrEmpty(merchantId) || string.IsNullOrEmpty(accessKeyId) ||
+			    string.IsNullOrEmpty(mwsSecretAccessKey))
+				throw new ArgumentNullException(
+					"One or more required parameters provided to initialize the EasyMwsClient were null or empty.");
 
-			_options = options ?? EasyMwsOptions.Defaults;
-			_merchantId = merchantId;
 			_amazonRegion = region;
-			_mwsClient = new MarketplaceWebServiceClient(accessKeyId, mwsSecretAccessKey, CreateConfig(region));
-			_reportRequestCallbackService = _reportRequestCallbackService ?? new ReportRequestCallbackService();
-			_feedSubmissionCallbackService = _feedSubmissionCallbackService ?? new FeedSubmissionCallbackService();
-			_callbackActivator = new CallbackActivator();
-			_requestReportProcessor = new RequestReportProcessor(_mwsClient, _reportRequestCallbackService, _options);
-			_feedSubmissionProcessor = new FeedSubmissionProcessor(_mwsClient, _feedSubmissionCallbackService, _options);
+			_merchantId = merchantId;
+			_options = options ?? EasyMwsOptions.Defaults;
+
 			_logger = easyMwsLogger ?? new EasyMwsLogger(isEnabled: false);
+			var mwsClient = new MarketplaceWebServiceClient(accessKeyId, mwsSecretAccessKey, CreateConfig(region));
+			_reportProcessor = _reportProcessor ?? new ReportProcessor(region, merchantId, options, mwsClient);
+			_feedProcessor = _feedProcessor ?? new FeedProcessor(region, merchantId, options, mwsClient);
+
 		}
+
+		public AmazonRegion AmazonRegion => _amazonRegion;
+		public string MerchantId => _merchantId;
+		public EasyMwsOptions Options => _options;
 
 		/// <summary>
 		/// Method that handles querying amazon for reports that are queued for download with the EasyMwsClient.QueueReport method.
 		/// It is handling the following operations : 
 		/// 1. Requests the next report from report request queue from Amazon, if a ReportRequestId is successfully generated by amazon then the ReportRequest is moved in a queue of reports awaiting Amazon generation.
-		///		If a ReportRequestId is not generated by amazon, a retry policy will be applied (retrying to get a ReportRequestId from amazon at after 30m, 1h, 4h intervals.)
+		///    If a ReportRequestId is not generated by amazon, a retry policy will be applied (retrying to get a ReportRequestId from amazon at after 30m, 1h, 4h intervals.)
 		/// 2. Query amazon if any of the reports that are pending generation, were generated.
-		///		If any reports were successfully generated (returned report processing status is "_DONE_"), those reports are moved to a queue of reports that await downloading.
-		///		If any reports requests were canceled by amazon (returned report processing status is "_CANCELLED_"), then those ReportRequests are moved back to the report request queue.
-		///		If amazon returns a processing status any other than "_DONE_" or "_CANCELLED_" for any report requests, those ReportRequests are moved back to the report request queue.
+		///    If any reports were successfully generated (returned report processing status is "_DONE_"), those reports are moved to a queue of reports that await downloading.
+		///    If any reports requests were canceled by amazon (returned report processing status is "_CANCELLED_"), then those ReportRequests are moved back to the report request queue.
+		///    If amazon returns a processing status any other than "_DONE_" or "_CANCELLED_" for any report requests, those ReportRequests are moved back to the report request queue.
 		/// 3. Downloads the next report from amazon (which is the next report ReportRequest in the queue of reports awaiting download).
 		/// 4. Perform a callback of the handler method provided as argument when QueueReport was called. The report content can be obtained by reading the stream argument of the callback method.
 		/// </summary>
@@ -83,8 +78,9 @@ namespace MountainWarehouse.EasyMWS
 
 				//TODO: Whenever an amazon request is unsuccessful, log the error, the RequestId and Timestamp found on ErrorResponse. (and take additional appropriate action if it's the case)
 				// In order to access this information, I believe MarketplaceWebServiceException has to be caught. Request info can be found on the ResponseHeaderMetadata property of the ex.
-				PollReports();
-				PollFeeds();
+
+				_reportProcessor.Poll();
+				_feedProcessor.Poll();
 			}
 			catch (Exception e)
 			{
@@ -98,10 +94,10 @@ namespace MountainWarehouse.EasyMWS
 		/// <param name="reportRequestContainer">An object that contains the arguments required to request the report from Amazon. This object is meant to be obtained by calling a ReportRequestFactory, ex: IReportRequestFactoryFba.</param>
 		/// <param name="callbackMethod">A delegate for a method that is going to be called once a report has been downloaded from amazon. The 'Stream' argument of that method will contain the actual report content.</param>
 		/// <param name="callbackData">An object any argument(s) needed to invoke the delegate 'callbackMethod'</param>
-		public void QueueReport(ReportRequestPropertiesContainer reportRequestContainer, Action<Stream, object> callbackMethod, object callbackData)
+		public void QueueReport(ReportRequestPropertiesContainer reportRequestContainer,
+			Action<Stream, object> callbackMethod, object callbackData)
 		{
-			_reportRequestCallbackService.Create(GetSerializedReportRequestCallback(reportRequestContainer, callbackMethod, callbackData));
-			_reportRequestCallbackService.SaveChanges();
+			_reportProcessor.Queue(reportRequestContainer, callbackMethod, callbackData);
 		}
 
 		/// <summary>
@@ -110,220 +106,10 @@ namespace MountainWarehouse.EasyMWS
 		/// <param name="feedSubmissionContainer"></param>
 		/// <param name="callbackMethod"></param>
 		/// <param name="callbackData"></param>
-		public void QueueFeed(FeedSubmissionPropertiesContainer feedSubmissionContainer, Action<Stream, object> callbackMethod, object callbackData)
+		public void QueueFeed(FeedSubmissionPropertiesContainer feedSubmissionContainer,
+			Action<Stream, object> callbackMethod, object callbackData)
 		{
-			_feedSubmissionCallbackService.Create(GetSerializedFeedSubmissionCallback(feedSubmissionContainer, callbackMethod, callbackData));
-			_feedSubmissionCallbackService.SaveChanges();
-		}
-
-		private void PollReports()
-		{
-			CleanUpReportRequestQueue();
-			RequestNextReportInQueueFromAmazon();
-			RequestReportStatusesFromAmazon();
-			var generatedReportRequestCallback = DownloadNextGeneratedRequestReportInQueueFromAmazon();
-			PerformCallback(generatedReportRequestCallback.reportRequestCallback, generatedReportRequestCallback.stream);
-			_reportRequestCallbackService.SaveChanges();
-		}
-
-		private void PollFeeds()
-		{
-			CleanUpFeedSubmissionQueue();
-			SubmitNextFeedInQueueToAmazon();
-			RequestFeedSubmissionStatusesFromAmazon();
-			var amazonProcessingReport = RequestNextFeedSubmissionInQueueFromAmazon();
-			PerformCallback(amazonProcessingReport.feedSubmissionCallback, amazonProcessingReport.reportContent);
-			_feedSubmissionCallbackService.SaveChanges();
-		}
-
-		private void CleanUpFeedSubmissionQueue()
-		{
-			var expiredFeedSubmission = _feedSubmissionCallbackService.GetAll()
-				.Where(rrc => rrc.SubmissionRetryCount > _options.FeedSubmissionMaxRetryCount);
-
-			foreach (var feedSubmission in expiredFeedSubmission)
-			{
-				_feedSubmissionCallbackService.Delete(feedSubmission);
-			}
-		}
-
-		private void SubmitNextFeedInQueueToAmazon()
-		{
-			var feedSubmission = _feedSubmissionProcessor.GetNextFeedToSubmitFromQueue(_amazonRegion, _merchantId);
-
-			if(feedSubmission == null)
-				return;
-
-			var feedSubmissionId = _feedSubmissionProcessor.SubmitSingleQueuedFeedToAmazon(feedSubmission, _merchantId);
-
-			feedSubmission.LastSubmitted = DateTime.UtcNow;
-			_feedSubmissionCallbackService.Update(feedSubmission);
-
-			if (string.IsNullOrEmpty(feedSubmissionId))
-			{
-				_feedSubmissionProcessor.AllocateFeedSubmissionForRetry(feedSubmission);
-			}
-			else
-			{
-				_feedSubmissionProcessor.MoveToQueueOfSubmittedFeeds(feedSubmission, feedSubmissionId);	
-			}
-		}
-
-		private void RequestNextReportInQueueFromAmazon()
-		{
-			var reportRequestCallbackReportQueued = _requestReportProcessor.GetNonRequestedReportFromQueue(_amazonRegion, _merchantId);
-
-			if (reportRequestCallbackReportQueued == null)
-				return;
-
-			var reportRequestId = _requestReportProcessor.RequestSingleQueuedReport(reportRequestCallbackReportQueued, _merchantId);
-
-			reportRequestCallbackReportQueued.LastRequested = DateTime.UtcNow;
-			_reportRequestCallbackService.Update(reportRequestCallbackReportQueued);
-			
-			if (string.IsNullOrEmpty(reportRequestId))
-			{
-				_requestReportProcessor.AllocateReportRequestForRetry(reportRequestCallbackReportQueued);
-			}
-			else
-			{
-				_requestReportProcessor.MoveToNonGeneratedReportsQueue(reportRequestCallbackReportQueued, reportRequestId);
-			}
-		}
-
-		private void CleanUpReportRequestQueue()
-		{
-			var expiredReportRequests = _reportRequestCallbackService.GetAll()
-				.Where(rrc => rrc.RequestRetryCount > _options.ReportRequestMaxRetryCount);
-
-			foreach (var reportRequest in expiredReportRequests)
-			{
-				_reportRequestCallbackService.Delete(reportRequest);
-			}
-		}
-
-		private (FeedSubmissionCallback feedSubmissionCallback, Stream reportContent) RequestNextFeedSubmissionInQueueFromAmazon()
-		{
-			var nextFeedWithProcessingComplete = _feedSubmissionProcessor.GetNextFeedFromProcessingCompleteQueue(_amazonRegion, _merchantId);
-
-			if (nextFeedWithProcessingComplete == null) return (null, null);
-
-			var processingReportInfo = _feedSubmissionProcessor.QueryFeedProcessingReport(nextFeedWithProcessingComplete, _merchantId);
-
-			// TODO: If feed processing report Content-MD5 hash doesn't match the hash sent by amazon, retry up to 3 times.
-			// log a warning for each hash miss-match, and recommend to the user to notify Amazon that a corrupted body was received.
-
-			return (nextFeedWithProcessingComplete, processingReportInfo.processingReport);
-		}
-
-		private (ReportRequestCallback reportRequestCallback, Stream stream) DownloadNextGeneratedRequestReportInQueueFromAmazon()
-		{
-			var generatedReportRequest = _requestReportProcessor.GetReadyForDownloadReports(_amazonRegion, _merchantId);
-
-			if (generatedReportRequest == null)
-				return (null, null);
-			
-			var stream = _requestReportProcessor.DownloadGeneratedReport(generatedReportRequest, _merchantId);
-			
-			return (generatedReportRequest, stream);
-		}
-
-		private void PerformCallback(ReportRequestCallback reportRequestCallback, Stream stream)
-		{
-			if (reportRequestCallback == null || stream == null) return;
-
-			var callback = new Callback(reportRequestCallback.TypeName, reportRequestCallback.MethodName,
-				reportRequestCallback.Data, reportRequestCallback.DataTypeName);
-
-			_callbackActivator.CallMethod(callback, stream);
-
-			DequeueReport(reportRequestCallback);
-		}
-
-		private void PerformCallback(FeedSubmissionCallback feedSubmissionCallback, Stream stream)
-		{
-			if (feedSubmissionCallback == null || stream == null) return;
-
-			var callback = new Callback(feedSubmissionCallback.TypeName, feedSubmissionCallback.MethodName,
-				feedSubmissionCallback.Data, feedSubmissionCallback.DataTypeName);
-
-			_callbackActivator.CallMethod(callback, stream);
-
-			_feedSubmissionProcessor.DequeueFeedSubmissionCallback(feedSubmissionCallback);
-		}
-
-		private void RequestFeedSubmissionStatusesFromAmazon()
-		{
-			var submittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeeds(_amazonRegion, _merchantId).ToList();
-
-			if (!submittedFeeds.Any())
-				return;
-
-			var feedSubmissionIdList = submittedFeeds.Select(x => x.FeedSubmissionId);
-
-			var feedSubmissionResults = _feedSubmissionProcessor.GetFeedSubmissionResults(feedSubmissionIdList, _merchantId);
-
-			_feedSubmissionProcessor.MoveFeedsToQueuesAccordingToProcessingStatus(feedSubmissionResults);
-		}
-
-		private void RequestReportStatusesFromAmazon()
-		{
-			var reportRequestCallbacksPendingReports = _requestReportProcessor.GetAllPendingReport(_amazonRegion, _merchantId).ToList();
-
-			if (!reportRequestCallbacksPendingReports.Any())
-				return;
-
-			var reportRequestIds = reportRequestCallbacksPendingReports.Select(x => x.RequestReportId);
-
-			var reportRequestStatuses = _requestReportProcessor.GetReportRequestListResponse(reportRequestIds, _merchantId);
-
-			_requestReportProcessor.MoveReportsToGeneratedQueue(reportRequestStatuses);
-			_requestReportProcessor.MoveReportsBackToRequestQueue(reportRequestStatuses);
-
-		}
-
-		private void DequeueReport(ReportRequestCallback reportRequestCallback)
-		{
-			_requestReportProcessor.DequeueReportRequestCallback(reportRequestCallback);
-		}
-
-		private ReportRequestCallback GetSerializedReportRequestCallback(
-			ReportRequestPropertiesContainer reportRequestContainer, Action<Stream, object> callbackMethod, object callbackData)
-		{
-			if (reportRequestContainer == null || callbackMethod == null) throw new ArgumentNullException();
-			var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
-
-			return new ReportRequestCallback(serializedCallback)
-			{
-				AmazonRegion = _amazonRegion,
-				MerchantId = _merchantId,
-				LastRequested = DateTime.MinValue,
-				ContentUpdateFrequency = reportRequestContainer.UpdateFrequency,
-				RequestReportId = null,
-				GeneratedReportId = null,
-				RequestRetryCount = 0,
-				ReportRequestData = JsonConvert.SerializeObject(reportRequestContainer)
-			};
-		}
-
-		private FeedSubmissionCallback GetSerializedFeedSubmissionCallback(
-			FeedSubmissionPropertiesContainer propertiesContainer, Action<Stream, object> callbackMethod, object callbackData)
-		{
-			if (propertiesContainer == null || callbackMethod == null) throw new ArgumentNullException();
-			var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
-
-			return new FeedSubmissionCallback(serializedCallback)
-			{
-				AmazonRegion = _amazonRegion,
-				MerchantId = _merchantId,
-				LastSubmitted = DateTime.MinValue,
-				IsProcessingComplete = false,
-				HasErrors = false,
-				SubmissionErrorData = null,
-				SubmissionRetryCount = 0,
-				FeedSubmissionId = null,
-				FeedSubmissionData = JsonConvert.SerializeObject(propertiesContainer),
-			};
+			_feedProcessor.Queue(feedSubmissionContainer, callbackMethod, callbackData);
 		}
 
 		#region Helpers for creating the MarketplaceWebServiceClient
@@ -357,6 +143,7 @@ namespace MountainWarehouse.EasyMWS
 				default:
 					throw new ArgumentException($"{region} is unknown - EasyMWS doesn't know the RootURL");
 			}
+
 
 			var config = new MarketplaceWebServiceConfig
 			{
