@@ -3,7 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using MountainWarehouse.EasyMWS.Data;
 
-namespace MountainWarehouse.EasyMWS.ReportProcessors
+namespace MountainWarehouse.EasyMWS.Processors
 {
 	internal interface IRequestReportProcessor
 	{

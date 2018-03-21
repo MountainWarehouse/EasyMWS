@@ -2,7 +2,7 @@
 using System.IO;
 using MountainWarehouse.EasyMWS.Data;
 
-namespace MountainWarehouse.EasyMWS.ReportProcessors
+namespace MountainWarehouse.EasyMWS.Processors
 {
 	internal interface IFeedSubmissionProcessor
 	{

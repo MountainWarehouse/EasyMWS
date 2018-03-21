@@ -4,7 +4,7 @@ using System.Linq;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Logging;
-using MountainWarehouse.EasyMWS.ReportProcessors;
+using MountainWarehouse.EasyMWS.Processors;
 using MountainWarehouse.EasyMWS.Services;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
 using Newtonsoft.Json;
