@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using MarketplaceWebService;
-using MarketplaceWebService.Model;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Services;
+using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
+using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService.Model;
 using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS.ReportProcessors
