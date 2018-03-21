@@ -473,7 +473,7 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
-		public void MoveReportsToGeneratedQueue_UpdateGeneratedRequestId()
+		public void MoveReportsToQueuesAccordingToProcessingStatus_UpdateGeneratedRequestId()
 		{
 			// Arrange
 			var data = new List<ReportRequestCallback>
@@ -497,13 +497,29 @@ namespace EasyMWS.Tests.Processors
 					AmazonRegion = AmazonRegion.Europe,
 					Id = 4,
 					RequestReportId = "Report3",
-					GeneratedReportId = "GeneratedIdTest1"
+					GeneratedReportId = null
 				},
 				new ReportRequestCallback
 				{
 					AmazonRegion = AmazonRegion.NorthAmerica,
 					Id = 5,
 					RequestReportId = "Report4",
+					GeneratedReportId = null
+				}
+				,
+				new ReportRequestCallback
+				{
+					AmazonRegion = AmazonRegion.NorthAmerica,
+					Id = 6,
+					RequestReportId = "Report5",
+					GeneratedReportId = null
+				}
+				,
+				new ReportRequestCallback
+				{
+					AmazonRegion = AmazonRegion.NorthAmerica,
+					Id = 7,
+					RequestReportId = "Report6",
 					GeneratedReportId = null
 				}
 			};
@@ -513,19 +529,35 @@ namespace EasyMWS.Tests.Processors
 			var dataResult = new List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)>
 			{
 				("Report1", "GeneratedId1", "_DONE_"),
-				("Report2", "GeneratedId2", "_DONE_"),
-				("Report3", null, "_CANCELLED_"),
-				("Report4", null, "_OTHER_")
+				("Report2", "GeneratedId2", "_DONE_NO_DATA_"),
+				("Report3", null, "_SUBMITTED_"),
+				("Report4", null, "_IN_PROGRESS_"),
+				("Report5", null, "_CANCELLED_"),
+				("Report6", null, "_OTHER_")
 			};
 
-			_requestReportProcessor.MoveReportsToGeneratedQueue(dataResult);
+			_requestReportProcessor.MoveReportsToQueuesAccordingToProcessingStatus(dataResult);
 
 			Assert.AreEqual("GeneratedId1", _reportRequestCallbacks.First(x => x.RequestReportId == "Report1").GeneratedReportId);
-			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Exactly(2));
+			Assert.AreEqual(0, _reportRequestCallbacks.First(x => x.RequestReportId == "Report1").RequestRetryCount);
+			Assert.AreEqual("GeneratedId2", _reportRequestCallbacks.First(x => x.RequestReportId == "Report2").GeneratedReportId);
+			Assert.AreEqual(0, _reportRequestCallbacks.First(x => x.RequestReportId == "Report2").RequestRetryCount);
+			Assert.IsNull(_reportRequestCallbacks.First(x => x.RequestReportId == "Report3").GeneratedReportId);
+			Assert.AreEqual(0, _reportRequestCallbacks.First(x => x.RequestReportId == "Report3").RequestRetryCount);
+			Assert.IsNull(_reportRequestCallbacks.First(x => x.RequestReportId == "Report4").GeneratedReportId);
+			Assert.AreEqual(0, _reportRequestCallbacks.First(x => x.RequestReportId == "Report4").RequestRetryCount);
+			Assert.IsNull(_reportRequestCallbacks.First(x => x.Id == 6).GeneratedReportId);
+			Assert.IsNull(_reportRequestCallbacks.First(x => x.Id == 6).RequestReportId);
+			Assert.AreEqual(1, _reportRequestCallbacks.First(x => x.Id == 6).RequestRetryCount);
+			Assert.IsNull(_reportRequestCallbacks.First(x => x.Id == 7).GeneratedReportId);
+			Assert.IsNull(_reportRequestCallbacks.First(x => x.Id == 7).RequestReportId);
+			Assert.AreEqual(1, _reportRequestCallbacks.First(x => x.Id == 7).RequestRetryCount);
+			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Exactly(6));
+			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestCallback>()), Times.Never);
 		}
 
 		[Test]
-		public void MoveReportsBackToRequestQueue_UpdateReportRequestId()
+		public void MoveReportsToQueuesAccordingToProcessingStatus_UpdateReportRequestId()
 		{
 			_reportRequestCallbacks.First().RequestReportId = "Report3";
 
@@ -537,7 +569,7 @@ namespace EasyMWS.Tests.Processors
 				("Report4", null, "_OTHER_")
 			};
 
-			_requestReportProcessor.MoveReportsBackToRequestQueue(data);
+			_requestReportProcessor.MoveReportsToQueuesAccordingToProcessingStatus(data);
 
 			Assert.IsNull(_reportRequestCallbacks.First().RequestReportId);
 			Assert.IsTrue(_reportRequestCallbacks.First().RequestRetryCount > 0);

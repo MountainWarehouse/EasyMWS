@@ -99,8 +99,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			var reportRequestStatuses = _requestReportProcessor.GetReportRequestListResponse(reportRequestIds, _merchantId);
 
-			_requestReportProcessor.MoveReportsToGeneratedQueue(reportRequestStatuses);
-			_requestReportProcessor.MoveReportsBackToRequestQueue(reportRequestStatuses);
+			_requestReportProcessor.MoveReportsToQueuesAccordingToProcessingStatus(reportRequestStatuses);
 		}
 
 		public (ReportRequestCallback reportRequestCallback, Stream stream) DownloadNextGeneratedRequestReportInQueueFromAmazon()

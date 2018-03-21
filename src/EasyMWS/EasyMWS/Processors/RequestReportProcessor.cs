@@ -118,6 +118,48 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    }
 	    }
 
+	    public void MoveReportsToQueuesAccordingToProcessingStatus(
+		    List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> reportGenerationStatuses)
+	    {
+		    foreach (var reportGenerationInfo in reportGenerationStatuses)
+		    {
+			    var reportGenerationCallback = _reportRequestCallbackService.FirstOrDefault(rrc =>
+					    rrc.RequestReportId == reportGenerationInfo.ReportRequestId
+						&& rrc.GeneratedReportId == null);
+				if(reportGenerationCallback == null) continue;
+
+			    if (reportGenerationInfo.ReportProcessingStatus == "_DONE_" ||
+			        reportGenerationInfo.ReportProcessingStatus == "_DONE_NO_DATA_")
+			    {
+				    reportGenerationCallback.GeneratedReportId = reportGenerationInfo.GeneratedReportId;
+				    reportGenerationCallback.RequestRetryCount = 0;
+					_reportRequestCallbackService.Update(reportGenerationCallback);
+				}
+			    else if (reportGenerationInfo.ReportProcessingStatus == "_SUBMITTED_" ||
+			             reportGenerationInfo.ReportProcessingStatus == "_IN_PROGRESS_")
+			    {
+					reportGenerationCallback.GeneratedReportId = null;
+				    reportGenerationCallback.RequestRetryCount = 0;
+					_reportRequestCallbackService.Update(reportGenerationCallback);
+				}
+			    else if (reportGenerationInfo.ReportProcessingStatus == "_CANCELLED_")
+			    {
+				    reportGenerationCallback.RequestReportId = null;
+				    reportGenerationCallback.GeneratedReportId = null;
+					reportGenerationCallback.RequestRetryCount++;
+				    _reportRequestCallbackService.Update(reportGenerationCallback);
+				}
+			    else
+			    {
+				    reportGenerationCallback.RequestReportId = null;
+				    reportGenerationCallback.GeneratedReportId = null;
+				    reportGenerationCallback.RequestRetryCount++;
+				    _reportRequestCallbackService.Update(reportGenerationCallback);
+				}
+		    }
+	    }
+
+
 	    public ReportRequestCallback GetReadyForDownloadReports(AmazonRegion region, string merchantId) =>
 		    string.IsNullOrEmpty(merchantId) ? null : _reportRequestCallbackService.FirstOrDefault(
 			    rrc => rrc.AmazonRegion == region && rrc.MerchantId == merchantId
