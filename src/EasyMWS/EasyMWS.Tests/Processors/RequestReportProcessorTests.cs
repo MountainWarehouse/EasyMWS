@@ -6,13 +6,13 @@ using Moq;
 using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Helpers;
-using MountainWarehouse.EasyMWS.ReportProcessors;
+using MountainWarehouse.EasyMWS.Processors;
 using MountainWarehouse.EasyMWS.Services;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService.Model;
 using NUnit.Framework;
 
-namespace EasyMWS.Tests.ReportProcessors
+namespace EasyMWS.Tests.Processors
 {
 	[TestFixture]
 	public class RequestReportProcessorTests

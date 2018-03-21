@@ -10,7 +10,7 @@ using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService.Model;
 using Newtonsoft.Json;
 
-namespace MountainWarehouse.EasyMWS.ReportProcessors
+namespace MountainWarehouse.EasyMWS.Processors
 {
     internal class RequestReportProcessor : IRequestReportProcessor
     {
