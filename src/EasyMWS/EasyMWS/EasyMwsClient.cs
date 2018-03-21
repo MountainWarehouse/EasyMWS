@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
-using MarketplaceWebService;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.ReportProcessors;
 using MountainWarehouse.EasyMWS.Services;
+using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
 using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS
