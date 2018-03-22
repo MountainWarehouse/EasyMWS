@@ -8,7 +8,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		void CleanUpFeedSubmissionQueue();
 		void SubmitNextFeedInQueueToAmazon();
 		void RequestFeedSubmissionStatusesFromAmazon();
-		(FeedSubmissionCallback feedSubmissionCallback, Stream reportContent) RequestNextFeedSubmissionInQueueFromAmazon();
+		(FeedSubmissionCallback feedSubmissionCallback, Stream reportContent, string contentMd5) RequestNextFeedSubmissionInQueueFromAmazon();
 		void ExecuteCallback(FeedSubmissionCallback feedSubmissionCallback, Stream stream);
 	}
 }

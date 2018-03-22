@@ -13,17 +13,18 @@ namespace MountainWarehouse.EasyMWS.Processors
 	{
 		private readonly IFeedSubmissionCallbackService _feedService;
 		private readonly IFeedSubmissionProcessor _feedSubmissionProcessor;
-		private readonly CallbackActivator _callbackActivator;
+		private readonly ICallbackActivator _callbackActivator;
 
 		private readonly AmazonRegion _region;
 		private readonly string _merchantId;
 		private readonly EasyMwsOptions _options;
 
-		internal FeedProcessor(AmazonRegion region, string merchantId, EasyMwsOptions options, IFeedSubmissionCallbackService feedService, IMarketplaceWebServiceClient mwsClient, IFeedSubmissionProcessor feedSubmissionProcessor)
+		internal FeedProcessor(AmazonRegion region, string merchantId, EasyMwsOptions options, IFeedSubmissionCallbackService feedService, IMarketplaceWebServiceClient mwsClient, IFeedSubmissionProcessor feedSubmissionProcessor, ICallbackActivator callbackActivator)
 		  : this(region, merchantId, options, mwsClient)
 		{
 			_feedService = feedService;
 			_feedSubmissionProcessor = feedSubmissionProcessor;
+			_callbackActivator = callbackActivator;
 		}
 
 		internal FeedProcessor(AmazonRegion region, string merchantId, EasyMwsOptions options, IMarketplaceWebServiceClient mwsClient)
@@ -32,7 +33,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_merchantId = merchantId;
 			_options = options;
 
-			_callbackActivator = new CallbackActivator();
+			_callbackActivator = _callbackActivator ?? new CallbackActivator();
 
 			_feedService = _feedService ?? new FeedSubmissionCallbackService();
 			_feedSubmissionProcessor = _feedSubmissionProcessor ?? new FeedSubmissionProcessor(mwsClient, _feedService, options);
@@ -44,7 +45,19 @@ namespace MountainWarehouse.EasyMWS.Processors
 			SubmitNextFeedInQueueToAmazon();
 			RequestFeedSubmissionStatusesFromAmazon();
 			var amazonProcessingReport = RequestNextFeedSubmissionInQueueFromAmazon();
-			ExecuteCallback(amazonProcessingReport.feedSubmissionCallback, amazonProcessingReport.reportContent);
+
+			// TODO: If feed processing report Content-MD5 hash doesn't match the hash sent by amazon, retry up to 3 times. 
+			// log a warning for each hash miss-match, and recommend to the user to notify Amazon that a corrupted body was received. 
+
+			if (MD5ChecksumHelper.IsChecksumCorrect(amazonProcessingReport.reportContent, amazonProcessingReport.contentMd5))
+			{
+				ExecuteCallback(amazonProcessingReport.feedSubmissionCallback, amazonProcessingReport.reportContent);
+			}
+			else
+			{
+				_feedSubmissionProcessor.MoveToRetryQueue(amazonProcessingReport.feedSubmissionCallback);
+			}
+			
 			_feedService.SaveChanges();
 		}
 
@@ -56,10 +69,22 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void CleanUpFeedSubmissionQueue()
 		{
-			var expiredFeedSubmission = _feedService.GetAll()
-				.Where(rrc => rrc.SubmissionRetryCount > _options.FeedSubmissionMaxRetryCount);
+			var expiredFeedSubmissions = _feedService.GetAll()
+				.Where(fscs => fscs.AmazonRegion == _region && fscs.MerchantId == _merchantId
+				               && fscs.FeedSubmissionId == null
+				               && fscs.SubmissionRetryCount > _options.FeedSubmissionMaxRetryCount);
 
-			foreach (var feedSubmission in expiredFeedSubmission)
+			foreach (var feedSubmission in expiredFeedSubmissions)
+			{
+				_feedService.Delete(feedSubmission);
+			}
+
+			var expiredFeedProcessingResultRequests = _feedService.GetAll()
+				.Where(fscs => fscs.AmazonRegion == _region && fscs.MerchantId == _merchantId
+				               && fscs.FeedSubmissionId != null
+				               && fscs.SubmissionRetryCount > _options.FeedResultFailedChecksumMaxRetryCount);
+
+			foreach (var feedSubmission in expiredFeedProcessingResultRequests)
 			{
 				_feedService.Delete(feedSubmission);
 			}
@@ -79,7 +104,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			if (string.IsNullOrEmpty(feedSubmissionId))
 			{
-				_feedSubmissionProcessor.AllocateFeedSubmissionForRetry(feedSubmission);
+				_feedSubmissionProcessor.MoveToRetryQueue(feedSubmission);
 			}
 			else
 			{
@@ -101,18 +126,15 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_feedSubmissionProcessor.MoveFeedsToQueuesAccordingToProcessingStatus(feedSubmissionResults);
 		}
 
-		public (FeedSubmissionCallback feedSubmissionCallback, Stream reportContent) RequestNextFeedSubmissionInQueueFromAmazon()
+		public (FeedSubmissionCallback feedSubmissionCallback, Stream reportContent, string contentMd5) RequestNextFeedSubmissionInQueueFromAmazon()
 		{
 			var nextFeedWithProcessingComplete = _feedSubmissionProcessor.GetNextFeedFromProcessingCompleteQueue(_region, _merchantId);
 
-			if (nextFeedWithProcessingComplete == null) return (null, null);
+			if (nextFeedWithProcessingComplete == null) return (null, null, null);
 
 			var processingReportInfo = _feedSubmissionProcessor.QueryFeedProcessingReport(nextFeedWithProcessingComplete, _merchantId);
 
-			// TODO: If feed processing report Content-MD5 hash doesn't match the hash sent by amazon, retry up to 3 times. 
-			// log a warning for each hash miss-match, and recommend to the user to notify Amazon that a corrupted body was received. 
-
-			return (nextFeedWithProcessingComplete, processingReportInfo.processingReport);
+			return (nextFeedWithProcessingComplete, processingReportInfo.processingReport, processingReportInfo.md5hash);
 		}
 
 		public void ExecuteCallback(FeedSubmissionCallback feedSubmissionCallback, Stream stream)

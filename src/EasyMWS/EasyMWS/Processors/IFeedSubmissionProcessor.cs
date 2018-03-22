@@ -8,7 +8,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 	{
 		FeedSubmissionCallback GetNextFeedToSubmitFromQueue(AmazonRegion region, string merchantId);
 		string SubmitSingleQueuedFeedToAmazon(FeedSubmissionCallback feedSubmission, string merchantId);
-		void AllocateFeedSubmissionForRetry(FeedSubmissionCallback feedSubmission);
 		void MoveToQueueOfSubmittedFeeds(FeedSubmissionCallback feedSubmission, string feedSubmissionId);
 		IEnumerable<FeedSubmissionCallback> GetAllSubmittedFeeds(AmazonRegion region, string merchantId);
 
@@ -19,7 +18,8 @@ namespace MountainWarehouse.EasyMWS.Processors
 			List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses);
 
 		FeedSubmissionCallback GetNextFeedFromProcessingCompleteQueue(AmazonRegion region, string merchant);
-		(Stream processingReport, string md5Checksum) QueryFeedProcessingReport(FeedSubmissionCallback feedSubmissionCallback, string merchant);
+		(Stream processingReport, string md5hash) QueryFeedProcessingReport(FeedSubmissionCallback feedSubmissionCallback, string merchant);
 		void DequeueFeedSubmissionCallback(FeedSubmissionCallback feedSubmissionCallback);
+		void MoveToRetryQueue(FeedSubmissionCallback feedSubmission);
 	}
 }
