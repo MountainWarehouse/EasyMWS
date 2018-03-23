@@ -53,7 +53,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 					FeedContent = stream,
 					MarketplaceIdList = feedSubmissionData.MarketplaceIdList == null ? null : new IdList {Id = feedSubmissionData.MarketplaceIdList},
 					PurgeAndReplace = feedSubmissionData.PurgeAndReplace ?? false,
-					ContentMD5 = MD5ChecksumHelper.ComputeHash(stream)
+					ContentMD5 = MD5ChecksumHelper.ComputeHashForAmazon(stream)
 				};
 
 				var response = _marketplaceWebServiceClient.SubmitFeed(submitFeedRequest);
