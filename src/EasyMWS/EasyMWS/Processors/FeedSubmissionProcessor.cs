@@ -53,7 +53,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 					FeedContent = stream,
 					MarketplaceIdList = feedSubmissionData.MarketplaceIdList == null ? null : new IdList {Id = feedSubmissionData.MarketplaceIdList},
 					PurgeAndReplace = feedSubmissionData.PurgeAndReplace ?? false,
-					ContentMD5 = feedSubmissionData.ContentMD5Value
+					ContentMD5 = MD5ChecksumHelper.ComputeHash(stream)
 				};
 
 				var response = _marketplaceWebServiceClient.SubmitFeed(submitFeedRequest);
@@ -62,16 +62,16 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public void AllocateFeedSubmissionForRetry(FeedSubmissionCallback feedSubmission)
-		{
-			feedSubmission.SubmissionRetryCount++;
-			_feedSubmissionCallbackService.Update(feedSubmission);
-		}
-
 		public void MoveToQueueOfSubmittedFeeds(FeedSubmissionCallback feedSubmission, string feedSubmissionId)
 		{
 			feedSubmission.FeedSubmissionId = feedSubmissionId;
 			feedSubmission.SubmissionRetryCount = 0;
+			_feedSubmissionCallbackService.Update(feedSubmission);
+		}
+
+		public void MoveToRetryQueue(FeedSubmissionCallback feedSubmission)
+		{
+			feedSubmission.SubmissionRetryCount++;
 			_feedSubmissionCallbackService.Update(feedSubmission);
 		}
 
@@ -136,9 +136,10 @@ namespace MountainWarehouse.EasyMWS.Processors
 			=> string.IsNullOrEmpty(merchant) ? null : _feedSubmissionCallbackService.FirstOrDefault(
 				ffscs => ffscs.AmazonRegion == region && ffscs.MerchantId == merchant
 				&& ffscs.FeedSubmissionId != null
-				&& ffscs.IsProcessingComplete == true);
+				&& ffscs.IsProcessingComplete == true
+				&& IsReadyForRequestingSubmissionResult(ffscs));
 
-		public (Stream processingReport, string md5Checksum) QueryFeedProcessingReport(FeedSubmissionCallback feedSubmissionCallback, string merchant)
+		public (Stream processingReport, string md5hash) QueryFeedProcessingReport(FeedSubmissionCallback feedSubmissionCallback, string merchant)
 		{
 			var reportResultStream = new MemoryStream();
 			var request = new GetFeedSubmissionResultRequest
@@ -160,14 +161,26 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		private bool IsFeedReadyForSubmission(FeedSubmissionCallback feedSubmission)
 		{
-			var isInInitialRetryStateAndReadyForRetry = feedSubmission.SubmissionRetryCount > 0
+			var isInRetryQueueAndReadyForRetry = feedSubmission.SubmissionRetryCount > 0
 			        && RetryIntervalHelper.IsRetryPeriodAwaited(feedSubmission.LastSubmitted, 
-					feedSubmission.SubmissionRetryCount, _options.FeedInitialSubmissionRetryInitialDelay, 
-					_options.FeedInitialSubmissionRetryInterval, RetryPeriodType.ArithmeticProgression);
+					feedSubmission.SubmissionRetryCount, _options.FeedSubmissionRetryInitialDelay, 
+					_options.FeedSubmissionRetryInterval, _options.FeedSubmissionRetryType);
 
 			var isNotInRetryState = feedSubmission.SubmissionRetryCount == 0;
 
-			return isInInitialRetryStateAndReadyForRetry || isNotInRetryState;
+			return isInRetryQueueAndReadyForRetry || isNotInRetryState;
+		}
+
+		private bool IsReadyForRequestingSubmissionResult(FeedSubmissionCallback feedSubmission)
+		{
+			var isInRetryQueueAndReadyForRetry = feedSubmission.SubmissionRetryCount > 0
+			        && RetryIntervalHelper.IsRetryPeriodAwaited(feedSubmission.LastSubmitted,
+				        feedSubmission.SubmissionRetryCount, _options.FeedResultFailedChecksumRetryInterval,
+				        _options.FeedResultFailedChecksumRetryInterval, RetryPeriodType.ArithmeticProgression);
+
+			var isNotInRetryState = feedSubmission.SubmissionRetryCount == 0;
+
+			return isInRetryQueueAndReadyForRetry || isNotInRetryState;
 		}
 
 		private bool IsFeedInASubmitFeedQueue(FeedSubmissionCallback feedSubmission)

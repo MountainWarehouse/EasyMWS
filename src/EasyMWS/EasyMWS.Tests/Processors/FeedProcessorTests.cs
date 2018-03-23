@@ -17,27 +17,29 @@ namespace EasyMWS.Tests.ReportProcessors
 	public class FeedProcessorTests
 	{
 		private FeedProcessor _feedProcessor;
-		private readonly int ConfiguredMaxNumberOrReportRequestRetries = 2;
-		private readonly int ConfiguredMaxNumberOrFeedSubmissionRetries = 2;
 		private Mock<IFeedSubmissionCallbackService> _feedSubmissionCallbackServiceMock;
 		private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
 		private Mock<IFeedSubmissionProcessor> _feedSubmissionProcessorMock;
+		private Mock<ICallbackActivator> _callbackActivatorMock;
 		private static bool _called;
+		private readonly AmazonRegion _amazonRegion = AmazonRegion.Europe;
+		private readonly string _merchantId = "testMerchantId1";
 
 		[SetUp]
 		public void SetUp()
 		{
 			var options = EasyMwsOptions.Defaults;
-			options.ReportRequestMaxRetryCount = ConfiguredMaxNumberOrReportRequestRetries;
-			options.FeedSubmissionMaxRetryCount = ConfiguredMaxNumberOrFeedSubmissionRetries;
-
 			_feedSubmissionCallbackServiceMock = new Mock<IFeedSubmissionCallbackService>();
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_feedSubmissionProcessorMock = new Mock<IFeedSubmissionProcessor>();
+			_callbackActivatorMock = new Mock<ICallbackActivator>();
 
-			_feedProcessor = new FeedProcessor(AmazonRegion.Europe, "testMerchantId1", options,
+			_callbackActivatorMock.Setup(cam => cam.SerializeCallback(It.IsAny<Action<Stream, object>>(), It.IsAny<object>()))
+				.Returns(new Callback("", "", "", ""));
+
+			_feedProcessor = new FeedProcessor(_amazonRegion, _merchantId, options,
 				_feedSubmissionCallbackServiceMock.Object, _marketplaceWebServiceClientMock.Object,
-				_feedSubmissionProcessorMock.Object);
+				_feedSubmissionProcessorMock.Object, _callbackActivatorMock.Object);
 		}
 
 		#region QueueFeed tests 
@@ -70,6 +72,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			FeedSubmissionCallback feedSubmissionCallback = null;
 			_feedSubmissionCallbackServiceMock.Setup(rrcsm => rrcsm.Create(It.IsAny<FeedSubmissionCallback>()))
 				.Callback<FeedSubmissionCallback>((p) => { feedSubmissionCallback = p; });
+
 			_feedProcessor.Queue(propertiesContainer, callbackMethod, new CallbackActivatorTests.CallbackDataTest {Foo = "Bar"});
 
 			_feedSubmissionCallbackServiceMock.Verify(rrcsm => rrcsm.Create(It.IsAny<FeedSubmissionCallback>()), Times.Once);
@@ -171,7 +174,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		}
 
 		[Test]
-		public void Poll_WithSubmitSingleQueuedFeedToAmazonResponseNull_CallsOnce_AllocateFeedSubmissionForRetry()
+		public void Poll_WithSubmitSingleQueuedFeedToAmazonResponseNull_CallsTwice_MoveToRetryQueue()
 		{
 			_feedSubmissionProcessorMock
 				.Setup(rrp => rrp.GetNextFeedToSubmitFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
@@ -182,12 +185,12 @@ namespace EasyMWS.Tests.ReportProcessors
 
 			_feedProcessor.Poll();
 
-			_feedSubmissionProcessorMock.Verify(rrp => rrp.AllocateFeedSubmissionForRetry(It.IsAny<FeedSubmissionCallback>()),
-				Times.Once);
+			_feedSubmissionProcessorMock.Verify(rrp => rrp.MoveToRetryQueue(It.IsAny<FeedSubmissionCallback>()),
+				Times.Exactly(2));
 		}
 
 		[Test]
-		public void Poll_WithSubmitSingleQueuedFeedToAmazonResponseEmpty_CallsOnce_AllocateFeedSubmissionForRetry()
+		public void Poll_WithSubmitSingleQueuedFeedToAmazonResponseEmpty_CallsTwice_MoveToRetryQueue()
 		{
 			_feedSubmissionProcessorMock
 				.Setup(rrp => rrp.GetNextFeedToSubmitFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
@@ -199,8 +202,62 @@ namespace EasyMWS.Tests.ReportProcessors
 
 			_feedProcessor.Poll();
 
-			_feedSubmissionProcessorMock.Verify(rrp => rrp.AllocateFeedSubmissionForRetry(It.IsAny<FeedSubmissionCallback>()),
-				Times.Once);
+			_feedSubmissionProcessorMock.Verify(rrp => rrp.MoveToRetryQueue(It.IsAny<FeedSubmissionCallback>()),
+				Times.Exactly(2));
+		}
+
+		[Test]
+		public void Poll_WithSubmitSingleQueuedFeedToAmazonResponseNotMatchingMd5_NeverCalls_ExecuteCallback()
+		{
+			var testStreamContent = "testStreamContent";
+			var testStream = StreamHelper.CreateNewMemoryStream(testStreamContent);
+			var notMatchingMd5Sum = "AAAAAAAAAAAAAAAA";
+
+			_feedSubmissionProcessorMock
+				.Setup(fspm => fspm.GetNextFeedToSubmitFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Returns(new FeedSubmissionCallback { LastSubmitted = DateTime.MinValue });
+			_feedSubmissionProcessorMock.Setup(fspm =>
+					fspm.SubmitSingleQueuedFeedToAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
+				.Returns("testSubmissionId");
+			_feedSubmissionProcessorMock.Setup(fspm =>
+					fspm.QueryFeedProcessingReport(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
+				.Returns((testStream, notMatchingMd5Sum));
+			_feedSubmissionProcessorMock.Setup(fspm =>
+					fspm.GetNextFeedFromProcessingCompleteQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Returns(new FeedSubmissionCallback());
+
+			_feedProcessor.Poll();
+
+			_callbackActivatorMock.Verify(cam => cam.CallMethod(It.IsAny<Callback>(), It.IsAny<Stream>()), Times.Never);
+			_feedSubmissionProcessorMock.Verify(fspm => fspm.DequeueFeedSubmissionCallback(It.IsAny<FeedSubmissionCallback>()), Times.Never);
+			_feedSubmissionProcessorMock.Verify(fspm => fspm.MoveToRetryQueue(It.IsAny<FeedSubmissionCallback>()), Times.Once);
+		}
+
+		[Test]
+		public void Poll_WithSubmitSingleQueuedFeedToAmazonResponseMatchingMd5_CallsOnce_ExecuteCallback()
+		{
+			var testStreamContent = "testStreamContent";	// This is the content for which an MD5 value is computed and used in the test. Do not modify this without the MD5 value.
+			var testStream = StreamHelper.CreateNewMemoryStream(testStreamContent);
+			var matchingMd5Sum = "AC3E13CCB81D8DEF87D8AD8D6ADB64A9";    // This is the MD5 value for testStreamContent="testStreamContent". Do not modify this without the stream content.
+
+			_feedSubmissionProcessorMock
+				.Setup(fspm => fspm.GetNextFeedToSubmitFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Returns(new FeedSubmissionCallback { LastSubmitted = DateTime.MinValue });
+			_feedSubmissionProcessorMock.Setup(fspm =>
+					fspm.SubmitSingleQueuedFeedToAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
+				.Returns("testSubmissionId");
+			_feedSubmissionProcessorMock.Setup(fspm =>
+					fspm.QueryFeedProcessingReport(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
+				.Returns((testStream, matchingMd5Sum));
+			_feedSubmissionProcessorMock.Setup(fspm =>
+					fspm.GetNextFeedFromProcessingCompleteQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Returns(new FeedSubmissionCallback());
+
+			_feedProcessor.Poll();
+
+			_callbackActivatorMock.Verify(cam => cam.CallMethod(It.IsAny<Callback>(), It.IsAny<Stream>()), Times.Once);
+			_feedSubmissionProcessorMock.Verify(fspm => fspm.DequeueFeedSubmissionCallback(It.IsAny<FeedSubmissionCallback>()), Times.Once);
+			_feedSubmissionProcessorMock.Verify(fspm => fspm.MoveToRetryQueue(It.IsAny<FeedSubmissionCallback>()), Times.Never);
 		}
 
 		[Test]
@@ -208,17 +265,17 @@ namespace EasyMWS.Tests.ReportProcessors
 		{
 			var testFeedSubmissionCallbacks = new List<FeedSubmissionCallback>
 			{
-				new FeedSubmissionCallback {Id = 1, SubmissionRetryCount = 0},
-				new FeedSubmissionCallback {Id = 2, SubmissionRetryCount = 1},
-				new FeedSubmissionCallback {Id = 3, SubmissionRetryCount = 2},
-				new FeedSubmissionCallback {Id = 4, SubmissionRetryCount = 3},
-				new FeedSubmissionCallback {Id = 5, SubmissionRetryCount = 4},
-				new FeedSubmissionCallback {Id = 5, SubmissionRetryCount = 5}
+				new FeedSubmissionCallback {Id = 1, SubmissionRetryCount = 0, AmazonRegion = _amazonRegion, MerchantId = _merchantId },
+				new FeedSubmissionCallback {Id = 2, SubmissionRetryCount = 1, AmazonRegion = _amazonRegion, MerchantId = _merchantId },
+				new FeedSubmissionCallback {Id = 3, SubmissionRetryCount = 2, AmazonRegion = _amazonRegion, MerchantId = _merchantId },
+				new FeedSubmissionCallback {Id = 4, SubmissionRetryCount = 3, AmazonRegion = _amazonRegion, MerchantId = _merchantId },
+				new FeedSubmissionCallback {Id = 5, SubmissionRetryCount = 4, AmazonRegion = _amazonRegion, MerchantId = _merchantId, FeedSubmissionId = null },
+				new FeedSubmissionCallback {Id = 5, SubmissionRetryCount = 5, AmazonRegion = _amazonRegion, MerchantId = _merchantId, FeedSubmissionId = "testFeedSubmissionId" }
 			}.AsQueryable();
 			_feedSubmissionCallbackServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(testFeedSubmissionCallbacks);
 
 			_feedProcessor.Poll();
-			_feedSubmissionCallbackServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionCallback>()), Times.Exactly(3));
+			_feedSubmissionCallbackServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionCallback>()), Times.Exactly(2));
 			_feedSubmissionCallbackServiceMock.Verify(x => x.SaveChanges(), Times.AtLeastOnce);
 		}
 
