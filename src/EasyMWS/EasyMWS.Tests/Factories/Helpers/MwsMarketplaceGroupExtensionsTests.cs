@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using MountainWarehouse.EasyMWS.Helpers;
 using NUnit.Framework;
 
@@ -14,7 +15,7 @@ namespace EasyMWS.Tests.Helpers
 
 		    CollectionAssert.Contains(reportRequestedMarketplacesGroup.GetMarketplacesIdList, MwsMarketplace.Germany.Id);
 		    CollectionAssert.Contains(reportRequestedMarketplacesGroup.GetMarketplacesIdList, MwsMarketplace.France.Id);
-		    Assert.AreEqual(2, reportRequestedMarketplacesGroup.GetMarketplacesIdList.Count);
+		    Assert.AreEqual(2, reportRequestedMarketplacesGroup.GetMarketplacesIdList.Count());
 	    }
 
 	    [Test]
