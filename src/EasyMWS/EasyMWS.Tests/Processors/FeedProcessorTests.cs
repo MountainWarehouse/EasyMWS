@@ -265,7 +265,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		{
 			var testStreamContent = "testStreamContent";	// This is the content for which an MD5 value is computed and used in the test. Do not modify this without the MD5 value.
 			var testStream = StreamHelper.CreateNewMemoryStream(testStreamContent);
-			var matchingMd5Sum = "AC3E13CCB81D8DEF87D8AD8D6ADB64A9";    // This is the MD5 value for testStreamContent="testStreamContent". Do not modify this without the stream content.
+			var matchingMd5Sum = "rD4TzLgdje+H2K2NattkqQ==";    // This is the MD5 value for testStreamContent="testStreamContent". Do not modify this without the stream content.
 
 			_feedSubmissionProcessorMock
 				.Setup(fspm => fspm.GetNextFeedToSubmitFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
