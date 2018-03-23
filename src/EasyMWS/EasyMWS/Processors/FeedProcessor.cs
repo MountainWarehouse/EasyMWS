@@ -48,16 +48,17 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			// TODO: If feed processing report Content-MD5 hash doesn't match the hash sent by amazon, retry up to 3 times. 
 			// log a warning for each hash miss-match, and recommend to the user to notify Amazon that a corrupted body was received. 
-
-			if (MD5ChecksumHelper.IsChecksumCorrect(amazonProcessingReport.reportContent, amazonProcessingReport.contentMd5))
+			if (amazonProcessingReport.feedSubmissionCallback != null)
 			{
-				ExecuteCallback(amazonProcessingReport.feedSubmissionCallback, amazonProcessingReport.reportContent);
+				if (MD5ChecksumHelper.IsChecksumCorrect(amazonProcessingReport.reportContent, amazonProcessingReport.contentMd5))
+				{
+					ExecuteCallback(amazonProcessingReport.feedSubmissionCallback, amazonProcessingReport.reportContent);
+				}
+				else
+				{
+					_feedSubmissionProcessor.MoveToRetryQueue(amazonProcessingReport.feedSubmissionCallback);
+				}
 			}
-			else
-			{
-				_feedSubmissionProcessor.MoveToRetryQueue(amazonProcessingReport.feedSubmissionCallback);
-			}
-			
 			_feedService.SaveChanges();
 		}
 
