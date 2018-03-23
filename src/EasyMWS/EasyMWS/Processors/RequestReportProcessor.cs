@@ -125,25 +125,18 @@ namespace MountainWarehouse.EasyMWS.Processors
 			           && rrc.GeneratedReportId != null);
 
 		public Stream DownloadGeneratedReport(ReportRequestCallback reportRequestCallback, string merchantId)
-	    {
-		    var reportResultStream = new MemoryStream();
-		    var reportContent = new StringBuilder();
-		    var getReportRequest = new GetReportRequest
-		    {
-			    ReportId = reportRequestCallback.GeneratedReportId,
-			    Report = reportResultStream,
-			    Merchant = merchantId
-		    };
+		{
+			var reportResultStream = new MemoryStream();
+			var getReportRequest = new GetReportRequest
+			{
+				ReportId = reportRequestCallback.GeneratedReportId,
+				Report = reportResultStream,
+				Merchant = merchantId
+			};
 
-		    _marketplaceWebServiceClient.GetReport(getReportRequest);
+			_marketplaceWebServiceClient.GetReport(getReportRequest);
 
-		    var streamReader = new StreamReader(getReportRequest.Report);
-		    while (!streamReader.EndOfStream && streamReader.Peek() != -1)
-		    {
-			    reportContent.Append((char) streamReader.Read());
-		    }
-
-		    return getReportRequest.Report;
+			return getReportRequest.Report;
 	    }
 
 	    public void DequeueReportRequestCallback(ReportRequestCallback reportRequestCallback)
