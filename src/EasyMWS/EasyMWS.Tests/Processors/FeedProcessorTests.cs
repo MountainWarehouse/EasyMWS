@@ -48,13 +48,14 @@ namespace EasyMWS.Tests.ReportProcessors
 		#region QueueFeed tests 
 
 		[Test]
-		public void QueueFeed_WithNullCallbackMethodArgument_ThrowsArgumentNullException()
+		public void QueueFeed_WithNullCallbackMethodArgument_CallsLogErrorOnce()
 		{
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("", "");
 			var callbackMethod = (Action<Stream, object>) null;
 
-			Assert.Throws<ArgumentNullException>(() =>
-				_feedProcessor.Queue(propertiesContainer, callbackMethod, new {Foo = "Bar"}));
+			_feedProcessor.Queue(propertiesContainer, callbackMethod, new { Foo = "Bar" });
+
+			_loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<Exception>()), Times.Once);
 		}
 
 		[Test]
@@ -63,8 +64,9 @@ namespace EasyMWS.Tests.ReportProcessors
 			FeedSubmissionPropertiesContainer propertiesContainer = null;
 			var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
 
-			Assert.Throws<ArgumentNullException>(() =>
-				_feedProcessor.Queue(propertiesContainer, callbackMethod, new {Foo = "Bar"}));
+			_feedProcessor.Queue(propertiesContainer, callbackMethod, new { Foo = "Bar" });
+
+			_loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<Exception>()), Times.Once);
 		}
 
 		[Test]

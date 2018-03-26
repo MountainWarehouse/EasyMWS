@@ -53,23 +53,25 @@ namespace EasyMWS.Tests.ReportProcessors
 		#region QueueReport tests 
 
 		[Test]
-		public void QueueReport_WithNullCallbackMethodArgument_ThrowsArgumentNullException()
+		public void QueueReport_WithNullCallbackMethodArgument_CallsLogErrorOnce()
 		{
 			var reportRequestContainer = new ReportRequestPropertiesContainer("", ContentUpdateFrequency.Unknown);
 			var callbackMethod = (Action<Stream, object>) null;
 
-			Assert.Throws<ArgumentNullException>(() =>
-				_reportProcessor.Queue(reportRequestContainer, callbackMethod, new {Foo = "Bar"}));
+			_reportProcessor.Queue(reportRequestContainer, callbackMethod, new {Foo = "Bar"});
+
+			_loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<Exception>()), Times.Once);
 		}
 
 		[Test]
-		public void QueueReport_WithNullReportRequestPropertiesContainerArgument_ThrowsArgumentNullException()
+		public void QueueReport_WithNullReportRequestPropertiesContainerArgument_CallsLogErrorOnce()
 		{
 			ReportRequestPropertiesContainer reportRequestContainer = null;
 			var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
 
-			Assert.Throws<ArgumentNullException>(() =>
-				_reportProcessor.Queue(reportRequestContainer, callbackMethod, new {Foo = "Bar"}));
+			_reportProcessor.Queue(reportRequestContainer, callbackMethod, new { Foo = "Bar" });
+
+			_loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<Exception>()), Times.Once);
 		}
 
 		[Test]
