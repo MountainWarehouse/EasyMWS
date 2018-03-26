@@ -49,8 +49,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			RequestFeedSubmissionStatusesFromAmazon();
 			var amazonProcessingReport = RequestNextFeedSubmissionInQueueFromAmazon();
 
-			// TODO: If feed processing report Content-MD5 hash doesn't match the hash sent by amazon, retry up to 3 times. 
-			// log a warning for each hash miss-match, and recommend to the user to notify Amazon that a corrupted body was received. 
+			// TODO: log a warning for each hash miss-match, and recommend to the user to notify Amazon that a corrupted body was received. 
 			if (amazonProcessingReport.feedSubmissionCallback != null)
 			{
 				if (MD5ChecksumHelper.IsChecksumCorrect(amazonProcessingReport.reportContent, amazonProcessingReport.contentMd5))
@@ -98,59 +97,89 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			var feedSubmission = _feedSubmissionProcessor.GetNextFeedToSubmitFromQueue(_region, _merchantId);
 
-			if (feedSubmission == null)
-				return;
+			if (feedSubmission == null) return;
 
-			var feedSubmissionId = _feedSubmissionProcessor.SubmitSingleQueuedFeedToAmazon(feedSubmission, _merchantId);
+			try
+			{
+				var feedSubmissionId = _feedSubmissionProcessor.SubmitSingleQueuedFeedToAmazon(feedSubmission, _merchantId);
 
-			feedSubmission.LastSubmitted = DateTime.UtcNow;
-			_feedService.Update(feedSubmission);
+				feedSubmission.LastSubmitted = DateTime.UtcNow;
+				_feedService.Update(feedSubmission);
 
-			if (string.IsNullOrEmpty(feedSubmissionId))
+				if (string.IsNullOrEmpty(feedSubmissionId))
+				{
+					_feedSubmissionProcessor.MoveToRetryQueue(feedSubmission);
+				}
+				else
+				{
+					_feedSubmissionProcessor.MoveToQueueOfSubmittedFeeds(feedSubmission, feedSubmissionId);
+				}
+			}
+			catch (Exception e)
 			{
 				_feedSubmissionProcessor.MoveToRetryQueue(feedSubmission);
-			}
-			else
-			{
-				_feedSubmissionProcessor.MoveToQueueOfSubmittedFeeds(feedSubmission, feedSubmissionId);
+				_logger.Error(e.Message, e);
 			}
 		}
 
 		public void RequestFeedSubmissionStatusesFromAmazon()
 		{
-			var submittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeeds(_region, _merchantId).ToList();
+			try
+			{
+				var submittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeeds(_region, _merchantId).ToList();
 
-			if (!submittedFeeds.Any())
-				return;
+				if (!submittedFeeds.Any())
+					return;
 
-			var feedSubmissionIdList = submittedFeeds.Select(x => x.FeedSubmissionId);
+				var feedSubmissionIdList = submittedFeeds.Select(x => x.FeedSubmissionId);
 
-			var feedSubmissionResults = _feedSubmissionProcessor.GetFeedSubmissionResults(feedSubmissionIdList, _merchantId);
+				var feedSubmissionResults = _feedSubmissionProcessor.GetFeedSubmissionResults(feedSubmissionIdList, _merchantId);
 
-			_feedSubmissionProcessor.MoveFeedsToQueuesAccordingToProcessingStatus(feedSubmissionResults);
+				_feedSubmissionProcessor.MoveFeedsToQueuesAccordingToProcessingStatus(feedSubmissionResults);
+			}
+			catch (Exception e)
+			{
+				_logger.Error(e.Message, e);
+			}
 		}
 
 		public (FeedSubmissionCallback feedSubmissionCallback, Stream reportContent, string contentMd5) RequestNextFeedSubmissionInQueueFromAmazon()
 		{
-			var nextFeedWithProcessingComplete = _feedSubmissionProcessor.GetNextFeedFromProcessingCompleteQueue(_region, _merchantId);
+			try
+			{
+				var nextFeedWithProcessingComplete =
+					_feedSubmissionProcessor.GetNextFeedFromProcessingCompleteQueue(_region, _merchantId);
 
-			if (nextFeedWithProcessingComplete == null) return (null, null, null);
+				if (nextFeedWithProcessingComplete == null) return (null, null, null);
 
-			var processingReportInfo = _feedSubmissionProcessor.QueryFeedProcessingReport(nextFeedWithProcessingComplete, _merchantId);
+				var processingReportInfo = _feedSubmissionProcessor.QueryFeedProcessingReport(nextFeedWithProcessingComplete, _merchantId);
 
-			return (nextFeedWithProcessingComplete, processingReportInfo.processingReport, processingReportInfo.md5hash);
+				return (nextFeedWithProcessingComplete, processingReportInfo.processingReport, processingReportInfo.md5hash);
+			}
+			catch (Exception e)
+			{
+				_logger.Error(e.Message, e);
+				return (null, null, null);
+			}
 		}
 
 		public void ExecuteCallback(FeedSubmissionCallback feedSubmissionCallback, Stream stream)
 		{
-			if (feedSubmissionCallback == null || stream == null) return;
+			try
+			{
+				if (feedSubmissionCallback == null || stream == null) return;
 
-			var callback = new Callback(feedSubmissionCallback.TypeName, feedSubmissionCallback.MethodName,
-			  feedSubmissionCallback.Data, feedSubmissionCallback.DataTypeName);
+				var callback = new Callback(feedSubmissionCallback.TypeName, feedSubmissionCallback.MethodName,
+					feedSubmissionCallback.Data, feedSubmissionCallback.DataTypeName);
 
-			_callbackActivator.CallMethod(callback, stream);
+				_callbackActivator.CallMethod(callback, stream);
 
-			_feedSubmissionProcessor.DequeueFeedSubmissionCallback(feedSubmissionCallback);
+				_feedSubmissionProcessor.DequeueFeedSubmissionCallback(feedSubmissionCallback);
+			}
+			catch (Exception e)
+			{
+				_logger.Error(e.Message, e);
+			}
 		}
 
 		private FeedSubmissionCallback GetSerializedFeedSubmissionCallback(
