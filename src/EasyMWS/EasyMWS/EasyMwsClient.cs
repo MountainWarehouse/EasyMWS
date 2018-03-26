@@ -47,8 +47,8 @@ namespace MountainWarehouse.EasyMWS
 
 			_logger = easyMwsLogger ?? new EasyMwsLogger(isEnabled: false);
 			var mwsClient = new MarketplaceWebServiceClient(accessKeyId, mwsSecretAccessKey, CreateConfig(_amazonRegion));
-			_reportProcessor = _reportProcessor ?? new ReportProcessor(_amazonRegion, _merchantId, _options, mwsClient);
-			_feedProcessor = _feedProcessor ?? new FeedProcessor(_amazonRegion, _merchantId, _options, mwsClient);
+			_reportProcessor = _reportProcessor ?? new ReportProcessor(_amazonRegion, _merchantId, _options, mwsClient, _logger);
+			_feedProcessor = _feedProcessor ?? new FeedProcessor(_amazonRegion, _merchantId, _options, mwsClient, _logger);
 
 		}
 
@@ -71,21 +71,15 @@ namespace MountainWarehouse.EasyMWS
 		public void Poll()
 		{
 			_logger.Info("Polling operation has been triggered!");
-			try
-			{
-				//TODO: For each request of any kind made to amazon, record RequestId and Timestamp. Either retain these for 30 days (config option On/Off) and/or return this info to the caller.
-				//For more info see: https://docs.developer.amazonservices.com/en_US/dev_guide/DG_ResponseFormat.html
 
-				//TODO: Whenever an amazon request is unsuccessful, log the error, the RequestId and Timestamp found on ErrorResponse. (and take additional appropriate action if it's the case)
-				// In order to access this information, I believe MarketplaceWebServiceException has to be caught. Request info can be found on the ResponseHeaderMetadata property of the ex.
+			//TODO: For each request of any kind made to amazon, record RequestId and Timestamp. Either retain these for 30 days (config option On/Off) and/or return this info to the caller.
+			//For more info see: https://docs.developer.amazonservices.com/en_US/dev_guide/DG_ResponseFormat.html
 
-				_reportProcessor.Poll();
-				_feedProcessor.Poll();
-			}
-			catch (Exception e)
-			{
-				_logger.Error(e.Message, e);
-			}
+			//TODO: Whenever an amazon request is unsuccessful, log the error, the RequestId and Timestamp found on ErrorResponse. (and take additional appropriate action if it's the case)
+			// In order to access this information, I believe MarketplaceWebServiceException has to be caught. Request info can be found on the ResponseHeaderMetadata property of the ex.
+
+			_reportProcessor.Poll();
+			_feedProcessor.Poll();
 		}
 
 		/// <summary>

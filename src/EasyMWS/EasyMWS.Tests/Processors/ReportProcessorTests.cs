@@ -8,6 +8,7 @@ using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
+using MountainWarehouse.EasyMWS.Logging;
 using MountainWarehouse.EasyMWS.Processors;
 using MountainWarehouse.EasyMWS.Services;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
@@ -24,6 +25,8 @@ namespace EasyMWS.Tests.ReportProcessors
 		private Mock<IReportRequestCallbackService> _reportRequestCallbackServiceMock;
 		private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
 		private Mock<IRequestReportProcessor> _requestReportProcessor;
+		private Mock<ICallbackActivator> _callbackActivatorMock;
+		private Mock<IEasyMwsLogger> _loggerMock;
 		private static bool _called;
 
 		[SetUp]
@@ -36,31 +39,39 @@ namespace EasyMWS.Tests.ReportProcessors
 			_reportRequestCallbackServiceMock = new Mock<IReportRequestCallbackService>();
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_requestReportProcessor = new Mock<IRequestReportProcessor>();
+			_callbackActivatorMock = new Mock<ICallbackActivator>();
+			_loggerMock = new Mock<IEasyMwsLogger>();
+
+			_callbackActivatorMock.Setup(cam => cam.SerializeCallback(It.IsAny<Action<Stream, object>>(), It.IsAny<object>()))
+				.Returns(new Callback("", "", "", ""));
+
 			_reportProcessor = new ReportProcessor(AmazonRegion.Europe, "testMerchantId1", options,
-				_reportRequestCallbackServiceMock.Object, _marketplaceWebServiceClientMock.Object, _requestReportProcessor.Object);
+				_reportRequestCallbackServiceMock.Object, _marketplaceWebServiceClientMock.Object, _requestReportProcessor.Object, _callbackActivatorMock.Object, _loggerMock.Object);
 		}
 
 
 		#region QueueReport tests 
 
 		[Test]
-		public void QueueReport_WithNullCallbackMethodArgument_ThrowsArgumentNullException()
+		public void QueueReport_WithNullCallbackMethodArgument_CallsLogErrorOnce()
 		{
 			var reportRequestContainer = new ReportRequestPropertiesContainer("", ContentUpdateFrequency.Unknown);
 			var callbackMethod = (Action<Stream, object>) null;
 
-			Assert.Throws<ArgumentNullException>(() =>
-				_reportProcessor.Queue(reportRequestContainer, callbackMethod, new {Foo = "Bar"}));
+			_reportProcessor.Queue(reportRequestContainer, callbackMethod, new {Foo = "Bar"});
+
+			_loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<Exception>()), Times.Once);
 		}
 
 		[Test]
-		public void QueueReport_WithNullReportRequestPropertiesContainerArgument_ThrowsArgumentNullException()
+		public void QueueReport_WithNullReportRequestPropertiesContainerArgument_CallsLogErrorOnce()
 		{
 			ReportRequestPropertiesContainer reportRequestContainer = null;
 			var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
 
-			Assert.Throws<ArgumentNullException>(() =>
-				_reportProcessor.Queue(reportRequestContainer, callbackMethod, new {Foo = "Bar"}));
+			_reportProcessor.Queue(reportRequestContainer, callbackMethod, new { Foo = "Bar" });
+
+			_loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<Exception>()), Times.Once);
 		}
 
 		[Test]

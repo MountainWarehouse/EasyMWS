@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Helpers;
+using MountainWarehouse.EasyMWS.Logging;
 using MountainWarehouse.EasyMWS.Services;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
 using Newtonsoft.Json;
@@ -13,26 +14,32 @@ namespace MountainWarehouse.EasyMWS.Processors
 	{
 		private readonly IReportRequestCallbackService _reportService;
 		private readonly IRequestReportProcessor _requestReportProcessor;
-		private readonly CallbackActivator _callbackActivator;
+		private readonly ICallbackActivator _callbackActivator;
+		private readonly IEasyMwsLogger _logger;
 
 		private readonly AmazonRegion _region;
 		private readonly string _merchantId;
 		private readonly EasyMwsOptions _options;
 
-		internal ReportProcessor(AmazonRegion region, string merchantId, EasyMwsOptions options, IReportRequestCallbackService reportService, IMarketplaceWebServiceClient mwsClient, IRequestReportProcessor requestReportProcessor)
-		  : this(region, merchantId, options, mwsClient)
+		internal ReportProcessor(AmazonRegion region, string merchantId, EasyMwsOptions options,
+			IReportRequestCallbackService reportService, IMarketplaceWebServiceClient mwsClient,
+			IRequestReportProcessor requestReportProcessor, ICallbackActivator callbackActivator, IEasyMwsLogger logger)
+			: this(region, merchantId, options, mwsClient, logger)
 		{
 			_reportService = reportService;
 			_requestReportProcessor = requestReportProcessor;
+			_callbackActivator = callbackActivator;
 		}
 
-		internal ReportProcessor(AmazonRegion region, string merchantId, EasyMwsOptions options, IMarketplaceWebServiceClient mwsClient)
+		internal ReportProcessor(AmazonRegion region, string merchantId, EasyMwsOptions options,
+			IMarketplaceWebServiceClient mwsClient, IEasyMwsLogger logger)
 		{
 			_region = region;
 			_merchantId = merchantId;
 			_options = options;
+			_logger = logger;
 
-			_callbackActivator = new CallbackActivator();
+			_callbackActivator = _callbackActivator ?? new CallbackActivator();
 
 			_reportService = _reportService ?? new ReportRequestCallbackService();
 			_requestReportProcessor = _requestReportProcessor ?? new RequestReportProcessor(mwsClient, _reportService, options);
@@ -41,18 +48,32 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void Poll()
 		{
-			CleanUpReportRequestQueue();
-			RequestNextReportInQueueFromAmazon();
-			RequestReportStatusesFromAmazon();
-			var generatedReportRequestCallback = DownloadNextGeneratedRequestReportInQueueFromAmazon();
-			ExecuteCallback(generatedReportRequestCallback.reportRequestCallback, generatedReportRequestCallback.stream);
-			_reportService.SaveChanges();
+			try
+			{
+				CleanUpReportRequestQueue();
+				RequestNextReportInQueueFromAmazon();
+				RequestReportStatusesFromAmazon();
+				var generatedReportRequestCallback = DownloadNextGeneratedRequestReportInQueueFromAmazon();
+				ExecuteCallback(generatedReportRequestCallback.reportRequestCallback, generatedReportRequestCallback.stream);
+				_reportService.SaveChanges();
+			}
+			catch (Exception e)
+			{
+				_logger.Error(e.Message, e);
+			}
 		}
 
 		public void Queue(ReportRequestPropertiesContainer propertiesContainer, Action<Stream, object> callbackMethod, object callbackData)
 		{
-			_reportService.Create(GetSerializedReportRequestCallback(propertiesContainer, callbackMethod, callbackData));
-			_reportService.SaveChanges();
+			try
+			{
+				_reportService.Create(GetSerializedReportRequestCallback(propertiesContainer, callbackMethod, callbackData));
+				_reportService.SaveChanges();
+			}
+			catch (Exception e)
+			{
+				_logger.Error(e.Message, e);
+			}
 		}
 
 		public void CleanUpReportRequestQueue()
@@ -70,60 +91,87 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			var reportRequestCallbackReportQueued = _requestReportProcessor.GetNonRequestedReportFromQueue(_region, _merchantId);
 
-			if (reportRequestCallbackReportQueued == null)
-				return;
+			if (reportRequestCallbackReportQueued == null) return;
 
-			var reportRequestId = _requestReportProcessor.RequestSingleQueuedReport(reportRequestCallbackReportQueued, _merchantId);
+			try
+			{
+				var reportRequestId = _requestReportProcessor.RequestSingleQueuedReport(reportRequestCallbackReportQueued, _merchantId);
 
-			reportRequestCallbackReportQueued.LastRequested = DateTime.UtcNow;
-			_reportService.Update(reportRequestCallbackReportQueued);
+				reportRequestCallbackReportQueued.LastRequested = DateTime.UtcNow;
+				_reportService.Update(reportRequestCallbackReportQueued);
 
-			if (string.IsNullOrEmpty(reportRequestId))
+				if (string.IsNullOrEmpty(reportRequestId))
+				{
+					_requestReportProcessor.AllocateReportRequestForRetry(reportRequestCallbackReportQueued);
+				}
+				else
+				{
+					_requestReportProcessor.MoveToNonGeneratedReportsQueue(reportRequestCallbackReportQueued, reportRequestId);
+				}
+			}
+			catch (Exception e)
 			{
 				_requestReportProcessor.AllocateReportRequestForRetry(reportRequestCallbackReportQueued);
-			}
-			else
-			{
-				_requestReportProcessor.MoveToNonGeneratedReportsQueue(reportRequestCallbackReportQueued, reportRequestId);
+				_logger.Error(e.Message, e);
 			}
 		}
 
 		public void RequestReportStatusesFromAmazon()
 		{
-			var reportRequestCallbacksPendingReports = _requestReportProcessor.GetAllPendingReport(_region, _merchantId).ToList();
+			try
+			{
+				var reportRequestCallbacksPendingReports = _requestReportProcessor.GetAllPendingReport(_region, _merchantId).ToList();
 
-			if (!reportRequestCallbacksPendingReports.Any())
-				return;
+				if (!reportRequestCallbacksPendingReports.Any()) return;
 
-			var reportRequestIds = reportRequestCallbacksPendingReports.Select(x => x.RequestReportId);
+				var reportRequestIds = reportRequestCallbacksPendingReports.Select(x => x.RequestReportId);
 
-			var reportRequestStatuses = _requestReportProcessor.GetReportRequestListResponse(reportRequestIds, _merchantId);
+				var reportRequestStatuses = _requestReportProcessor.GetReportRequestListResponse(reportRequestIds, _merchantId);
 
-			_requestReportProcessor.MoveReportsToQueuesAccordingToProcessingStatus(reportRequestStatuses);
+				_requestReportProcessor.MoveReportsToQueuesAccordingToProcessingStatus(reportRequestStatuses);
+			}
+			catch (Exception e)
+			{
+				_logger.Error(e.Message, e);
+			}
 		}
 
 		public (ReportRequestCallback reportRequestCallback, Stream stream) DownloadNextGeneratedRequestReportInQueueFromAmazon()
 		{
 			var generatedReportRequest = _requestReportProcessor.GetReadyForDownloadReports(_region, _merchantId);
 
-			if (generatedReportRequest == null)
+			if (generatedReportRequest == null) return (null, null);
+
+			try
+			{
+				var stream = _requestReportProcessor.DownloadGeneratedReport(generatedReportRequest, _merchantId);
+
+				return (generatedReportRequest, stream);
+			}
+			catch (Exception e)
+			{
+				_logger.Error(e.Message, e);
 				return (null, null);
-
-			var stream = _requestReportProcessor.DownloadGeneratedReport(generatedReportRequest, _merchantId);
-
-			return (generatedReportRequest, stream);
+			}
 		}
 
 		public void ExecuteCallback(ReportRequestCallback reportRequestCallback, Stream stream)
 		{
-			if (reportRequestCallback == null || stream == null) return;
+			try
+			{
+				if (reportRequestCallback == null || stream == null) return;
 
-			var callback = new Callback(reportRequestCallback.TypeName, reportRequestCallback.MethodName,
-			  reportRequestCallback.Data, reportRequestCallback.DataTypeName);
+				var callback = new Callback(reportRequestCallback.TypeName, reportRequestCallback.MethodName,
+					reportRequestCallback.Data, reportRequestCallback.DataTypeName);
 
-			_callbackActivator.CallMethod(callback, stream);
+				_callbackActivator.CallMethod(callback, stream);
 
-			DequeueReport(reportRequestCallback);
+				DequeueReport(reportRequestCallback);
+			}
+			catch (Exception e)
+			{
+				_logger.Error(e.Message, e);
+			}
 		}
 
 		public void DequeueReport(ReportRequestCallback reportRequestCallback)
@@ -132,7 +180,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		}
 
 		private ReportRequestCallback GetSerializedReportRequestCallback(
-		  ReportRequestPropertiesContainer reportRequestContainer, Action<Stream, object> callbackMethod, object callbackData)
+			ReportRequestPropertiesContainer reportRequestContainer, Action<Stream, object> callbackMethod, object callbackData)
 		{
 			if (reportRequestContainer == null || callbackMethod == null) throw new ArgumentNullException();
 			var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
