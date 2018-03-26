@@ -91,14 +91,7 @@ namespace MountainWarehouse.EasyMWS
 		public void QueueReport(ReportRequestPropertiesContainer reportRequestContainer,
 			Action<Stream, object> callbackMethod, object callbackData)
 		{
-			try
-			{
-				_reportProcessor.Queue(reportRequestContainer, callbackMethod, callbackData);
-			}
-			catch (Exception e)
-			{
-				_logger.Error(e.Message, e);
-			}
+			_reportProcessor.Queue(reportRequestContainer, callbackMethod, callbackData);
 		}
 
 		/// <summary>
@@ -110,14 +103,7 @@ namespace MountainWarehouse.EasyMWS
 		public void QueueFeed(FeedSubmissionPropertiesContainer feedSubmissionContainer,
 			Action<Stream, object> callbackMethod, object callbackData)
 		{
-			try
-			{
-				_feedProcessor.Queue(feedSubmissionContainer, callbackMethod, callbackData);
-			}
-			catch (Exception e)
-			{
-				_logger.Error(e.Message, e);
-			}
+			_feedProcessor.Queue(feedSubmissionContainer, callbackMethod, callbackData);
 		}
 
 		#region Helpers for creating the MarketplaceWebServiceClient
