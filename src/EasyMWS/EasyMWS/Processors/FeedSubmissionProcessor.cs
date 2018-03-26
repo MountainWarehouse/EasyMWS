@@ -100,34 +100,38 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void MoveFeedsToQueuesAccordingToProcessingStatus(List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses)
 		{
-			foreach (var feedInfo in feedProcessingStatuses)
+			foreach (var feedSubmissionInfo in feedProcessingStatuses)
 			{
-				var feedSubmissionCallback = _feedSubmissionCallbackService.FirstOrDefault(fsc => fsc.FeedSubmissionId == feedInfo.FeedSubmissionId);
+				var feedSubmissionCallback = _feedSubmissionCallbackService.FirstOrDefault(fsc => fsc.FeedSubmissionId == feedSubmissionInfo.FeedSubmissionId);
+				if(feedSubmissionCallback == null) continue;
 
-				if (feedInfo.FeedProcessingStatus == "_DONE_")
+				if (feedSubmissionInfo.FeedProcessingStatus == "_DONE_")
 				{
 					feedSubmissionCallback.IsProcessingComplete = true;
 					feedSubmissionCallback.SubmissionRetryCount = 0;
 					_feedSubmissionCallbackService.Update(feedSubmissionCallback);
-				} else if (feedInfo.FeedProcessingStatus == "_AWAITING_ASYNCHRONOUS_REPLY_"
-				           || feedInfo.FeedProcessingStatus == "_IN_PROGRESS_"
-				           || feedInfo.FeedProcessingStatus == "_IN_SAFETY_NET_"
-				           || feedInfo.FeedProcessingStatus == "_SUBMITTED_"
-				           || feedInfo.FeedProcessingStatus == "_UNCONFIRMED_")
+				}
+				else if (feedSubmissionInfo.FeedProcessingStatus == "_AWAITING_ASYNCHRONOUS_REPLY_"
+				           || feedSubmissionInfo.FeedProcessingStatus == "_IN_PROGRESS_"
+				           || feedSubmissionInfo.FeedProcessingStatus == "_IN_SAFETY_NET_"
+				           || feedSubmissionInfo.FeedProcessingStatus == "_SUBMITTED_"
+				           || feedSubmissionInfo.FeedProcessingStatus == "_UNCONFIRMED_")
 				{
 					feedSubmissionCallback.IsProcessingComplete = false;
+					feedSubmissionCallback.SubmissionRetryCount = 0;
 					_feedSubmissionCallbackService.Update(feedSubmissionCallback);
-				} else if (feedInfo.FeedProcessingStatus == "_CANCELLED_")
+				}
+				else if (feedSubmissionInfo.FeedProcessingStatus == "_CANCELLED_")
 				{
 					feedSubmissionCallback.IsProcessingComplete = false;
 					feedSubmissionCallback.SubmissionRetryCount++;
 					_feedSubmissionCallbackService.Update(feedSubmissionCallback);
-					// TODO: log that the feed has been removed from Queue. investigate if it's worth it to move the feed to the initial queue.
 				}
 				else
 				{
-					// TODO: log that the feed has been removed from Queue. investigate if it's worth it to move the feed to the initial queue.
-					_feedSubmissionCallbackService.Delete(feedSubmissionCallback);
+					feedSubmissionCallback.IsProcessingComplete = false;
+					feedSubmissionCallback.SubmissionRetryCount++;
+					_feedSubmissionCallbackService.Update(feedSubmissionCallback);
 				}
 			}
 		}

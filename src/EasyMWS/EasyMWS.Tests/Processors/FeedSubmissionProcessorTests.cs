@@ -531,13 +531,15 @@ namespace EasyMWS.Tests.Processors
 
 			var resultsInfo = new List<(string FeedSubmissionId, string FeedProcessingStatus)>
 			{
-				("testId2", "_SOME_MADE_UP_STATUS_")
+				("testId", "_SOME_MADE_UP_STATUS_")
 			};
 			 
 			_feedSubmissionProcessor.MoveFeedsToQueuesAccordingToProcessingStatus(resultsInfo);
 
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionCallback>()), Times.Never);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionCallback>()), Times.Exactly(1));
+			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").IsProcessingComplete);
+			Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").SubmissionRetryCount);
+			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionCallback>()), Times.Once);
+			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionCallback>()), Times.Never);
 		}
 	}
 }
