@@ -6,6 +6,7 @@ using Moq;
 using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Helpers;
+using MountainWarehouse.EasyMWS.Logging;
 using MountainWarehouse.EasyMWS.Processors;
 using MountainWarehouse.EasyMWS.Services;
 using Newtonsoft.Json;
@@ -21,6 +22,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
 		private Mock<IFeedSubmissionProcessor> _feedSubmissionProcessorMock;
 		private Mock<ICallbackActivator> _callbackActivatorMock;
+		private Mock<IEasyMwsLogger> _loggerMock;
 		private static bool _called;
 		private readonly AmazonRegion _amazonRegion = AmazonRegion.Europe;
 		private readonly string _merchantId = "testMerchantId1";
@@ -33,13 +35,14 @@ namespace EasyMWS.Tests.ReportProcessors
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_feedSubmissionProcessorMock = new Mock<IFeedSubmissionProcessor>();
 			_callbackActivatorMock = new Mock<ICallbackActivator>();
+			_loggerMock = new Mock<IEasyMwsLogger>();
 
 			_callbackActivatorMock.Setup(cam => cam.SerializeCallback(It.IsAny<Action<Stream, object>>(), It.IsAny<object>()))
 				.Returns(new Callback("", "", "", ""));
 
 			_feedProcessor = new FeedProcessor(_amazonRegion, _merchantId, options,
 				_feedSubmissionCallbackServiceMock.Object, _marketplaceWebServiceClientMock.Object,
-				_feedSubmissionProcessorMock.Object, _callbackActivatorMock.Object);
+				_feedSubmissionProcessorMock.Object, _callbackActivatorMock.Object, _loggerMock.Object);
 		}
 
 		#region QueueFeed tests 

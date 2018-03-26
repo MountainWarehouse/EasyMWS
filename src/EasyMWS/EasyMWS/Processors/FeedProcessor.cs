@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Helpers;
+using MountainWarehouse.EasyMWS.Logging;
 using MountainWarehouse.EasyMWS.Services;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
 using Newtonsoft.Json;
@@ -14,24 +15,26 @@ namespace MountainWarehouse.EasyMWS.Processors
 		private readonly IFeedSubmissionCallbackService _feedService;
 		private readonly IFeedSubmissionProcessor _feedSubmissionProcessor;
 		private readonly ICallbackActivator _callbackActivator;
+		private readonly IEasyMwsLogger _logger;
 
 		private readonly AmazonRegion _region;
 		private readonly string _merchantId;
 		private readonly EasyMwsOptions _options;
 
-		internal FeedProcessor(AmazonRegion region, string merchantId, EasyMwsOptions options, IFeedSubmissionCallbackService feedService, IMarketplaceWebServiceClient mwsClient, IFeedSubmissionProcessor feedSubmissionProcessor, ICallbackActivator callbackActivator)
-		  : this(region, merchantId, options, mwsClient)
+		internal FeedProcessor(AmazonRegion region, string merchantId, EasyMwsOptions options, IFeedSubmissionCallbackService feedService, IMarketplaceWebServiceClient mwsClient, IFeedSubmissionProcessor feedSubmissionProcessor, ICallbackActivator callbackActivator, IEasyMwsLogger logger)
+		  : this(region, merchantId, options, mwsClient, logger)
 		{
 			_feedService = feedService;
 			_feedSubmissionProcessor = feedSubmissionProcessor;
 			_callbackActivator = callbackActivator;
 		}
 
-		internal FeedProcessor(AmazonRegion region, string merchantId, EasyMwsOptions options, IMarketplaceWebServiceClient mwsClient)
+		internal FeedProcessor(AmazonRegion region, string merchantId, EasyMwsOptions options, IMarketplaceWebServiceClient mwsClient, IEasyMwsLogger logger)
 		{
 			_region = region;
 			_merchantId = merchantId;
 			_options = options;
+			_logger = logger;
 
 			_callbackActivator = _callbackActivator ?? new CallbackActivator();
 
