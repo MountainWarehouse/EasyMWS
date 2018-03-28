@@ -746,7 +746,7 @@ namespace EasyMWS.Tests.Processors
 
 			// Act
 			var testData = _reportRequestCallbacks.Find(x => x.GeneratedReportId == "GeneratedIdTest1");
-			var result = _requestReportProcessor.DownloadGeneratedReportFromAmazon(testData, merchantId);
+			var result = _requestReportProcessor.DownloadGeneratedReportFromAmazon(testData);
 
 			// Assert
 			_marketplaceWebServiceClientMock.Verify(x => x.GetReport(It.IsAny<GetReportRequest>()), Times.Once);
