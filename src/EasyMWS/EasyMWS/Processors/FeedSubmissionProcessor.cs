@@ -143,7 +143,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				&& ffscs.IsProcessingComplete == true
 				&& IsReadyForRequestingSubmissionResult(ffscs));
 
-		public (Stream processingReport, string md5hash) QueryFeedProcessingReport(FeedSubmissionCallback feedSubmissionCallback, string merchant)
+		public (Stream processingReport, string md5hash) GetFeedSubmissionResultFromAmazon(FeedSubmissionCallback feedSubmissionCallback, string merchant)
 		{
 			var reportResultStream = new MemoryStream();
 			var request = new GetFeedSubmissionResultRequest

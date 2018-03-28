@@ -166,7 +166,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 				if (nextFeedWithProcessingComplete == null) return (null, null, null);
 
-				var processingReportInfo = _feedSubmissionProcessor.QueryFeedProcessingReport(nextFeedWithProcessingComplete, _merchantId);
+				var processingReportInfo = _feedSubmissionProcessor.GetFeedSubmissionResultFromAmazon(nextFeedWithProcessingComplete, _merchantId);
 
 				return (nextFeedWithProcessingComplete, processingReportInfo.processingReport, processingReportInfo.md5hash);
 			}

@@ -225,7 +225,7 @@ namespace EasyMWS.Tests.ReportProcessors
 					fspm.SubmitFeedToAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
 				.Returns("testSubmissionId");
 			_feedSubmissionProcessorMock.Setup(fspm =>
-					fspm.QueryFeedProcessingReport(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
+					fspm.GetFeedSubmissionResultFromAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
 				.Returns((testStream, notMatchingMd5Sum));
 			_feedSubmissionProcessorMock.Setup(fspm =>
 					fspm.GetNextFromQueueOfProcessingCompleteFeeds(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
@@ -252,7 +252,7 @@ namespace EasyMWS.Tests.ReportProcessors
 					fspm.SubmitFeedToAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
 				.Returns("testSubmissionId");
 			_feedSubmissionProcessorMock.Setup(fspm =>
-					fspm.QueryFeedProcessingReport(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
+					fspm.GetFeedSubmissionResultFromAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
 				.Returns((testStream, notMatchingMd5Sum));
 			_feedSubmissionProcessorMock.Setup(fspm =>
 					fspm.GetNextFromQueueOfProcessingCompleteFeeds(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
@@ -279,7 +279,7 @@ namespace EasyMWS.Tests.ReportProcessors
 					fspm.SubmitFeedToAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
 				.Returns("testSubmissionId");
 			_feedSubmissionProcessorMock.Setup(fspm =>
-					fspm.QueryFeedProcessingReport(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
+					fspm.GetFeedSubmissionResultFromAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
 				.Returns((testStream, matchingMd5Sum));
 			_feedSubmissionProcessorMock.Setup(fspm =>
 					fspm.GetNextFromQueueOfProcessingCompleteFeeds(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
