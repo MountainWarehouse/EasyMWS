@@ -176,7 +176,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void DequeueReport(ReportRequestCallback reportRequestCallback)
 		{
-			_requestReportProcessor.DequeueReportRequestCallback(reportRequestCallback);
+			_requestReportProcessor.RemoveFromQueue(reportRequestCallback);
 		}
 
 		private ReportRequestCallback GetSerializedReportRequestCallback(

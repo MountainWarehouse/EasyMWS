@@ -189,7 +189,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			return getReportRequest.Report;
 	    }
 
-	    public void DequeueReportRequestCallback(ReportRequestCallback reportRequestCallback)
+	    public void RemoveFromQueue(ReportRequestCallback reportRequestCallback)
 	    {
 		    _reportRequestCallbackService.Delete(reportRequestCallback);
 	    }
