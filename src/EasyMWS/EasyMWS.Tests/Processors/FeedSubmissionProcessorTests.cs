@@ -433,7 +433,7 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
-		public void MoveFeedsToQueuesAccordingToProcessingStatus_MovesFeedToProcessingCompleteQueue_IfProcessingStatusIsDone()
+		public void QueueFeedsAccordingToProcessingStatus_MovesFeedToProcessingCompleteQueue_IfProcessingStatusIsDone()
 		{
 			var data = new List<FeedSubmissionCallback>
 			{
@@ -447,7 +447,7 @@ namespace EasyMWS.Tests.Processors
 				("testId", "_DONE_")
 			};
 
-			_feedSubmissionProcessor.MoveFeedsToQueuesAccordingToProcessingStatus(resultsInfo);
+			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(resultsInfo);
 
 			Assert.IsTrue(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").IsProcessingComplete);
 			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").SubmissionRetryCount);
@@ -457,7 +457,7 @@ namespace EasyMWS.Tests.Processors
 
 		[Test]
 		public void
-			MoveFeedsToQueuesAccordingToProcessingStatus_LeavesFeedsInTheAwaitProcessingQueue_IfProcessingStatusIsAsExpected()
+			QueueFeedsAccordingToProcessingStatus_LeavesFeedsInTheAwaitProcessingQueue_IfProcessingStatusIsAsExpected()
 		{
 			var data = new List<FeedSubmissionCallback>
 			{
@@ -478,7 +478,7 @@ namespace EasyMWS.Tests.Processors
 				("testId5", "_UNCONFIRMED_")
 			};
 
-			_feedSubmissionProcessor.MoveFeedsToQueuesAccordingToProcessingStatus(resultsInfo);
+			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(resultsInfo);
 
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId1").IsProcessingComplete);
 			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId1").SubmissionRetryCount);
@@ -495,7 +495,7 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
-		public void MoveFeedsToQueuesAccordingToProcessingStatus_RemovesFeedFromDb_IfProcessingStatusIsCancelled()
+		public void QueueFeedsAccordingToProcessingStatus_RemovesFeedFromDb_IfProcessingStatusIsCancelled()
 		{
 			var data = new List<FeedSubmissionCallback>
 			{
@@ -510,7 +510,7 @@ namespace EasyMWS.Tests.Processors
 				("testId", "_CANCELLED_"),
 			};
 
-			_feedSubmissionProcessor.MoveFeedsToQueuesAccordingToProcessingStatus(resultsInfo);
+			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(resultsInfo);
 
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").IsProcessingComplete);
 			Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").SubmissionRetryCount);
@@ -519,7 +519,7 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
-		public void MoveFeedsToQueuesAccordingToProcessingStatus_RemovesFeedFromDb_IfProcessingStatusIsUnknown()
+		public void QueueFeedsAccordingToProcessingStatus_RemovesFeedFromDb_IfProcessingStatusIsUnknown()
 		{
 			var data = new List<FeedSubmissionCallback>
 			{
@@ -534,7 +534,7 @@ namespace EasyMWS.Tests.Processors
 				("testId", "_SOME_MADE_UP_STATUS_")
 			};
 			 
-			_feedSubmissionProcessor.MoveFeedsToQueuesAccordingToProcessingStatus(resultsInfo);
+			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(resultsInfo);
 
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").IsProcessingComplete);
 			Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").SubmissionRetryCount);

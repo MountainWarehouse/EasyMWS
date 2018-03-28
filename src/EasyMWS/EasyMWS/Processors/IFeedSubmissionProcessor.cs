@@ -14,7 +14,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		List<(string FeedSubmissionId, string FeedProcessingStatus)> RequestFeedSubmissionStatusesFromAmazon(
 			IEnumerable<string> feedSubmissionIdList, string merchant);
 
-		void MoveFeedsToQueuesAccordingToProcessingStatus(
+		void QueueFeedsAccordingToProcessingStatus(
 			List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses);
 
 		FeedSubmissionCallback GetNextFeedFromProcessingCompleteQueue(AmazonRegion region, string merchant);

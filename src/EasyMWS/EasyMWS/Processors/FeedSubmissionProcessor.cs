@@ -98,7 +98,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			return responseInfo;
 		}
 
-		public void MoveFeedsToQueuesAccordingToProcessingStatus(List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses)
+		public void QueueFeedsAccordingToProcessingStatus(List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses)
 		{
 			foreach (var feedSubmissionInfo in feedProcessingStatuses)
 			{
