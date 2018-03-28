@@ -53,8 +53,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				CleanUpReportRequestQueue();
 				RequestNextReportInQueueFromAmazon();
+				_reportService.SaveChanges();
+
 				RequestReportStatusesFromAmazon();
+				_reportService.SaveChanges();
+
 				var generatedReportRequestCallback = DownloadNextReportInQueueFromAmazon();
+				_reportService.SaveChanges();
+
 				ExecuteCallback(generatedReportRequestCallback.reportRequestCallback, generatedReportRequestCallback.stream);
 				_reportService.SaveChanges();
 			}
