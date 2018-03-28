@@ -394,7 +394,7 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
-		public void RequestReportsStatuses_WithMultiplePendingReports_SubmitsAmazonRequest()
+		public void RequestFeedSubmissionStatusesFromAmazon_WithMultiplePendingReports_SubmitsAmazonRequest()
 		{
 			var getFeedSubmissionListResponse = new GetFeedSubmissionListResponse
 			{
@@ -425,7 +425,7 @@ namespace EasyMWS.Tests.Processors
 			_marketplaceWebServiceClientMock.Setup(x => x.GetFeedSubmissionList(It.IsAny<GetFeedSubmissionListRequest>()))
 				.Returns(getFeedSubmissionListResponse);
 
-			var result = _feedSubmissionProcessor.GetFeedSubmissionResults(testRequestIdList, "");
+			var result = _feedSubmissionProcessor.RequestFeedSubmissionStatusesFromAmazon(testRequestIdList, "");
 
 			Assert.AreEqual("_DONE_", result.First(x => x.FeedSubmissionId == "feed1").FeedProcessingStatus);
 			Assert.AreEqual("_OTHER_", result.First(x => x.FeedSubmissionId == "feed3").FeedProcessingStatus);

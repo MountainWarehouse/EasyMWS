@@ -82,7 +82,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 						&& rrcs.IsProcessingComplete == false
 				);
 
-		public List<(string FeedSubmissionId, string FeedProcessingStatus)> GetFeedSubmissionResults(IEnumerable<string> feedSubmissionIdList, string merchant)
+		public List<(string FeedSubmissionId, string FeedProcessingStatus)> RequestFeedSubmissionStatusesFromAmazon(IEnumerable<string> feedSubmissionIdList, string merchant)
 		{
 			var request = new GetFeedSubmissionListRequest() {FeedSubmissionIdList = new IdList(), Merchant = merchant};
 			request.FeedSubmissionIdList.Id.AddRange(feedSubmissionIdList);

@@ -147,7 +147,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 				var feedSubmissionIdList = submittedFeeds.Select(x => x.FeedSubmissionId);
 
-				var feedSubmissionResults = _feedSubmissionProcessor.GetFeedSubmissionResults(feedSubmissionIdList, _merchantId);
+				var feedSubmissionResults = _feedSubmissionProcessor.RequestFeedSubmissionStatusesFromAmazon(feedSubmissionIdList, _merchantId);
 
 				_feedSubmissionProcessor.MoveFeedsToQueuesAccordingToProcessingStatus(feedSubmissionResults);
 			}
