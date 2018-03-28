@@ -7,7 +7,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 	internal interface IFeedSubmissionProcessor
 	{
 		FeedSubmissionCallback GetNextFromQueueOfFeedsToSubmit(AmazonRegion region, string merchantId);
-		string SubmitFeedToAmazon(FeedSubmissionCallback feedSubmission, string merchantId);
+		string SubmitFeedToAmazon(FeedSubmissionCallback feedSubmission);
 		void MoveToQueueOfSubmittedFeeds(FeedSubmissionCallback feedSubmission, string feedSubmissionId);
 		IEnumerable<FeedSubmissionCallback> GetAllSubmittedFeedsFromQueue(AmazonRegion region, string merchantId);
 

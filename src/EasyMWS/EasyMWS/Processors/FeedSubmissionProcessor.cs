@@ -37,18 +37,20 @@ namespace MountainWarehouse.EasyMWS.Processors
 				&& IsFeedInASubmitFeedQueue(fscs)
 				&& IsFeedReadyForSubmission(fscs));
 
-		public string SubmitFeedToAmazon(FeedSubmissionCallback feedSubmission, string merchantId)
+		public string SubmitFeedToAmazon(FeedSubmissionCallback feedSubmission)
 		{
-			if(feedSubmission == null || string.IsNullOrEmpty(merchantId))
-				throw new ArgumentNullException("Cannot submit queued feed to amazon due to missing feed submission information or empty merchant ID");
+			var missingInformationExceptionMessage = "Cannot submit queued feed to amazon due to missing feed submission information";
+
+			if (feedSubmission?.FeedSubmissionData == null) throw new ArgumentNullException(missingInformationExceptionMessage);
 
 			var feedSubmissionData = JsonConvert.DeserializeObject<FeedSubmissionPropertiesContainer>(feedSubmission.FeedSubmissionData);
+			if (feedSubmissionData?.FeedType == null) throw new ArgumentException(missingInformationExceptionMessage);
 
 			using (var stream = StreamHelper.CreateNewMemoryStream(feedSubmissionData.FeedContent))
 			{
 				var submitFeedRequest = new SubmitFeedRequest
 				{
-					Merchant = merchantId,
+					Merchant = feedSubmission.MerchantId,
 					FeedType = feedSubmissionData.FeedType,
 					FeedContent = stream,
 					MarketplaceIdList = feedSubmissionData.MarketplaceIdList == null ? null : new IdList {Id = feedSubmissionData.MarketplaceIdList},

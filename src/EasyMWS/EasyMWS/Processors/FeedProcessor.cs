@@ -115,7 +115,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			try
 			{
-				var feedSubmissionId = _feedSubmissionProcessor.SubmitFeedToAmazon(feedSubmission, _merchantId);
+				var feedSubmissionId = _feedSubmissionProcessor.SubmitFeedToAmazon(feedSubmission);
 
 				feedSubmission.LastSubmitted = DateTime.UtcNow;
 				_feedService.Update(feedSubmission);
