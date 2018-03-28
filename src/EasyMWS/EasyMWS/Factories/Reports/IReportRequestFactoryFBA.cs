@@ -20,7 +20,6 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="requestedMarketplacesGroup">Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
 		/// <returns></returns>
-		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		ReportRequestPropertiesContainer GenerateRequestForReportGetAfnInventoryData(MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		/// <summary>
@@ -159,7 +158,6 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="requestedMarketplacesGroup">Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
 		/// <returns></returns>
-		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		ReportRequestPropertiesContainer GenerateRequestForReportGetFbaMyiUnsuppressedInventoryData(MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		/// <summary>
@@ -220,7 +218,6 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="requestedMarketplacesGroup">Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
 		/// <returns></returns>
-		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		ReportRequestPropertiesContainer GenerateRequestForReportFbaFeePreviewReport(DateTime startDate, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		#endregion
