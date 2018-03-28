@@ -106,19 +106,19 @@ namespace EasyMWS.Tests.ReportProcessors
 		#region PollFeeds tests 
 
 		[Test]
-		public void Poll_CallsOnce_GetNextFeedToSubmitFromQueue()
+		public void Poll_CallsOnce_GetNextFromQueueOfFeedsToSubmit()
 		{
 			_feedProcessor.Poll();
 
 			_feedSubmissionProcessorMock.Verify(
-				rrp => rrp.GetNextFeedToSubmitFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()), Times.Once);
+				rrp => rrp.GetNextFromQueueOfFeedsToSubmit(It.IsAny<AmazonRegion>(), It.IsAny<string>()), Times.Once);
 		}
 
 		[Test]
 		public void Poll_WithGetNextFeedToSubmitFromQueueReturningNull_DoesNotSubmitFeedToAmazon()
 		{
 			_feedSubmissionProcessorMock
-				.Setup(rrp => rrp.GetNextFeedToSubmitFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Setup(rrp => rrp.GetNextFromQueueOfFeedsToSubmit(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
 				.Returns((FeedSubmissionCallback) null);
 
 			_feedProcessor.Poll();
@@ -131,13 +131,13 @@ namespace EasyMWS.Tests.ReportProcessors
 		public void Poll_WithGetNextFeedToSubmitFromQueueReturningNotNull_DoesSubmitFeedToAmazon()
 		{
 			_feedSubmissionProcessorMock
-				.Setup(rrp => rrp.GetNextFeedToSubmitFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Setup(rrp => rrp.GetNextFromQueueOfFeedsToSubmit(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
 				.Returns(new FeedSubmissionCallback());
 
 			_feedProcessor.Poll();
 
 			_feedSubmissionProcessorMock.Verify(
-				rrp => rrp.SubmitSingleQueuedFeedToAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()), Times.Once);
+				rrp => rrp.SubmitFeedToAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()), Times.Once);
 		}
 
 		[Test]
@@ -147,7 +147,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			FeedSubmissionCallback feedSubmissionCallback = null;
 
 			_feedSubmissionProcessorMock
-				.Setup(rrp => rrp.GetNextFeedToSubmitFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Setup(rrp => rrp.GetNextFromQueueOfFeedsToSubmit(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
 				.Returns(new FeedSubmissionCallback {LastSubmitted = DateTime.MinValue});
 			_feedSubmissionCallbackServiceMock.Setup(rrcsm => rrcsm.Update(It.IsAny<FeedSubmissionCallback>()))
 				.Callback((FeedSubmissionCallback arg) =>
@@ -166,10 +166,10 @@ namespace EasyMWS.Tests.ReportProcessors
 		public void Poll_WithSubmitSingleQueuedFeedToAmazonResponseNotNull_CallsOnce_MoveToQueueOfSubmittedFeeds()
 		{
 			_feedSubmissionProcessorMock
-				.Setup(rrp => rrp.GetNextFeedToSubmitFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Setup(rrp => rrp.GetNextFromQueueOfFeedsToSubmit(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
 				.Returns(new FeedSubmissionCallback {LastSubmitted = DateTime.MinValue});
 			_feedSubmissionProcessorMock.Setup(rrp =>
-					rrp.SubmitSingleQueuedFeedToAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
+					rrp.SubmitFeedToAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
 				.Returns("testFeedSubmissionId");
 
 			_feedProcessor.Poll();
@@ -182,10 +182,10 @@ namespace EasyMWS.Tests.ReportProcessors
 		public void Poll_WithSubmitSingleQueuedFeedToAmazonResponseNull_CallsOnce_MoveToRetryQueue()
 		{
 			_feedSubmissionProcessorMock
-				.Setup(rrp => rrp.GetNextFeedToSubmitFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Setup(rrp => rrp.GetNextFromQueueOfFeedsToSubmit(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
 				.Returns(new FeedSubmissionCallback {LastSubmitted = DateTime.MinValue});
 			_feedSubmissionProcessorMock.Setup(rrp =>
-					rrp.SubmitSingleQueuedFeedToAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
+					rrp.SubmitFeedToAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
 				.Returns((string) null);
 
 			_feedProcessor.Poll();
@@ -198,10 +198,10 @@ namespace EasyMWS.Tests.ReportProcessors
 		public void Poll_WithSubmitSingleQueuedFeedToAmazonResponseEmpty_CallsOnce_MoveToRetryQueue()
 		{
 			_feedSubmissionProcessorMock
-				.Setup(rrp => rrp.GetNextFeedToSubmitFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Setup(rrp => rrp.GetNextFromQueueOfFeedsToSubmit(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
 				.Returns(new FeedSubmissionCallback {LastSubmitted = DateTime.MinValue});
 			_feedSubmissionProcessorMock.Setup(rrp =>
-					rrp.SubmitSingleQueuedFeedToAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
+					rrp.SubmitFeedToAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
 				.Returns(string.Empty);
 
 
@@ -219,22 +219,22 @@ namespace EasyMWS.Tests.ReportProcessors
 			var notMatchingMd5Sum = "AAAAAAAAAAAAAAAA";
 
 			_feedSubmissionProcessorMock
-				.Setup(fspm => fspm.GetNextFeedToSubmitFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Setup(fspm => fspm.GetNextFromQueueOfFeedsToSubmit(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
 				.Returns(new FeedSubmissionCallback { LastSubmitted = DateTime.MinValue });
 			_feedSubmissionProcessorMock.Setup(fspm =>
-					fspm.SubmitSingleQueuedFeedToAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
+					fspm.SubmitFeedToAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
 				.Returns("testSubmissionId");
 			_feedSubmissionProcessorMock.Setup(fspm =>
-					fspm.QueryFeedProcessingReport(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
+					fspm.GetFeedSubmissionResultFromAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
 				.Returns((testStream, notMatchingMd5Sum));
 			_feedSubmissionProcessorMock.Setup(fspm =>
-					fspm.GetNextFeedFromProcessingCompleteQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+					fspm.GetNextFromQueueOfProcessingCompleteFeeds(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
 				.Returns((FeedSubmissionCallback)null);
 
 			_feedProcessor.Poll();
 
 			_callbackActivatorMock.Verify(cam => cam.CallMethod(It.IsAny<Callback>(), It.IsAny<Stream>()), Times.Never);
-			_feedSubmissionProcessorMock.Verify(fspm => fspm.DequeueFeedSubmissionCallback(It.IsAny<FeedSubmissionCallback>()), Times.Never);
+			_feedSubmissionProcessorMock.Verify(fspm => fspm.RemoveFromQueue(It.IsAny<FeedSubmissionCallback>()), Times.Never);
 			_feedSubmissionProcessorMock.Verify(fspm => fspm.MoveToRetryQueue(It.IsAny<FeedSubmissionCallback>()), Times.Never);
 		}
 
@@ -246,22 +246,22 @@ namespace EasyMWS.Tests.ReportProcessors
 			var notMatchingMd5Sum = "AAAAAAAAAAAAAAAA";
 
 			_feedSubmissionProcessorMock
-				.Setup(fspm => fspm.GetNextFeedToSubmitFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Setup(fspm => fspm.GetNextFromQueueOfFeedsToSubmit(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
 				.Returns(new FeedSubmissionCallback { LastSubmitted = DateTime.MinValue });
 			_feedSubmissionProcessorMock.Setup(fspm =>
-					fspm.SubmitSingleQueuedFeedToAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
+					fspm.SubmitFeedToAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
 				.Returns("testSubmissionId");
 			_feedSubmissionProcessorMock.Setup(fspm =>
-					fspm.QueryFeedProcessingReport(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
+					fspm.GetFeedSubmissionResultFromAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
 				.Returns((testStream, notMatchingMd5Sum));
 			_feedSubmissionProcessorMock.Setup(fspm =>
-					fspm.GetNextFeedFromProcessingCompleteQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+					fspm.GetNextFromQueueOfProcessingCompleteFeeds(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
 				.Returns(new FeedSubmissionCallback());
 
 			_feedProcessor.Poll();
 
 			_callbackActivatorMock.Verify(cam => cam.CallMethod(It.IsAny<Callback>(), It.IsAny<Stream>()), Times.Never);
-			_feedSubmissionProcessorMock.Verify(fspm => fspm.DequeueFeedSubmissionCallback(It.IsAny<FeedSubmissionCallback>()), Times.Never);
+			_feedSubmissionProcessorMock.Verify(fspm => fspm.RemoveFromQueue(It.IsAny<FeedSubmissionCallback>()), Times.Never);
 			_feedSubmissionProcessorMock.Verify(fspm => fspm.MoveToRetryQueue(It.IsAny<FeedSubmissionCallback>()), Times.Once);
 		}
 
@@ -273,22 +273,22 @@ namespace EasyMWS.Tests.ReportProcessors
 			var matchingMd5Sum = "rD4TzLgdje+H2K2NattkqQ==";    // This is the MD5 value for testStreamContent="testStreamContent". Do not modify this without the stream content.
 
 			_feedSubmissionProcessorMock
-				.Setup(fspm => fspm.GetNextFeedToSubmitFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Setup(fspm => fspm.GetNextFromQueueOfFeedsToSubmit(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
 				.Returns(new FeedSubmissionCallback { LastSubmitted = DateTime.MinValue });
 			_feedSubmissionProcessorMock.Setup(fspm =>
-					fspm.SubmitSingleQueuedFeedToAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
+					fspm.SubmitFeedToAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
 				.Returns("testSubmissionId");
 			_feedSubmissionProcessorMock.Setup(fspm =>
-					fspm.QueryFeedProcessingReport(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
+					fspm.GetFeedSubmissionResultFromAmazon(It.IsAny<FeedSubmissionCallback>(), It.IsAny<string>()))
 				.Returns((testStream, matchingMd5Sum));
 			_feedSubmissionProcessorMock.Setup(fspm =>
-					fspm.GetNextFeedFromProcessingCompleteQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+					fspm.GetNextFromQueueOfProcessingCompleteFeeds(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
 				.Returns(new FeedSubmissionCallback());
 
 			_feedProcessor.Poll();
 
 			_callbackActivatorMock.Verify(cam => cam.CallMethod(It.IsAny<Callback>(), It.IsAny<Stream>()), Times.Once);
-			_feedSubmissionProcessorMock.Verify(fspm => fspm.DequeueFeedSubmissionCallback(It.IsAny<FeedSubmissionCallback>()), Times.Once);
+			_feedSubmissionProcessorMock.Verify(fspm => fspm.RemoveFromQueue(It.IsAny<FeedSubmissionCallback>()), Times.Once);
 			_feedSubmissionProcessorMock.Verify(fspm => fspm.MoveToRetryQueue(It.IsAny<FeedSubmissionCallback>()), Times.Never);
 		}
 

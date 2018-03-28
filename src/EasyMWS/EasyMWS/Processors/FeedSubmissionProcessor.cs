@@ -31,13 +31,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_options = options;
 		}
 
-		public FeedSubmissionCallback GetNextFeedToSubmitFromQueue(AmazonRegion region, string merchantId) =>
+		public FeedSubmissionCallback GetNextFromQueueOfFeedsToSubmit(AmazonRegion region, string merchantId) =>
 			string.IsNullOrEmpty(merchantId) ? null : _feedSubmissionCallbackService.GetAll()
 				.FirstOrDefault(fscs => fscs.AmazonRegion == region && fscs.MerchantId == merchantId
 				&& IsFeedInASubmitFeedQueue(fscs)
 				&& IsFeedReadyForSubmission(fscs));
 
-		public string SubmitSingleQueuedFeedToAmazon(FeedSubmissionCallback feedSubmission, string merchantId)
+		public string SubmitFeedToAmazon(FeedSubmissionCallback feedSubmission, string merchantId)
 		{
 			if(feedSubmission == null || string.IsNullOrEmpty(merchantId))
 				throw new ArgumentNullException("Cannot submit queued feed to amazon due to missing feed submission information or empty merchant ID");
@@ -75,14 +75,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_feedSubmissionCallbackService.Update(feedSubmission);
 		}
 
-		public IEnumerable<FeedSubmissionCallback> GetAllSubmittedFeeds(AmazonRegion region, string merchantId) =>
+		public IEnumerable<FeedSubmissionCallback> GetAllSubmittedFeedsFromQueue(AmazonRegion region, string merchantId) =>
 			string.IsNullOrEmpty(merchantId) ? new List<FeedSubmissionCallback>().AsEnumerable() : _feedSubmissionCallbackService.Where(
 				rrcs => rrcs.AmazonRegion == region && rrcs.MerchantId == merchantId
 				        && rrcs.FeedSubmissionId != null
 						&& rrcs.IsProcessingComplete == false
 				);
 
-		public List<(string FeedSubmissionId, string FeedProcessingStatus)> GetFeedSubmissionResults(IEnumerable<string> feedSubmissionIdList, string merchant)
+		public List<(string FeedSubmissionId, string FeedProcessingStatus)> RequestFeedSubmissionStatusesFromAmazon(IEnumerable<string> feedSubmissionIdList, string merchant)
 		{
 			var request = new GetFeedSubmissionListRequest() {FeedSubmissionIdList = new IdList(), Merchant = merchant};
 			request.FeedSubmissionIdList.Id.AddRange(feedSubmissionIdList);
@@ -98,7 +98,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			return responseInfo;
 		}
 
-		public void MoveFeedsToQueuesAccordingToProcessingStatus(List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses)
+		public void QueueFeedsAccordingToProcessingStatus(List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses)
 		{
 			foreach (var feedSubmissionInfo in feedProcessingStatuses)
 			{
@@ -136,14 +136,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public FeedSubmissionCallback GetNextFeedFromProcessingCompleteQueue(AmazonRegion region, string merchant)
+		public FeedSubmissionCallback GetNextFromQueueOfProcessingCompleteFeeds(AmazonRegion region, string merchant)
 			=> string.IsNullOrEmpty(merchant) ? null : _feedSubmissionCallbackService.FirstOrDefault(
 				ffscs => ffscs.AmazonRegion == region && ffscs.MerchantId == merchant
 				&& ffscs.FeedSubmissionId != null
 				&& ffscs.IsProcessingComplete == true
 				&& IsReadyForRequestingSubmissionResult(ffscs));
 
-		public (Stream processingReport, string md5hash) QueryFeedProcessingReport(FeedSubmissionCallback feedSubmissionCallback, string merchant)
+		public (Stream processingReport, string md5hash) GetFeedSubmissionResultFromAmazon(FeedSubmissionCallback feedSubmissionCallback, string merchant)
 		{
 			var reportResultStream = new MemoryStream();
 			var request = new GetFeedSubmissionResultRequest
@@ -158,7 +158,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			return (reportResultStream, response.GetFeedSubmissionResultResult.ContentMD5);
 		}
 
-		public void DequeueFeedSubmissionCallback(FeedSubmissionCallback feedSubmissionCallback)
+		public void RemoveFromQueue(FeedSubmissionCallback feedSubmissionCallback)
 		{
 			_feedSubmissionCallbackService.Delete(feedSubmissionCallback);
 		}

@@ -114,38 +114,38 @@ namespace EasyMWS.Tests.ReportProcessors
 		#region PollReports tests 
 
 		[Test]
-		public void Poll_CallsOnce_GetNonRequestedReportFromQueue()
+		public void Poll_CallsOnce_GetNextFromQueueOfReportsToRequest()
 		{
 			_reportProcessor.Poll();
 
 			_requestReportProcessor.Verify(
-				rrp => rrp.GetNonRequestedReportFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()), Times.Once);
+				rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<AmazonRegion>(), It.IsAny<string>()), Times.Once);
 		}
 
 		[Test]
 		public void Poll_WithGetNonRequestedReportFromQueueReturningNull_DoesNotRequestAReportFromAmazon()
 		{
 			_requestReportProcessor
-				.Setup(rrp => rrp.GetNonRequestedReportFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
 				.Returns((ReportRequestCallback) null);
 
 			_reportProcessor.Poll();
 
 			_requestReportProcessor.Verify(
-				rrp => rrp.RequestSingleQueuedReport(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()), Times.Never);
+				rrp => rrp.RequestReportFromAmazon(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()), Times.Never);
 		}
 
 		[Test]
 		public void Poll_WithGetNonRequestedReportFromQueueReturningNotNull_RequestsAReportFromAmazon()
 		{
 			_requestReportProcessor
-				.Setup(rrp => rrp.GetNonRequestedReportFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
 				.Returns(new ReportRequestCallback());
 
 			_reportProcessor.Poll();
 
 			_requestReportProcessor.Verify(
-				rrp => rrp.RequestSingleQueuedReport(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()), Times.Once);
+				rrp => rrp.RequestReportFromAmazon(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()), Times.Once);
 		}
 
 		[Test]
@@ -155,7 +155,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			ReportRequestCallback testReportRequestCallback = null;
 
 			_requestReportProcessor
-				.Setup(rrp => rrp.GetNonRequestedReportFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
 				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue});
 			_reportRequestCallbackServiceMock.Setup(rrcsm => rrcsm.Update(It.IsAny<ReportRequestCallback>()))
 				.Callback((ReportRequestCallback arg) =>
@@ -171,33 +171,33 @@ namespace EasyMWS.Tests.ReportProcessors
 		}
 
 		[Test]
-		public void Poll_WithRequestReportAmazonResponseNotNull_CallsOnce_MoveToNonGeneratedReportsQueue()
+		public void Poll_WithRequestReportAmazonResponseNotNull_CallsOnce_GetNextFromQueueOfReportsToGenerate()
 		{
 			_requestReportProcessor
-				.Setup(rrp => rrp.GetNonRequestedReportFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
 				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue});
 			_requestReportProcessor.Setup(rrp =>
-					rrp.RequestSingleQueuedReport(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()))
+					rrp.RequestReportFromAmazon(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()))
 				.Returns("testReportRequestId");
 
 			_reportProcessor.Poll();
 
 			_requestReportProcessor.Verify(
-				rrp => rrp.MoveToNonGeneratedReportsQueue(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()), Times.Once);
+				rrp => rrp.GetNextFromQueueOfReportsToGenerate(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()), Times.Once);
 		}
 
 		[Test]
 		public void Poll_WithRequestReportAmazonResponseNull_CallsOnce_AllocateReportRequestForRetry()
 		{
 			_requestReportProcessor
-				.Setup(rrp => rrp.GetNonRequestedReportFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
 				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue});
 			_requestReportProcessor.Setup(rrp =>
-					rrp.RequestSingleQueuedReport(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()))
+					rrp.RequestReportFromAmazon(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()))
 				.Returns((string) null);
 
 			_reportProcessor.Poll();
-			_requestReportProcessor.Verify(rrp => rrp.AllocateReportRequestForRetry(It.IsAny<ReportRequestCallback>()),
+			_requestReportProcessor.Verify(rrp => rrp.MoveToRetryQueue(It.IsAny<ReportRequestCallback>()),
 				Times.Once);
 		}
 
@@ -205,16 +205,16 @@ namespace EasyMWS.Tests.ReportProcessors
 		public void Poll_WithRequestReportAmazonResponseEmpty_CallsOnce_AllocateReportRequestForRetry()
 		{
 			_requestReportProcessor
-				.Setup(rrp => rrp.GetNonRequestedReportFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
 				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue});
 			_requestReportProcessor.Setup(rrp =>
-					rrp.RequestSingleQueuedReport(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()))
+					rrp.RequestReportFromAmazon(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()))
 				.Returns(string.Empty);
 
 
 			_reportProcessor.Poll();
 
-			_requestReportProcessor.Verify(rrp => rrp.AllocateReportRequestForRetry(It.IsAny<ReportRequestCallback>()),
+			_requestReportProcessor.Verify(rrp => rrp.MoveToRetryQueue(It.IsAny<ReportRequestCallback>()),
 				Times.Once);
 		}
 

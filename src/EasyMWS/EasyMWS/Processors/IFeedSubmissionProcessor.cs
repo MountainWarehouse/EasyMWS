@@ -6,20 +6,20 @@ namespace MountainWarehouse.EasyMWS.Processors
 {
 	internal interface IFeedSubmissionProcessor
 	{
-		FeedSubmissionCallback GetNextFeedToSubmitFromQueue(AmazonRegion region, string merchantId);
-		string SubmitSingleQueuedFeedToAmazon(FeedSubmissionCallback feedSubmission, string merchantId);
+		FeedSubmissionCallback GetNextFromQueueOfFeedsToSubmit(AmazonRegion region, string merchantId);
+		string SubmitFeedToAmazon(FeedSubmissionCallback feedSubmission, string merchantId);
 		void MoveToQueueOfSubmittedFeeds(FeedSubmissionCallback feedSubmission, string feedSubmissionId);
-		IEnumerable<FeedSubmissionCallback> GetAllSubmittedFeeds(AmazonRegion region, string merchantId);
+		IEnumerable<FeedSubmissionCallback> GetAllSubmittedFeedsFromQueue(AmazonRegion region, string merchantId);
 
-		List<(string FeedSubmissionId, string FeedProcessingStatus)> GetFeedSubmissionResults(
+		List<(string FeedSubmissionId, string FeedProcessingStatus)> RequestFeedSubmissionStatusesFromAmazon(
 			IEnumerable<string> feedSubmissionIdList, string merchant);
 
-		void MoveFeedsToQueuesAccordingToProcessingStatus(
+		void QueueFeedsAccordingToProcessingStatus(
 			List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses);
 
-		FeedSubmissionCallback GetNextFeedFromProcessingCompleteQueue(AmazonRegion region, string merchant);
-		(Stream processingReport, string md5hash) QueryFeedProcessingReport(FeedSubmissionCallback feedSubmissionCallback, string merchant);
-		void DequeueFeedSubmissionCallback(FeedSubmissionCallback feedSubmissionCallback);
+		FeedSubmissionCallback GetNextFromQueueOfProcessingCompleteFeeds(AmazonRegion region, string merchant);
+		(Stream processingReport, string md5hash) GetFeedSubmissionResultFromAmazon(FeedSubmissionCallback feedSubmissionCallback, string merchant);
+		void RemoveFromQueue(FeedSubmissionCallback feedSubmissionCallback);
 		void MoveToRetryQueue(FeedSubmissionCallback feedSubmission);
 	}
 }
