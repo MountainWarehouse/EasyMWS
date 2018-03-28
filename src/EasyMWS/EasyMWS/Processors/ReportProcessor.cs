@@ -106,7 +106,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				}
 				else
 				{
-					_requestReportProcessor.MoveToNonGeneratedReportsQueue(reportRequestCallbackReportQueued, reportRequestId);
+					_requestReportProcessor.GetNextFromQueueOfReportsToGenerate(reportRequestCallbackReportQueued, reportRequestId);
 				}
 			}
 			catch (Exception e)

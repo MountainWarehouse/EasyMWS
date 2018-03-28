@@ -171,7 +171,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		}
 
 		[Test]
-		public void Poll_WithRequestReportAmazonResponseNotNull_CallsOnce_MoveToNonGeneratedReportsQueue()
+		public void Poll_WithRequestReportAmazonResponseNotNull_CallsOnce_GetNextFromQueueOfReportsToGenerate()
 		{
 			_requestReportProcessor
 				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
@@ -183,7 +183,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			_reportProcessor.Poll();
 
 			_requestReportProcessor.Verify(
-				rrp => rrp.MoveToNonGeneratedReportsQueue(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()), Times.Once);
+				rrp => rrp.GetNextFromQueueOfReportsToGenerate(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()), Times.Once);
 		}
 
 		[Test]

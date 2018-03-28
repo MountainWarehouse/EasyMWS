@@ -71,7 +71,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    }
 		}
 
-	    public void MoveToNonGeneratedReportsQueue(ReportRequestCallback reportRequestCallback, string reportRequestId)
+	    public void GetNextFromQueueOfReportsToGenerate(ReportRequestCallback reportRequestCallback, string reportRequestId)
 	    {
 		    reportRequestCallback.RequestReportId = reportRequestId;
 		    reportRequestCallback.RequestRetryCount = 0;

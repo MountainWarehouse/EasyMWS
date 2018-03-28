@@ -381,11 +381,11 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
-		public void MoveToNonGeneratedReportsQueue_UpdatesRequestReportId_OnTheCallback()
+		public void GetNextFromQueueOfReportsToGenerate_UpdatesRequestReportId_OnTheCallback()
 		{
 			var reportRequestId = "testReportRequestId";
 
-			 _requestReportProcessor.MoveToNonGeneratedReportsQueue(_reportRequestCallbacks[0], reportRequestId);
+			 _requestReportProcessor.GetNextFromQueueOfReportsToGenerate(_reportRequestCallbacks[0], reportRequestId);
 
 			Assert.AreEqual("testReportRequestId", _reportRequestCallbacks[0].RequestReportId);
 			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Once);

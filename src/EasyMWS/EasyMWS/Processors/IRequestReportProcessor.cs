@@ -8,7 +8,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 	{
 		ReportRequestCallback GetNextFromQueueOfReportsToRequest(AmazonRegion region, string merchantId);
 		string RequestSingleQueuedReport(ReportRequestCallback reportRequestCallback, string merchantId);
-		void MoveToNonGeneratedReportsQueue(ReportRequestCallback reportRequestCallback, string reportRequestId);
+		void GetNextFromQueueOfReportsToGenerate(ReportRequestCallback reportRequestCallback, string reportRequestId);
 		IEnumerable<ReportRequestCallback> GetAllPendingReportFromQueue(AmazonRegion region, string merchantId);
 		List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> GetReportProcessingStatusesFromAmazon(IEnumerable<string> requestIdList, string merchant);
 		ReportRequestCallback GetReadyForDownloadReportsFromQueue(AmazonRegion region, string merchantId);
