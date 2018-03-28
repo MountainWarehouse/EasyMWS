@@ -169,11 +169,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 			{
 				if (!permittedMarketplaces.Contains(requestedMarketplace))
 				{
-					var permittedMarketplacesCountryCodes = permittedMarketplaces.Select(MwsMarketplace.GetMarketplaceCountryCode);
-
 					throw new ArgumentException(
 						$@"The report request for type:'{reportType}', is only available to the following marketplaces:'{
-								permittedMarketplacesCountryCodes.Aggregate((c, n) => $"{c}, {n}")
+								MwsMarketplace.GetMarketplaceCountryCodesAsCommaSeparatedString(permittedMarketplaces)
 							}'.
 The requested marketplace:'{MwsMarketplace.GetMarketplaceCountryCode(requestedMarketplace)}' is not supported by Amazon MWS for the specified report type.");
 				}

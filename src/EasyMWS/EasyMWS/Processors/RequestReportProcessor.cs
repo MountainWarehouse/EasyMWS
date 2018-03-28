@@ -47,12 +47,20 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var reportRequestData = JsonConvert.DeserializeObject<ReportRequestPropertiesContainer>(reportRequestCallback.ReportRequestData);
 			var reportRequest = new RequestReportRequest
 			{
-				Merchant = merchantId,
-				ReportType = reportRequestData.ReportType,
-				MarketplaceIdList = reportRequestData.MarketplaceIdList == null ? null : new IdList { Id = reportRequestData.MarketplaceIdList }
+				Merchant = reportRequestCallback.MerchantId,
+				ReportType = reportRequestData.ReportType
 			};
 
-		    try
+		    if (reportRequestData.MarketplaceIdList != null)
+			    reportRequest.MarketplaceIdList = new IdList {Id = reportRequestData.MarketplaceIdList};
+			if (reportRequestData.StartDate.HasValue)
+			    reportRequest.StartDate = reportRequestData.StartDate.Value;
+		    if (reportRequestData.EndDate.HasValue)
+			    reportRequest.EndDate = reportRequestData.EndDate.Value;
+		    if (!string.IsNullOrEmpty(reportRequestData.ReportOptions))
+			    reportRequest.ReportOptions = reportRequestData.ReportOptions;
+
+			try
 		    {
 			    var reportResponse = _marketplaceWebServiceClient.RequestReport(reportRequest);
 			    return reportResponse?.RequestReportResult?.ReportRequestInfo?.ReportRequestId;
