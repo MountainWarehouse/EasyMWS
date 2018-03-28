@@ -53,7 +53,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				CleanUpReportRequestQueue();
 				RequestNextReportInQueueFromAmazon();
 				RequestReportStatusesFromAmazon();
-				var generatedReportRequestCallback = DownloadNextGeneratedRequestReportInQueueFromAmazon();
+				var generatedReportRequestCallback = DownloadNextReportInQueueFromAmazon();
 				ExecuteCallback(generatedReportRequestCallback.reportRequestCallback, generatedReportRequestCallback.stream);
 				_reportService.SaveChanges();
 			}
@@ -89,29 +89,29 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void RequestNextReportInQueueFromAmazon()
 		{
-			var reportRequestCallbackReportQueued = _requestReportProcessor.GetNonRequestedReportFromQueue(_region, _merchantId);
+			var reportRequestCallbackReportQueued = _requestReportProcessor.GetNextFromQueueOfReportsToRequest(_region, _merchantId);
 
 			if (reportRequestCallbackReportQueued == null) return;
 
 			try
 			{
-				var reportRequestId = _requestReportProcessor.RequestSingleQueuedReport(reportRequestCallbackReportQueued);
+				var reportRequestId = _requestReportProcessor.RequestReportFromAmazon(reportRequestCallbackReportQueued);
 
 				reportRequestCallbackReportQueued.LastRequested = DateTime.UtcNow;
 				_reportService.Update(reportRequestCallbackReportQueued);
 
 				if (string.IsNullOrEmpty(reportRequestId))
 				{
-					_requestReportProcessor.AllocateReportRequestForRetry(reportRequestCallbackReportQueued);
+					_requestReportProcessor.MoveToRetryQueue(reportRequestCallbackReportQueued);
 				}
 				else
 				{
-					_requestReportProcessor.MoveToNonGeneratedReportsQueue(reportRequestCallbackReportQueued, reportRequestId);
+					_requestReportProcessor.GetNextFromQueueOfReportsToGenerate(reportRequestCallbackReportQueued, reportRequestId);
 				}
 			}
 			catch (Exception e)
 			{
-				_requestReportProcessor.AllocateReportRequestForRetry(reportRequestCallbackReportQueued);
+				_requestReportProcessor.MoveToRetryQueue(reportRequestCallbackReportQueued);
 				_logger.Error(e.Message, e);
 			}
 		}
@@ -120,15 +120,15 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			try
 			{
-				var reportRequestCallbacksPendingReports = _requestReportProcessor.GetAllPendingReport(_region, _merchantId).ToList();
+				var reportRequestCallbacksPendingReports = _requestReportProcessor.GetAllPendingReportFromQueue(_region, _merchantId).ToList();
 
 				if (!reportRequestCallbacksPendingReports.Any()) return;
 
 				var reportRequestIds = reportRequestCallbacksPendingReports.Select(x => x.RequestReportId);
 
-				var reportRequestStatuses = _requestReportProcessor.GetReportRequestListResponse(reportRequestIds, _merchantId);
+				var reportRequestStatuses = _requestReportProcessor.GetReportProcessingStatusesFromAmazon(reportRequestIds, _merchantId);
 
-				_requestReportProcessor.MoveReportsToQueuesAccordingToProcessingStatus(reportRequestStatuses);
+				_requestReportProcessor.QueueReportsAccordingToProcessingStatus(reportRequestStatuses);
 			}
 			catch (Exception e)
 			{
@@ -136,15 +136,15 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public (ReportRequestCallback reportRequestCallback, Stream stream) DownloadNextGeneratedRequestReportInQueueFromAmazon()
+		public (ReportRequestCallback reportRequestCallback, Stream stream) DownloadNextReportInQueueFromAmazon()
 		{
-			var generatedReportRequest = _requestReportProcessor.GetReadyForDownloadReports(_region, _merchantId);
+			var generatedReportRequest = _requestReportProcessor.GetNextFromQueueOfReportsToDownload(_region, _merchantId);
 
 			if (generatedReportRequest == null) return (null, null);
 
 			try
 			{
-				var stream = _requestReportProcessor.DownloadGeneratedReport(generatedReportRequest, _merchantId);
+				var stream = _requestReportProcessor.DownloadGeneratedReportFromAmazon(generatedReportRequest, _merchantId);
 
 				return (generatedReportRequest, stream);
 			}
@@ -166,17 +166,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 				_callbackActivator.CallMethod(callback, stream);
 
-				DequeueReport(reportRequestCallback);
+				_requestReportProcessor.RemoveFromQueue(reportRequestCallback);
 			}
 			catch (Exception e)
 			{
 				_logger.Error(e.Message, e);
 			}
-		}
-
-		public void DequeueReport(ReportRequestCallback reportRequestCallback)
-		{
-			_requestReportProcessor.DequeueReportRequestCallback(reportRequestCallback);
 		}
 
 		private ReportRequestCallback GetSerializedReportRequestCallback(

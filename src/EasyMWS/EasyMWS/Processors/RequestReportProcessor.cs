@@ -31,7 +31,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    _options = options;
 	    }
 
-	    public ReportRequestCallback GetNonRequestedReportFromQueue(AmazonRegion region, string merchantId) =>
+	    public ReportRequestCallback GetNextFromQueueOfReportsToRequest(AmazonRegion region, string merchantId) =>
 		    string.IsNullOrEmpty(merchantId) ? null : _reportRequestCallbackService.GetAll()
 				    .FirstOrDefault(rrc => rrc.AmazonRegion == region && rrc.MerchantId == merchantId
 					    && rrc.RequestReportId == null
@@ -39,7 +39,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 						    _options.ReportRequestRetryInitialDelay, _options.ReportRequestRetryInterval, _options.ReportRequestRetryType)
 				    );
 		
-	    public string RequestSingleQueuedReport(ReportRequestCallback reportRequestCallback)
+	    public string RequestReportFromAmazon(ReportRequestCallback reportRequestCallback)
 	    {
 		    var missingInformationExceptionMessage = "Cannot submit queued feed to amazon due to missing feed submission information";
 
@@ -74,20 +74,20 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    }
 		}
 
-	    public void MoveToNonGeneratedReportsQueue(ReportRequestCallback reportRequestCallback, string reportRequestId)
+	    public void GetNextFromQueueOfReportsToGenerate(ReportRequestCallback reportRequestCallback, string reportRequestId)
 	    {
 		    reportRequestCallback.RequestReportId = reportRequestId;
 		    reportRequestCallback.RequestRetryCount = 0;
 			_reportRequestCallbackService.Update(reportRequestCallback);
 	    }
 
-	    public IEnumerable<ReportRequestCallback> GetAllPendingReport(AmazonRegion region, string merchantId) =>
+	    public IEnumerable<ReportRequestCallback> GetAllPendingReportFromQueue(AmazonRegion region, string merchantId) =>
 		    string.IsNullOrEmpty(merchantId) ? new List<ReportRequestCallback>().AsEnumerable() : _reportRequestCallbackService.Where(
 			    rrcs => rrcs.AmazonRegion == region && rrcs.MerchantId == merchantId
 			            && rrcs.RequestReportId != null
 			            && rrcs.GeneratedReportId == null);
 
-		public List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> GetReportRequestListResponse(IEnumerable<string> requestIdList, string merchant)
+		public List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> GetReportProcessingStatusesFromAmazon(IEnumerable<string> requestIdList, string merchant)
 	    {
 		    var request = new GetReportRequestListRequest() {ReportRequestIdList = new IdList(), Merchant = merchant};
 		    request.ReportRequestIdList.Id.AddRange(requestIdList);
@@ -129,7 +129,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    }
 	    }
 
-	    public void MoveReportsToQueuesAccordingToProcessingStatus(
+	    public void QueueReportsAccordingToProcessingStatus(
 		    List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> reportGenerationStatuses)
 	    {
 		    foreach (var reportGenerationInfo in reportGenerationStatuses)
@@ -171,13 +171,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 	    }
 
 
-	    public ReportRequestCallback GetReadyForDownloadReports(AmazonRegion region, string merchantId) =>
+	    public ReportRequestCallback GetNextFromQueueOfReportsToDownload(AmazonRegion region, string merchantId) =>
 		    string.IsNullOrEmpty(merchantId) ? null : _reportRequestCallbackService.FirstOrDefault(
 			    rrc => rrc.AmazonRegion == region && rrc.MerchantId == merchantId
 			           && rrc.RequestReportId != null
 			           && rrc.GeneratedReportId != null);
 
-		public Stream DownloadGeneratedReport(ReportRequestCallback reportRequestCallback, string merchantId)
+		public Stream DownloadGeneratedReportFromAmazon(ReportRequestCallback reportRequestCallback, string merchantId)
 		{
 			var reportResultStream = new MemoryStream();
 			var getReportRequest = new GetReportRequest
@@ -192,12 +192,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 			return getReportRequest.Report;
 	    }
 
-	    public void DequeueReportRequestCallback(ReportRequestCallback reportRequestCallback)
+	    public void RemoveFromQueue(ReportRequestCallback reportRequestCallback)
 	    {
 		    _reportRequestCallbackService.Delete(reportRequestCallback);
 	    }
 
-	    public void AllocateReportRequestForRetry(ReportRequestCallback reportRequestCallback)
+	    public void MoveToRetryQueue(ReportRequestCallback reportRequestCallback)
 	    {
 			reportRequestCallback.RequestRetryCount++;
 

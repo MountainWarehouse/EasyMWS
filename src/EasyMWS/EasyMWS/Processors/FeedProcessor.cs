@@ -109,13 +109,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void SubmitNextFeedInQueueToAmazon()
 		{
-			var feedSubmission = _feedSubmissionProcessor.GetNextFeedToSubmitFromQueue(_region, _merchantId);
+			var feedSubmission = _feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit(_region, _merchantId);
 
 			if (feedSubmission == null) return;
 
 			try
 			{
-				var feedSubmissionId = _feedSubmissionProcessor.SubmitSingleQueuedFeedToAmazon(feedSubmission, _merchantId);
+				var feedSubmissionId = _feedSubmissionProcessor.SubmitFeedToAmazon(feedSubmission, _merchantId);
 
 				feedSubmission.LastSubmitted = DateTime.UtcNow;
 				_feedService.Update(feedSubmission);
@@ -140,16 +140,16 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			try
 			{
-				var submittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeeds(_region, _merchantId).ToList();
+				var submittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeedsFromQueue(_region, _merchantId).ToList();
 
 				if (!submittedFeeds.Any())
 					return;
 
 				var feedSubmissionIdList = submittedFeeds.Select(x => x.FeedSubmissionId);
 
-				var feedSubmissionResults = _feedSubmissionProcessor.GetFeedSubmissionResults(feedSubmissionIdList, _merchantId);
+				var feedSubmissionResults = _feedSubmissionProcessor.RequestFeedSubmissionStatusesFromAmazon(feedSubmissionIdList, _merchantId);
 
-				_feedSubmissionProcessor.MoveFeedsToQueuesAccordingToProcessingStatus(feedSubmissionResults);
+				_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(feedSubmissionResults);
 			}
 			catch (Exception e)
 			{
@@ -162,11 +162,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 			try
 			{
 				var nextFeedWithProcessingComplete =
-					_feedSubmissionProcessor.GetNextFeedFromProcessingCompleteQueue(_region, _merchantId);
+					_feedSubmissionProcessor.GetNextFromQueueOfProcessingCompleteFeeds(_region, _merchantId);
 
 				if (nextFeedWithProcessingComplete == null) return (null, null, null);
 
-				var processingReportInfo = _feedSubmissionProcessor.QueryFeedProcessingReport(nextFeedWithProcessingComplete, _merchantId);
+				var processingReportInfo = _feedSubmissionProcessor.GetFeedSubmissionResultFromAmazon(nextFeedWithProcessingComplete, _merchantId);
 
 				return (nextFeedWithProcessingComplete, processingReportInfo.processingReport, processingReportInfo.md5hash);
 			}
@@ -188,7 +188,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 				_callbackActivator.CallMethod(callback, stream);
 
-				_feedSubmissionProcessor.DequeueFeedSubmissionCallback(feedSubmissionCallback);
+				_feedSubmissionProcessor.RemoveFromQueue(feedSubmissionCallback);
 			}
 			catch (Exception e)
 			{

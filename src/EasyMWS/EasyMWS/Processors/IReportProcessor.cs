@@ -8,8 +8,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		void CleanUpReportRequestQueue();
 		void RequestNextReportInQueueFromAmazon();
 		void RequestReportStatusesFromAmazon();
-		(ReportRequestCallback reportRequestCallback, Stream stream) DownloadNextGeneratedRequestReportInQueueFromAmazon();
+		(ReportRequestCallback reportRequestCallback, Stream stream) DownloadNextReportInQueueFromAmazon();
 		void ExecuteCallback(ReportRequestCallback reportRequestCallback, Stream stream);
-		void DequeueReport(ReportRequestCallback reportRequestCallback);
 	}
 }

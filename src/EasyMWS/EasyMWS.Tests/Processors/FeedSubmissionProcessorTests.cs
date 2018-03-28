@@ -57,7 +57,7 @@ namespace EasyMWS.Tests.Processors
 
 		[Test]
 		public void
-			GetNextFeedToSubmitFromQueue_ReturnsFirstFeedSubmissionFromQueueWithNullFeedSubmissionId_AndSkipsEntriesWithNonNullFeedSubmissionId()
+			GetNextFromQueueOfFeedsToSubmit_ReturnsFirstFeedSubmissionFromQueueWithNullFeedSubmissionId_AndSkipsEntriesWithNonNullFeedSubmissionId()
 		{
 			var testMerchantId = "test merchant id";
 			var feedSubmissionWithNonNullFeedSubmissionId1 = new FeedSubmissionCallback
@@ -91,14 +91,14 @@ namespace EasyMWS.Tests.Processors
 			_feedSubmissionCallbacks.Add(feedSubmissionWithNullFeedSubmissionId2);
 
 			var feedSubmissionCallback =
-				_feedSubmissionProcessor.GetNextFeedToSubmitFromQueue(AmazonRegion.Europe, testMerchantId);
+				_feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit(AmazonRegion.Europe, testMerchantId);
 
 			Assert.IsNotNull(feedSubmissionCallback);
 			Assert.AreEqual(feedSubmissionWithNullFeedSubmissionId1.Id, feedSubmissionCallback.Id);
 		}
 
 		[Test]
-		public void GetNextFeedToSubmitFromQueue_ReturnsFirstFeedSubmissionFromQueueForGivenRegionAndMerchantId()
+		public void GetNextFromQueueOfFeedsToSubmit_ReturnsFirstFeedSubmissionFromQueueForGivenRegionAndMerchantId()
 		{
 			var merchantId1 = "test merchant id 1";
 			var merchantId2 = "test merchant id 2";
@@ -142,14 +142,14 @@ namespace EasyMWS.Tests.Processors
 			_feedSubmissionCallbacks.Add(feedSubmissionWithSameRegionAndMerchantId2);
 
 			var feedSubmissionCallback =
-				_feedSubmissionProcessor.GetNextFeedToSubmitFromQueue(AmazonRegion.Australia, merchantId2);
+				_feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit(AmazonRegion.Australia, merchantId2);
 
 			Assert.IsNotNull(feedSubmissionCallback);
 			Assert.AreEqual(feedSubmissionWithSameRegionAndMerchantId1.Id, feedSubmissionCallback.Id);
 		}
 
 		[Test]
-		public void GetNextFeedToSubmitFromQueue_CalledWithNullMerchantId_ReturnsNull()
+		public void GetNextFromQueueOfFeedsToSubmit_CalledWithNullMerchantId_ReturnsNull()
 		{
 			var testMerchantId = "test merchant id";
 			var feedSubmissionWithNonNullFeedSubmissionId1 = new FeedSubmissionCallback
@@ -192,30 +192,30 @@ namespace EasyMWS.Tests.Processors
 			_feedSubmissionCallbacks.Add(feedSubmissionWithNullMerchant);
 
 			var feedSubmissionCallback =
-				_feedSubmissionProcessor.GetNextFeedToSubmitFromQueue(AmazonRegion.Europe, null);
+				_feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit(AmazonRegion.Europe, null);
 
 			Assert.IsNull(feedSubmissionCallback);
 		}
 
 		[Test]
-		public void SubmitSingleQueuedFeedToAmazon_CalledWithNullFeedSubmissionCallback_ThrowsArgumentNullException()
+		public void SubmitFeedToAmazon_CalledWithNullFeedSubmissionCallback_ThrowsArgumentNullException()
 		{
 			Assert.Throws<ArgumentNullException>(() =>
-				_feedSubmissionProcessor.SubmitSingleQueuedFeedToAmazon(null, "testMerchantId"));
+				_feedSubmissionProcessor.SubmitFeedToAmazon(null, "testMerchantId"));
 		}
 
 		[Test]
-		public void SubmitSingleQueuedFeedToAmazon_CalledWithNullMerchantId_ThrowsArgumentNullException()
+		public void SubmitFeedToAmazon_CalledWithNullMerchantId_ThrowsArgumentNullException()
 		{
 			Assert.Throws<ArgumentNullException>(() =>
-				_feedSubmissionProcessor.SubmitSingleQueuedFeedToAmazon(new FeedSubmissionCallback(), null));
+				_feedSubmissionProcessor.SubmitFeedToAmazon(new FeedSubmissionCallback(), null));
 		}
 
 		[Test]
-		public void SubmitSingleQueuedFeedToAmazon_CalledWithEmptyMerchantId_ThrowsArgumentNullException()
+		public void SubmitFeedToAmazon_CalledWithEmptyMerchantId_ThrowsArgumentNullException()
 		{
 			Assert.Throws<ArgumentNullException>(() =>
-				_feedSubmissionProcessor.SubmitSingleQueuedFeedToAmazon(new FeedSubmissionCallback(), string.Empty));
+				_feedSubmissionProcessor.SubmitFeedToAmazon(new FeedSubmissionCallback(), string.Empty));
 		}
 
 		[Test]
@@ -254,7 +254,7 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
-		public void GetAllSubmittedFeeds_ReturnsListOfSubmittedFeeds_ForGivenMerchant()
+		public void GetAllSubmittedFeedsFromQueue_ReturnsListOfSubmittedFeeds_ForGivenMerchant()
 		{
 			// Arrange
 			var testMerchantId2 = "test merchant id 2";
@@ -321,7 +321,7 @@ namespace EasyMWS.Tests.Processors
 			_feedSubmissionCallbacks.AddRange(data);
 
 			// Act
-			var listSubmittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeeds(_region, _merchantId);
+			var listSubmittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeedsFromQueue(_region, _merchantId);
 
 			// Assert
 			Assert.AreEqual(2, listSubmittedFeeds.Count());
@@ -329,7 +329,7 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
-		public void GetAllSubmittedFeeds_CalledWithNullMerchantId_ReturnsNull()
+		public void GetAllSubmittedFeedsFromQueue_CalledWithNullMerchantId_ReturnsNull()
 		{
 			var data = new List<FeedSubmissionCallback>
 			{
@@ -386,7 +386,7 @@ namespace EasyMWS.Tests.Processors
 			_feedSubmissionCallbacks.AddRange(data);
 
 			// Act
-			var listOfSubmittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeeds(_region, null);
+			var listOfSubmittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeedsFromQueue(_region, null);
 
 			// Assert
 			Assert.IsEmpty(listOfSubmittedFeeds);
@@ -394,7 +394,7 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
-		public void RequestReportsStatuses_WithMultiplePendingReports_SubmitsAmazonRequest()
+		public void RequestFeedSubmissionStatusesFromAmazon_WithMultiplePendingReports_SubmitsAmazonRequest()
 		{
 			var getFeedSubmissionListResponse = new GetFeedSubmissionListResponse
 			{
@@ -425,7 +425,7 @@ namespace EasyMWS.Tests.Processors
 			_marketplaceWebServiceClientMock.Setup(x => x.GetFeedSubmissionList(It.IsAny<GetFeedSubmissionListRequest>()))
 				.Returns(getFeedSubmissionListResponse);
 
-			var result = _feedSubmissionProcessor.GetFeedSubmissionResults(testRequestIdList, "");
+			var result = _feedSubmissionProcessor.RequestFeedSubmissionStatusesFromAmazon(testRequestIdList, "");
 
 			Assert.AreEqual("_DONE_", result.First(x => x.FeedSubmissionId == "feed1").FeedProcessingStatus);
 			Assert.AreEqual("_OTHER_", result.First(x => x.FeedSubmissionId == "feed3").FeedProcessingStatus);
@@ -433,7 +433,7 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
-		public void MoveFeedsToQueuesAccordingToProcessingStatus_MovesFeedToProcessingCompleteQueue_IfProcessingStatusIsDone()
+		public void QueueFeedsAccordingToProcessingStatus_MovesFeedToProcessingCompleteQueue_IfProcessingStatusIsDone()
 		{
 			var data = new List<FeedSubmissionCallback>
 			{
@@ -447,7 +447,7 @@ namespace EasyMWS.Tests.Processors
 				("testId", "_DONE_")
 			};
 
-			_feedSubmissionProcessor.MoveFeedsToQueuesAccordingToProcessingStatus(resultsInfo);
+			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(resultsInfo);
 
 			Assert.IsTrue(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").IsProcessingComplete);
 			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").SubmissionRetryCount);
@@ -457,7 +457,7 @@ namespace EasyMWS.Tests.Processors
 
 		[Test]
 		public void
-			MoveFeedsToQueuesAccordingToProcessingStatus_LeavesFeedsInTheAwaitProcessingQueue_IfProcessingStatusIsAsExpected()
+			QueueFeedsAccordingToProcessingStatus_LeavesFeedsInTheAwaitProcessingQueue_IfProcessingStatusIsAsExpected()
 		{
 			var data = new List<FeedSubmissionCallback>
 			{
@@ -478,7 +478,7 @@ namespace EasyMWS.Tests.Processors
 				("testId5", "_UNCONFIRMED_")
 			};
 
-			_feedSubmissionProcessor.MoveFeedsToQueuesAccordingToProcessingStatus(resultsInfo);
+			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(resultsInfo);
 
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId1").IsProcessingComplete);
 			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId1").SubmissionRetryCount);
@@ -495,7 +495,7 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
-		public void MoveFeedsToQueuesAccordingToProcessingStatus_RemovesFeedFromDb_IfProcessingStatusIsCancelled()
+		public void QueueFeedsAccordingToProcessingStatus_RemovesFeedFromDb_IfProcessingStatusIsCancelled()
 		{
 			var data = new List<FeedSubmissionCallback>
 			{
@@ -510,7 +510,7 @@ namespace EasyMWS.Tests.Processors
 				("testId", "_CANCELLED_"),
 			};
 
-			_feedSubmissionProcessor.MoveFeedsToQueuesAccordingToProcessingStatus(resultsInfo);
+			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(resultsInfo);
 
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").IsProcessingComplete);
 			Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").SubmissionRetryCount);
@@ -519,7 +519,7 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
-		public void MoveFeedsToQueuesAccordingToProcessingStatus_RemovesFeedFromDb_IfProcessingStatusIsUnknown()
+		public void QueueFeedsAccordingToProcessingStatus_RemovesFeedFromDb_IfProcessingStatusIsUnknown()
 		{
 			var data = new List<FeedSubmissionCallback>
 			{
@@ -534,7 +534,7 @@ namespace EasyMWS.Tests.Processors
 				("testId", "_SOME_MADE_UP_STATUS_")
 			};
 			 
-			_feedSubmissionProcessor.MoveFeedsToQueuesAccordingToProcessingStatus(resultsInfo);
+			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(resultsInfo);
 
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").IsProcessingComplete);
 			Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").SubmissionRetryCount);
