@@ -629,7 +629,7 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
-		public void GetReadyForDownloadReports_ReturnListOfReports_GeneratedIdNotNull_ForGivenRegionAndMerchantId()
+		public void GetReadyForDownloadReportsFromQueue_ReturnListOfReports_GeneratedIdNotNull_ForGivenRegionAndMerchantId()
 		{
 			// Arrange
 			var merchantId2 = "test merchant id 2";
@@ -673,13 +673,13 @@ namespace EasyMWS.Tests.Processors
 			};
 			_reportRequestCallbacks.AddRange(data);
 
-			var result = _requestReportProcessor.GetReadyForDownloadReports(_region, _merchantId);
+			var result = _requestReportProcessor.GetReadyForDownloadReportsFromQueue(_region, _merchantId);
 
 			Assert.AreEqual(4, result.Id);
 		}
 
 		[Test]
-		public void GetReadyForDownloadReports_CalledWithNullMerchantId_ReturnsNull()
+		public void GetReadyForDownloadReportsFromQueue_CalledWithNullMerchantId_ReturnsNull()
 		{
 			// Arrange
 			var data = new List<ReportRequestCallback>
@@ -722,7 +722,7 @@ namespace EasyMWS.Tests.Processors
 			};
 			_reportRequestCallbacks.AddRange(data);
 
-			var result = _requestReportProcessor.GetReadyForDownloadReports(_region, null);
+			var result = _requestReportProcessor.GetReadyForDownloadReportsFromQueue(_region, null);
 
 			Assert.IsNull(result);
 		}
