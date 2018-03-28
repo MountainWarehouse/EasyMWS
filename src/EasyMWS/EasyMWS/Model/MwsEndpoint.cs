@@ -1,6 +1,6 @@
 ﻿using MountainWarehouse.EasyMWS.Enums;
 
-namespace MountainWarehouse.EasyMWS.Helpers
+namespace MountainWarehouse.EasyMWS.Model
 {
 	public sealed class MwsEndpoint
 	{
