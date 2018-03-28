@@ -1,4 +1,5 @@
 ﻿using MountainWarehouse.EasyMWS;
+using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Logging;
 using NUnit.Framework;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using MountainWarehouse.EasyMWS.Enums;
 
 namespace MountainWarehouse.EasyMWS.Helpers
 {
