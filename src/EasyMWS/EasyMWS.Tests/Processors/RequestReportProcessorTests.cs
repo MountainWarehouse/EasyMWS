@@ -728,7 +728,7 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
-		public void DownloadGeneratedReport_ShouldDownloadReportFromAmazon_ReturnStream()
+		public void DownloadGeneratedReportFromAmazon_ShouldDownloadReportFromAmazon_ReturnStream()
 		{
 			// Arrange
 			var merchantId = "testMerchantId";
@@ -746,7 +746,7 @@ namespace EasyMWS.Tests.Processors
 
 			// Act
 			var testData = _reportRequestCallbacks.Find(x => x.GeneratedReportId == "GeneratedIdTest1");
-			var result = _requestReportProcessor.DownloadGeneratedReport(testData, merchantId);
+			var result = _requestReportProcessor.DownloadGeneratedReportFromAmazon(testData, merchantId);
 
 			// Assert
 			_marketplaceWebServiceClientMock.Verify(x => x.GetReport(It.IsAny<GetReportRequest>()), Times.Once);

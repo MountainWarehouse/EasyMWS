@@ -174,7 +174,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			           && rrc.RequestReportId != null
 			           && rrc.GeneratedReportId != null);
 
-		public Stream DownloadGeneratedReport(ReportRequestCallback reportRequestCallback, string merchantId)
+		public Stream DownloadGeneratedReportFromAmazon(ReportRequestCallback reportRequestCallback, string merchantId)
 		{
 			var reportResultStream = new MemoryStream();
 			var getReportRequest = new GetReportRequest

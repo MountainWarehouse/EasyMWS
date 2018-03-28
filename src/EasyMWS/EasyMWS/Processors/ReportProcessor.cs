@@ -144,7 +144,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			try
 			{
-				var stream = _requestReportProcessor.DownloadGeneratedReport(generatedReportRequest, _merchantId);
+				var stream = _requestReportProcessor.DownloadGeneratedReportFromAmazon(generatedReportRequest, _merchantId);
 
 				return (generatedReportRequest, stream);
 			}
