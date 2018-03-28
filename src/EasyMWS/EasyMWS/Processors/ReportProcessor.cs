@@ -95,7 +95,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			try
 			{
-				var reportRequestId = _requestReportProcessor.RequestSingleQueuedReport(reportRequestCallbackReportQueued, _merchantId);
+				var reportRequestId = _requestReportProcessor.RequestReportFromAmazon(reportRequestCallbackReportQueued, _merchantId);
 
 				reportRequestCallbackReportQueued.LastRequested = DateTime.UtcNow;
 				_reportService.Update(reportRequestCallbackReportQueued);
