@@ -10,6 +10,5 @@ namespace MountainWarehouse.EasyMWS.Processors
 		void RequestReportStatusesFromAmazon();
 		(ReportRequestCallback reportRequestCallback, Stream stream) DownloadNextReportInQueueFromAmazon();
 		void ExecuteCallback(ReportRequestCallback reportRequestCallback, Stream stream);
-		void DequeueReport(ReportRequestCallback reportRequestCallback);
 	}
 }

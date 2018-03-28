@@ -166,17 +166,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 				_callbackActivator.CallMethod(callback, stream);
 
-				DequeueReport(reportRequestCallback);
+				_requestReportProcessor.RemoveFromQueue(reportRequestCallback);
 			}
 			catch (Exception e)
 			{
 				_logger.Error(e.Message, e);
 			}
-		}
-
-		public void DequeueReport(ReportRequestCallback reportRequestCallback)
-		{
-			_requestReportProcessor.RemoveFromQueue(reportRequestCallback);
 		}
 
 		private ReportRequestCallback GetSerializedReportRequestCallback(
