@@ -3,6 +3,7 @@ using System.IO;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Logging;
+using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Processors;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
 

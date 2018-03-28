@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Factories.Reports;
 using MountainWarehouse.EasyMWS.Helpers;
+using MountainWarehouse.EasyMWS.Model;
 using NUnit.Framework;
 
 namespace EasyMWS.Tests.Factories
