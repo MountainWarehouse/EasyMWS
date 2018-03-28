@@ -39,12 +39,15 @@ namespace MountainWarehouse.EasyMWS.Processors
 						    _options.ReportRequestRetryInitialDelay, _options.ReportRequestRetryInterval, _options.ReportRequestRetryType)
 				    );
 		
-	    public string RequestSingleQueuedReport(ReportRequestCallback reportRequestCallback, string merchantId)
+	    public string RequestSingleQueuedReport(ReportRequestCallback reportRequestCallback)
 	    {
-		    if (reportRequestCallback == null || string.IsNullOrEmpty(merchantId))
-			    throw new ArgumentNullException("Cannot submit queued feed to amazon due to missing feed submission information or empty merchant ID");
+		    var missingInformationExceptionMessage = "Cannot submit queued feed to amazon due to missing feed submission information";
+
+			if (reportRequestCallback?.ReportRequestData == null) throw new ArgumentNullException(missingInformationExceptionMessage);
 
 			var reportRequestData = JsonConvert.DeserializeObject<ReportRequestPropertiesContainer>(reportRequestCallback.ReportRequestData);
+		    if (reportRequestData?.ReportType == null) throw new ArgumentException(missingInformationExceptionMessage);
+
 			var reportRequest = new RequestReportRequest
 			{
 				Merchant = reportRequestCallback.MerchantId,

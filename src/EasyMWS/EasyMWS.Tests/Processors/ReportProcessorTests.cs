@@ -132,7 +132,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			_reportProcessor.Poll();
 
 			_requestReportProcessor.Verify(
-				rrp => rrp.RequestSingleQueuedReport(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()), Times.Never);
+				rrp => rrp.RequestSingleQueuedReport(It.IsAny<ReportRequestCallback>()), Times.Never);
 		}
 
 		[Test]
@@ -145,7 +145,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			_reportProcessor.Poll();
 
 			_requestReportProcessor.Verify(
-				rrp => rrp.RequestSingleQueuedReport(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()), Times.Once);
+				rrp => rrp.RequestSingleQueuedReport(It.IsAny<ReportRequestCallback>()), Times.Once);
 		}
 
 		[Test]
@@ -177,7 +177,7 @@ namespace EasyMWS.Tests.ReportProcessors
 				.Setup(rrp => rrp.GetNonRequestedReportFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
 				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue});
 			_requestReportProcessor.Setup(rrp =>
-					rrp.RequestSingleQueuedReport(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()))
+					rrp.RequestSingleQueuedReport(It.IsAny<ReportRequestCallback>()))
 				.Returns("testReportRequestId");
 
 			_reportProcessor.Poll();
@@ -193,7 +193,7 @@ namespace EasyMWS.Tests.ReportProcessors
 				.Setup(rrp => rrp.GetNonRequestedReportFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
 				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue});
 			_requestReportProcessor.Setup(rrp =>
-					rrp.RequestSingleQueuedReport(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()))
+					rrp.RequestSingleQueuedReport(It.IsAny<ReportRequestCallback>()))
 				.Returns((string) null);
 
 			_reportProcessor.Poll();
@@ -208,7 +208,7 @@ namespace EasyMWS.Tests.ReportProcessors
 				.Setup(rrp => rrp.GetNonRequestedReportFromQueue(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
 				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue});
 			_requestReportProcessor.Setup(rrp =>
-					rrp.RequestSingleQueuedReport(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()))
+					rrp.RequestSingleQueuedReport(It.IsAny<ReportRequestCallback>()))
 				.Returns(string.Empty);
 
 
