@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text;
 
-namespace MountainWarehouse.EasyMWS.Helpers
+namespace MountainWarehouse.EasyMWS.Model
 {
     internal class ReportOptions
     {

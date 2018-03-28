@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MountainWarehouse.EasyMWS.Helpers
+namespace MountainWarehouse.EasyMWS.Model
 {
     public class EasyMwsOptions
     {

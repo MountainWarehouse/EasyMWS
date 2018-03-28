@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using MountainWarehouse.EasyMWS.Helpers;
+using MountainWarehouse.EasyMWS.Model;
 using NUnit.Framework;
 
 namespace EasyMWS.Tests.Factories.Helpers
