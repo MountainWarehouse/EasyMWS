@@ -5,11 +5,13 @@ using System.Linq.Expressions;
 using Moq;
 using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.Data;
+using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Processors;
 using MountainWarehouse.EasyMWS.Services;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService.Model;
+using Newtonsoft.Json;
 using NUnit.Framework;
 
 namespace EasyMWS.Tests.Processors
@@ -326,6 +328,56 @@ namespace EasyMWS.Tests.Processors
 
 			_marketplaceWebServiceClientMock.Verify(mwsc => mwsc.RequestReport(It.IsAny<RequestReportRequest>()), Times.Once);
 			Assert.AreEqual("Report001", reportId);
+		}
+
+		[Test]
+		public void RequestSingleQueuedReport_WithAllOptions_SubmitsCorrectDataToAmazon()
+		{
+
+			var reportRequestPropertiesContainer = new ReportRequestPropertiesContainer("testReportType800",
+				ContentUpdateFrequency.Unknown, new List<string> {"testMpId1", "testMpId2"}, new DateTime(1000, 10, 10), new DateTime(2000, 12, 20), "testOptions");
+			var reportRequestCallback = new ReportRequestCallback
+			{
+				MerchantId = "testMerchant800",
+				ReportRequestData = JsonConvert.SerializeObject(reportRequestPropertiesContainer)
+			};
+			var requestReportRequest = (RequestReportRequest) null;
+			_marketplaceWebServiceClientMock.Setup(mwscm => mwscm.RequestReport(It.IsAny<RequestReportRequest>()))
+				.Callback<RequestReportRequest>((rrr) => { requestReportRequest = rrr; });
+
+			_requestReportProcessor.RequestSingleQueuedReport(reportRequestCallback, "testMerchantId");
+
+			Assert.AreEqual("testMerchant800", requestReportRequest.Merchant);
+			Assert.AreEqual("testReportType800", requestReportRequest.ReportType);
+			Assert.AreEqual(new DateTime(1000, 10, 10), requestReportRequest.StartDate);
+			Assert.AreEqual(new DateTime(2000, 12, 20), requestReportRequest.EndDate);
+			Assert.AreEqual("testOptions", requestReportRequest.ReportOptions);
+			Assert.NotNull(requestReportRequest.MarketplaceIdList);
+			CollectionAssert.AreEquivalent(new List<string> { "testMpId1", "testMpId2" }, requestReportRequest.MarketplaceIdList.Id);
+		}
+
+		[Test]
+		public void RequestSingleQueuedReport_WithNoOptions_SubmitsCorrectDataToAmazon()
+		{
+
+			var reportRequestPropertiesContainer = new ReportRequestPropertiesContainer("testReportType800", ContentUpdateFrequency.Unknown);
+			var reportRequestCallback = new ReportRequestCallback
+			{
+				MerchantId = "testMerchant800",
+				ReportRequestData = JsonConvert.SerializeObject(reportRequestPropertiesContainer)
+			};
+			var requestReportRequest = (RequestReportRequest)null;
+			_marketplaceWebServiceClientMock.Setup(mwscm => mwscm.RequestReport(It.IsAny<RequestReportRequest>()))
+				.Callback<RequestReportRequest>((rrr) => { requestReportRequest = rrr; });
+
+			_requestReportProcessor.RequestSingleQueuedReport(reportRequestCallback, "testMerchantId");
+
+			Assert.AreEqual("testMerchant800", requestReportRequest.Merchant);
+			Assert.AreEqual("testReportType800", requestReportRequest.ReportType);
+			Assert.AreEqual(DateTime.MinValue,requestReportRequest.StartDate);
+			Assert.AreEqual(DateTime.MinValue, requestReportRequest.EndDate);
+			Assert.IsNull(requestReportRequest.ReportOptions);
+			Assert.IsNull(requestReportRequest.MarketplaceIdList);
 		}
 
 		[Test]
