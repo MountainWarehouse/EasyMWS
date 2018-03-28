@@ -102,7 +102,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 				if (string.IsNullOrEmpty(reportRequestId))
 				{
-					_requestReportProcessor.AllocateReportRequestForRetry(reportRequestCallbackReportQueued);
+					_requestReportProcessor.MoveToRetryQueue(reportRequestCallbackReportQueued);
 				}
 				else
 				{
@@ -111,7 +111,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 			catch (Exception e)
 			{
-				_requestReportProcessor.AllocateReportRequestForRetry(reportRequestCallbackReportQueued);
+				_requestReportProcessor.MoveToRetryQueue(reportRequestCallbackReportQueued);
 				_logger.Error(e.Message, e);
 			}
 		}

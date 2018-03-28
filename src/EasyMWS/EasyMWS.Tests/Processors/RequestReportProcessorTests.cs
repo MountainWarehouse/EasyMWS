@@ -754,24 +754,24 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
-		public void AllocateReportRequestForRetry_CalledOnce_IncrementsRequestRetryCountCorrectly()
+		public void MoveToRetryQueue_CalledOnce_IncrementsRequestRetryCountCorrectly()
 		{
 			Assert.AreEqual(0, _reportRequestCallbacks.First().RequestRetryCount);
 
-			_requestReportProcessor.AllocateReportRequestForRetry(_reportRequestCallbacks.First());
+			_requestReportProcessor.MoveToRetryQueue(_reportRequestCallbacks.First());
 
 			Assert.AreEqual(1, _reportRequestCallbacks.First().RequestRetryCount);
 			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Once);
 		}
 
 		[Test]
-		public void AllocateReportRequestForRetry_CalledMultipleTimes_IncrementsRequestRetryCountCorrectly()
+		public void MoveToRetryQueue_CalledMultipleTimes_IncrementsRequestRetryCountCorrectly()
 		{
 			Assert.AreEqual(0, _reportRequestCallbacks.First().RequestRetryCount);
 
-			_requestReportProcessor.AllocateReportRequestForRetry(_reportRequestCallbacks.First());
-			_requestReportProcessor.AllocateReportRequestForRetry(_reportRequestCallbacks.First());
-			_requestReportProcessor.AllocateReportRequestForRetry(_reportRequestCallbacks.First());
+			_requestReportProcessor.MoveToRetryQueue(_reportRequestCallbacks.First());
+			_requestReportProcessor.MoveToRetryQueue(_reportRequestCallbacks.First());
+			_requestReportProcessor.MoveToRetryQueue(_reportRequestCallbacks.First());
 
 			Assert.AreEqual(3, _reportRequestCallbacks.First().RequestRetryCount);
 			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Exactly(3));

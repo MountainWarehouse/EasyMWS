@@ -194,7 +194,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    _reportRequestCallbackService.Delete(reportRequestCallback);
 	    }
 
-	    public void AllocateReportRequestForRetry(ReportRequestCallback reportRequestCallback)
+	    public void MoveToRetryQueue(ReportRequestCallback reportRequestCallback)
 	    {
 			reportRequestCallback.RequestRetryCount++;
 

@@ -197,7 +197,7 @@ namespace EasyMWS.Tests.ReportProcessors
 				.Returns((string) null);
 
 			_reportProcessor.Poll();
-			_requestReportProcessor.Verify(rrp => rrp.AllocateReportRequestForRetry(It.IsAny<ReportRequestCallback>()),
+			_requestReportProcessor.Verify(rrp => rrp.MoveToRetryQueue(It.IsAny<ReportRequestCallback>()),
 				Times.Once);
 		}
 
@@ -214,7 +214,7 @@ namespace EasyMWS.Tests.ReportProcessors
 
 			_reportProcessor.Poll();
 
-			_requestReportProcessor.Verify(rrp => rrp.AllocateReportRequestForRetry(It.IsAny<ReportRequestCallback>()),
+			_requestReportProcessor.Verify(rrp => rrp.MoveToRetryQueue(It.IsAny<ReportRequestCallback>()),
 				Times.Once);
 		}
 
