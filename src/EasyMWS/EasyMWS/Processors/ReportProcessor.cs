@@ -53,7 +53,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				CleanUpReportRequestQueue();
 				RequestNextReportInQueueFromAmazon();
 				RequestReportStatusesFromAmazon();
-				var generatedReportRequestCallback = DownloadNextGeneratedRequestReportInQueueFromAmazon();
+				var generatedReportRequestCallback = DownloadNextReportInQueueFromAmazon();
 				ExecuteCallback(generatedReportRequestCallback.reportRequestCallback, generatedReportRequestCallback.stream);
 				_reportService.SaveChanges();
 			}
@@ -136,7 +136,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public (ReportRequestCallback reportRequestCallback, Stream stream) DownloadNextGeneratedRequestReportInQueueFromAmazon()
+		public (ReportRequestCallback reportRequestCallback, Stream stream) DownloadNextReportInQueueFromAmazon()
 		{
 			var generatedReportRequest = _requestReportProcessor.GetNextFromQueueOfReportsToDownload(_region, _merchantId);
 
