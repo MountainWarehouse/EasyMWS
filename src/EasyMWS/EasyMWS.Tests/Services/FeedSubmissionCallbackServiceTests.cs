@@ -22,7 +22,7 @@ namespace EasyMWS.Tests.Services
 	    public void Setup()
 	    {
 		    var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType", false,
-			    "testContentMd5Value", new List<string>(MwsMarketplaceGroup.AmazonEurope()));
+			    new List<string>(MwsMarketplaceGroup.AmazonEurope()));
 
 		    var feedSubmissionCallbacks = new List<FeedSubmissionCallback>
 		    {
