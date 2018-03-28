@@ -120,7 +120,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			try
 			{
-				var reportRequestCallbacksPendingReports = _requestReportProcessor.GetAllPendingReport(_region, _merchantId).ToList();
+				var reportRequestCallbacksPendingReports = _requestReportProcessor.GetAllPendingReportFromQueue(_region, _merchantId).ToList();
 
 				if (!reportRequestCallbacksPendingReports.Any()) return;
 

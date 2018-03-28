@@ -392,7 +392,7 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
-		public void GetAllPendingReport_ReturnListReportRequestId_ForGivenMerchant()
+		public void GetAllPendingReportFromQueue_ReturnListReportRequestId_ForGivenMerchant()
 		{
 			// Arrange
 			var testMerchantId2 = "test merchant id 2";
@@ -445,7 +445,7 @@ namespace EasyMWS.Tests.Processors
 			_reportRequestCallbacks.AddRange(data);
 
 			// Act
-			var listPendingReports = _requestReportProcessor.GetAllPendingReport(_region, _merchantId);
+			var listPendingReports = _requestReportProcessor.GetAllPendingReportFromQueue(_region, _merchantId);
 			
 			// Assert
 			Assert.AreEqual(2, listPendingReports.Count());
@@ -453,7 +453,7 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
-		public void GetAllPendingReport_CalledWithNullMerchantId_ReturnsNull()
+		public void GetAllPendingReportFromQueue_CalledWithNullMerchantId_ReturnsNull()
 		{
 			var data = new List<ReportRequestCallback>
 			{
@@ -504,7 +504,7 @@ namespace EasyMWS.Tests.Processors
 			_reportRequestCallbacks.AddRange(data);
 
 			// Act
-			var listPendingReports = _requestReportProcessor.GetAllPendingReport(_region, null);
+			var listPendingReports = _requestReportProcessor.GetAllPendingReportFromQueue(_region, null);
 
 			// Assert
 			Assert.IsEmpty(listPendingReports);

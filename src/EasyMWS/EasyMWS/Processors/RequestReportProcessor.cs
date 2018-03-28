@@ -78,7 +78,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_reportRequestCallbackService.Update(reportRequestCallback);
 	    }
 
-	    public IEnumerable<ReportRequestCallback> GetAllPendingReport(AmazonRegion region, string merchantId) =>
+	    public IEnumerable<ReportRequestCallback> GetAllPendingReportFromQueue(AmazonRegion region, string merchantId) =>
 		    string.IsNullOrEmpty(merchantId) ? new List<ReportRequestCallback>().AsEnumerable() : _reportRequestCallbackService.Where(
 			    rrcs => rrcs.AmazonRegion == region && rrcs.MerchantId == merchantId
 			            && rrcs.RequestReportId != null
