@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using MountainWarehouse.EasyMWS.Data;
+using MountainWarehouse.EasyMWS.Enums;
 
 namespace MountainWarehouse.EasyMWS.Processors
 {

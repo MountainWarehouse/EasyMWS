@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Logging;
 using MountainWarehouse.EasyMWS.Processors;

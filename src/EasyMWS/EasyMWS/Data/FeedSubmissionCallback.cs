@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using MountainWarehouse.EasyMWS.Enums;
 
 namespace MountainWarehouse.EasyMWS.Data
 {
