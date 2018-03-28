@@ -84,7 +84,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			            && rrcs.RequestReportId != null
 			            && rrcs.GeneratedReportId == null);
 
-		public List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> GetReportRequestListResponse(IEnumerable<string> requestIdList, string merchant)
+		public List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> GetReportProcessingStatusesFromAmazon(IEnumerable<string> requestIdList, string merchant)
 	    {
 		    var request = new GetReportRequestListRequest() {ReportRequestIdList = new IdList(), Merchant = merchant};
 		    request.ReportRequestIdList.Id.AddRange(requestIdList);

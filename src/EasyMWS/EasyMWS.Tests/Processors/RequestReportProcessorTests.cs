@@ -512,11 +512,11 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
-		public void RequestReportsStatuses_WithMultiplePendingReports_SubmitsAmazonRequest()
+		public void GetReportProcessingStatusesFromAmazon_WithMultiplePendingReports_SubmitsAmazonRequest()
 		{
 			var testRequestIdList = new List<string>{ "Report1", "Report2", "Report3" };
 
-			var result = _requestReportProcessor.GetReportRequestListResponse(testRequestIdList, "");
+			var result = _requestReportProcessor.GetReportProcessingStatusesFromAmazon(testRequestIdList, "");
 
 			Assert.AreEqual("testGeneratedReportId", result.First(x => x.ReportRequestId == "Report1").GeneratedReportId);
 			Assert.AreEqual("_DONE_", result.First(x => x.ReportRequestId == "Report1").ReportProcessingStatus);
