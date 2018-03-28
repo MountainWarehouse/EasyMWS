@@ -48,8 +48,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				CleanUpFeedSubmissionQueue();
 				SubmitNextFeedInQueueToAmazon();
+				_feedService.SaveChanges();
+
 				RequestFeedSubmissionStatusesFromAmazon();
+				_feedService.SaveChanges();
+
 				var amazonProcessingReport = RequestNextFeedSubmissionInQueueFromAmazon();
+				_feedService.SaveChanges();
 
 				// TODO: log a warning for each hash miss-match, and recommend to the user to notify Amazon that a corrupted body was received. 
 				if (amazonProcessingReport.feedSubmissionCallback != null)
