@@ -128,7 +128,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 				var reportRequestStatuses = _requestReportProcessor.GetReportProcessingStatusesFromAmazon(reportRequestIds, _merchantId);
 
-				_requestReportProcessor.MoveReportsToQueuesAccordingToProcessingStatus(reportRequestStatuses);
+				_requestReportProcessor.QueueReportsAccordingToProcessingStatus(reportRequestStatuses);
 			}
 			catch (Exception e)
 			{

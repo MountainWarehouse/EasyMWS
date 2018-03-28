@@ -525,7 +525,7 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
-		public void MoveReportsToQueuesAccordingToProcessingStatus_UpdateGeneratedRequestId()
+		public void QueueReportsAccordingToProcessingStatus_UpdateGeneratedRequestId()
 		{
 			// Arrange
 			var data = new List<ReportRequestCallback>
@@ -588,7 +588,7 @@ namespace EasyMWS.Tests.Processors
 				("Report6", null, "_OTHER_")
 			};
 
-			_requestReportProcessor.MoveReportsToQueuesAccordingToProcessingStatus(dataResult);
+			_requestReportProcessor.QueueReportsAccordingToProcessingStatus(dataResult);
 
 			Assert.AreEqual("GeneratedId1", _reportRequestCallbacks.First(x => x.RequestReportId == "Report1").GeneratedReportId);
 			Assert.AreEqual(0, _reportRequestCallbacks.First(x => x.RequestReportId == "Report1").RequestRetryCount);
@@ -609,7 +609,7 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
-		public void MoveReportsToQueuesAccordingToProcessingStatus_UpdateReportRequestId()
+		public void QueueReportsAccordingToProcessingStatus_UpdateReportRequestId()
 		{
 			_reportRequestCallbacks.First().RequestReportId = "Report3";
 
@@ -621,7 +621,7 @@ namespace EasyMWS.Tests.Processors
 				("Report4", null, "_OTHER_")
 			};
 
-			_requestReportProcessor.MoveReportsToQueuesAccordingToProcessingStatus(data);
+			_requestReportProcessor.QueueReportsAccordingToProcessingStatus(data);
 
 			Assert.IsNull(_reportRequestCallbacks.First().RequestReportId);
 			Assert.IsTrue(_reportRequestCallbacks.First().RequestRetryCount > 0);

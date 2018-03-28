@@ -15,7 +15,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		Stream DownloadGeneratedReportFromAmazon(ReportRequestCallback reportRequestCallback, string merchantId);
 		void RemoveFromQueue(ReportRequestCallback reportRequestCallback);
 		void MoveToRetryQueue(ReportRequestCallback reportRequestCallback);
-		void MoveReportsToQueuesAccordingToProcessingStatus(
+		void QueueReportsAccordingToProcessingStatus(
 			List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> reportGenerationStatuses);
 	}
 }

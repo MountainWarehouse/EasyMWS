@@ -126,7 +126,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    }
 	    }
 
-	    public void MoveReportsToQueuesAccordingToProcessingStatus(
+	    public void QueueReportsAccordingToProcessingStatus(
 		    List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> reportGenerationStatuses)
 	    {
 		    foreach (var reportGenerationInfo in reportGenerationStatuses)
