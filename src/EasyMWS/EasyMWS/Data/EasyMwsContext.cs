@@ -38,8 +38,11 @@ namespace MountainWarehouse.EasyMWS.Data
 		{
 			modelBuilder.Entity<ReportRequestCallback>()
 				.HasIndex(e => new {e.RequestReportId, e.GeneratedReportId});
+			modelBuilder.Entity<FeedSubmissionCallback>()
+				.HasIndex(e => new { e.FeedSubmissionId });
 		}
 
 		internal DbSet<ReportRequestCallback> ReportRequestCallbacks { get; set; }
+		internal DbSet<FeedSubmissionCallback> FeedSubmissionCallbacks { get; set; }
 	}
 }

@@ -21,6 +21,7 @@ namespace MountainWarehouse.EasyMWS.Data
 
 		#region Data necessary to request a report from amazon.
 	    public AmazonRegion AmazonRegion { get; set; }
+	    public string MerchantId { get; set; }
 	    public ContentUpdateFrequency ContentUpdateFrequency { get; set; }
 	    public string ReportRequestData { get; set; }
 		#endregion

@@ -22,6 +22,44 @@ namespace MountainWarehouse.EasyMWS.Migrations
                 .HasAnnotation("ProductVersion", "2.0.1-rtm-125")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+            modelBuilder.Entity("MountainWarehouse.EasyMWS.Data.FeedSubmissionCallback", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<int>("AmazonRegion");
+
+                    b.Property<string>("Data");
+
+                    b.Property<string>("DataTypeName");
+
+                    b.Property<string>("FeedSubmissionData");
+
+                    b.Property<string>("FeedSubmissionId");
+
+                    b.Property<bool>("HasErrors");
+
+                    b.Property<bool>("IsProcessingComplete");
+
+                    b.Property<DateTime>("LastSubmitted");
+
+                    b.Property<string>("MerchantId");
+
+                    b.Property<string>("MethodName");
+
+                    b.Property<string>("SubmissionErrorData");
+
+                    b.Property<int>("SubmissionRetryCount");
+
+                    b.Property<string>("TypeName");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FeedSubmissionId");
+
+                    b.ToTable("FeedSubmissionCallbacks");
+                });
+
             modelBuilder.Entity("MountainWarehouse.EasyMWS.Data.ReportRequestCallback", b =>
                 {
                     b.Property<int>("Id")
@@ -38,6 +76,8 @@ namespace MountainWarehouse.EasyMWS.Migrations
                     b.Property<string>("GeneratedReportId");
 
                     b.Property<DateTime>("LastRequested");
+
+                    b.Property<string>("MerchantId");
 
                     b.Property<string>("MethodName");
 

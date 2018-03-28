@@ -7,6 +7,7 @@
 	{
 		NearRealTime,
 		Daily,
+		AtLeast72Hours,
 		Unknown
 	}
 }

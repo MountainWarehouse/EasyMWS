@@ -38,7 +38,8 @@ namespace EasyMWS.Tests.Services
 					DataTypeName = "testDataTypeName",
 					ContentUpdateFrequency = 0,
 					Id = 1
-				}
+				},
+				new ReportRequestCallback{Id = 2}
 		    };
 
 			_reportRequestCallbackReportMock = new Mock<IReportRequestCallbackRepo>();
@@ -48,7 +49,7 @@ namespace EasyMWS.Tests.Services
 
 
 		[Test]
-		public void RequestSingleQueueReport_OneInQueue_ReturnsObjecContainingCorrectData()
+		public void FirstOrDefault_TwoInQueue_ReturnsFirstObjectContainingCorrectData()
 		{
 			var reportRequestCallback = _reportRequestCallbackService.FirstOrDefault();
 			var reportRequestData = JsonConvert.DeserializeObject<ReportRequestPropertiesContainer>(reportRequestCallback.ReportRequestData);

@@ -11,9 +11,14 @@ namespace MountainWarehouse.EasyMWS.Services
 	{
 		private readonly IReportRequestCallbackRepo _reportRequestCallbackRepo;
 
-		internal ReportRequestCallbackService(IReportRequestCallbackRepo reportRequestCallbackRepo = null)
+		internal ReportRequestCallbackService(IReportRequestCallbackRepo reportRequestCallbackRepo) : this()
 		{
-			_reportRequestCallbackRepo = reportRequestCallbackRepo ?? new ReportRequestCallbackRepo();
+			_reportRequestCallbackRepo = reportRequestCallbackRepo;
+		}
+
+		internal ReportRequestCallbackService()
+		{
+			_reportRequestCallbackRepo = _reportRequestCallbackRepo ?? new ReportRequestCallbackRepo();
 		}
 
 		public void Create(ReportRequestCallback callback) => _reportRequestCallbackRepo.Create(callback);

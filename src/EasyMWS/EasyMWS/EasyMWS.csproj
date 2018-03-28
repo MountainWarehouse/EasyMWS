@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>MountainWarehouse.EasyMWS</RootNamespace>
     <AssemblyName>MountainWarehouse.EasyMWS</AssemblyName>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <RepositoryUrl>https://github.com/MountainWarehouse/EasyMWS</RepositoryUrl>
     <PackageProjectUrl>https://github.com/MountainWarehouse/EasyMWS</PackageProjectUrl>
     <PackageTags>Amazon MWS MarketplaceWebService</PackageTags>
@@ -29,6 +29,29 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="WebService\MarketplaceWebService\Mock\CancelFeedSubmissionsResponse.xml" />
+    <None Remove="WebService\MarketplaceWebService\Mock\CancelReportRequestsResponse.xml" />
+    <None Remove="WebService\MarketplaceWebService\Mock\GetFeedSubmissionCountResponse.xml" />
+    <None Remove="WebService\MarketplaceWebService\Mock\GetFeedSubmissionListByNextTokenResponse.xml" />
+    <None Remove="WebService\MarketplaceWebService\Mock\GetFeedSubmissionListResponse.xml" />
+    <None Remove="WebService\MarketplaceWebService\Mock\GetFeedSubmissionResultResponse.xml" />
+    <None Remove="WebService\MarketplaceWebService\Mock\GetReportCountResponse.xml" />
+    <None Remove="WebService\MarketplaceWebService\Mock\GetReportListByNextTokenResponse.xml" />
+    <None Remove="WebService\MarketplaceWebService\Mock\GetReportListResponse.xml" />
+    <None Remove="WebService\MarketplaceWebService\Mock\GetReportRequestCountResponse.xml" />
+    <None Remove="WebService\MarketplaceWebService\Mock\GetReportRequestListByNextTokenResponse.xml" />
+    <None Remove="WebService\MarketplaceWebService\Mock\GetReportRequestListResponse.xml" />
+    <None Remove="WebService\MarketplaceWebService\Mock\GetReportResponse.xml" />
+    <None Remove="WebService\MarketplaceWebService\Mock\GetReportScheduleCountResponse.xml" />
+    <None Remove="WebService\MarketplaceWebService\Mock\GetReportScheduleListByNextTokenResponse.xml" />
+    <None Remove="WebService\MarketplaceWebService\Mock\GetReportScheduleListResponse.xml" />
+    <None Remove="WebService\MarketplaceWebService\Mock\ManageReportScheduleResponse.xml" />
+    <None Remove="WebService\MarketplaceWebService\Mock\RequestReportResponse.xml" />
+    <None Remove="WebService\MarketplaceWebService\Mock\SubmitFeedResponse.xml" />
+    <None Remove="WebService\MarketplaceWebService\Mock\UpdateReportAcknowledgementsResponse.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
@@ -39,7 +62,30 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MarketplaceWebService\MarketplaceWebService.csproj" />
+    <EmbeddedResource Include="WebService\MarketplaceWebService\Mock\CancelFeedSubmissionsResponse.xml" />
+    <EmbeddedResource Include="WebService\MarketplaceWebService\Mock\CancelReportRequestsResponse.xml" />
+    <EmbeddedResource Include="WebService\MarketplaceWebService\Mock\GetFeedSubmissionCountResponse.xml" />
+    <EmbeddedResource Include="WebService\MarketplaceWebService\Mock\GetFeedSubmissionListByNextTokenResponse.xml" />
+    <EmbeddedResource Include="WebService\MarketplaceWebService\Mock\GetFeedSubmissionListResponse.xml" />
+    <EmbeddedResource Include="WebService\MarketplaceWebService\Mock\GetFeedSubmissionResultResponse.xml" />
+    <EmbeddedResource Include="WebService\MarketplaceWebService\Mock\GetReportCountResponse.xml" />
+    <EmbeddedResource Include="WebService\MarketplaceWebService\Mock\GetReportListByNextTokenResponse.xml" />
+    <EmbeddedResource Include="WebService\MarketplaceWebService\Mock\GetReportListResponse.xml" />
+    <EmbeddedResource Include="WebService\MarketplaceWebService\Mock\GetReportRequestCountResponse.xml" />
+    <EmbeddedResource Include="WebService\MarketplaceWebService\Mock\GetReportRequestListByNextTokenResponse.xml" />
+    <EmbeddedResource Include="WebService\MarketplaceWebService\Mock\GetReportRequestListResponse.xml" />
+    <EmbeddedResource Include="WebService\MarketplaceWebService\Mock\GetReportResponse.xml" />
+    <EmbeddedResource Include="WebService\MarketplaceWebService\Mock\GetReportScheduleCountResponse.xml" />
+    <EmbeddedResource Include="WebService\MarketplaceWebService\Mock\GetReportScheduleListByNextTokenResponse.xml" />
+    <EmbeddedResource Include="WebService\MarketplaceWebService\Mock\GetReportScheduleListResponse.xml" />
+    <EmbeddedResource Include="WebService\MarketplaceWebService\Mock\ManageReportScheduleResponse.xml" />
+    <EmbeddedResource Include="WebService\MarketplaceWebService\Mock\RequestReportResponse.xml" />
+    <EmbeddedResource Include="WebService\MarketplaceWebService\Mock\SubmitFeedResponse.xml" />
+    <EmbeddedResource Include="WebService\MarketplaceWebService\Mock\UpdateReportAcknowledgementsResponse.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Migrations\" />
   </ItemGroup>
 
 </Project>

@@ -10,6 +10,8 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 	/// </summary>
 	public interface IReportRequestFactoryFba
 	{
+		#region FBA Inventory Reports
+
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_AFN_INVENTORY_DATA_ <para />
 		/// Tab-delimited flat file. Content updated in near real-time. For FBA sellers only. <para />
@@ -203,5 +205,23 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// <returns></returns>
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		ReportRequestPropertiesContainer GenerateRequestForReportGetStrandedInventoryUiData(MwsMarketplaceGroup requestedMarketplacesGroup = null);
+
+		#endregion
+
+		#region FBA Payment Reports
+
+		/// <summary>
+		/// Generate a request object for a MWS report of type : _GET_FBA_ESTIMATED_FBA_FEES_TXT_DATA_ <para />
+		/// Tab-delimited flat file. Contains the estimated Amazon Selling and Fulfillment Fees for your FBA inventory with active offers. <para />
+		/// The content is updated at least once every 72 hours. <para />
+		/// To successfully generate a report, specify the StartDate parameter of a minimum 72 hours prior to NOW and EndDate to NOW.<para />
+		/// For FBA sellers in the NA and EU only. For Marketplace and Seller Central sellers.						<para />																					
+		/// </summary>
+		/// <param name="requestedMarketplacesGroup">Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <returns></returns>
+		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
+		ReportRequestPropertiesContainer GenerateRequestForReportFbaFeePreviewReport(DateTime startDate, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+
+		#endregion
 	}
 }

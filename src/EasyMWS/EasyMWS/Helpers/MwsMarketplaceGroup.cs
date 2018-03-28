@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace MountainWarehouse.EasyMWS.Helpers
 {
@@ -27,19 +28,24 @@ namespace MountainWarehouse.EasyMWS.Helpers
 	    }
 
 	    /// <summary>
-	    /// The readonly list of marketplaces belong to this group. To add more marketplaces to this group please use the TryAddMarketplace method.
+	    /// The readonly list of marketplaces that belong to this group. To add more marketplaces to this group please use the TryAddMarketplace method.
 	    /// </summary>
-	    public ReadOnlyCollection<string> GetMarketplacesIdList => _marketplacesIdList.AsReadOnly();
+	    public IEnumerable<string> GetMarketplacesIdList => _marketplacesIdList.AsEnumerable();
 
-	    /// <summary>
-	    /// Tries to add a marketplace to the current group. <para />
-	    /// When attempting to add a marketplace to a group, please note that a group can only contain marketplaces with the same MWS endpoint as the one setup for the group at initialization.<para />
-	    /// Failure in following this convention will result in an InvalidOperationException.<para /> 
-	    /// Example: A group initialized with an european marketplace cannot also contain a north-american or asian marketplace.<para/>
-	    /// If a report has to be requested for marketplaces belonging to different MWS endpoints, then a request object has to be generated for each different MWS endpoint.
-	    /// </summary>
-	    /// <param name="marketplace"></param>
-	    public void TryAddMarketplace(MwsMarketplace marketplace)
+		/// <summary>
+		/// The readonly list of marketplace country codes that belong to this group. To add more marketplaces to this group please use the TryAddMarketplace method.
+		/// </summary>
+		public IEnumerable<string> GetMarketplacesCountryCodes => _marketplacesIdList.Select(MwsMarketplace.GetMarketplaceCountryCode);
+
+		/// <summary>
+		/// Tries to add a marketplace to the current group. <para />
+		/// When attempting to add a marketplace to a group, please note that a group can only contain marketplaces with the same MWS endpoint as the one setup for the group at initialization.<para />
+		/// Failure in following this convention will result in an InvalidOperationException.<para /> 
+		/// Example: A group initialized with an european marketplace cannot also contain a north-american or asian marketplace.<para/>
+		/// If a report has to be requested for marketplaces belonging to different MWS endpoints, then a request object has to be generated for each different MWS endpoint.
+		/// </summary>
+		/// <param name="marketplace"></param>
+		public void TryAddMarketplace(MwsMarketplace marketplace)
 	    {
 		    if (marketplace.MwsEndpoint != MwsEndpoint)
 		    {
