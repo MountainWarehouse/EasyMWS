@@ -6,7 +6,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 {
 	internal interface IRequestReportProcessor
 	{
-		ReportRequestCallback GetNonRequestedReportFromQueue(AmazonRegion region, string merchantId);
+		ReportRequestCallback GetNextFromQueueOfReportsToRequest(AmazonRegion region, string merchantId);
 		string RequestSingleQueuedReport(ReportRequestCallback reportRequestCallback, string merchantId);
 		void MoveToNonGeneratedReportsQueue(ReportRequestCallback reportRequestCallback, string reportRequestId);
 		IEnumerable<ReportRequestCallback> GetAllPendingReportFromQueue(AmazonRegion region, string merchantId);

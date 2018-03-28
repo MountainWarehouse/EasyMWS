@@ -89,7 +89,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void RequestNextReportInQueueFromAmazon()
 		{
-			var reportRequestCallbackReportQueued = _requestReportProcessor.GetNonRequestedReportFromQueue(_region, _merchantId);
+			var reportRequestCallbackReportQueued = _requestReportProcessor.GetNextFromQueueOfReportsToRequest(_region, _merchantId);
 
 			if (reportRequestCallbackReportQueued == null) return;
 
