@@ -57,6 +57,11 @@ namespace MountainWarehouse.EasyMWS.Helpers
 		    return marketplace.CountryCode;
 		}
 
+	    public static string GetMarketplaceCountryCodesAsCommaSeparatedString(IEnumerable<string> marketplaceIds)
+	    {
+		    return marketplaceIds.Select(GetMarketplaceCountryCode).Aggregate((c, n) => $"{c}, {n}");
+		}
+
 	    /// <summary>
 		/// The Canada marketplace. Shares the same amazon MWS endpoint with US and Mexico.
 		/// </summary>
