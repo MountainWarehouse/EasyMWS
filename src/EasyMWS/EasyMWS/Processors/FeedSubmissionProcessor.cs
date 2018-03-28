@@ -37,7 +37,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				&& IsFeedInASubmitFeedQueue(fscs)
 				&& IsFeedReadyForSubmission(fscs));
 
-		public string SubmitSingleQueuedFeedToAmazon(FeedSubmissionCallback feedSubmission, string merchantId)
+		public string SubmitFeedToAmazon(FeedSubmissionCallback feedSubmission, string merchantId)
 		{
 			if(feedSubmission == null || string.IsNullOrEmpty(merchantId))
 				throw new ArgumentNullException("Cannot submit queued feed to amazon due to missing feed submission information or empty merchant ID");
