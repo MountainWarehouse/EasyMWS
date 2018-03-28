@@ -17,7 +17,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		void QueueFeedsAccordingToProcessingStatus(
 			List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses);
 
-		FeedSubmissionCallback GetNextFeedFromProcessingCompleteQueue(AmazonRegion region, string merchant);
+		FeedSubmissionCallback GetNextFromQueueOfProcessingCompleteFeeds(AmazonRegion region, string merchant);
 		(Stream processingReport, string md5hash) QueryFeedProcessingReport(FeedSubmissionCallback feedSubmissionCallback, string merchant);
 		void DequeueFeedSubmissionCallback(FeedSubmissionCallback feedSubmissionCallback);
 		void MoveToRetryQueue(FeedSubmissionCallback feedSubmission);

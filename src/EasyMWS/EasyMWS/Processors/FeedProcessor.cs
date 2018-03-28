@@ -162,7 +162,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			try
 			{
 				var nextFeedWithProcessingComplete =
-					_feedSubmissionProcessor.GetNextFeedFromProcessingCompleteQueue(_region, _merchantId);
+					_feedSubmissionProcessor.GetNextFromQueueOfProcessingCompleteFeeds(_region, _merchantId);
 
 				if (nextFeedWithProcessingComplete == null) return (null, null, null);
 
