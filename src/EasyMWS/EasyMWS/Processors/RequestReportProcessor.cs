@@ -168,7 +168,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 	    }
 
 
-	    public ReportRequestCallback GetReadyForDownloadReportsFromQueue(AmazonRegion region, string merchantId) =>
+	    public ReportRequestCallback GetNextFromQueueOfReportsToDownload(AmazonRegion region, string merchantId) =>
 		    string.IsNullOrEmpty(merchantId) ? null : _reportRequestCallbackService.FirstOrDefault(
 			    rrc => rrc.AmazonRegion == region && rrc.MerchantId == merchantId
 			           && rrc.RequestReportId != null

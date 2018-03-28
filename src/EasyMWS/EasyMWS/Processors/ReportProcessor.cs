@@ -138,7 +138,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public (ReportRequestCallback reportRequestCallback, Stream stream) DownloadNextGeneratedRequestReportInQueueFromAmazon()
 		{
-			var generatedReportRequest = _requestReportProcessor.GetReadyForDownloadReportsFromQueue(_region, _merchantId);
+			var generatedReportRequest = _requestReportProcessor.GetNextFromQueueOfReportsToDownload(_region, _merchantId);
 
 			if (generatedReportRequest == null) return (null, null);
 
