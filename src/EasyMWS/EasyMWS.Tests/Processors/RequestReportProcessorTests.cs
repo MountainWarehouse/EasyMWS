@@ -306,25 +306,25 @@ namespace EasyMWS.Tests.Processors
 		[Test]
 		public void RequestReportFromAmazon_CalledWithNullReportRequestCallback_ThrowsArgumentNullException()
 		{
-			Assert.Throws<ArgumentNullException>(() => _requestReportProcessor.RequestReportFromAmazon(null, "testMerchantId"));
+			Assert.Throws<ArgumentNullException>(() => _requestReportProcessor.RequestReportFromAmazon(null));
 		}
 
 		[Test]
-		public void RequestReportFromAmazon_CalledWithNullMerchantId_ThrowsArgumentNullException()
+		public void RequestReportFromAmazon_CalledWithReportRequestCallbackWithNullReportRequestData_ThrowsArgumentNullException()
 		{
-			Assert.Throws<ArgumentNullException>(() => _requestReportProcessor.RequestReportFromAmazon(new ReportRequestCallback(), null));
+			Assert.Throws<ArgumentNullException>(() => _requestReportProcessor.RequestReportFromAmazon(new ReportRequestCallback()));
 		}
 
 		[Test]
-		public void RequestReportFromAmazon_CalledWithEmptyMerchantId_ThrowsArgumentNullException()
+		public void RequestReportFromAmazon_CalledWithReportRequestDataWithNoReportType_ThrowsArgumentNullException()
 		{
-			Assert.Throws<ArgumentNullException>(() => _requestReportProcessor.RequestReportFromAmazon(new ReportRequestCallback(), string.Empty));
+			Assert.Throws<ArgumentException>(() => _requestReportProcessor.RequestReportFromAmazon(new ReportRequestCallback{ReportRequestData = String.Empty}));
 		}
 
 		[Test]
 		public void RequestReportFromAmazon_OneInQueue_SubmitsToAmazon()
 		{
-			var reportId = _requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbacks[0], "testMerchantId");
+			var reportId = _requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbacks[0]);
 
 			_marketplaceWebServiceClientMock.Verify(mwsc => mwsc.RequestReport(It.IsAny<RequestReportRequest>()), Times.Once);
 			Assert.AreEqual("Report001", reportId);
@@ -345,7 +345,7 @@ namespace EasyMWS.Tests.Processors
 			_marketplaceWebServiceClientMock.Setup(mwscm => mwscm.RequestReport(It.IsAny<RequestReportRequest>()))
 				.Callback<RequestReportRequest>((rrr) => { requestReportRequest = rrr; });
 
-			_requestReportProcessor.RequestReportFromAmazon(reportRequestCallback, "testMerchantId");
+			_requestReportProcessor.RequestReportFromAmazon(reportRequestCallback);
 
 			Assert.AreEqual("testMerchant800", requestReportRequest.Merchant);
 			Assert.AreEqual("testReportType800", requestReportRequest.ReportType);
@@ -370,7 +370,7 @@ namespace EasyMWS.Tests.Processors
 			_marketplaceWebServiceClientMock.Setup(mwscm => mwscm.RequestReport(It.IsAny<RequestReportRequest>()))
 				.Callback<RequestReportRequest>((rrr) => { requestReportRequest = rrr; });
 
-			_requestReportProcessor.RequestReportFromAmazon(reportRequestCallback, "testMerchantId");
+			_requestReportProcessor.RequestReportFromAmazon(reportRequestCallback);
 
 			Assert.AreEqual("testMerchant800", requestReportRequest.Merchant);
 			Assert.AreEqual("testReportType800", requestReportRequest.ReportType);
@@ -746,7 +746,7 @@ namespace EasyMWS.Tests.Processors
 
 			// Act
 			var testData = _reportRequestCallbacks.Find(x => x.GeneratedReportId == "GeneratedIdTest1");
-			var result = _requestReportProcessor.DownloadGeneratedReportFromAmazon(testData, merchantId);
+			var result = _requestReportProcessor.DownloadGeneratedReportFromAmazon(testData);
 
 			// Assert
 			_marketplaceWebServiceClientMock.Verify(x => x.GetReport(It.IsAny<GetReportRequest>()), Times.Once);

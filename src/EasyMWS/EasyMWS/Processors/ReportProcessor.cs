@@ -95,7 +95,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			try
 			{
-				var reportRequestId = _requestReportProcessor.RequestReportFromAmazon(reportRequestCallbackReportQueued, _merchantId);
+				var reportRequestId = _requestReportProcessor.RequestReportFromAmazon(reportRequestCallbackReportQueued);
 
 				reportRequestCallbackReportQueued.LastRequested = DateTime.UtcNow;
 				_reportService.Update(reportRequestCallbackReportQueued);
@@ -144,7 +144,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			try
 			{
-				var stream = _requestReportProcessor.DownloadGeneratedReportFromAmazon(generatedReportRequest, _merchantId);
+				var stream = _requestReportProcessor.DownloadGeneratedReportFromAmazon(generatedReportRequest);
 
 				return (generatedReportRequest, stream);
 			}

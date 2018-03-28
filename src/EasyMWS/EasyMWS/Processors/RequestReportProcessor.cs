@@ -39,12 +39,15 @@ namespace MountainWarehouse.EasyMWS.Processors
 						    _options.ReportRequestRetryInitialDelay, _options.ReportRequestRetryInterval, _options.ReportRequestRetryType)
 				    );
 		
-	    public string RequestReportFromAmazon(ReportRequestCallback reportRequestCallback, string merchantId)
+	    public string RequestReportFromAmazon(ReportRequestCallback reportRequestCallback)
 	    {
-		    if (reportRequestCallback == null || string.IsNullOrEmpty(merchantId))
-			    throw new ArgumentNullException("Cannot submit queued feed to amazon due to missing feed submission information or empty merchant ID");
+		    var missingInformationExceptionMessage = "Cannot submit queued feed to amazon due to missing feed submission information";
+
+			if (reportRequestCallback?.ReportRequestData == null) throw new ArgumentNullException(missingInformationExceptionMessage);
 
 			var reportRequestData = JsonConvert.DeserializeObject<ReportRequestPropertiesContainer>(reportRequestCallback.ReportRequestData);
+		    if (reportRequestData?.ReportType == null) throw new ArgumentException(missingInformationExceptionMessage);
+
 			var reportRequest = new RequestReportRequest
 			{
 				Merchant = reportRequestCallback.MerchantId,
@@ -174,14 +177,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 			           && rrc.RequestReportId != null
 			           && rrc.GeneratedReportId != null);
 
-		public Stream DownloadGeneratedReportFromAmazon(ReportRequestCallback reportRequestCallback, string merchantId)
+		public Stream DownloadGeneratedReportFromAmazon(ReportRequestCallback reportRequestCallback)
 		{
 			var reportResultStream = new MemoryStream();
 			var getReportRequest = new GetReportRequest
 			{
 				ReportId = reportRequestCallback.GeneratedReportId,
 				Report = reportResultStream,
-				Merchant = merchantId
+				Merchant = reportRequestCallback.MerchantId
 			};
 
 			_marketplaceWebServiceClient.GetReport(getReportRequest);

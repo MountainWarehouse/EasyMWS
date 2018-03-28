@@ -115,7 +115,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			try
 			{
-				var feedSubmissionId = _feedSubmissionProcessor.SubmitFeedToAmazon(feedSubmission, _merchantId);
+				var feedSubmissionId = _feedSubmissionProcessor.SubmitFeedToAmazon(feedSubmission);
 
 				feedSubmission.LastSubmitted = DateTime.UtcNow;
 				_feedService.Update(feedSubmission);
@@ -166,7 +166,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 				if (nextFeedWithProcessingComplete == null) return (null, null, null);
 
-				var processingReportInfo = _feedSubmissionProcessor.GetFeedSubmissionResultFromAmazon(nextFeedWithProcessingComplete, _merchantId);
+				var processingReportInfo = _feedSubmissionProcessor.GetFeedSubmissionResultFromAmazon(nextFeedWithProcessingComplete);
 
 				return (nextFeedWithProcessingComplete, processingReportInfo.processingReport, processingReportInfo.md5hash);
 			}
