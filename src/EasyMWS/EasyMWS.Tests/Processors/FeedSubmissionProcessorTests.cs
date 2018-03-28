@@ -254,7 +254,7 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
-		public void GetAllSubmittedFeeds_ReturnsListOfSubmittedFeeds_ForGivenMerchant()
+		public void GetAllSubmittedFeedsFromQueue_ReturnsListOfSubmittedFeeds_ForGivenMerchant()
 		{
 			// Arrange
 			var testMerchantId2 = "test merchant id 2";
@@ -321,7 +321,7 @@ namespace EasyMWS.Tests.Processors
 			_feedSubmissionCallbacks.AddRange(data);
 
 			// Act
-			var listSubmittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeeds(_region, _merchantId);
+			var listSubmittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeedsFromQueue(_region, _merchantId);
 
 			// Assert
 			Assert.AreEqual(2, listSubmittedFeeds.Count());
@@ -329,7 +329,7 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
-		public void GetAllSubmittedFeeds_CalledWithNullMerchantId_ReturnsNull()
+		public void GetAllSubmittedFeedsFromQueue_CalledWithNullMerchantId_ReturnsNull()
 		{
 			var data = new List<FeedSubmissionCallback>
 			{
@@ -386,7 +386,7 @@ namespace EasyMWS.Tests.Processors
 			_feedSubmissionCallbacks.AddRange(data);
 
 			// Act
-			var listOfSubmittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeeds(_region, null);
+			var listOfSubmittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeedsFromQueue(_region, null);
 
 			// Assert
 			Assert.IsEmpty(listOfSubmittedFeeds);

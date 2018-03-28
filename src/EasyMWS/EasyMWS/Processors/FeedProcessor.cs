@@ -140,7 +140,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			try
 			{
-				var submittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeeds(_region, _merchantId).ToList();
+				var submittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeedsFromQueue(_region, _merchantId).ToList();
 
 				if (!submittedFeeds.Any())
 					return;

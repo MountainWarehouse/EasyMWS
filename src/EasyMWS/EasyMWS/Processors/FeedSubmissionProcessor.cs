@@ -75,7 +75,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_feedSubmissionCallbackService.Update(feedSubmission);
 		}
 
-		public IEnumerable<FeedSubmissionCallback> GetAllSubmittedFeeds(AmazonRegion region, string merchantId) =>
+		public IEnumerable<FeedSubmissionCallback> GetAllSubmittedFeedsFromQueue(AmazonRegion region, string merchantId) =>
 			string.IsNullOrEmpty(merchantId) ? new List<FeedSubmissionCallback>().AsEnumerable() : _feedSubmissionCallbackService.Where(
 				rrcs => rrcs.AmazonRegion == region && rrcs.MerchantId == merchantId
 				        && rrcs.FeedSubmissionId != null
