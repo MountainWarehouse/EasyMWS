@@ -109,7 +109,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void SubmitNextFeedInQueueToAmazon()
 		{
-			var feedSubmission = _feedSubmissionProcessor.GetNextFeedToSubmitFromQueue(_region, _merchantId);
+			var feedSubmission = _feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit(_region, _merchantId);
 
 			if (feedSubmission == null) return;
 

@@ -57,7 +57,7 @@ namespace EasyMWS.Tests.Processors
 
 		[Test]
 		public void
-			GetNextFeedToSubmitFromQueue_ReturnsFirstFeedSubmissionFromQueueWithNullFeedSubmissionId_AndSkipsEntriesWithNonNullFeedSubmissionId()
+			GetNextFromQueueOfFeedsToSubmit_ReturnsFirstFeedSubmissionFromQueueWithNullFeedSubmissionId_AndSkipsEntriesWithNonNullFeedSubmissionId()
 		{
 			var testMerchantId = "test merchant id";
 			var feedSubmissionWithNonNullFeedSubmissionId1 = new FeedSubmissionCallback
@@ -91,14 +91,14 @@ namespace EasyMWS.Tests.Processors
 			_feedSubmissionCallbacks.Add(feedSubmissionWithNullFeedSubmissionId2);
 
 			var feedSubmissionCallback =
-				_feedSubmissionProcessor.GetNextFeedToSubmitFromQueue(AmazonRegion.Europe, testMerchantId);
+				_feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit(AmazonRegion.Europe, testMerchantId);
 
 			Assert.IsNotNull(feedSubmissionCallback);
 			Assert.AreEqual(feedSubmissionWithNullFeedSubmissionId1.Id, feedSubmissionCallback.Id);
 		}
 
 		[Test]
-		public void GetNextFeedToSubmitFromQueue_ReturnsFirstFeedSubmissionFromQueueForGivenRegionAndMerchantId()
+		public void GetNextFromQueueOfFeedsToSubmit_ReturnsFirstFeedSubmissionFromQueueForGivenRegionAndMerchantId()
 		{
 			var merchantId1 = "test merchant id 1";
 			var merchantId2 = "test merchant id 2";
@@ -142,14 +142,14 @@ namespace EasyMWS.Tests.Processors
 			_feedSubmissionCallbacks.Add(feedSubmissionWithSameRegionAndMerchantId2);
 
 			var feedSubmissionCallback =
-				_feedSubmissionProcessor.GetNextFeedToSubmitFromQueue(AmazonRegion.Australia, merchantId2);
+				_feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit(AmazonRegion.Australia, merchantId2);
 
 			Assert.IsNotNull(feedSubmissionCallback);
 			Assert.AreEqual(feedSubmissionWithSameRegionAndMerchantId1.Id, feedSubmissionCallback.Id);
 		}
 
 		[Test]
-		public void GetNextFeedToSubmitFromQueue_CalledWithNullMerchantId_ReturnsNull()
+		public void GetNextFromQueueOfFeedsToSubmit_CalledWithNullMerchantId_ReturnsNull()
 		{
 			var testMerchantId = "test merchant id";
 			var feedSubmissionWithNonNullFeedSubmissionId1 = new FeedSubmissionCallback
@@ -192,7 +192,7 @@ namespace EasyMWS.Tests.Processors
 			_feedSubmissionCallbacks.Add(feedSubmissionWithNullMerchant);
 
 			var feedSubmissionCallback =
-				_feedSubmissionProcessor.GetNextFeedToSubmitFromQueue(AmazonRegion.Europe, null);
+				_feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit(AmazonRegion.Europe, null);
 
 			Assert.IsNull(feedSubmissionCallback);
 		}
