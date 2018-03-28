@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MountainWarehouse.EasyMWS.Model;
 
-namespace MountainWarehouse.EasyMWS.Helpers
+namespace MountainWarehouse.EasyMWS.Model
 {
     public sealed class MwsMarketplace
     {
