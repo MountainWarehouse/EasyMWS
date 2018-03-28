@@ -19,7 +19,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		FeedSubmissionCallback GetNextFromQueueOfProcessingCompleteFeeds(AmazonRegion region, string merchant);
 		(Stream processingReport, string md5hash) GetFeedSubmissionResultFromAmazon(FeedSubmissionCallback feedSubmissionCallback, string merchant);
-		void DequeueFeedSubmissionCallback(FeedSubmissionCallback feedSubmissionCallback);
+		void RemoveFromQueue(FeedSubmissionCallback feedSubmissionCallback);
 		void MoveToRetryQueue(FeedSubmissionCallback feedSubmission);
 	}
 }

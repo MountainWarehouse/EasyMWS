@@ -188,7 +188,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 				_callbackActivator.CallMethod(callback, stream);
 
-				_feedSubmissionProcessor.DequeueFeedSubmissionCallback(feedSubmissionCallback);
+				_feedSubmissionProcessor.RemoveFromQueue(feedSubmissionCallback);
 			}
 			catch (Exception e)
 			{

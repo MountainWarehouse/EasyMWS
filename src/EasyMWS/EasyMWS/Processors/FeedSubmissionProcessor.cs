@@ -158,7 +158,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			return (reportResultStream, response.GetFeedSubmissionResultResult.ContentMD5);
 		}
 
-		public void DequeueFeedSubmissionCallback(FeedSubmissionCallback feedSubmissionCallback)
+		public void RemoveFromQueue(FeedSubmissionCallback feedSubmissionCallback)
 		{
 			_feedSubmissionCallbackService.Delete(feedSubmissionCallback);
 		}
