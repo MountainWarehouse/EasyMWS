@@ -58,6 +58,20 @@ namespace MountainWarehouse.EasyMWS.Model
 		public int FeedResultFailedChecksumMaxRetryCount { get; set; }
 
 		/// <summary>
+		/// Default=false. Normally reports downloaded from amazon are not stored in the local EasyMws database.<para/>
+		/// If this is set to 'True', all reports downloaded from Amazon will be stored in the local EasyMws database, so they will be available after the QueueReport callback method is called.<para/>
+		/// Any stored reports will automatically be deleted after a period of time specified with the 'KeepAmazonReportsLocallyForTimePeriod' option.<para/>
+		/// The purpose of this option is to provide access to any downloaded reports in case something goes wrong with the QueueReport callback, without the need to queue the same report again.
+		/// </summary>
+		public bool KeepAmazonReportsInLocalDbAfterCallbackIsPerformed { get; set; }
+
+		/// <summary>
+		/// Default= 1 Day. If the 'KeepAmazonReportsLocallyAfterCallbackIsPerformed' option is enabled (it is disabled by default),<para/>
+		/// this option specify for how long any reports downloaded from Amazon will be kept in the local database before they are automatically deleted.
+		/// </summary>
+		public TimeSpan KeepAmazonReportsLocallyForTimePeriod { get; set; }
+
+	    /// <summary>
 		/// The set of default settings that will be used if no custom settings are specified.
 		/// </summary>
 		public static EasyMwsOptions Defaults = new EasyMwsOptions
@@ -73,7 +87,10 @@ namespace MountainWarehouse.EasyMWS.Model
 			FeedSubmissionRetryInterval = TimeSpan.FromHours(5),
 
 			FeedResultFailedChecksumRetryInterval = TimeSpan.FromMinutes(2),
-			FeedResultFailedChecksumMaxRetryCount = 3
+			FeedResultFailedChecksumMaxRetryCount = 3,
+
+			KeepAmazonReportsInLocalDbAfterCallbackIsPerformed = false,
+			KeepAmazonReportsLocallyForTimePeriod = TimeSpan.FromDays(1)
 		};
 	}
 
