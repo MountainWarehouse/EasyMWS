@@ -84,8 +84,4 @@
     <EmbeddedResource Include="WebService\MarketplaceWebService\Mock\UpdateReportAcknowledgementsResponse.xml" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Migrations\" />
-  </ItemGroup>
-
 </Project>
