@@ -72,7 +72,7 @@ namespace MountainWarehouse.EasyMWS
 		/// </summary>
 		public void Poll()
 		{
-			_logger.Info("Polling operation has been triggered!");
+
 
 			//TODO: For each request of any kind made to amazon, record RequestId and Timestamp. Either retain these for 30 days (config option On/Off) and/or return this info to the caller.
 			//For more info see: https://docs.developer.amazonservices.com/en_US/dev_guide/DG_ResponseFormat.html

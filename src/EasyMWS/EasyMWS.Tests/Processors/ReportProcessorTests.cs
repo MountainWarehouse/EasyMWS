@@ -224,14 +224,17 @@ namespace EasyMWS.Tests.ReportProcessors
 		[Test]
 		public void Poll_DeletesReportRequests_WithRetryCountAboveMaxRetryCount()
 		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+
 			var testReportRequestCallbacks = new List<ReportRequestCallback>
 			{
-				new ReportRequestCallback {Id = 1, RequestRetryCount = 0},
-				new ReportRequestCallback {Id = 2, RequestRetryCount = 1},
-				new ReportRequestCallback {Id = 3, RequestRetryCount = 2},
-				new ReportRequestCallback {Id = 4, RequestRetryCount = 3},
-				new ReportRequestCallback {Id = 5, RequestRetryCount = 4},
-				new ReportRequestCallback {Id = 5, RequestRetryCount = 5}
+				new ReportRequestCallback {Id = 1, RequestRetryCount = 0, ReportRequestData = serializedReportRequestData},
+				new ReportRequestCallback {Id = 2, RequestRetryCount = 1, ReportRequestData = serializedReportRequestData},
+				new ReportRequestCallback {Id = 3, RequestRetryCount = 2, ReportRequestData = serializedReportRequestData},
+				new ReportRequestCallback {Id = 4, RequestRetryCount = 3, ReportRequestData = serializedReportRequestData},
+				new ReportRequestCallback {Id = 5, RequestRetryCount = 4, ReportRequestData = serializedReportRequestData},
+				new ReportRequestCallback {Id = 5, RequestRetryCount = 5, ReportRequestData = serializedReportRequestData}
 			}.AsQueryable();
 			_reportRequestCallbackServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(testReportRequestCallbacks);
 

@@ -53,6 +53,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void Poll()
 		{
+			_logger.Info("EasyMwsClient: Executing polling action for report requests.");
 			try
 			{
 				CleanUpReportRequestQueue();
@@ -89,12 +90,19 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void CleanUpReportRequestQueue()
 		{
+			_logger.Info("EasyMwsClient: Executing cleanup of report request queues.");
 			var expiredReportRequests = _reportService.GetAll()
 				.Where(rrc => rrc.RequestRetryCount > _options.ReportRequestMaxRetryCount);
 
-			foreach (var reportRequest in expiredReportRequests)
+			if (expiredReportRequests.Any())
 			{
-				_reportService.Delete(reportRequest);
+				_logger.Warn("EasyMwsClient: Report requests have expired for the following report types, and will now be deleted :");
+				foreach (var expiredReport in expiredReportRequests)
+				{
+					var reportType = expiredReport?.GetPropertiesContainer()?.ReportType;
+					_logger.Warn($"EasyMwsClient: reportType='{reportType}' for region {expiredReport?.AmazonRegion.ToString()}");
+					_reportService.Delete(expiredReport);
+				}
 			}
 		}
 
