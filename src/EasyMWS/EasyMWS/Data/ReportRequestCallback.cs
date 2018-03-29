@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using MountainWarehouse.EasyMWS.Enums;
+using MountainWarehouse.EasyMWS.Model;
+using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS.Data
 {
@@ -43,4 +45,12 @@ namespace MountainWarehouse.EasyMWS.Data
 	    public ReportRequestCallback(Callback callback) => (TypeName, MethodName, Data, DataTypeName) =
 		    (callback.TypeName, callback.MethodName, callback.Data, callback.DataTypeName);
     }
+
+	internal static class ReportRequestCallbackExtensions
+	{
+		internal static ReportRequestPropertiesContainer GetPropertiesContainer(this ReportRequestCallback source)
+		{
+			return JsonConvert.DeserializeObject<ReportRequestPropertiesContainer>(source.ReportRequestData);
+		}
+	}
 }
