@@ -10,6 +10,7 @@ namespace MountainWarehouse.EasyMWS.Data
 	    public string DownloadRequestId { get; set; }
 	    public string DownloadTimestamp { get; set; }
 	    public string Content { get; set; }
+	    public string ReportType { get; set; }
 	    public DateTime DateCreated { get; set; }
     }
 }
