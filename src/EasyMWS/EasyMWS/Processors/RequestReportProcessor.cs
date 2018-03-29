@@ -50,7 +50,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			if (reportRequestCallback?.ReportRequestData == null) throw new ArgumentNullException(missingInformationExceptionMessage);
 
-			var reportRequestData = JsonConvert.DeserializeObject<ReportRequestPropertiesContainer>(reportRequestCallback.ReportRequestData);
+			var reportRequestData = reportRequestCallback.GetPropertiesContainer();
 		    if (reportRequestData?.ReportType == null) throw new ArgumentException(missingInformationExceptionMessage);
 
 			var reportRequest = new RequestReportRequest
@@ -198,9 +198,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    if (_options.KeepAmazonReportsInLocalDbAfterCallbackIsPerformed)
 		    {
 
-			    var requestPropertyContainer = reportRequestCallback?.ReportRequestData != null
-				    ? JsonConvert.DeserializeObject<ReportRequestPropertiesContainer>(reportRequestCallback.ReportRequestData)
-				    : null;
+			    var requestPropertyContainer = reportRequestCallback.GetPropertiesContainer();
 			    var reportType = requestPropertyContainer?.ReportType ?? "unknown";
 
 			    var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";

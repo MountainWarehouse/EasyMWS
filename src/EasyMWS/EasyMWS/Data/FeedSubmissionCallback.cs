@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using MountainWarehouse.EasyMWS.Enums;
+using MountainWarehouse.EasyMWS.Model;
+using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS.Data
 {
@@ -39,5 +41,13 @@ namespace MountainWarehouse.EasyMWS.Data
 
 		public FeedSubmissionCallback(Callback callback) => (TypeName, MethodName, Data, DataTypeName) =
 			(callback.TypeName, callback.MethodName, callback.Data, callback.DataTypeName);
+	}
+
+	internal static class FeedSubmissionCallbackExtensions
+	{
+		internal static FeedSubmissionPropertiesContainer GetPropertiesContainer(this FeedSubmissionCallback source)
+		{
+			return JsonConvert.DeserializeObject<FeedSubmissionPropertiesContainer>(source.FeedSubmissionData);
+		}
 	}
 }

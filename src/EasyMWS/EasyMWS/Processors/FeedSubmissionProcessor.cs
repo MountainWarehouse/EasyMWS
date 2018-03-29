@@ -45,7 +45,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			if (feedSubmission?.FeedSubmissionData == null) throw new ArgumentNullException(missingInformationExceptionMessage);
 
-			var feedSubmissionData = JsonConvert.DeserializeObject<FeedSubmissionPropertiesContainer>(feedSubmission.FeedSubmissionData);
+			var feedSubmissionData = feedSubmission.GetPropertiesContainer();
 			if (feedSubmissionData?.FeedType == null) throw new ArgumentException(missingInformationExceptionMessage);
 
 			using (var stream = StreamHelper.CreateNewMemoryStream(feedSubmissionData.FeedContent))
