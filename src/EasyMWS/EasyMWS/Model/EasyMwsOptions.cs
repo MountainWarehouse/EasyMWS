@@ -8,52 +8,52 @@ namespace MountainWarehouse.EasyMWS.Model
     public class EasyMwsOptions
     {
 		/// <summary>
-		/// When requesting a report from amazon fails, specify how many times to retry the same request.
+		/// Default=4. When requesting a report from amazon fails, specify how many times to retry the same request.
 		/// </summary>
 	    public int ReportRequestMaxRetryCount { get; set; }
 
 		/// <summary>
-		/// When requesting a report from amazon fails, specify the time series type for request retries.
+		/// Default=GeometricProgression. When requesting a report from amazon fails, specify the time series type for request retries.
 		/// </summary>
 		public RetryPeriodType ReportRequestRetryType { get; set; }
 
 		/// <summary>
-		/// When requesting a report from amazon fails, specify the initial delay awaited before the first request retry is performed.
+		/// Default=15minutes. When requesting a report from amazon fails, specify the initial delay awaited before the first request retry is performed.
 		/// </summary>
 		public TimeSpan ReportRequestRetryInitialDelay { get; set; }
 
 		/// <summary>
-		/// When requesting a report from amazon fails, specify the time-step used to calculate how often request retries will be performed. 
+		/// Default=1hour. When requesting a report from amazon fails, specify the time-step used to calculate how often request retries will be performed. 
 		/// </summary>
 		public TimeSpan ReportRequestRetryInterval { get; set; }
 
 		/// <summary>
-		/// When requesting a FeedSubmission from amazon fails, specify how many times to retry the same request.
+		/// Default=3. When requesting a FeedSubmission from amazon fails, specify how many times to retry the same request.
 		/// </summary>
 		public int FeedSubmissionMaxRetryCount { get; set; }
 
 		/// <summary>
-		/// When requesting a FeedSubmission from amazon fails, specify the time series type for request retries.
+		/// Default=ArithmeticProgression. When requesting a FeedSubmission from amazon fails, specify the time series type for request retries.
 		/// </summary>
 		public RetryPeriodType FeedSubmissionRetryType { get; set; }
 
 		/// <summary>
-		/// When requesting a FeedSubmission from amazon fails, specify the initial delay awaited before the first request retry is performed.
+		/// Default=2minutes. When requesting a FeedSubmission from amazon fails, specify the initial delay awaited before the first request retry is performed.
 		/// </summary>
 		public TimeSpan FeedSubmissionRetryInitialDelay { get; set; }
 
 		/// <summary>
-		/// When requesting a FeedSubmission from amazon fails, specify the time-step used to calculate how often request retries will be performed. 
+		/// Default=5hours. When requesting a FeedSubmission from amazon fails, specify the time-step used to calculate how often request retries will be performed. 
 		/// </summary>
 		public TimeSpan FeedSubmissionRetryInterval { get; set; }
 
 		/// <summary>
-		/// If the checksum verification fails for a feed submission report received from Amazon, specify the the time-step used to calculate how often the feed submission report request will be retried. 
+		/// Default=2minutes. If the checksum verification fails for a feed submission report received from Amazon, specify the the time-step used to calculate how often the feed submission report request will be retried. 
 		/// </summary>
 		public TimeSpan FeedResultFailedChecksumRetryInterval { get; set; }
 
 		/// <summary>
-		/// If the checksum verification fails for a feed submission report received from Amazon, specify how many times the feed submission report request will be retried. 
+		/// Default=3. If the checksum verification fails for a feed submission report received from Amazon, specify how many times the feed submission report request will be retried. 
 		/// </summary>
 		public int FeedResultFailedChecksumMaxRetryCount { get; set; }
 
@@ -66,13 +66,29 @@ namespace MountainWarehouse.EasyMWS.Model
 		public bool KeepAmazonReportsInLocalDbAfterCallbackIsPerformed { get; set; }
 
 		/// <summary>
-		/// Default= 1 Day. If the 'KeepAmazonReportsLocallyAfterCallbackIsPerformed' option is enabled (it is disabled by default),<para/>
+		/// Default=1day. If the 'KeepAmazonReportsLocallyAfterCallbackIsPerformed' option is enabled (it is disabled by default),<para/>
 		/// this option specify for how long any reports downloaded from Amazon will be kept in the local database before they are automatically deleted.
 		/// </summary>
 		public TimeSpan KeepAmazonReportsLocallyForTimePeriod { get; set; }
 
-	    /// <summary>
-		/// The set of default settings that will be used if no custom settings are specified.
+		/// <summary>
+		/// The set of default settings that will be used if no custom settings are specified.<para/>
+		/// <para/>
+		/// ReportRequestMaxRetryCount = 4,<para/>
+		/// ReportRequestRetryType = GeometricProgression,<para/>
+		/// ReportRequestRetryInitialDelay = Minutes(15),<para/>
+		/// ReportRequestRetryInterval = Hours(1),<para/>
+		/// <para/>
+		/// FeedSubmissionMaxRetryCount = 3,<para/>
+		/// FeedSubmissionRetryType = ArithmeticProgression,<para/>
+		/// FeedSubmissionRetryInitialDelay = Minutes(2),<para/>
+		/// FeedSubmissionRetryInterval = Hours(5),<para/>
+		/// <para/>
+		/// FeedResultFailedChecksumRetryInterval = Minutes(2),<para/>
+		/// FeedResultFailedChecksumMaxRetryCount = 3,<para/>
+		/// <para/>
+		/// KeepAmazonReportsInLocalDbAfterCallbackIsPerformed = false,<para/>
+		/// KeepAmazonReportsLocallyForTimePeriod = Days(1)<para/>
 		/// </summary>
 		public static EasyMwsOptions Defaults = new EasyMwsOptions
 		{
