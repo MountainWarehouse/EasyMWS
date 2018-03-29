@@ -203,9 +203,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 				    : null;
 			    var reportType = requestPropertyContainer?.ReportType ?? "unknown";
 
-			    var requestId = response.ResponseHeaderMetadata.RequestId;
-			    var timestamp = response.ResponseHeaderMetadata.Timestamp;
-			    StoreAmazonReportToInternalStorage(reportContentStream, reportType, requestId, timestamp);
+			    var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
+			    var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
+				StoreAmazonReportToInternalStorage(reportContentStream, reportType, requestId, timestamp);
 		    }
 
 		    return reportContentStream;
@@ -229,7 +229,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var sr = new StreamReader(reportContent);
 		    reportContent.Position = 0;
 		    sb.Append(sr.ReadToEnd());
-			sr.Close();
 		    reportContent.Position = 0;
 
 		    _amazonReportStorageService.Create(new AmazonReport
