@@ -757,6 +757,97 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
+		public void DownloadGeneratedReportFromAmazon_WithStoreReportsEnabled_CallsCreateAmazonReport_WithExpectedObject()
+		{
+			// Arrange
+			var merchantId = "testMerchantId";
+			_easyMwsOptions.KeepAmazonReportsInLocalDbAfterCallbackIsPerformed = true;
+
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType",ContentUpdateFrequency.Unknown);
+
+			var reportRequestCallback = new ReportRequestCallback
+			{
+				Data = null,
+				AmazonRegion = AmazonRegion.Europe,
+				Id = 4,
+				RequestReportId = "Report3",
+				GeneratedReportId = "GeneratedIdTest1",
+				ReportRequestData = JsonConvert.SerializeObject(propertiesContainer)
+			};
+			_reportRequestCallbacks.Add(reportRequestCallback);
+			AmazonReport amazonReportCreateArgument = null;
+			_amazonReportServiceMock.Setup(arsm => arsm.Create(It.IsAny<AmazonReport>()))
+				.Callback<AmazonReport>(report => { amazonReportCreateArgument = report; });
+			_marketplaceWebServiceClientMock.Setup(mwscm => mwscm.GetReport(It.IsAny<GetReportRequest>()))
+				.Returns(new GetReportResponse
+				{
+					ResponseHeaderMetadata = new ResponseHeaderMetadata("testRequestId", null, "testTimestamp")
+				})
+				.Callback<GetReportRequest>(request =>
+				{
+					request.Report = StreamHelper.CreateNewMemoryStream("testReportContent");
+				});
+
+			// Act
+			var testData = _reportRequestCallbacks.Find(x => x.GeneratedReportId == "GeneratedIdTest1");
+			var result = _requestReportProcessor.DownloadGeneratedReportFromAmazon(testData);
+
+			// Assert
+			_marketplaceWebServiceClientMock.Verify(x => x.GetReport(It.IsAny<GetReportRequest>()), Times.Once);
+			_amazonReportServiceMock.Verify(arsm=>arsm.Create(It.IsAny<AmazonReport>()), Times.Once);
+			_amazonReportServiceMock.Verify(arsm => arsm.SaveChanges(), Times.Once);
+			Assert.IsNotNull(result);
+			Assert.AreEqual("testReportType", amazonReportCreateArgument.ReportType);
+			Assert.AreEqual("testRequestId", amazonReportCreateArgument.DownloadRequestId);
+			Assert.AreEqual("testTimestamp", amazonReportCreateArgument.DownloadTimestamp);
+			Assert.IsTrue(DateTime.Compare(DateTime.UtcNow, amazonReportCreateArgument.DateCreated.AddMinutes(-5)) > 0);
+			Assert.AreEqual("testReportContent", amazonReportCreateArgument.Content);
+		}
+
+		[Test]
+		public void DownloadGeneratedReportFromAmazon_WithStoreReportsDisabled_NeverCallsCreateAmazonReport()
+		{
+			// Arrange
+			var merchantId = "testMerchantId";
+			_easyMwsOptions.KeepAmazonReportsInLocalDbAfterCallbackIsPerformed = false;
+
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+
+			var reportRequestCallback = new ReportRequestCallback
+			{
+				Data = null,
+				AmazonRegion = AmazonRegion.Europe,
+				Id = 4,
+				RequestReportId = "Report3",
+				GeneratedReportId = "GeneratedIdTest1",
+				ReportRequestData = JsonConvert.SerializeObject(propertiesContainer)
+			};
+			_reportRequestCallbacks.Add(reportRequestCallback);
+			AmazonReport amazonReportCreateArgument = null;
+			_amazonReportServiceMock.Setup(arsm => arsm.Create(It.IsAny<AmazonReport>()))
+				.Callback<AmazonReport>(report => { amazonReportCreateArgument = report; });
+			_marketplaceWebServiceClientMock.Setup(mwscm => mwscm.GetReport(It.IsAny<GetReportRequest>()))
+				.Returns(new GetReportResponse
+				{
+					ResponseHeaderMetadata = new ResponseHeaderMetadata("testRequestId", null, "testTimestamp")
+				})
+				.Callback<GetReportRequest>(request =>
+				{
+					request.Report = StreamHelper.CreateNewMemoryStream("testReportContent");
+				});
+
+			// Act
+			var testData = _reportRequestCallbacks.Find(x => x.GeneratedReportId == "GeneratedIdTest1");
+			var result = _requestReportProcessor.DownloadGeneratedReportFromAmazon(testData);
+
+			// Assert
+			_marketplaceWebServiceClientMock.Verify(x => x.GetReport(It.IsAny<GetReportRequest>()), Times.Once);
+			_amazonReportServiceMock.Verify(arsm => arsm.Create(It.IsAny<AmazonReport>()), Times.Never);
+			_amazonReportServiceMock.Verify(arsm => arsm.SaveChanges(), Times.Never);
+			Assert.IsNotNull(result);
+		}
+
+		[Test]
 		public void MoveToRetryQueue_CalledOnce_IncrementsRequestRetryCountCorrectly()
 		{
 			Assert.AreEqual(0, _reportRequestCallbacks.First().RequestRetryCount);
