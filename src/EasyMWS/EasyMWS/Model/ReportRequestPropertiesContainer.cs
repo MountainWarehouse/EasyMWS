@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using MountainWarehouse.EasyMWS.Enums;
 
-namespace MountainWarehouse.EasyMWS.Helpers
+namespace MountainWarehouse.EasyMWS.Model
 {
 	[Serializable]
 	public class ReportRequestPropertiesContainer

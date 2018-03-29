@@ -2,8 +2,10 @@
 using System.IO;
 using System.Linq;
 using MountainWarehouse.EasyMWS.Data;
+using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Logging;
+using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Services;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
 using Newtonsoft.Json;
@@ -52,8 +54,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				CleanUpReportRequestQueue();
 				RequestNextReportInQueueFromAmazon();
+				_reportService.SaveChanges();
+
 				RequestReportStatusesFromAmazon();
+				_reportService.SaveChanges();
+
 				var generatedReportRequestCallback = DownloadNextReportInQueueFromAmazon();
+				_reportService.SaveChanges();
+
 				ExecuteCallback(generatedReportRequestCallback.reportRequestCallback, generatedReportRequestCallback.stream);
 				_reportService.SaveChanges();
 			}

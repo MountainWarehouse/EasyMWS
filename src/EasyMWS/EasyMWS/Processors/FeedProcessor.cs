@@ -2,8 +2,10 @@
 using System.IO;
 using System.Linq;
 using MountainWarehouse.EasyMWS.Data;
+using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Logging;
+using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Services;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
 using Newtonsoft.Json;
@@ -48,8 +50,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				CleanUpFeedSubmissionQueue();
 				SubmitNextFeedInQueueToAmazon();
+				_feedService.SaveChanges();
+
 				RequestFeedSubmissionStatusesFromAmazon();
+				_feedService.SaveChanges();
+
 				var amazonProcessingReport = RequestNextFeedSubmissionInQueueFromAmazon();
+				_feedService.SaveChanges();
 
 				// TODO: log a warning for each hash miss-match, and recommend to the user to notify Amazon that a corrupted body was received. 
 				if (amazonProcessingReport.feedSubmissionCallback != null)

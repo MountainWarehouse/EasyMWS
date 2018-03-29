@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using MountainWarehouse.EasyMWS.Model;
 
-namespace MountainWarehouse.EasyMWS.Helpers
+namespace MountainWarehouse.EasyMWS.Model
 {
 	/// <summary>
 	/// This is meant to be used as optional argument for MWS report request generation methods from ReportRequestFactoryFba, in order to provide them with groups of marketplaces for which a report should

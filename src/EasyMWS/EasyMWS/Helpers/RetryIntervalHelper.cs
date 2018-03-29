@@ -1,4 +1,5 @@
 ﻿using System;
+using MountainWarehouse.EasyMWS.Model;
 
 namespace MountainWarehouse.EasyMWS.Helpers
 {

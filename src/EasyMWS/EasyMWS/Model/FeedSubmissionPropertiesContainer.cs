@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace MountainWarehouse.EasyMWS.Helpers
+namespace MountainWarehouse.EasyMWS.Model
 {
 	[Serializable]
     public class FeedSubmissionPropertiesContainer
@@ -29,12 +29,6 @@ namespace MountainWarehouse.EasyMWS.Helpers
 		/// </summary>
 		public bool? PurgeAndReplace { get; set; }
 
-		/// <summary>
-		/// An MD5 hash of the feed content. Amazon MWS uses this value to determine if 
-		/// the feed data has been corrupted or tampered with during transit. This replaces the Content-MD5 header.
-		/// </summary>
-		public string ContentMD5Value { get; set; }
-
 		#endregion
 
 		/// <summary>
@@ -54,11 +48,10 @@ namespace MountainWarehouse.EasyMWS.Helpers
 		/// <param name="feedContent"></param>
 		/// <param name="feedType"></param>
 		/// <param name="purgeAndReplace"></param>
-		/// <param name="mdContentMd5Value"></param>
 		/// <param name="marketplaceIdList"></param>
 		public FeedSubmissionPropertiesContainer(string feedContent, string feedType, bool? purgeAndReplace = null,
-		    string mdContentMd5Value = null, List<string> marketplaceIdList = null) =>
-		    (FeedContent, FeedType, PurgeAndReplace, ContentMD5Value, MarketplaceIdList) =
-		    (feedContent, feedType, purgeAndReplace, ContentMD5Value, marketplaceIdList);
+		    List<string> marketplaceIdList = null) =>
+		    (FeedContent, FeedType, PurgeAndReplace, MarketplaceIdList) =
+		    (feedContent, feedType, purgeAndReplace, marketplaceIdList);
     }
 }

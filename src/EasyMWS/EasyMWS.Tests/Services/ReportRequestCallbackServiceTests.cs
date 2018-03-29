@@ -7,6 +7,7 @@ using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
+using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Repositories;
 using MountainWarehouse.EasyMWS.Services;
 using Newtonsoft.Json;

@@ -1,6 +1,8 @@
 ﻿using MountainWarehouse.EasyMWS;
+using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Logging;
+using MountainWarehouse.EasyMWS.Model;
 using NUnit.Framework;
 
 namespace EasyMWS.Tests.Logging

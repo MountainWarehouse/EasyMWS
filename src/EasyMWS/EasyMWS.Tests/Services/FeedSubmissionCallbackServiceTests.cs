@@ -3,7 +3,9 @@ using System.Linq;
 using Moq;
 using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.Data;
+using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
+using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Repositories;
 using MountainWarehouse.EasyMWS.Services;
 using Newtonsoft.Json;
@@ -20,7 +22,7 @@ namespace EasyMWS.Tests.Services
 	    public void Setup()
 	    {
 		    var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType", false,
-			    "testContentMd5Value", new List<string>(MwsMarketplaceGroup.AmazonEurope()));
+			    new List<string>(MwsMarketplaceGroup.AmazonEurope()));
 
 		    var feedSubmissionCallbacks = new List<FeedSubmissionCallback>
 		    {
