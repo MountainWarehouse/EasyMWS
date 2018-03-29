@@ -12,9 +12,10 @@ using System;
 namespace MountainWarehouse.EasyMWS.Migrations
 {
     [DbContext(typeof(EasyMwsContext))]
-    partial class EasyMwsContextModelSnapshot : ModelSnapshot
+    [Migration("20180329133053_CreateAmazonReportTable")]
+    partial class CreateAmazonReportTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -33,8 +34,6 @@ namespace MountainWarehouse.EasyMWS.Migrations
                     b.Property<string>("DownloadRequestId");
 
                     b.Property<string>("DownloadTimestamp");
-
-                    b.Property<string>("ReportType");
 
                     b.HasKey("Id");
 

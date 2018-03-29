@@ -16,21 +16,24 @@ namespace MountainWarehouse.EasyMWS.Processors
 {
     internal class RequestReportProcessor : IRequestReportProcessor
     {
+	    private readonly IAmazonReportService _amazonReportStorageService;
 	    private readonly IReportRequestCallbackService _reportRequestCallbackService;
 	    private readonly IMarketplaceWebServiceClient _marketplaceWebServiceClient;
 	    private readonly EasyMwsOptions _options;
 
 		internal RequestReportProcessor(IMarketplaceWebServiceClient marketplaceWebServiceClient,
-		    IReportRequestCallbackService reportRequestCallbackService, EasyMwsOptions options) : this(marketplaceWebServiceClient, options)
+		    IReportRequestCallbackService reportRequestCallbackService, IAmazonReportService amazonReportStorageService, EasyMwsOptions options) : this(marketplaceWebServiceClient, options)
 	    {
 		    _reportRequestCallbackService = reportRequestCallbackService;
-		}
+		    _amazonReportStorageService = amazonReportStorageService;
+	    }
 
 		internal RequestReportProcessor(IMarketplaceWebServiceClient marketplaceWebServiceClient, EasyMwsOptions options)
 	    {
 		    _marketplaceWebServiceClient = marketplaceWebServiceClient;
 		    _reportRequestCallbackService = _reportRequestCallbackService ?? new ReportRequestCallbackService();
-		    _options = options;
+		    _amazonReportStorageService = _amazonReportStorageService ?? new AmazonReportService();
+			_options = options;
 	    }
 
 	    public ReportRequestCallback GetNextFromQueueOfReportsToRequest(AmazonRegion region, string merchantId) =>
@@ -179,19 +182,33 @@ namespace MountainWarehouse.EasyMWS.Processors
 			           && rrc.RequestReportId != null
 			           && rrc.GeneratedReportId != null);
 
-		public Stream DownloadGeneratedReportFromAmazon(ReportRequestCallback reportRequestCallback)
-		{
-			var reportResultStream = new MemoryStream();
-			var getReportRequest = new GetReportRequest
-			{
-				ReportId = reportRequestCallback.GeneratedReportId,
-				Report = reportResultStream,
-				Merchant = reportRequestCallback.MerchantId
-			};
+	    public Stream DownloadGeneratedReportFromAmazon(ReportRequestCallback reportRequestCallback)
+	    {
+		    var reportResultStream = new MemoryStream();
+		    var getReportRequest = new GetReportRequest
+		    {
+			    ReportId = reportRequestCallback.GeneratedReportId,
+			    Report = reportResultStream,
+			    Merchant = reportRequestCallback.MerchantId
+		    };
 
-			_marketplaceWebServiceClient.GetReport(getReportRequest);
+		    var response = _marketplaceWebServiceClient.GetReport(getReportRequest);
+		    var reportContentStream = getReportRequest.Report;
 
-			return getReportRequest.Report;
+		    if (_options.KeepAmazonReportsInLocalDbAfterCallbackIsPerformed)
+		    {
+
+			    var requestPropertyContainer = reportRequestCallback?.ReportRequestData != null
+				    ? JsonConvert.DeserializeObject<ReportRequestPropertiesContainer>(reportRequestCallback.ReportRequestData)
+				    : null;
+			    var reportType = requestPropertyContainer?.ReportType ?? "unknown";
+
+			    var requestId = response.ResponseHeaderMetadata.RequestId;
+			    var timestamp = response.ResponseHeaderMetadata.Timestamp;
+			    StoreAmazonReportToInternalStorage(reportContentStream, reportType, requestId, timestamp);
+		    }
+
+		    return reportContentStream;
 	    }
 
 	    public void RemoveFromQueue(ReportRequestCallback reportRequestCallback)
@@ -204,6 +221,26 @@ namespace MountainWarehouse.EasyMWS.Processors
 			reportRequestCallback.RequestRetryCount++;
 
 		    _reportRequestCallbackService.Update(reportRequestCallback);
+		}
+
+	    private void StoreAmazonReportToInternalStorage(Stream reportContent, string reportType, string requestId, string timestamp)
+	    {
+		    var sb = new StringBuilder();
+			var sr = new StreamReader(reportContent);
+		    reportContent.Position = 0;
+		    sb.Append(sr.ReadToEnd());
+			sr.Close();
+		    reportContent.Position = 0;
+
+		    _amazonReportStorageService.Create(new AmazonReport
+		    {
+			    Content = sb.ToString(),
+				DateCreated = DateTime.UtcNow,
+				ReportType = reportType,
+				DownloadRequestId = requestId,
+				DownloadTimestamp = timestamp
+			});
+			_amazonReportStorageService.SaveChanges();
 		}
     }
 }

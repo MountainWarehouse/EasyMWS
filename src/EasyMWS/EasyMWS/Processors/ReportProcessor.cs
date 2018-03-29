@@ -17,6 +17,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		private readonly IReportRequestCallbackService _reportService;
 		private readonly IRequestReportProcessor _requestReportProcessor;
 		private readonly ICallbackActivator _callbackActivator;
+		private readonly IAmazonReportService _amazonReportService;
 		private readonly IEasyMwsLogger _logger;
 
 		private readonly AmazonRegion _region;
@@ -25,12 +26,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		internal ReportProcessor(AmazonRegion region, string merchantId, EasyMwsOptions options,
 			IReportRequestCallbackService reportService, IMarketplaceWebServiceClient mwsClient,
-			IRequestReportProcessor requestReportProcessor, ICallbackActivator callbackActivator, IEasyMwsLogger logger)
+			IRequestReportProcessor requestReportProcessor, ICallbackActivator callbackActivator,
+			IAmazonReportService amazonReportService, IEasyMwsLogger logger)
 			: this(region, merchantId, options, mwsClient, logger)
 		{
 			_reportService = reportService;
 			_requestReportProcessor = requestReportProcessor;
 			_callbackActivator = callbackActivator;
+			_amazonReportService = amazonReportService;
 		}
 
 		internal ReportProcessor(AmazonRegion region, string merchantId, EasyMwsOptions options,
@@ -42,9 +45,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_logger = logger;
 
 			_callbackActivator = _callbackActivator ?? new CallbackActivator();
-
+			_amazonReportService = _amazonReportService ?? new AmazonReportService();
 			_reportService = _reportService ?? new ReportRequestCallbackService();
-			_requestReportProcessor = _requestReportProcessor ?? new RequestReportProcessor(mwsClient, _reportService, options);
+			_requestReportProcessor = _requestReportProcessor ?? new RequestReportProcessor(mwsClient, _reportService, _amazonReportService, options);
 		}
 
 
