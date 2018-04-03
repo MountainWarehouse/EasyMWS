@@ -2,7 +2,7 @@
 using MountainWarehouse.EasyMWS.Model;
 using NUnit.Framework;
 
-namespace EasyMWS.Tests.Helpers
+namespace EasyMWS.Tests.Model
 {
     public class MwsMarketplaceTests
     {
