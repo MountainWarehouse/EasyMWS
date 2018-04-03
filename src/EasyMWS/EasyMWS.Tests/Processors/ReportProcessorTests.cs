@@ -141,9 +141,12 @@ namespace EasyMWS.Tests.ReportProcessors
 		[Test]
 		public void Poll_WithGetNonRequestedReportFromQueueReturningNotNull_RequestsAReportFromAmazon()
 		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+
 			_requestReportProcessor
 				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
-				.Returns(new ReportRequestCallback());
+				.Returns(new ReportRequestCallback{ReportRequestData = serializedReportRequestData });
 
 			_reportProcessor.Poll();
 
@@ -155,11 +158,14 @@ namespace EasyMWS.Tests.ReportProcessors
 		public void
 			Poll_WithGetNonRequestedReportFromQueueReturningNotNull_UpdatesLastRequestedPropertyForProcessedReportRequest()
 		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+
 			ReportRequestCallback testReportRequestCallback = null;
 
 			_requestReportProcessor
 				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
-				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue});
+				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue, ReportRequestData = serializedReportRequestData});
 			_reportRequestCallbackServiceMock.Setup(rrcsm => rrcsm.Update(It.IsAny<ReportRequestCallback>()))
 				.Callback((ReportRequestCallback arg) =>
 				{
@@ -176,9 +182,12 @@ namespace EasyMWS.Tests.ReportProcessors
 		[Test]
 		public void Poll_WithRequestReportAmazonResponseNotNull_CallsOnce_GetNextFromQueueOfReportsToGenerate()
 		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+
 			_requestReportProcessor
 				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
-				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue});
+				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue, ReportRequestData = serializedReportRequestData });
 			_requestReportProcessor.Setup(rrp =>
 					rrp.RequestReportFromAmazon(It.IsAny<ReportRequestCallback>()))
 				.Returns("testReportRequestId");
@@ -192,9 +201,12 @@ namespace EasyMWS.Tests.ReportProcessors
 		[Test]
 		public void Poll_WithRequestReportAmazonResponseNull_CallsOnce_AllocateReportRequestForRetry()
 		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+
 			_requestReportProcessor
 				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
-				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue});
+				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue, ReportRequestData = serializedReportRequestData});
 			_requestReportProcessor.Setup(rrp =>
 					rrp.RequestReportFromAmazon(It.IsAny<ReportRequestCallback>()))
 				.Returns((string) null);
@@ -207,9 +219,12 @@ namespace EasyMWS.Tests.ReportProcessors
 		[Test]
 		public void Poll_WithRequestReportAmazonResponseEmpty_CallsOnce_AllocateReportRequestForRetry()
 		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+
 			_requestReportProcessor
 				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
-				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue});
+				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue, ReportRequestData = serializedReportRequestData});
 			_requestReportProcessor.Setup(rrp =>
 					rrp.RequestReportFromAmazon(It.IsAny<ReportRequestCallback>()))
 				.Returns(string.Empty);

@@ -90,17 +90,16 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void CleanUpReportRequestQueue()
 		{
-			_logger.Info("EasyMwsClient: Executing cleanup of report request queues.");
+			_logger.Info("Executing cleanup of report request queues.");
 			var expiredReportRequests = _reportService.GetAll()
 				.Where(rrc => rrc.RequestRetryCount > _options.ReportRequestMaxRetryCount);
 
 			if (expiredReportRequests.Any())
 			{
-				_logger.Warn("EasyMwsClient: Report requests have expired for the following report types, and will now be deleted :");
+				_logger.Warn("Report requests have expired for the following report types, and will now be deleted :");
 				foreach (var expiredReport in expiredReportRequests)
 				{
-					var reportType = expiredReport?.GetPropertiesContainer()?.ReportType;
-					_logger.Warn($"EasyMwsClient: reportType='{reportType}' for region {expiredReport?.AmazonRegion.ToString()}");
+					_logger.Warn($"Report request for {expiredReport.GetRegionAndTypeString()} deleted from queue.");
 					_reportService.Delete(expiredReport);
 				}
 			}
@@ -108,29 +107,33 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void RequestNextReportInQueueFromAmazon()
 		{
-			var reportRequestCallbackReportQueued = _requestReportProcessor.GetNextFromQueueOfReportsToRequest(_region, _merchantId);
+			var reportRequest = _requestReportProcessor.GetNextFromQueueOfReportsToRequest(_region, _merchantId);
 
-			if (reportRequestCallbackReportQueued == null) return;
+			if (reportRequest == null) return;
+			var reportFriendlyId = reportRequest.GetRegionAndTypeString();
+			_logger.Info($"Attempting to request the next report in queue from Amazon: {reportFriendlyId}.");
 
 			try
 			{
-				var reportRequestId = _requestReportProcessor.RequestReportFromAmazon(reportRequestCallbackReportQueued);
+				var reportRequestId = _requestReportProcessor.RequestReportFromAmazon(reportRequest);
 
-				reportRequestCallbackReportQueued.LastRequested = DateTime.UtcNow;
-				_reportService.Update(reportRequestCallbackReportQueued);
+				reportRequest.LastRequested = DateTime.UtcNow;
+				_reportService.Update(reportRequest);
 
 				if (string.IsNullOrEmpty(reportRequestId))
 				{
-					_requestReportProcessor.MoveToRetryQueue(reportRequestCallbackReportQueued);
+					_requestReportProcessor.MoveToRetryQueue(reportRequest);
+					_logger.Warn($"AmazonMWS RequestReport failed for {reportFriendlyId}");
 				}
 				else
 				{
-					_requestReportProcessor.GetNextFromQueueOfReportsToGenerate(reportRequestCallbackReportQueued, reportRequestId);
+					_requestReportProcessor.GetNextFromQueueOfReportsToGenerate(reportRequest, reportRequestId);
+					_logger.Info($"AmazonMWS RequestReport succeeded for {reportFriendlyId}. ReportRequestId:'{reportRequestId}'");
 				}
 			}
 			catch (Exception e)
 			{
-				_requestReportProcessor.MoveToRetryQueue(reportRequestCallbackReportQueued);
+				_requestReportProcessor.MoveToRetryQueue(reportRequest);
 				_logger.Error(e.Message, e);
 			}
 		}
