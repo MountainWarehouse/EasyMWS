@@ -23,7 +23,7 @@ namespace EasyMWS.Tests.Helpers
 	    {
 		    _callbackActivator = new CallbackActivator();
 			_called = false;
-			_callbackData = new ReportRequestPropertiesContainer("", ContentUpdateFrequency.Daily, new List<string>());
+			_callbackData = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Daily, new List<string>());
 		}
 
 		[Test]

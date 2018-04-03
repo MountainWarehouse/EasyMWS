@@ -99,7 +99,7 @@ namespace EasyMWS.Tests
 		[Test]
 		public void QueueReport_CallsReportProcessorQueueMethod_Once()
 		{
-			_easyMwsClient.QueueReport(new ReportRequestPropertiesContainer("", ContentUpdateFrequency.Unknown),
+			_easyMwsClient.QueueReport(new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown),
 				new Action<Stream, object>((
 					(stream, o) => { })), new { });
 
@@ -109,7 +109,7 @@ namespace EasyMWS.Tests
 		[Test]
 		public void QueueFeed_CallsFeedProcessorQueueMethod_Once()
 		{
-			_easyMwsClient.QueueFeed(new FeedSubmissionPropertiesContainer("", ""),
+			_easyMwsClient.QueueFeed(new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType"),
 				new Action<Stream, object>((
 					(stream, o) => { })), new { });
 

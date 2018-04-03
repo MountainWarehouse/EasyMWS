@@ -58,7 +58,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		[Test]
 		public void QueueReport_WithNullCallbackMethodArgument_CallsLogErrorOnce()
 		{
-			var reportRequestContainer = new ReportRequestPropertiesContainer("", ContentUpdateFrequency.Unknown);
+			var reportRequestContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
 			var callbackMethod = (Action<Stream, object>) null;
 
 			_reportProcessor.Queue(reportRequestContainer, callbackMethod, new {Foo = "Bar"});
@@ -103,7 +103,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		[Test]
 		public void QueueReport_WithNonEmptyArguments_CallsReportRequestCallbackServiceSaveChangesOnce()
 		{
-			var reportRequestContainer = new ReportRequestPropertiesContainer("", ContentUpdateFrequency.Unknown);
+			var reportRequestContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
 			var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
 
 			_reportProcessor.Queue(reportRequestContainer, callbackMethod, new {Foo = "Bar"});

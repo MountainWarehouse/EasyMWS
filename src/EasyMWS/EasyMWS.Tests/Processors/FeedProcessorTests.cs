@@ -52,7 +52,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		[Test]
 		public void QueueFeed_WithNullCallbackMethodArgument_CallsLogErrorOnce()
 		{
-			var propertiesContainer = new FeedSubmissionPropertiesContainer("", "");
+			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
 			var callbackMethod = (Action<Stream, object>) null;
 
 			_feedProcessor.Queue(propertiesContainer, callbackMethod, new { Foo = "Bar" });
@@ -94,7 +94,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		[Test]
 		public void QueueFeed_WithNonEmptyArguments_CallsReportRequestCallbackServiceSaveChangesOnce()
 		{
-			var propertiesContainer = new FeedSubmissionPropertiesContainer("", "");
+			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
 			var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
 
 			_feedProcessor.Queue(propertiesContainer, callbackMethod, new CallbackActivatorTests.CallbackDataTest {Foo = "Bar"});

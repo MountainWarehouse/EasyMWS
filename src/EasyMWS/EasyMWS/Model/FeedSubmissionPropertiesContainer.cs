@@ -42,16 +42,22 @@ namespace MountainWarehouse.EasyMWS.Model
 	    {
 	    }
 
-		/// <summary>
-		/// Creates a new feed submission wrapper object.
-		/// </summary>
-		/// <param name="feedContent"></param>
-		/// <param name="feedType"></param>
-		/// <param name="purgeAndReplace"></param>
-		/// <param name="marketplaceIdList"></param>
-		public FeedSubmissionPropertiesContainer(string feedContent, string feedType, bool? purgeAndReplace = null,
-		    List<string> marketplaceIdList = null) =>
-		    (FeedContent, FeedType, PurgeAndReplace, MarketplaceIdList) =
-		    (feedContent, feedType, purgeAndReplace, marketplaceIdList);
+	    /// <summary>
+	    /// Creates a new feed submission wrapper object.
+	    /// </summary>
+	    /// <param name="feedContent"></param>
+	    /// <param name="feedType"></param>
+	    /// <param name="purgeAndReplace"></param>
+	    /// <param name="marketplaceIdList"></param>
+	    public FeedSubmissionPropertiesContainer(string feedContent, string feedType, bool? purgeAndReplace = null, List<string> marketplaceIdList = null)
+	    {
+		    if (string.IsNullOrEmpty(feedType)) throw new ArgumentException("FeedType was not specified, but it is required.");
+		    if (string.IsNullOrEmpty(feedContent)) throw new ArgumentException("FeedContent was not specified, but it is required.");
+
+			FeedContent = feedContent;
+		    FeedType = feedType;
+		    PurgeAndReplace = purgeAndReplace;
+		    MarketplaceIdList = marketplaceIdList;
+	    }
     }
 }
