@@ -32,7 +32,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		[SetUp]
 		public void SetUp()
 		{
-			var options = EasyMwsOptions.Defaults;
+			var options = EasyMwsOptions.Defaults();
 			_feedSubmissionCallbackServiceMock = new Mock<IFeedSubmissionCallbackService>();
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_feedSubmissionProcessorMock = new Mock<IFeedSubmissionProcessor>();
@@ -304,7 +304,7 @@ namespace EasyMWS.Tests.ReportProcessors
 				new FeedSubmissionCallback {Id = 3, SubmissionRetryCount = 2, AmazonRegion = _amazonRegion, MerchantId = _merchantId },
 				new FeedSubmissionCallback {Id = 4, SubmissionRetryCount = 3, AmazonRegion = _amazonRegion, MerchantId = _merchantId },
 				new FeedSubmissionCallback {Id = 5, SubmissionRetryCount = 4, AmazonRegion = _amazonRegion, MerchantId = _merchantId, FeedSubmissionId = null },
-				new FeedSubmissionCallback {Id = 5, SubmissionRetryCount = 5, AmazonRegion = _amazonRegion, MerchantId = _merchantId, FeedSubmissionId = "testFeedSubmissionId" }
+				new FeedSubmissionCallback {Id = 6, SubmissionRetryCount = 5, AmazonRegion = _amazonRegion, MerchantId = _merchantId, FeedSubmissionId = "testFeedSubmissionId" }
 			}.AsQueryable();
 			_feedSubmissionCallbackServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(testFeedSubmissionCallbacks);
 
