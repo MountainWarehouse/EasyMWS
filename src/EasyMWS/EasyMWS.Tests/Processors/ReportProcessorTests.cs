@@ -21,8 +21,6 @@ namespace EasyMWS.Tests.ReportProcessors
 	public class ReportProcessorTests
 	{
 		private ReportProcessor _reportProcessor;
-		private readonly int ConfiguredMaxNumberOrReportRequestRetries = 2;
-		private readonly int ConfiguredMaxNumberOrFeedSubmissionRetries = 2;
 		private Mock<IReportRequestCallbackService> _reportRequestCallbackServiceMock;
 		private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
 		private Mock<IRequestReportProcessor> _requestReportProcessor;
@@ -34,10 +32,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		[SetUp]
 		public void SetUp()
 		{
-			var options = EasyMwsOptions.Defaults;
-			options.ReportRequestMaxRetryCount = ConfiguredMaxNumberOrReportRequestRetries;
-			options.FeedSubmissionMaxRetryCount = ConfiguredMaxNumberOrFeedSubmissionRetries;
-
+			var options = EasyMwsOptions.Defaults();
 			_reportRequestCallbackServiceMock = new Mock<IReportRequestCallbackService>();
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_requestReportProcessor = new Mock<IRequestReportProcessor>();
@@ -231,12 +226,12 @@ namespace EasyMWS.Tests.ReportProcessors
 				new ReportRequestCallback {Id = 3, RequestRetryCount = 2},
 				new ReportRequestCallback {Id = 4, RequestRetryCount = 3},
 				new ReportRequestCallback {Id = 5, RequestRetryCount = 4},
-				new ReportRequestCallback {Id = 5, RequestRetryCount = 5}
+				new ReportRequestCallback {Id = 6, RequestRetryCount = 5}
 			}.AsQueryable();
 			_reportRequestCallbackServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(testReportRequestCallbacks);
 
 			_reportProcessor.Poll();
-			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestCallback>()), Times.Exactly(3));
+			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestCallback>()), Times.Exactly(1));
 			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.AtLeastOnce);
 		}
 

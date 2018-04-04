@@ -90,24 +90,27 @@ namespace MountainWarehouse.EasyMWS.Model
 		/// KeepAmazonReportsInLocalDbAfterCallbackIsPerformed = false,<para/>
 		/// KeepAmazonReportsLocallyForTimePeriod = Days(1)<para/>
 		/// </summary>
-		public static EasyMwsOptions Defaults = new EasyMwsOptions
-		{
-			ReportRequestMaxRetryCount = 4,
-			ReportRequestRetryType = RetryPeriodType.GeometricProgression,
-			ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(15),
-			ReportRequestRetryInterval = TimeSpan.FromHours(1),
+	    public static EasyMwsOptions Defaults()
+	    {
+		    return new EasyMwsOptions
+		    {
+			    ReportRequestMaxRetryCount = 4,
+			    ReportRequestRetryType = RetryPeriodType.GeometricProgression,
+			    ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(15),
+			    ReportRequestRetryInterval = TimeSpan.FromHours(1),
 
-			FeedSubmissionMaxRetryCount = 3,
-			FeedSubmissionRetryType = RetryPeriodType.ArithmeticProgression,
-			FeedSubmissionRetryInitialDelay = TimeSpan.FromMinutes(2),
-			FeedSubmissionRetryInterval = TimeSpan.FromHours(5),
+			    FeedSubmissionMaxRetryCount = 3,
+			    FeedSubmissionRetryType = RetryPeriodType.ArithmeticProgression,
+			    FeedSubmissionRetryInitialDelay = TimeSpan.FromMinutes(2),
+			    FeedSubmissionRetryInterval = TimeSpan.FromHours(5),
 
-			FeedResultFailedChecksumRetryInterval = TimeSpan.FromMinutes(2),
-			FeedResultFailedChecksumMaxRetryCount = 3,
+			    FeedResultFailedChecksumRetryInterval = TimeSpan.FromMinutes(2),
+			    FeedResultFailedChecksumMaxRetryCount = 3,
 
-			KeepAmazonReportsInLocalDbAfterCallbackIsPerformed = false,
-			KeepAmazonReportsLocallyForTimePeriod = TimeSpan.FromDays(1)
-		};
+			    KeepAmazonReportsInLocalDbAfterCallbackIsPerformed = false,
+			    KeepAmazonReportsLocallyForTimePeriod = TimeSpan.FromDays(1)
+		    };
+		}
 	}
 
 	/// <summary>
