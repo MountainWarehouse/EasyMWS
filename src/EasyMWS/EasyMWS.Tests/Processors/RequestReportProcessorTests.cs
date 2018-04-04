@@ -534,6 +534,8 @@ namespace EasyMWS.Tests.Processors
 		public void QueueReportsAccordingToProcessingStatus_UpdateGeneratedRequestId()
 		{
 			// Arrange
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
 			var data = new List<ReportRequestCallback>
 			{
 				new ReportRequestCallback
@@ -541,28 +543,32 @@ namespace EasyMWS.Tests.Processors
 					AmazonRegion = AmazonRegion.Europe,
 					Id = 2,
 					RequestReportId = "Report1",
-					GeneratedReportId = null
+					GeneratedReportId = null,
+					ReportRequestData = serializedReportRequestData
 				},
 				new ReportRequestCallback
 				{
 					AmazonRegion = AmazonRegion.Europe,
 					Id = 3,
 					RequestReportId = "Report2",
-					GeneratedReportId = null
+					GeneratedReportId = null,
+					ReportRequestData = serializedReportRequestData
 				},
 				new ReportRequestCallback
 				{
 					AmazonRegion = AmazonRegion.Europe,
 					Id = 4,
 					RequestReportId = "Report3",
-					GeneratedReportId = null
+					GeneratedReportId = null,
+					ReportRequestData = serializedReportRequestData
 				},
 				new ReportRequestCallback
 				{
 					AmazonRegion = AmazonRegion.NorthAmerica,
 					Id = 5,
 					RequestReportId = "Report4",
-					GeneratedReportId = null
+					GeneratedReportId = null,
+					ReportRequestData = serializedReportRequestData
 				}
 				,
 				new ReportRequestCallback
@@ -570,7 +576,8 @@ namespace EasyMWS.Tests.Processors
 					AmazonRegion = AmazonRegion.NorthAmerica,
 					Id = 6,
 					RequestReportId = "Report5",
-					GeneratedReportId = null
+					GeneratedReportId = null,
+					ReportRequestData = serializedReportRequestData
 				}
 				,
 				new ReportRequestCallback
@@ -578,7 +585,8 @@ namespace EasyMWS.Tests.Processors
 					AmazonRegion = AmazonRegion.NorthAmerica,
 					Id = 7,
 					RequestReportId = "Report6",
-					GeneratedReportId = null
+					GeneratedReportId = null,
+					ReportRequestData = serializedReportRequestData
 				}
 			};
 
