@@ -123,12 +123,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 				if (string.IsNullOrEmpty(reportRequestId))
 				{
 					_requestReportProcessor.MoveToRetryQueue(reportRequest);
-					_logger.Warn($"AmazonMWS RequestReport failed for {reportFriendlyId}");
+					_logger.Warn($"AmazonMWS request failed for {reportFriendlyId}");
 				}
 				else
 				{
 					_requestReportProcessor.GetNextFromQueueOfReportsToGenerate(reportRequest, reportRequestId);
-					_logger.Info($"AmazonMWS RequestReport succeeded for {reportFriendlyId}. ReportRequestId:'{reportRequestId}'");
+					_logger.Info($"AmazonMWS request succeeded for {reportFriendlyId}. ReportRequestId:'{reportRequestId}'");
 				}
 			}
 			catch (Exception e)
@@ -140,7 +140,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void RequestReportStatusesFromAmazon()
 		{
-			_logger.Info($"Attempting to request the processing status for all reports in queue.");
+			_logger.Info($"Attempting to request report processing status for all reports in queue.");
 			try
 			{
 				var reportRequestCallbacksPendingReports = _requestReportProcessor.GetAllPendingReportFromQueue(_region, _merchantId).ToList();
@@ -150,7 +150,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				var reportRequestIds = reportRequestCallbacksPendingReports.Select(x => x.RequestReportId);
 
 				var reportRequestStatuses = _requestReportProcessor.GetReportProcessingStatusesFromAmazon(reportRequestIds, _merchantId);
-				_logger.Info($"AmazonMWS GetReportRequestList succeeded.");
+				_logger.Info($"AmazonMWS request for report processing statuses succeeded.");
 
 				_requestReportProcessor.QueueReportsAccordingToProcessingStatus(reportRequestStatuses);
 			}
@@ -163,12 +163,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 		public (ReportRequestCallback reportRequestCallback, Stream stream) DownloadNextReportInQueueFromAmazon()
 		{
 			var generatedReportRequest = _requestReportProcessor.GetNextFromQueueOfReportsToDownload(_region, _merchantId);
-
 			if (generatedReportRequest == null) return (null, null);
+			var reportFriendlyId = generatedReportRequest.GetRegionAndTypeString();
+			_logger.Info($"Attempting to download the next report in queue from Amazon: {reportFriendlyId}.");
 
 			try
 			{
 				var stream = _requestReportProcessor.DownloadGeneratedReportFromAmazon(generatedReportRequest);
+				_logger.Info($"Report download from Amazon has succeeded for {reportFriendlyId}.");
 
 				return (generatedReportRequest, stream);
 			}
