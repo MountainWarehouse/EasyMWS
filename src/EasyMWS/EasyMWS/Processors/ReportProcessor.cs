@@ -203,8 +203,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			if (reportRequestContainer == null || callbackMethod == null) throw new ArgumentNullException();
 			var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
+			var serializedPropertiesContainer = JsonConvert.SerializeObject(reportRequestContainer);
 
-			return new ReportRequestCallback(serializedCallback)
+			return new ReportRequestCallback(serializedCallback, serializedPropertiesContainer)
 			{
 				AmazonRegion = _region,
 				MerchantId = _merchantId,
@@ -212,8 +213,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				ContentUpdateFrequency = reportRequestContainer.UpdateFrequency,
 				RequestReportId = null,
 				GeneratedReportId = null,
-				RequestRetryCount = 0,
-				ReportRequestData = JsonConvert.SerializeObject(reportRequestContainer)
+				RequestRetryCount = 0
 			};
 		}
 	}
