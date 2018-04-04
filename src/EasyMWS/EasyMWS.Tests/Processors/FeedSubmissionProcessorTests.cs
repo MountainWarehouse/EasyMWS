@@ -29,7 +29,7 @@ namespace EasyMWS.Tests.Processors
 		[SetUp]
 		public void Setup()
 		{
-			_easyMwsOptions = EasyMwsOptions.Defaults;
+			_easyMwsOptions = EasyMwsOptions.Defaults();
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_feedSubmissionCallbackServiceMock = new Mock<IFeedSubmissionCallbackService>();
 			_feedSubmissionProcessor = new FeedSubmissionProcessor(_marketplaceWebServiceClientMock.Object,

@@ -45,7 +45,7 @@ namespace MountainWarehouse.EasyMWS
 
 			_amazonRegion = region;
 			_merchantId = merchantId;
-			_options = options ?? EasyMwsOptions.Defaults;
+			_options = options ?? EasyMwsOptions.Defaults();
 
 			_logger = easyMwsLogger ?? new EasyMwsLogger(isEnabled: false);
 			var mwsClient = new MarketplaceWebServiceClient(accessKeyId, mwsSecretAccessKey, CreateConfig(_amazonRegion));

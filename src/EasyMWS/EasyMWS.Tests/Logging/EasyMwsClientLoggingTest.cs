@@ -16,7 +16,7 @@ namespace EasyMWS.Tests.Logging
 		public void Setup()
 		{
 			_logger = new EasyMwsLogger();
-			_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "test", "test", "test", _logger, EasyMwsOptions.Defaults);
+			_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "test", "test", "test", _logger, EasyMwsOptions.Defaults());
 		}
 
 		[Test]
@@ -33,7 +33,7 @@ namespace EasyMWS.Tests.Logging
 		[Test]
 		public void IfLoggingIsDisabled_Poll_DoesNotLogAMessage()
 		{
-			_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "test", "test", "test", null, EasyMwsOptions.Defaults);
+			_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "test", "test", "test", null, EasyMwsOptions.Defaults());
 			var isAtLeastOneMessageLogged = false;
 			_logger.LogAvailable += (sender, args) => { isAtLeastOneMessageLogged = true; };
 

@@ -34,7 +34,7 @@ namespace EasyMWS.Tests.Processors
 		[SetUp]
 		public void SetUp()
 		{
-			_easyMwsOptions = EasyMwsOptions.Defaults;
+			_easyMwsOptions = EasyMwsOptions.Defaults();
 
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_reportRequestCallbackServiceMock = new Mock<IReportRequestCallbackService>();
@@ -261,7 +261,6 @@ namespace EasyMWS.Tests.Processors
 			var reportRequestWithRequestRetryPeriodIncomplete = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 2, RequestReportId = null, RequestRetryCount = 5, LastRequested = DateTime.UtcNow.AddMinutes(-59) };
 			_easyMwsOptions.ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(1);
 			_easyMwsOptions.ReportRequestRetryInterval = TimeSpan.FromMinutes(60);
-			_easyMwsOptions.ReportRequestMaxRetryCount = 10;
 			_easyMwsOptions.ReportRequestRetryType = RetryPeriodType.ArithmeticProgression;
 			_requestReportProcessor = new RequestReportProcessor(_marketplaceWebServiceClientMock.Object, _reportRequestCallbackServiceMock.Object, _amazonReportServiceMock.Object, _loggerMock.Object, _easyMwsOptions);
 			var reportRequestWithNoRetryPeriodComplete1 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 3, RequestReportId = null, RequestRetryCount = 5, LastRequested = DateTime.UtcNow.AddMinutes(-61) };
@@ -286,7 +285,6 @@ namespace EasyMWS.Tests.Processors
 				RequestRetryCount = testRequestRetryCount, LastRequested = DateTime.UtcNow.AddMinutes(-61) };
 			_easyMwsOptions.ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(1);
 			_easyMwsOptions.ReportRequestRetryInterval = TimeSpan.FromMinutes(minutesBetweenRetries);
-			_easyMwsOptions.ReportRequestMaxRetryCount = 10;
 			_easyMwsOptions.ReportRequestRetryType = RetryPeriodType.GeometricProgression;
 			_requestReportProcessor = new RequestReportProcessor(_marketplaceWebServiceClientMock.Object, _reportRequestCallbackServiceMock.Object, _amazonReportServiceMock.Object, _loggerMock.Object, _easyMwsOptions);
 			var reportRequestWithNoRetryPeriodComplete1 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe,

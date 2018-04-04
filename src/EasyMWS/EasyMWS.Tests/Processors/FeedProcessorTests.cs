@@ -32,7 +32,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		[SetUp]
 		public void SetUp()
 		{
-			var options = EasyMwsOptions.Defaults;
+			var options = EasyMwsOptions.Defaults();
 			_feedSubmissionCallbackServiceMock = new Mock<IFeedSubmissionCallbackService>();
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_feedSubmissionProcessorMock = new Mock<IFeedSubmissionProcessor>();

@@ -21,8 +21,6 @@ namespace EasyMWS.Tests.ReportProcessors
 	public class ReportProcessorTests
 	{
 		private ReportProcessor _reportProcessor;
-		private readonly int ConfiguredMaxNumberOrReportRequestRetries = 2;
-		private readonly int ConfiguredMaxNumberOrFeedSubmissionRetries = 2;
 		private Mock<IReportRequestCallbackService> _reportRequestCallbackServiceMock;
 		private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
 		private Mock<IRequestReportProcessor> _requestReportProcessor;
@@ -34,10 +32,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		[SetUp]
 		public void SetUp()
 		{
-			var options = EasyMwsOptions.Defaults;
-			options.ReportRequestMaxRetryCount = ConfiguredMaxNumberOrReportRequestRetries;
-			options.FeedSubmissionMaxRetryCount = ConfiguredMaxNumberOrFeedSubmissionRetries;
-
+			var options = EasyMwsOptions.Defaults();
 			_reportRequestCallbackServiceMock = new Mock<IReportRequestCallbackService>();
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_requestReportProcessor = new Mock<IRequestReportProcessor>();
