@@ -47,7 +47,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_callbackActivator = _callbackActivator ?? new CallbackActivator();
 			_amazonReportService = _amazonReportService ?? new AmazonReportService();
 			_reportService = _reportService ?? new ReportRequestCallbackService();
-			_requestReportProcessor = _requestReportProcessor ?? new RequestReportProcessor(mwsClient, _reportService, _amazonReportService, options);
+			_requestReportProcessor = _requestReportProcessor ?? new RequestReportProcessor(mwsClient, _reportService, _amazonReportService, logger, options);
 		}
 
 
@@ -140,6 +140,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void RequestReportStatusesFromAmazon()
 		{
+			_logger.Info($"Attempting to request the processing status for all reports in queue.");
 			try
 			{
 				var reportRequestCallbacksPendingReports = _requestReportProcessor.GetAllPendingReportFromQueue(_region, _merchantId).ToList();
@@ -149,6 +150,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				var reportRequestIds = reportRequestCallbacksPendingReports.Select(x => x.RequestReportId);
 
 				var reportRequestStatuses = _requestReportProcessor.GetReportProcessingStatusesFromAmazon(reportRequestIds, _merchantId);
+				_logger.Info($"AmazonMWS GetReportRequestList succeeded.");
 
 				_requestReportProcessor.QueueReportsAccordingToProcessingStatus(reportRequestStatuses);
 			}
