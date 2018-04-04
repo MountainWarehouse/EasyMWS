@@ -7,6 +7,7 @@ using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
+using MountainWarehouse.EasyMWS.Logging;
 using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Processors;
 using MountainWarehouse.EasyMWS.Services;
@@ -27,6 +28,7 @@ namespace EasyMWS.Tests.Processors
 		private List<ReportRequestCallback> _reportRequestCallbacks;
 		private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
 		private Mock<IAmazonReportService> _amazonReportServiceMock;
+		private Mock<IEasyMwsLogger> _loggerMock;
 		private EasyMwsOptions _easyMwsOptions;
 
 		[SetUp]
@@ -37,7 +39,8 @@ namespace EasyMWS.Tests.Processors
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_reportRequestCallbackServiceMock = new Mock<IReportRequestCallbackService>();
 			_amazonReportServiceMock = new Mock<IAmazonReportService>();
-			_requestReportProcessor = new RequestReportProcessor(_marketplaceWebServiceClientMock.Object, _reportRequestCallbackServiceMock.Object, _amazonReportServiceMock.Object, _easyMwsOptions);
+			_loggerMock = new Mock<IEasyMwsLogger>();
+			_requestReportProcessor = new RequestReportProcessor(_marketplaceWebServiceClientMock.Object, _reportRequestCallbackServiceMock.Object, _amazonReportServiceMock.Object, _loggerMock.Object, _easyMwsOptions);
 			
 			_reportRequestCallbacks = new List<ReportRequestCallback>
 			{
@@ -198,7 +201,7 @@ namespace EasyMWS.Tests.Processors
 			var reportRequestWithRequestRetryPeriodIncomplete = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 2, RequestReportId = null, RequestRetryCount = 1, LastRequested = DateTime.UtcNow.AddHours(-1)};
 			_easyMwsOptions.ReportRequestRetryInitialDelay = TimeSpan.FromHours(2);
 			_easyMwsOptions.ReportRequestRetryInterval = TimeSpan.FromHours(2);
-			_requestReportProcessor = new RequestReportProcessor(_marketplaceWebServiceClientMock.Object, _reportRequestCallbackServiceMock.Object, _amazonReportServiceMock.Object, _easyMwsOptions);
+			_requestReportProcessor = new RequestReportProcessor(_marketplaceWebServiceClientMock.Object, _reportRequestCallbackServiceMock.Object, _amazonReportServiceMock.Object, _loggerMock.Object, _easyMwsOptions);
 			var reportRequestWithNoRequestRetryCount1 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 3, RequestReportId = null, RequestRetryCount = 0, LastRequested = DateTime.MinValue };
 			var reportRequestWithNoRequestRetryCount2 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 4, RequestReportId = null, RequestRetryCount = 0, LastRequested = DateTime.MinValue };
 
@@ -219,7 +222,7 @@ namespace EasyMWS.Tests.Processors
 			var reportRequestWithRequestRetryPeriodIncomplete = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 2, RequestReportId = null, RequestRetryCount = 1, LastRequested = DateTime.UtcNow.AddMinutes(-30) };
 			_easyMwsOptions.ReportRequestRetryInitialDelay = TimeSpan.FromHours(1);
 			_easyMwsOptions.ReportRequestRetryInterval = TimeSpan.FromHours(1);
-			_requestReportProcessor = new RequestReportProcessor(_marketplaceWebServiceClientMock.Object, _reportRequestCallbackServiceMock.Object, _amazonReportServiceMock.Object, _easyMwsOptions);
+			_requestReportProcessor = new RequestReportProcessor(_marketplaceWebServiceClientMock.Object, _reportRequestCallbackServiceMock.Object, _amazonReportServiceMock.Object, _loggerMock.Object, _easyMwsOptions);
 			var reportRequestWithNoRetryPeriodComplete1 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 3, RequestReportId = null, RequestRetryCount = 0, LastRequested = DateTime.UtcNow.AddMinutes(-61) };
 			var reportRequestWithNoRetryPeriodComplete2 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 4, RequestReportId = null, RequestRetryCount = 0, LastRequested = DateTime.UtcNow.AddMinutes(-61) };
 
@@ -239,7 +242,7 @@ namespace EasyMWS.Tests.Processors
 			var reportRequestWithRequestRetryPeriodIncomplete = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 2, RequestReportId = null, RequestRetryCount = 1, LastRequested = DateTime.UtcNow.AddMinutes(-59) };
 			_easyMwsOptions.ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(60);
 			_easyMwsOptions.ReportRequestRetryInterval = TimeSpan.FromMinutes(1);
-			_requestReportProcessor = new RequestReportProcessor(_marketplaceWebServiceClientMock.Object, _reportRequestCallbackServiceMock.Object, _amazonReportServiceMock.Object, _easyMwsOptions);
+			_requestReportProcessor = new RequestReportProcessor(_marketplaceWebServiceClientMock.Object, _reportRequestCallbackServiceMock.Object, _amazonReportServiceMock.Object, _loggerMock.Object, _easyMwsOptions);
 			var reportRequestWithNoRetryPeriodComplete1 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 3, RequestReportId = null, RequestRetryCount = 1, LastRequested = DateTime.UtcNow.AddMinutes(-61) };
 			var reportRequestWithNoRetryPeriodComplete2 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 4, RequestReportId = null, RequestRetryCount = 1, LastRequested = DateTime.UtcNow.AddMinutes(-61) };
 
@@ -260,7 +263,7 @@ namespace EasyMWS.Tests.Processors
 			_easyMwsOptions.ReportRequestRetryInterval = TimeSpan.FromMinutes(60);
 			_easyMwsOptions.ReportRequestMaxRetryCount = 10;
 			_easyMwsOptions.ReportRequestRetryType = RetryPeriodType.ArithmeticProgression;
-			_requestReportProcessor = new RequestReportProcessor(_marketplaceWebServiceClientMock.Object, _reportRequestCallbackServiceMock.Object, _amazonReportServiceMock.Object, _easyMwsOptions);
+			_requestReportProcessor = new RequestReportProcessor(_marketplaceWebServiceClientMock.Object, _reportRequestCallbackServiceMock.Object, _amazonReportServiceMock.Object, _loggerMock.Object, _easyMwsOptions);
 			var reportRequestWithNoRetryPeriodComplete1 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 3, RequestReportId = null, RequestRetryCount = 5, LastRequested = DateTime.UtcNow.AddMinutes(-61) };
 			var reportRequestWithNoRetryPeriodComplete2 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 4, RequestReportId = null, RequestRetryCount = 5, LastRequested = DateTime.UtcNow.AddMinutes(-61) };
 
@@ -285,7 +288,7 @@ namespace EasyMWS.Tests.Processors
 			_easyMwsOptions.ReportRequestRetryInterval = TimeSpan.FromMinutes(minutesBetweenRetries);
 			_easyMwsOptions.ReportRequestMaxRetryCount = 10;
 			_easyMwsOptions.ReportRequestRetryType = RetryPeriodType.GeometricProgression;
-			_requestReportProcessor = new RequestReportProcessor(_marketplaceWebServiceClientMock.Object, _reportRequestCallbackServiceMock.Object, _amazonReportServiceMock.Object, _easyMwsOptions);
+			_requestReportProcessor = new RequestReportProcessor(_marketplaceWebServiceClientMock.Object, _reportRequestCallbackServiceMock.Object, _amazonReportServiceMock.Object, _loggerMock.Object, _easyMwsOptions);
 			var reportRequestWithNoRetryPeriodComplete1 = new ReportRequestCallback { AmazonRegion = AmazonRegion.Europe,
 				MerchantId = _merchantId, Id = 3, RequestReportId = null,
 				RequestRetryCount = testRequestRetryCount, LastRequested = DateTime.UtcNow.AddMinutes(-59) };

@@ -6,6 +6,7 @@ using System.Text;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
+using MountainWarehouse.EasyMWS.Logging;
 using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Services;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
@@ -19,20 +20,22 @@ namespace MountainWarehouse.EasyMWS.Processors
 	    private readonly IAmazonReportService _amazonReportStorageService;
 	    private readonly IReportRequestCallbackService _reportRequestCallbackService;
 	    private readonly IMarketplaceWebServiceClient _marketplaceWebServiceClient;
-	    private readonly EasyMwsOptions _options;
+	    private readonly IEasyMwsLogger _logger;
+		private readonly EasyMwsOptions _options;
 
 		internal RequestReportProcessor(IMarketplaceWebServiceClient marketplaceWebServiceClient,
-		    IReportRequestCallbackService reportRequestCallbackService, IAmazonReportService amazonReportStorageService, EasyMwsOptions options) : this(marketplaceWebServiceClient, options)
+		    IReportRequestCallbackService reportRequestCallbackService, IAmazonReportService amazonReportStorageService, IEasyMwsLogger logger, EasyMwsOptions options) : this(marketplaceWebServiceClient, logger, options)
 	    {
 		    _reportRequestCallbackService = reportRequestCallbackService;
 		    _amazonReportStorageService = amazonReportStorageService;
 	    }
 
-		internal RequestReportProcessor(IMarketplaceWebServiceClient marketplaceWebServiceClient, EasyMwsOptions options)
+		internal RequestReportProcessor(IMarketplaceWebServiceClient marketplaceWebServiceClient, IEasyMwsLogger logger, EasyMwsOptions options)
 	    {
 		    _marketplaceWebServiceClient = marketplaceWebServiceClient;
 		    _reportRequestCallbackService = _reportRequestCallbackService ?? new ReportRequestCallbackService();
 		    _amazonReportStorageService = _amazonReportStorageService ?? new AmazonReportService();
+		    _logger = logger;
 			_options = options;
 	    }
 
