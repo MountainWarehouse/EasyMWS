@@ -12,7 +12,7 @@ using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS.Processors
 {
-	internal class FeedProcessor : IQueueingProcessor<FeedSubmissionPropertiesContainer>, IFeedProcessor
+	internal class FeedProcessor : IQueueingProcessor<FeedSubmissionPropertiesContainer>
 	{
 		private readonly IFeedSubmissionCallbackService _feedService;
 		private readonly IFeedSubmissionProcessor _feedSubmissionProcessor;
