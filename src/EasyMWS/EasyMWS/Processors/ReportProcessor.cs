@@ -96,8 +96,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var reportRequest = _requestReportProcessor.GetNextFromQueueOfReportsToRequest(_region, _merchantId);
 
 			if (reportRequest == null) return;
-			var reportFriendlyId = reportRequest.GetRegionAndTypeString();
-			_logger.Info($"Attempting to request the next report in queue from Amazon: {reportFriendlyId}.");
+			_logger.Info($"Attempting to request the next report in queue from Amazon: {reportRequest.RegionAndTypeComputed}.");
 
 			try
 			{
@@ -109,12 +108,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 				if (string.IsNullOrEmpty(reportRequestId))
 				{
 					_requestReportProcessor.MoveToRetryQueue(reportRequest);
-					_logger.Warn($"AmazonMWS request failed for {reportFriendlyId}");
+					_logger.Warn($"AmazonMWS request failed for {reportRequest.RegionAndTypeComputed}");
 				}
 				else
 				{
 					_requestReportProcessor.GetNextFromQueueOfReportsToGenerate(reportRequest, reportRequestId);
-					_logger.Info($"AmazonMWS request succeeded for {reportFriendlyId}. ReportRequestId:'{reportRequestId}'");
+					_logger.Info($"AmazonMWS request succeeded for {reportRequest.RegionAndTypeComputed}. ReportRequestId:'{reportRequestId}'");
 				}
 			}
 			catch (Exception e)
@@ -148,17 +147,17 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public (ReportRequestCallback reportRequestCallback, Stream stream) DownloadNextReportInQueueFromAmazon()
 		{
-			var generatedReportRequest = _requestReportProcessor.GetNextFromQueueOfReportsToDownload(_region, _merchantId);
-			if (generatedReportRequest == null) return (null, null);
-			var reportFriendlyId = generatedReportRequest.GetRegionAndTypeString();
-			_logger.Info($"Attempting to download the next report in queue from Amazon: {reportFriendlyId}.");
+			var reportToDownload = _requestReportProcessor.GetNextFromQueueOfReportsToDownload(_region, _merchantId);
+			if (reportToDownload == null) return (null, null);
+
+			_logger.Info($"Attempting to download the next report in queue from Amazon: {reportToDownload.RegionAndTypeComputed}.");
 
 			try
 			{
-				var stream = _requestReportProcessor.DownloadGeneratedReportFromAmazon(generatedReportRequest);
-				_logger.Info($"Report download from Amazon has succeeded for {reportFriendlyId}.");
+				var stream = _requestReportProcessor.DownloadGeneratedReportFromAmazon(reportToDownload);
+				_logger.Info($"Report download from Amazon has succeeded for {reportToDownload.RegionAndTypeComputed}.");
 
-				return (generatedReportRequest, stream);
+				return (reportToDownload, stream);
 			}
 			catch (Exception e)
 			{
@@ -167,20 +166,19 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public void ExecuteCallback(ReportRequestCallback reportRequestCallback, Stream stream)
+		public void ExecuteCallback(ReportRequestCallback reportRequest, Stream stream)
 		{
-			var reportFriendlyId = reportRequestCallback.GetRegionAndTypeString();
-			_logger.Info($"Attempting to perform method callback for the next downloaded report in queue : {reportFriendlyId}.");
+			_logger.Info($"Attempting to perform method callback for the next downloaded report in queue : {reportRequest.RegionAndTypeComputed}.");
 			try
 			{
-				if (reportRequestCallback == null || stream == null) return;
+				if (reportRequest == null || stream == null) return;
 
-				var callback = new Callback(reportRequestCallback.TypeName, reportRequestCallback.MethodName,
-					reportRequestCallback.Data, reportRequestCallback.DataTypeName);
+				var callback = new Callback(reportRequest.TypeName, reportRequest.MethodName,
+					reportRequest.Data, reportRequest.DataTypeName);
 
 				_callbackActivator.CallMethod(callback, stream);
 
-				_requestReportProcessor.RemoveFromQueue(reportRequestCallback);
+				_requestReportProcessor.RemoveFromQueue(reportRequest);
 			}
 			catch (Exception e)
 			{
