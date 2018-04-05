@@ -3,7 +3,7 @@ using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Model;
 using NUnit.Framework;
 
-namespace EasyMWS.Tests.Factories.Helpers
+namespace EasyMWS.Tests.Factories.Model
 {
     public class ReportOptionsTests
     {

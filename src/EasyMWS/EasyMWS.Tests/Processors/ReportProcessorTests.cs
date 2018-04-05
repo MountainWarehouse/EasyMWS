@@ -53,7 +53,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		[Test]
 		public void QueueReport_WithNullCallbackMethodArgument_CallsLogErrorOnce()
 		{
-			var reportRequestContainer = new ReportRequestPropertiesContainer("", ContentUpdateFrequency.Unknown);
+			var reportRequestContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
 			var callbackMethod = (Action<Stream, object>) null;
 
 			_reportProcessor.Queue(reportRequestContainer, callbackMethod, new {Foo = "Bar"});
@@ -98,7 +98,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		[Test]
 		public void QueueReport_WithNonEmptyArguments_CallsReportRequestCallbackServiceSaveChangesOnce()
 		{
-			var reportRequestContainer = new ReportRequestPropertiesContainer("", ContentUpdateFrequency.Unknown);
+			var reportRequestContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
 			var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
 
 			_reportProcessor.Queue(reportRequestContainer, callbackMethod, new {Foo = "Bar"});
@@ -110,6 +110,26 @@ namespace EasyMWS.Tests.ReportProcessors
 
 
 		#region PollReports tests 
+
+		[Test]
+		public void Poll_IfNoReportIsDownloaded_NoNullPointerExceptionIsLogged()
+		{
+			Exception actualLoggedException = null;
+			_loggerMock.Setup(lm => lm.Error(It.IsAny<string>(), It.IsAny<Exception>()))
+				.Callback<string, Exception>((message, exception) => { actualLoggedException = exception; });
+
+			_reportProcessor.Poll();
+
+			Assert.IsFalse(actualLoggedException is NullReferenceException);
+		}
+
+		[Test]
+		public void Poll_IfNoReportIsDownloaded_LogErrorIsNotCalled()
+		{
+			_reportProcessor.Poll();
+
+			_loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
+		}
 
 		[Test]
 		public void Poll_CallsOnce_GetNextFromQueueOfReportsToRequest()
@@ -136,9 +156,12 @@ namespace EasyMWS.Tests.ReportProcessors
 		[Test]
 		public void Poll_WithGetNonRequestedReportFromQueueReturningNotNull_RequestsAReportFromAmazon()
 		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+
 			_requestReportProcessor
 				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
-				.Returns(new ReportRequestCallback());
+				.Returns(new ReportRequestCallback{ReportRequestData = serializedReportRequestData });
 
 			_reportProcessor.Poll();
 
@@ -150,11 +173,14 @@ namespace EasyMWS.Tests.ReportProcessors
 		public void
 			Poll_WithGetNonRequestedReportFromQueueReturningNotNull_UpdatesLastRequestedPropertyForProcessedReportRequest()
 		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+
 			ReportRequestCallback testReportRequestCallback = null;
 
 			_requestReportProcessor
 				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
-				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue});
+				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue, ReportRequestData = serializedReportRequestData});
 			_reportRequestCallbackServiceMock.Setup(rrcsm => rrcsm.Update(It.IsAny<ReportRequestCallback>()))
 				.Callback((ReportRequestCallback arg) =>
 				{
@@ -171,9 +197,12 @@ namespace EasyMWS.Tests.ReportProcessors
 		[Test]
 		public void Poll_WithRequestReportAmazonResponseNotNull_CallsOnce_GetNextFromQueueOfReportsToGenerate()
 		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+
 			_requestReportProcessor
 				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
-				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue});
+				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue, ReportRequestData = serializedReportRequestData });
 			_requestReportProcessor.Setup(rrp =>
 					rrp.RequestReportFromAmazon(It.IsAny<ReportRequestCallback>()))
 				.Returns("testReportRequestId");
@@ -187,9 +216,12 @@ namespace EasyMWS.Tests.ReportProcessors
 		[Test]
 		public void Poll_WithRequestReportAmazonResponseNull_CallsOnce_AllocateReportRequestForRetry()
 		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+
 			_requestReportProcessor
 				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
-				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue});
+				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue, ReportRequestData = serializedReportRequestData});
 			_requestReportProcessor.Setup(rrp =>
 					rrp.RequestReportFromAmazon(It.IsAny<ReportRequestCallback>()))
 				.Returns((string) null);
@@ -202,9 +234,12 @@ namespace EasyMWS.Tests.ReportProcessors
 		[Test]
 		public void Poll_WithRequestReportAmazonResponseEmpty_CallsOnce_AllocateReportRequestForRetry()
 		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+
 			_requestReportProcessor
 				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
-				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue});
+				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue, ReportRequestData = serializedReportRequestData});
 			_requestReportProcessor.Setup(rrp =>
 					rrp.RequestReportFromAmazon(It.IsAny<ReportRequestCallback>()))
 				.Returns(string.Empty);
@@ -215,26 +250,6 @@ namespace EasyMWS.Tests.ReportProcessors
 			_requestReportProcessor.Verify(rrp => rrp.MoveToRetryQueue(It.IsAny<ReportRequestCallback>()),
 				Times.Once);
 		}
-
-		[Test]
-		public void Poll_DeletesReportRequests_WithRetryCountAboveMaxRetryCount()
-		{
-			var testReportRequestCallbacks = new List<ReportRequestCallback>
-			{
-				new ReportRequestCallback {Id = 1, RequestRetryCount = 0},
-				new ReportRequestCallback {Id = 2, RequestRetryCount = 1},
-				new ReportRequestCallback {Id = 3, RequestRetryCount = 2},
-				new ReportRequestCallback {Id = 4, RequestRetryCount = 3},
-				new ReportRequestCallback {Id = 5, RequestRetryCount = 4},
-				new ReportRequestCallback {Id = 6, RequestRetryCount = 5}
-			}.AsQueryable();
-			_reportRequestCallbackServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(testReportRequestCallbacks);
-
-			_reportProcessor.Poll();
-			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestCallback>()), Times.Exactly(1));
-			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.AtLeastOnce);
-		}
-
 		#endregion
 	}
 }
