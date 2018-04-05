@@ -167,6 +167,29 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_feedSubmissionCallbackService.Delete(feedSubmissionCallback);
 		}
 
+		public void CleanUpFeedSubmissionQueue(AmazonRegion region, string merchant)
+		{
+			var expiredFeedSubmissions = _feedSubmissionCallbackService.GetAll()
+				.Where(fscs => fscs.AmazonRegion == region && fscs.MerchantId == merchant
+							   && fscs.FeedSubmissionId == null
+				               && fscs.SubmissionRetryCount > _options.FeedSubmissionMaxRetryCount);
+
+			foreach (var feedSubmission in expiredFeedSubmissions)
+			{
+				_feedSubmissionCallbackService.Delete(feedSubmission);
+			}
+
+			var expiredFeedProcessingResultRequests = _feedSubmissionCallbackService.GetAll()
+				.Where(fscs => fscs.AmazonRegion == region && fscs.MerchantId == merchant
+							   && fscs.FeedSubmissionId != null
+				               && fscs.SubmissionRetryCount > _options.FeedResultFailedChecksumMaxRetryCount);
+
+			foreach (var feedSubmission in expiredFeedProcessingResultRequests)
+			{
+				_feedSubmissionCallbackService.Delete(feedSubmission);
+			}
+		}
+
 		private bool IsFeedReadyForSubmission(FeedSubmissionCallback feedSubmission)
 		{
 			var isInRetryQueueAndReadyForRetry = feedSubmission.SubmissionRetryCount > 0

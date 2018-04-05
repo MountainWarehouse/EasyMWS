@@ -48,7 +48,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			try
 			{
-				CleanUpFeedSubmissionQueue();
+				_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_region, _merchantId);
 				SubmitNextFeedInQueueToAmazon();
 				_feedService.SaveChanges();
 
@@ -88,29 +88,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 			catch (Exception e)
 			{
 				_logger.Error(e.Message, e);
-			}
-		}
-
-		public void CleanUpFeedSubmissionQueue()
-		{
-			var expiredFeedSubmissions = _feedService.GetAll()
-				.Where(fscs => fscs.AmazonRegion == _region && fscs.MerchantId == _merchantId
-				               && fscs.FeedSubmissionId == null
-				               && fscs.SubmissionRetryCount > _options.FeedSubmissionMaxRetryCount);
-
-			foreach (var feedSubmission in expiredFeedSubmissions)
-			{
-				_feedService.Delete(feedSubmission);
-			}
-
-			var expiredFeedProcessingResultRequests = _feedService.GetAll()
-				.Where(fscs => fscs.AmazonRegion == _region && fscs.MerchantId == _merchantId
-				               && fscs.FeedSubmissionId != null
-				               && fscs.SubmissionRetryCount > _options.FeedResultFailedChecksumMaxRetryCount);
-
-			foreach (var feedSubmission in expiredFeedProcessingResultRequests)
-			{
-				_feedService.Delete(feedSubmission);
 			}
 		}
 

@@ -541,5 +541,23 @@ namespace EasyMWS.Tests.Processors
 			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionCallback>()), Times.Once);
 			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionCallback>()), Times.Never);
 		}
+
+		[Test]
+		public void Poll_DeletesFeedSubmissions_WithRetryCountAboveMaxRetryCount()
+		{
+			var testFeedSubmissionCallbacks = new List<FeedSubmissionCallback>
+			{
+				new FeedSubmissionCallback {Id = 1, SubmissionRetryCount = 0, AmazonRegion = _region, MerchantId = _merchantId },
+				new FeedSubmissionCallback {Id = 2, SubmissionRetryCount = 1, AmazonRegion = _region, MerchantId = _merchantId },
+				new FeedSubmissionCallback {Id = 3, SubmissionRetryCount = 2, AmazonRegion = _region, MerchantId = _merchantId },
+				new FeedSubmissionCallback {Id = 4, SubmissionRetryCount = 3, AmazonRegion = _region, MerchantId = _merchantId },
+				new FeedSubmissionCallback {Id = 5, SubmissionRetryCount = 4, AmazonRegion = _region, MerchantId = _merchantId, FeedSubmissionId = null },
+				new FeedSubmissionCallback {Id = 6, SubmissionRetryCount = 5, AmazonRegion = _region, MerchantId = _merchantId, FeedSubmissionId = "testFeedSubmissionId" }
+			}.AsQueryable();
+			_feedSubmissionCallbackServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(testFeedSubmissionCallbacks);
+
+			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_region, _merchantId);
+			_feedSubmissionCallbackServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionCallback>()), Times.Exactly(2));
+		}
 	}
 }
