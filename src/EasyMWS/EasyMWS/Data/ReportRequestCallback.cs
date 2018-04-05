@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Model;
 using Newtonsoft.Json;
@@ -8,6 +9,14 @@ namespace MountainWarehouse.EasyMWS.Data
 {
 	public class ReportRequestCallback
 	{
+		private string _regionAndType;
+		[NotMapped]
+		public string RegionAndTypeComputed
+		{
+			// this field is populated based on ReportRequestData which, once set in the ctor, should never change again for the same entity.
+			get { return _regionAndType = _regionAndType ?? this.GetRegionAndTypeString(); }
+		}
+
 		[Key]
 		public int Id { get; set; }
 
