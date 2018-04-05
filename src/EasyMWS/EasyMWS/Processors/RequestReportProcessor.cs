@@ -73,15 +73,20 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    if (!string.IsNullOrEmpty(reportRequestData.ReportOptions))
 			    reportRequest.ReportOptions = reportRequestData.ReportOptions;
 
-			try
+		    try
 		    {
 			    var reportResponse = _marketplaceWebServiceClient.RequestReport(reportRequest);
+			    var requestId = reportResponse?.ResponseHeaderMetadata?.RequestId ?? "unknown";
+				var timestamp = reportResponse?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
+				_logger.Info($"Request to MWS.RequestReport was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']", new RequestInfo(timestamp, requestId));
+
 			    return reportResponse?.RequestReportResult?.ReportRequestInfo?.ReportRequestId;
-			}
-		    catch (Exception)
-		    {
-				return null;
 		    }
+		    catch (Exception e)
+		    {
+				_logger.Error($"Request to MWS.RequestReport failed!", e);
+			    return null;
+			}
 		}
 
 	    public void GetNextFromQueueOfReportsToGenerate(ReportRequestCallback reportRequestCallback, string reportRequestId)
@@ -104,15 +109,17 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var request = new GetReportRequestListRequest() {ReportRequestIdList = new IdList(), Merchant = merchant};
 		    request.ReportRequestIdList.Id.AddRange(requestIdList);
 		    var response = _marketplaceWebServiceClient.GetReportRequestList(request);
+			var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
+		    var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
+			_logger.Info($"Request to MWS.GetReportRequestList was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']", new RequestInfo(timestamp, requestId));
 
-		    var responseInformation = new List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)>();
+			var responseInformation = new List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)>();
 
 		    foreach (var reportRequestInfo in response.GetReportRequestListResult.ReportRequestInfo)
 		    {
 			    responseInformation.Add((reportRequestInfo.ReportRequestId, reportRequestInfo.GeneratedReportId, reportRequestInfo.ReportProcessingStatus));
 		    }
 
-		    _logger.Info($"AmazonMWS request for report processing statuses succeeded.");
 			return responseInformation;
 	    }
 
@@ -224,8 +231,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    };
 
 		    var response = _marketplaceWebServiceClient.GetReport(getReportRequest);
+
 		    var reportContentStream = getReportRequest.Report;
-		    _logger.Info($"Report download from Amazon has succeeded for {reportRequestCallback.RegionAndTypeComputed}.");
+			var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
+		    var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
+			_logger.Info($"Request to MWS.GetReport was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']", new RequestInfo(timestamp, requestId));
+			_logger.Info($"Report download from Amazon has succeeded for {reportRequestCallback.RegionAndTypeComputed}.");
 
 			if (_options.KeepAmazonReportsInLocalDbAfterCallbackIsPerformed)
 		    {
@@ -233,9 +244,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 				var requestPropertyContainer = reportRequestCallback.GetPropertiesContainer();
 			    var reportType = requestPropertyContainer?.ReportType ?? "unknown";
-
-			    var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
-			    var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
 
 			    _logger.Info($"Proceeding to save backup report content in EasyMws internal database for {reportRequestCallback.RegionAndTypeComputed}");
 				StoreAmazonReportToInternalStorage(reportContentStream, reportType, requestId, timestamp);

@@ -67,6 +67,10 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 				var response = _marketplaceWebServiceClient.SubmitFeed(submitFeedRequest);
 
+				var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
+				var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
+				_logger.Info($"Request to MWS.SubmitFeed was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']", new RequestInfo(timestamp, requestId));
+
 				return response?.SubmitFeedResult?.FeedSubmissionInfo?.FeedSubmissionId;
 			}
 		}
@@ -102,6 +106,10 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var request = new GetFeedSubmissionListRequest() {FeedSubmissionIdList = new IdList(), Merchant = merchant};
 			request.FeedSubmissionIdList.Id.AddRange(feedSubmissionIdList);
 			var response = _marketplaceWebServiceClient.GetFeedSubmissionList(request);
+
+			var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
+			var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
+			_logger.Info($"Request to MWS.GetFeedSubmissionList was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']", new RequestInfo(timestamp, requestId));
 
 			var responseInfo = new List<(string FeedSubmissionId, string IsProcessingComplete)>();
 
@@ -172,9 +180,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 			};
 
 			var response = _marketplaceWebServiceClient.GetFeedSubmissionResult(request);
+
+			var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
+			var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
+			_logger.Info($"Request to MWS.GetFeedSubmissionResult was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']", new RequestInfo(timestamp, requestId));
 			_logger.Info($"Feed submission result request from Amazon has succeeded for {feedSubmissionCallback.RegionAndTypeComputed}.");
 
-			return (reportResultStream, response.GetFeedSubmissionResultResult.ContentMD5);
+			return (reportResultStream, response?.GetFeedSubmissionResultResult?.ContentMD5);
 		}
 
 		public void RemoveFromQueue(FeedSubmissionCallback feedSubmissionCallback)
