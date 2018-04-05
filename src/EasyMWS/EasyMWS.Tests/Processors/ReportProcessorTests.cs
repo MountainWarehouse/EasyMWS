@@ -112,6 +112,26 @@ namespace EasyMWS.Tests.ReportProcessors
 		#region PollReports tests 
 
 		[Test]
+		public void Poll_IfNoReportIsDownloaded_NoNullPointerExceptionIsLogged()
+		{
+			Exception actualLoggedException = null;
+			_loggerMock.Setup(lm => lm.Error(It.IsAny<string>(), It.IsAny<Exception>()))
+				.Callback<string, Exception>((message, exception) => { actualLoggedException = exception; });
+
+			_reportProcessor.Poll();
+
+			Assert.IsFalse(actualLoggedException is NullReferenceException);
+		}
+
+		[Test]
+		public void Poll_IfNoReportIsDownloaded_LogErrorIsNotCalled()
+		{
+			_reportProcessor.Poll();
+
+			_loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
+		}
+
+		[Test]
 		public void Poll_CallsOnce_GetNextFromQueueOfReportsToRequest()
 		{
 			_reportProcessor.Poll();

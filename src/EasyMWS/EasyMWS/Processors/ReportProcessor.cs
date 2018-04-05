@@ -66,8 +66,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 				var generatedReportRequestCallback = DownloadNextReportInQueueFromAmazon();
 				_reportService.SaveChanges();
 
-				ExecuteCallback(generatedReportRequestCallback.reportRequestCallback, generatedReportRequestCallback.stream);
-				_reportService.SaveChanges();
+				if (generatedReportRequestCallback.reportRequestCallback != null && generatedReportRequestCallback.stream != null)
+				{
+					ExecuteCallback(generatedReportRequestCallback.reportRequestCallback, generatedReportRequestCallback.stream);
+					_reportService.SaveChanges();
+				}
 			}
 			catch (Exception e)
 			{
