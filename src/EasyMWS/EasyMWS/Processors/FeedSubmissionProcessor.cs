@@ -5,6 +5,7 @@ using System.Linq;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
+using MountainWarehouse.EasyMWS.Logging;
 using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Services;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
@@ -17,19 +18,21 @@ namespace MountainWarehouse.EasyMWS.Processors
 	{
 		private readonly IFeedSubmissionCallbackService _feedSubmissionCallbackService;
 		private readonly IMarketplaceWebServiceClient _marketplaceWebServiceClient;
+		private readonly IEasyMwsLogger _logger;
 		private readonly EasyMwsOptions _options;
 
 		internal FeedSubmissionProcessor(IMarketplaceWebServiceClient marketplaceWebServiceClient,
-			IFeedSubmissionCallbackService feedSubmissionCallbackService, EasyMwsOptions options) : this(
-			marketplaceWebServiceClient, options)
+			IFeedSubmissionCallbackService feedSubmissionCallbackService, IEasyMwsLogger logger, EasyMwsOptions options) : this(
+			marketplaceWebServiceClient, logger, options)
 		{
 			_feedSubmissionCallbackService = feedSubmissionCallbackService;
 		}
 
-		internal FeedSubmissionProcessor(IMarketplaceWebServiceClient marketplaceWebServiceClient, EasyMwsOptions options)
+		internal FeedSubmissionProcessor(IMarketplaceWebServiceClient marketplaceWebServiceClient, IEasyMwsLogger logger, EasyMwsOptions options)
 		{
 			_marketplaceWebServiceClient = marketplaceWebServiceClient;
 			_feedSubmissionCallbackService = _feedSubmissionCallbackService ?? new FeedSubmissionCallbackService();
+			_logger = logger;
 			_options = options;
 		}
 
@@ -169,6 +172,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void CleanUpFeedSubmissionQueue(AmazonRegion region, string merchant)
 		{
+			//_logger.Info("Executing cleanup of report request queues.");
 			var expiredFeedSubmissions = _feedSubmissionCallbackService.GetAll()
 				.Where(fscs => fscs.AmazonRegion == region && fscs.MerchantId == merchant
 							   && fscs.FeedSubmissionId == null

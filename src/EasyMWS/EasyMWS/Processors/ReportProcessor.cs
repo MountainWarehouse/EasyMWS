@@ -46,7 +46,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_callbackActivator = _callbackActivator ?? new CallbackActivator();
 			_amazonReportService = _amazonReportService ?? new AmazonReportService();
 			_reportService = _reportService ?? new ReportRequestCallbackService();
-			_requestReportProcessor = _requestReportProcessor ?? new RequestReportProcessor(mwsClient, _reportService, _amazonReportService, logger, options);
+			_requestReportProcessor = _requestReportProcessor ?? new RequestReportProcessor(mwsClient, _reportService, _amazonReportService, _logger, options);
 		}
 
 

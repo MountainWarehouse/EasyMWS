@@ -7,6 +7,7 @@ using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
+using MountainWarehouse.EasyMWS.Logging;
 using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Processors;
 using MountainWarehouse.EasyMWS.Services;
@@ -25,6 +26,7 @@ namespace EasyMWS.Tests.Processors
 		private Mock<IFeedSubmissionCallbackService> _feedSubmissionCallbackServiceMock;
 		private List<FeedSubmissionCallback> _feedSubmissionCallbacks;
 		private string _merchantId = "TestMerchantId";
+		private Mock<IEasyMwsLogger> _loggerMock;
 		private AmazonRegion _region = AmazonRegion.Europe;
 
 		[SetUp]
@@ -33,8 +35,9 @@ namespace EasyMWS.Tests.Processors
 			_easyMwsOptions = EasyMwsOptions.Defaults();
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_feedSubmissionCallbackServiceMock = new Mock<IFeedSubmissionCallbackService>();
+			_loggerMock = new Mock<IEasyMwsLogger>();
 			_feedSubmissionProcessor = new FeedSubmissionProcessor(_marketplaceWebServiceClientMock.Object,
-				_feedSubmissionCallbackServiceMock.Object, _easyMwsOptions);
+				_feedSubmissionCallbackServiceMock.Object, _loggerMock.Object, _easyMwsOptions);
 
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);

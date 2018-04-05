@@ -41,7 +41,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_callbackActivator = _callbackActivator ?? new CallbackActivator();
 
 			_feedService = _feedService ?? new FeedSubmissionCallbackService();
-			_feedSubmissionProcessor = _feedSubmissionProcessor ?? new FeedSubmissionProcessor(mwsClient, _feedService, options);
+			_feedSubmissionProcessor = _feedSubmissionProcessor ?? new FeedSubmissionProcessor(mwsClient, _feedService, _logger, _options);
 		}
 
 		public void Poll()
