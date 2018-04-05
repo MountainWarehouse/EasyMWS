@@ -125,7 +125,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void RequestReportStatusesFromAmazon()
 		{
-			_logger.Info($"Attempting to request report processing status for all reports in queue.");
+			_logger.Info($"Attempting to request report processing statuses for all reports in queue.");
 			try
 			{
 				var reportRequestCallbacksPendingReports = _requestReportProcessor.GetAllPendingReportFromQueue(_region, _merchantId).ToList();

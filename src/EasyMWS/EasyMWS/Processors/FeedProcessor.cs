@@ -49,6 +49,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			try
 			{
 				_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_region, _merchantId);
+
 				SubmitNextFeedInQueueToAmazon();
 				_feedService.SaveChanges();
 
@@ -58,7 +59,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 				var amazonProcessingReport = RequestNextFeedSubmissionInQueueFromAmazon();
 				_feedService.SaveChanges();
 
-				// TODO: log a warning for each hash miss-match, and recommend to the user to notify Amazon that a corrupted body was received. 
 				if (amazonProcessingReport.feedSubmissionCallback != null)
 				{
 					if (MD5ChecksumHelper.IsChecksumCorrect(amazonProcessingReport.reportContent, amazonProcessingReport.contentMd5))
@@ -69,8 +69,8 @@ namespace MountainWarehouse.EasyMWS.Processors
 					{
 						_feedSubmissionProcessor.MoveToRetryQueue(amazonProcessingReport.feedSubmissionCallback);
 					}
+					_feedService.SaveChanges();
 				}
-				_feedService.SaveChanges();
 			}
 			catch (Exception e)
 			{
@@ -96,6 +96,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var feedSubmission = _feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit(_region, _merchantId);
 
 			if (feedSubmission == null) return;
+			_logger.Info($"Attempting to submit the next feed in queue to Amazon: {feedSubmission.RegionAndTypeComputed}.");
 
 			try
 			{
@@ -107,10 +108,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 				if (string.IsNullOrEmpty(feedSubmissionId))
 				{
 					_feedSubmissionProcessor.MoveToRetryQueue(feedSubmission);
+					_logger.Warn($"AmazonMWS feed submission request failed for {feedSubmission.RegionAndTypeComputed}");
 				}
 				else
 				{
 					_feedSubmissionProcessor.MoveToQueueOfSubmittedFeeds(feedSubmission, feedSubmissionId);
+					_logger.Info($"AmazonMWS feed submission request succeeded for {feedSubmission.RegionAndTypeComputed}. FeedSubmissionId:'{feedSubmissionId}'");
 				}
 			}
 			catch (Exception e)
@@ -122,6 +125,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void RequestFeedSubmissionStatusesFromAmazon()
 		{
+			_logger.Info($"Attempting to request feed submission statuses for all feeds in queue.");
 			try
 			{
 				var submittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeedsFromQueue(_region, _merchantId).ToList();
@@ -132,6 +136,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				var feedSubmissionIdList = submittedFeeds.Select(x => x.FeedSubmissionId);
 
 				var feedSubmissionResults = _feedSubmissionProcessor.RequestFeedSubmissionStatusesFromAmazon(feedSubmissionIdList, _merchantId);
+				_logger.Info($"AmazonMWS request for feed submission statuses succeeded.");
 
 				_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(feedSubmissionResults);
 			}
@@ -143,14 +148,15 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public (FeedSubmissionCallback feedSubmissionCallback, Stream reportContent, string contentMd5) RequestNextFeedSubmissionInQueueFromAmazon()
 		{
+			var nextFeedWithProcessingComplete = _feedSubmissionProcessor.GetNextFromQueueOfProcessingCompleteFeeds(_region, _merchantId);
+			if (nextFeedWithProcessingComplete == null) return (null, null, null);
+
+			_logger.Info($"Attempting to request the feed submission result for the next feed in queue from Amazon: {nextFeedWithProcessingComplete.RegionAndTypeComputed}.");
+
 			try
 			{
-				var nextFeedWithProcessingComplete =
-					_feedSubmissionProcessor.GetNextFromQueueOfProcessingCompleteFeeds(_region, _merchantId);
-
-				if (nextFeedWithProcessingComplete == null) return (null, null, null);
-
 				var processingReportInfo = _feedSubmissionProcessor.GetFeedSubmissionResultFromAmazon(nextFeedWithProcessingComplete);
+				_logger.Info($"Feed submission result request from Amazon has succeeded for {nextFeedWithProcessingComplete.RegionAndTypeComputed}.");
 
 				return (nextFeedWithProcessingComplete, processingReportInfo.processingReport, processingReportInfo.md5hash);
 			}
@@ -163,6 +169,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void ExecuteCallback(FeedSubmissionCallback feedSubmissionCallback, Stream stream)
 		{
+			_logger.Info($"Attempting to perform method callback for the next submitted feed in queue : {feedSubmissionCallback.RegionAndTypeComputed}.");
 			try
 			{
 				if (feedSubmissionCallback == null || stream == null) return;
@@ -185,8 +192,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			if (propertiesContainer == null || callbackMethod == null) throw new ArgumentNullException();
 			var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
+			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 
-			return new FeedSubmissionCallback(serializedCallback)
+			return new FeedSubmissionCallback(serializedCallback, serializedPropertiesContainer)
 			{
 				AmazonRegion = _region,
 				MerchantId = _merchantId,
@@ -195,8 +203,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				HasErrors = false,
 				SubmissionErrorData = null,
 				SubmissionRetryCount = 0,
-				FeedSubmissionId = null,
-				FeedSubmissionData = JsonConvert.SerializeObject(propertiesContainer),
+				FeedSubmissionId = null
 			};
 		}
 	}
