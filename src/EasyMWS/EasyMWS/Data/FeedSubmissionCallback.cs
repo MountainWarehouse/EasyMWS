@@ -43,14 +43,24 @@ namespace MountainWarehouse.EasyMWS.Data
 	    public bool HasErrors { get; set; }
 	    public string SubmissionErrorData { get; set; }
 
-	    #endregion
+		#endregion
 
+		[Obsolete("This constructor should never be used directly. But it has to exist as required by EF. Use other overloads instead!")]
 		public FeedSubmissionCallback()
 		{
 		}
 
-		public FeedSubmissionCallback(Callback callback) => (TypeName, MethodName, Data, DataTypeName) =
-			(callback.TypeName, callback.MethodName, callback.Data, callback.DataTypeName);
+	    public FeedSubmissionCallback(Callback callback, string feedSubmissionData)
+	    {
+			if(callback == null || string.IsNullOrEmpty(feedSubmissionData))
+				throw new ArgumentException("Callback data or FeedSubmissionData not provided, but are required.");
+
+		    TypeName = callback.TypeName;
+		    MethodName = callback.MethodName;
+		    Data = callback.Data;
+		    DataTypeName = callback.DataTypeName;
+		    FeedSubmissionData = feedSubmissionData;
+	    }
 	}
 
 	internal static class FeedSubmissionCallbackExtensions

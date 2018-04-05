@@ -23,11 +23,12 @@ namespace EasyMWS.Tests.Services
 	    {
 		    var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType", false,
 			    new List<string>(MwsMarketplaceGroup.AmazonEurope()));
+		    var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 
-		    var feedSubmissionCallbacks = new List<FeedSubmissionCallback>
+			var feedSubmissionCallbacks = new List<FeedSubmissionCallback>
 		    {
-				new FeedSubmissionCallback{ Id = 2 },
-				new FeedSubmissionCallback
+				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer){ Id = 2 },
+				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
 				{
 					Id = 1,
 					AmazonRegion = AmazonRegion.Europe,
