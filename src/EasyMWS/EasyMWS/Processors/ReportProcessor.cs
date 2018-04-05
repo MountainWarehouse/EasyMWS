@@ -96,8 +96,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var reportRequest = _requestReportProcessor.GetNextFromQueueOfReportsToRequest(_region, _merchantId);
 
 			if (reportRequest == null) return;
-			_logger.Info($"Attempting to request the next report in queue from Amazon: {reportRequest.RegionAndTypeComputed}.");
-
+			
 			try
 			{
 				var reportRequestId = _requestReportProcessor.RequestReportFromAmazon(reportRequest);
@@ -125,7 +124,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void RequestReportStatusesFromAmazon()
 		{
-			_logger.Info($"Attempting to request report processing statuses for all reports in queue.");
 			try
 			{
 				var reportRequestCallbacksPendingReports = _requestReportProcessor.GetAllPendingReportFromQueue(_region, _merchantId).ToList();
@@ -135,7 +133,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 				var reportRequestIds = reportRequestCallbacksPendingReports.Select(x => x.RequestReportId);
 
 				var reportRequestStatuses = _requestReportProcessor.GetReportProcessingStatusesFromAmazon(reportRequestIds, _merchantId);
-				_logger.Info($"AmazonMWS request for report processing statuses succeeded.");
 
 				_requestReportProcessor.QueueReportsAccordingToProcessingStatus(reportRequestStatuses);
 			}
@@ -150,12 +147,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var reportToDownload = _requestReportProcessor.GetNextFromQueueOfReportsToDownload(_region, _merchantId);
 			if (reportToDownload == null) return (null, null);
 
-			_logger.Info($"Attempting to download the next report in queue from Amazon: {reportToDownload.RegionAndTypeComputed}.");
-
 			try
 			{
 				var stream = _requestReportProcessor.DownloadGeneratedReportFromAmazon(reportToDownload);
-				_logger.Info($"Report download from Amazon has succeeded for {reportToDownload.RegionAndTypeComputed}.");
 
 				return (reportToDownload, stream);
 			}
@@ -168,11 +162,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void ExecuteCallback(ReportRequestCallback reportRequest, Stream stream)
 		{
+			if (reportRequest == null || stream == null) return;
+
 			_logger.Info($"Attempting to perform method callback for the next downloaded report in queue : {reportRequest.RegionAndTypeComputed}.");
 			try
 			{
-				if (reportRequest == null || stream == null) return;
-
 				var callback = new Callback(reportRequest.TypeName, reportRequest.MethodName,
 					reportRequest.Data, reportRequest.DataTypeName);
 

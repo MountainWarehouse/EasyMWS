@@ -64,9 +64,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 					if (MD5ChecksumHelper.IsChecksumCorrect(amazonProcessingReport.reportContent, amazonProcessingReport.contentMd5))
 					{
 						ExecuteCallback(amazonProcessingReport.feedSubmissionCallback, amazonProcessingReport.reportContent);
+						_logger.Warn($"Checksum verification succeeded for feed submission report for {amazonProcessingReport.feedSubmissionCallback.RegionAndTypeComputed}");
 					}
 					else
 					{
+						_logger.Warn($"Checksum verification failed for feed submission report for {amazonProcessingReport.feedSubmissionCallback.RegionAndTypeComputed}");
 						_feedSubmissionProcessor.MoveToRetryQueue(amazonProcessingReport.feedSubmissionCallback);
 					}
 					_feedService.SaveChanges();
@@ -96,8 +98,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var feedSubmission = _feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit(_region, _merchantId);
 
 			if (feedSubmission == null) return;
-			_logger.Info($"Attempting to submit the next feed in queue to Amazon: {feedSubmission.RegionAndTypeComputed}.");
-
+			
 			try
 			{
 				var feedSubmissionId = _feedSubmissionProcessor.SubmitFeedToAmazon(feedSubmission);
@@ -125,7 +126,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void RequestFeedSubmissionStatusesFromAmazon()
 		{
-			_logger.Info($"Attempting to request feed submission statuses for all feeds in queue.");
 			try
 			{
 				var submittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeedsFromQueue(_region, _merchantId).ToList();
@@ -136,7 +136,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 				var feedSubmissionIdList = submittedFeeds.Select(x => x.FeedSubmissionId);
 
 				var feedSubmissionResults = _feedSubmissionProcessor.RequestFeedSubmissionStatusesFromAmazon(feedSubmissionIdList, _merchantId);
-				_logger.Info($"AmazonMWS request for feed submission statuses succeeded.");
 
 				_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(feedSubmissionResults);
 			}
@@ -151,12 +150,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var nextFeedWithProcessingComplete = _feedSubmissionProcessor.GetNextFromQueueOfProcessingCompleteFeeds(_region, _merchantId);
 			if (nextFeedWithProcessingComplete == null) return (null, null, null);
 
-			_logger.Info($"Attempting to request the feed submission result for the next feed in queue from Amazon: {nextFeedWithProcessingComplete.RegionAndTypeComputed}.");
-
 			try
 			{
 				var processingReportInfo = _feedSubmissionProcessor.GetFeedSubmissionResultFromAmazon(nextFeedWithProcessingComplete);
-				_logger.Info($"Feed submission result request from Amazon has succeeded for {nextFeedWithProcessingComplete.RegionAndTypeComputed}.");
 
 				return (nextFeedWithProcessingComplete, processingReportInfo.processingReport, processingReportInfo.md5hash);
 			}
@@ -169,11 +165,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void ExecuteCallback(FeedSubmissionCallback feedSubmissionCallback, Stream stream)
 		{
+			if (feedSubmissionCallback == null || stream == null) return;
+
 			_logger.Info($"Attempting to perform method callback for the next submitted feed in queue : {feedSubmissionCallback.RegionAndTypeComputed}.");
 			try
 			{
-				if (feedSubmissionCallback == null || stream == null) return;
-
 				var callback = new Callback(feedSubmissionCallback.TypeName, feedSubmissionCallback.MethodName,
 					feedSubmissionCallback.Data, feedSubmissionCallback.DataTypeName);
 

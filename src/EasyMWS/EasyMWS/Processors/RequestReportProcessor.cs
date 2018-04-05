@@ -99,7 +99,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> GetReportProcessingStatusesFromAmazon(IEnumerable<string> requestIdList, string merchant)
 	    {
-		    var request = new GetReportRequestListRequest() {ReportRequestIdList = new IdList(), Merchant = merchant};
+		    _logger.Info($"Attempting to request report processing statuses for all reports in queue.");
+
+			var request = new GetReportRequestListRequest() {ReportRequestIdList = new IdList(), Merchant = merchant};
 		    request.ReportRequestIdList.Id.AddRange(requestIdList);
 		    var response = _marketplaceWebServiceClient.GetReportRequestList(request);
 
@@ -110,7 +112,8 @@ namespace MountainWarehouse.EasyMWS.Processors
 			    responseInformation.Add((reportRequestInfo.ReportRequestId, reportRequestInfo.GeneratedReportId, reportRequestInfo.ReportProcessingStatus));
 		    }
 
-		    return responseInformation;
+		    _logger.Info($"AmazonMWS request for report processing statuses succeeded.");
+			return responseInformation;
 	    }
 
 	    public void MoveReportsToGeneratedQueue(List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> reportsStatusInformation)
@@ -141,18 +144,18 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 	    public void CleanupReportRequests()
 	    {
-			_logger.Info("Executing cleanup of report request queues.");
+			_logger.Info("Executing cleanup of report requests queue.");
 		    var expiredReportRequests = _reportRequestCallbackService.GetAll()
 			    .Where(rrc => rrc.RequestRetryCount > _options.ReportRequestMaxRetryCount);
 
 		    if (expiredReportRequests.Any())
 		    {
-			    _logger.Warn("Report requests have expired for the following report types, and will now be deleted :");
+			    _logger.Warn("The following report requests have exceeded their retry limit and will now be deleted :");
 			    foreach (var expiredReport in expiredReportRequests)
 			    {
-				    _logger.Warn($"Report request for {expiredReport.RegionAndTypeComputed} deleted from queue.");
 				    _reportRequestCallbackService.Delete(expiredReport);
-			    }
+				    _logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue.");
+				}
 		    }
 		}
 
@@ -210,7 +213,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 	    public Stream DownloadGeneratedReportFromAmazon(ReportRequestCallback reportRequestCallback)
 	    {
-		    var reportResultStream = new MemoryStream();
+		    _logger.Info($"Attempting to download the next report in queue from Amazon: {reportRequestCallback.RegionAndTypeComputed}.");
+
+			var reportResultStream = new MemoryStream();
 		    var getReportRequest = new GetReportRequest
 		    {
 			    ReportId = reportRequestCallback.GeneratedReportId,
@@ -220,24 +225,30 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		    var response = _marketplaceWebServiceClient.GetReport(getReportRequest);
 		    var reportContentStream = getReportRequest.Report;
+		    _logger.Info($"Report download from Amazon has succeeded for {reportRequestCallback.RegionAndTypeComputed}.");
 
-		    if (_options.KeepAmazonReportsInLocalDbAfterCallbackIsPerformed)
+			if (_options.KeepAmazonReportsInLocalDbAfterCallbackIsPerformed)
 		    {
+			    _logger.Info($"Backup report storage in local easyMws database is enabled. To disable it, update the KeepAmazonReportsInLocalDbAfterCallbackIsPerformed option.");
 
-			    var requestPropertyContainer = reportRequestCallback.GetPropertiesContainer();
+				var requestPropertyContainer = reportRequestCallback.GetPropertiesContainer();
 			    var reportType = requestPropertyContainer?.ReportType ?? "unknown";
 
 			    var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
 			    var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
+
+			    _logger.Info($"Proceeding to save backup report content in EasyMws internal database for {reportRequestCallback.RegionAndTypeComputed}");
 				StoreAmazonReportToInternalStorage(reportContentStream, reportType, requestId, timestamp);
 		    }
 
-		    return reportContentStream;
+			return reportContentStream;
 	    }
 
 	    public void RemoveFromQueue(ReportRequestCallback reportRequestCallback)
 	    {
 		    _reportRequestCallbackService.Delete(reportRequestCallback);
+		    _logger.Info($"Removing {reportRequestCallback.RegionAndTypeComputed} from queue.");
+
 	    }
 
 	    public void MoveToRetryQueue(ReportRequestCallback reportRequestCallback)
@@ -251,7 +262,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 	    private void StoreAmazonReportToInternalStorage(Stream reportContent, string reportType, string requestId, string timestamp)
 	    {
-		    var sb = new StringBuilder();
+			var sb = new StringBuilder();
 			var sr = new StreamReader(reportContent);
 		    reportContent.Position = 0;
 		    sb.Append(sr.ReadToEnd());
