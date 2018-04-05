@@ -56,6 +56,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var reportRequestData = reportRequestCallback.GetPropertiesContainer();
 		    if (reportRequestData?.ReportType == null) throw new ArgumentException(missingInformationExceptionMessage);
 
+		    var reportFriendlyId = reportRequestCallback.GetRegionAndTypeString();
+			_logger.Info($"Attempting to request the next report in queue from Amazon: {reportFriendlyId}.");
+
 			var reportRequest = new RequestReportRequest
 			{
 				Merchant = reportRequestCallback.MerchantId,
@@ -241,9 +244,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 	    public void MoveToRetryQueue(ReportRequestCallback reportRequestCallback)
 	    {
+		    var reportFriendlyId = reportRequestCallback.GetRegionAndTypeString();
+
 			reportRequestCallback.RequestRetryCount++;
 
 		    _reportRequestCallbackService.Update(reportRequestCallback);
+
+		    _logger.Warn($"Moving {reportFriendlyId} to retry queue. Retry count is now '{reportRequestCallback.RequestRetryCount}'.");
 		}
 
 	    private void StoreAmazonReportToInternalStorage(Stream reportContent, string reportType, string requestId, string timestamp)
