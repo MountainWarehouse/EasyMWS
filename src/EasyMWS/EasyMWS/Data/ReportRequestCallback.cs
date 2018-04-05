@@ -77,14 +77,10 @@ namespace MountainWarehouse.EasyMWS.Data
 			return JsonConvert.DeserializeObject<ReportRequestPropertiesContainer>(source.ReportRequestData);
 		}
 
-		internal static string GetReportType(this ReportRequestCallback source)
-		{
-			return GetPropertiesContainer(source)?.ReportType;
-		}
-
 		internal static string GetRegionAndTypeString(this ReportRequestCallback source)
 		{
-			return $"[region:'{source.AmazonRegion.ToString()}', reportType:'{GetReportType(source)}']" ;
+			var reportType = GetPropertiesContainer(source)?.ReportType;
+			return $"[region:'{source.AmazonRegion.ToString()}', reportType:'{reportType}']" ;
 		}
 	}
 }
