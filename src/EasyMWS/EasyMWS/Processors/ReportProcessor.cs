@@ -55,7 +55,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_logger.Info("EasyMwsClient: Executing polling action for report requests.");
 			try
 			{
-				_requestReportProcessor.CleanupReportRequests();
+				_requestReportProcessor.CleanupReportRequests(_region, _merchantId);
 
 				RequestNextReportInQueueFromAmazon();
 				_reportService.SaveChanges();
