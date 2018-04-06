@@ -9,7 +9,7 @@ using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Model;
 using NUnit.Framework;
 
-namespace EasyMWS.Tests.Helpers
+namespace EasyMWS.Tests.Model
 {
     public class ReportRequestPropertiesContainerTests
     {
@@ -23,8 +23,22 @@ namespace EasyMWS.Tests.Helpers
 	    {
 		    _callbackActivator = new CallbackActivator();
 			_called = false;
-			_callbackData = new ReportRequestPropertiesContainer("", ContentUpdateFrequency.Daily, new List<string>());
+			_callbackData = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Daily, new List<string>());
 		}
+
+	    [Test]
+	    public void ReportRequestPropertiesContainer_InitializationWithEmptyReportType_ThrowsException()
+	    {
+		    Assert.Throws<ArgumentException>((() =>
+			    new ReportRequestPropertiesContainer("", ContentUpdateFrequency.Unknown)));
+	    }
+
+	    [Test]
+	    public void ReportRequestPropertiesContainer_InitializationWithNullReportType_ThrowsException()
+	    {
+		    Assert.Throws<ArgumentException>((() =>
+			    new ReportRequestPropertiesContainer(null, ContentUpdateFrequency.Unknown)));
+	    }
 
 		[Test]
 	    public void ReportRequestPropertiesContainer_IsSerializedAndDeserialized_AsExpected()

@@ -72,14 +72,6 @@ namespace MountainWarehouse.EasyMWS
 		/// </summary>
 		public void Poll()
 		{
-			_logger.Info("Polling operation has been triggered!");
-
-			//TODO: For each request of any kind made to amazon, record RequestId and Timestamp. Either retain these for 30 days (config option On/Off) and/or return this info to the caller.
-			//For more info see: https://docs.developer.amazonservices.com/en_US/dev_guide/DG_ResponseFormat.html
-
-			//TODO: Whenever an amazon request is unsuccessful, log the error, the RequestId and Timestamp found on ErrorResponse. (and take additional appropriate action if it's the case)
-			// In order to access this information, I believe MarketplaceWebServiceException has to be caught. Request info can be found on the ResponseHeaderMetadata property of the ex.
-
 			_reportProcessor.Poll();
 			_feedProcessor.Poll();
 		}

@@ -6,6 +6,7 @@ using System.Text;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
+using MountainWarehouse.EasyMWS.Logging;
 using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Services;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
@@ -19,20 +20,22 @@ namespace MountainWarehouse.EasyMWS.Processors
 	    private readonly IAmazonReportService _amazonReportStorageService;
 	    private readonly IReportRequestCallbackService _reportRequestCallbackService;
 	    private readonly IMarketplaceWebServiceClient _marketplaceWebServiceClient;
-	    private readonly EasyMwsOptions _options;
+	    private readonly IEasyMwsLogger _logger;
+		private readonly EasyMwsOptions _options;
 
 		internal RequestReportProcessor(IMarketplaceWebServiceClient marketplaceWebServiceClient,
-		    IReportRequestCallbackService reportRequestCallbackService, IAmazonReportService amazonReportStorageService, EasyMwsOptions options) : this(marketplaceWebServiceClient, options)
+		    IReportRequestCallbackService reportRequestCallbackService, IAmazonReportService amazonReportStorageService, IEasyMwsLogger logger, EasyMwsOptions options) : this(marketplaceWebServiceClient, logger, options)
 	    {
 		    _reportRequestCallbackService = reportRequestCallbackService;
 		    _amazonReportStorageService = amazonReportStorageService;
 	    }
 
-		internal RequestReportProcessor(IMarketplaceWebServiceClient marketplaceWebServiceClient, EasyMwsOptions options)
+		internal RequestReportProcessor(IMarketplaceWebServiceClient marketplaceWebServiceClient, IEasyMwsLogger logger, EasyMwsOptions options)
 	    {
 		    _marketplaceWebServiceClient = marketplaceWebServiceClient;
 		    _reportRequestCallbackService = _reportRequestCallbackService ?? new ReportRequestCallbackService();
 		    _amazonReportStorageService = _amazonReportStorageService ?? new AmazonReportService();
+		    _logger = logger;
 			_options = options;
 	    }
 
@@ -53,6 +56,8 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var reportRequestData = reportRequestCallback.GetPropertiesContainer();
 		    if (reportRequestData?.ReportType == null) throw new ArgumentException(missingInformationExceptionMessage);
 
+			_logger.Info($"Attempting to request the next report in queue from Amazon: {reportRequestCallback.RegionAndTypeComputed}.");
+
 			var reportRequest = new RequestReportRequest
 			{
 				Merchant = reportRequestCallback.MerchantId,
@@ -68,15 +73,20 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    if (!string.IsNullOrEmpty(reportRequestData.ReportOptions))
 			    reportRequest.ReportOptions = reportRequestData.ReportOptions;
 
-			try
+		    try
 		    {
 			    var reportResponse = _marketplaceWebServiceClient.RequestReport(reportRequest);
+			    var requestId = reportResponse?.ResponseHeaderMetadata?.RequestId ?? "unknown";
+				var timestamp = reportResponse?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
+				_logger.Info($"Request to MWS.RequestReport was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']", new RequestInfo(timestamp, requestId));
+
 			    return reportResponse?.RequestReportResult?.ReportRequestInfo?.ReportRequestId;
-			}
-		    catch (Exception)
-		    {
-				return null;
 		    }
+		    catch (Exception e)
+		    {
+				_logger.Error($"Request to MWS.RequestReport failed!", e);
+			    return null;
+			}
 		}
 
 	    public void GetNextFromQueueOfReportsToGenerate(ReportRequestCallback reportRequestCallback, string reportRequestId)
@@ -94,18 +104,23 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> GetReportProcessingStatusesFromAmazon(IEnumerable<string> requestIdList, string merchant)
 	    {
-		    var request = new GetReportRequestListRequest() {ReportRequestIdList = new IdList(), Merchant = merchant};
+		    _logger.Info($"Attempting to request report processing statuses for all reports in queue.");
+
+			var request = new GetReportRequestListRequest() {ReportRequestIdList = new IdList(), Merchant = merchant};
 		    request.ReportRequestIdList.Id.AddRange(requestIdList);
 		    var response = _marketplaceWebServiceClient.GetReportRequestList(request);
+			var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
+		    var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
+			_logger.Info($"Request to MWS.GetReportRequestList was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']", new RequestInfo(timestamp, requestId));
 
-		    var responseInformation = new List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)>();
+			var responseInformation = new List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)>();
 
 		    foreach (var reportRequestInfo in response.GetReportRequestListResult.ReportRequestInfo)
 		    {
 			    responseInformation.Add((reportRequestInfo.ReportRequestId, reportRequestInfo.GeneratedReportId, reportRequestInfo.ReportProcessingStatus));
 		    }
 
-		    return responseInformation;
+			return responseInformation;
 	    }
 
 	    public void MoveReportsToGeneratedQueue(List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> reportsStatusInformation)
@@ -134,7 +149,24 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    }
 	    }
 
-	    public void QueueReportsAccordingToProcessingStatus(
+	    public void CleanupReportRequests()
+	    {
+			_logger.Info("Executing cleanup of report requests queue.");
+		    var expiredReportRequests = _reportRequestCallbackService.GetAll()
+			    .Where(rrc => rrc.RequestRetryCount > _options.ReportRequestMaxRetryCount);
+
+		    if (expiredReportRequests.Any())
+		    {
+			    _logger.Warn("The following report requests have exceeded their retry limit and will now be deleted :");
+			    foreach (var expiredReport in expiredReportRequests)
+			    {
+				    _reportRequestCallbackService.Delete(expiredReport);
+				    _logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue.");
+				}
+		    }
+		}
+
+		public void QueueReportsAccordingToProcessingStatus(
 		    List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> reportGenerationStatuses)
 	    {
 		    foreach (var reportGenerationInfo in reportGenerationStatuses)
@@ -144,12 +176,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 						&& rrc.GeneratedReportId == null);
 				if(reportGenerationCallback == null) continue;
 
-			    if (reportGenerationInfo.ReportProcessingStatus == "_DONE_" ||
+				if (reportGenerationInfo.ReportProcessingStatus == "_DONE_" ||
 			        reportGenerationInfo.ReportProcessingStatus == "_DONE_NO_DATA_")
 			    {
 				    reportGenerationCallback.GeneratedReportId = reportGenerationInfo.GeneratedReportId;
 				    reportGenerationCallback.RequestRetryCount = 0;
 					_reportRequestCallbackService.Update(reportGenerationCallback);
+				    _logger.Info($"Report was successfully generated by Amazon for {reportGenerationCallback.RegionAndTypeComputed}. GeneratedReportId:'{reportGenerationInfo.GeneratedReportId}'.");
 				}
 			    else if (reportGenerationInfo.ReportProcessingStatus == "_SUBMITTED_" ||
 			             reportGenerationInfo.ReportProcessingStatus == "_IN_PROGRESS_")
@@ -157,13 +190,15 @@ namespace MountainWarehouse.EasyMWS.Processors
 					reportGenerationCallback.GeneratedReportId = null;
 				    reportGenerationCallback.RequestRetryCount = 0;
 					_reportRequestCallbackService.Update(reportGenerationCallback);
+				    _logger.Info($"Report generation by Amazon is still in progress for {reportGenerationCallback.RegionAndTypeComputed}.");
 				}
 			    else if (reportGenerationInfo.ReportProcessingStatus == "_CANCELLED_")
 			    {
-				    reportGenerationCallback.RequestReportId = null;
+					reportGenerationCallback.RequestReportId = null;
 				    reportGenerationCallback.GeneratedReportId = null;
 					reportGenerationCallback.RequestRetryCount++;
 				    _reportRequestCallbackService.Update(reportGenerationCallback);
+				    _logger.Warn($"Report generation was cancelled by Amazon for {reportGenerationCallback.RegionAndTypeComputed}. Placing report back in report request queue! Retry count is now '{reportGenerationCallback.RequestRetryCount}'");
 				}
 			    else
 			    {
@@ -171,6 +206,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				    reportGenerationCallback.GeneratedReportId = null;
 				    reportGenerationCallback.RequestRetryCount++;
 				    _reportRequestCallbackService.Update(reportGenerationCallback);
+				    _logger.Warn($"Report status returned by amazon is {reportGenerationInfo.ReportProcessingStatus} for {reportGenerationCallback.RegionAndTypeComputed}. This status is not yet handled by EasyMws. Placing report back in report request queue! Retry count is now '{reportGenerationCallback.RequestRetryCount}'");
 				}
 		    }
 	    }
@@ -184,7 +220,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 	    public Stream DownloadGeneratedReportFromAmazon(ReportRequestCallback reportRequestCallback)
 	    {
-		    var reportResultStream = new MemoryStream();
+		    _logger.Info($"Attempting to download the next report in queue from Amazon: {reportRequestCallback.RegionAndTypeComputed}.");
+
+			var reportResultStream = new MemoryStream();
 		    var getReportRequest = new GetReportRequest
 		    {
 			    ReportId = reportRequestCallback.GeneratedReportId,
@@ -193,25 +231,32 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    };
 
 		    var response = _marketplaceWebServiceClient.GetReport(getReportRequest);
+
 		    var reportContentStream = getReportRequest.Report;
+			var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
+		    var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
+			_logger.Info($"Request to MWS.GetReport was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']", new RequestInfo(timestamp, requestId));
+			_logger.Info($"Report download from Amazon has succeeded for {reportRequestCallback.RegionAndTypeComputed}.");
 
-		    if (_options.KeepAmazonReportsInLocalDbAfterCallbackIsPerformed)
+			if (_options.KeepAmazonReportsInLocalDbAfterCallbackIsPerformed)
 		    {
+			    _logger.Info($"Backup report storage in local easyMws database is enabled. To disable it, update the KeepAmazonReportsInLocalDbAfterCallbackIsPerformed option.");
 
-			    var requestPropertyContainer = reportRequestCallback.GetPropertiesContainer();
+				var requestPropertyContainer = reportRequestCallback.GetPropertiesContainer();
 			    var reportType = requestPropertyContainer?.ReportType ?? "unknown";
 
-			    var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
-			    var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
+			    _logger.Info($"Proceeding to save backup report content in EasyMws internal database for {reportRequestCallback.RegionAndTypeComputed}");
 				StoreAmazonReportToInternalStorage(reportContentStream, reportType, requestId, timestamp);
 		    }
 
-		    return reportContentStream;
+			return reportContentStream;
 	    }
 
 	    public void RemoveFromQueue(ReportRequestCallback reportRequestCallback)
 	    {
 		    _reportRequestCallbackService.Delete(reportRequestCallback);
+		    _logger.Info($"Removing {reportRequestCallback.RegionAndTypeComputed} from queue.");
+
 	    }
 
 	    public void MoveToRetryQueue(ReportRequestCallback reportRequestCallback)
@@ -219,11 +264,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 			reportRequestCallback.RequestRetryCount++;
 
 		    _reportRequestCallbackService.Update(reportRequestCallback);
+
+		    _logger.Warn($"Moving {reportRequestCallback.RegionAndTypeComputed} to retry queue. Retry count is now '{reportRequestCallback.RequestRetryCount}'.");
 		}
 
 	    private void StoreAmazonReportToInternalStorage(Stream reportContent, string reportType, string requestId, string timestamp)
 	    {
-		    var sb = new StringBuilder();
+			var sb = new StringBuilder();
 			var sr = new StreamReader(reportContent);
 		    reportContent.Position = 0;
 		    sb.Append(sr.ReadToEnd());

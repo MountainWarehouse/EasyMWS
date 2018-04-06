@@ -22,5 +22,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 		(Stream processingReport, string md5hash) GetFeedSubmissionResultFromAmazon(FeedSubmissionCallback feedSubmissionCallback);
 		void RemoveFromQueue(FeedSubmissionCallback feedSubmissionCallback);
 		void MoveToRetryQueue(FeedSubmissionCallback feedSubmission);
+		void CleanUpFeedSubmissionQueue(AmazonRegion region, string merchant);
 	}
 }

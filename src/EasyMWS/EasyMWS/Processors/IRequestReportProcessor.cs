@@ -18,6 +18,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		void MoveToRetryQueue(ReportRequestCallback reportRequestCallback);
 		void QueueReportsAccordingToProcessingStatus(
 			List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> reportGenerationStatuses);
+		void CleanupReportRequests();
 	}
 }
 		

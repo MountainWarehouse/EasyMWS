@@ -51,8 +51,18 @@ namespace MountainWarehouse.EasyMWS.Model
 		/// <param name="reportType"></param>
 		/// <param name="marketplaceIdList"></param>
 		/// <param name="updateFrequency"></param>
-		public ReportRequestPropertiesContainer(string reportType, ContentUpdateFrequency updateFrequency, List<string> marketplaceIdList = null, DateTime? startDate = null, DateTime? endDate = null, string reportOptions = null) =>
-			(ReportType, MarketplaceIdList, UpdateFrequency, StartDate, EndDate, ReportOptions) = (reportType, marketplaceIdList, updateFrequency, startDate, endDate, reportOptions);
+		public ReportRequestPropertiesContainer(string reportType, ContentUpdateFrequency updateFrequency, List<string> marketplaceIdList = null, DateTime? startDate = null, DateTime? endDate = null, string reportOptions = null)
+		{
+			if (string.IsNullOrEmpty(reportType))
+				throw new ArgumentException("ReportType was not specified, but it is required.");
+
+			ReportType = reportType;
+			MarketplaceIdList = marketplaceIdList;
+			UpdateFrequency = updateFrequency;
+			StartDate = startDate;
+			EndDate = endDate;
+			ReportOptions = reportOptions;
+		}
 	}
 }
 

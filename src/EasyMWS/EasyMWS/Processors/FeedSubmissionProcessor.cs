@@ -5,6 +5,7 @@ using System.Linq;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
+using MountainWarehouse.EasyMWS.Logging;
 using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Services;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
@@ -17,19 +18,21 @@ namespace MountainWarehouse.EasyMWS.Processors
 	{
 		private readonly IFeedSubmissionCallbackService _feedSubmissionCallbackService;
 		private readonly IMarketplaceWebServiceClient _marketplaceWebServiceClient;
+		private readonly IEasyMwsLogger _logger;
 		private readonly EasyMwsOptions _options;
 
 		internal FeedSubmissionProcessor(IMarketplaceWebServiceClient marketplaceWebServiceClient,
-			IFeedSubmissionCallbackService feedSubmissionCallbackService, EasyMwsOptions options) : this(
-			marketplaceWebServiceClient, options)
+			IFeedSubmissionCallbackService feedSubmissionCallbackService, IEasyMwsLogger logger, EasyMwsOptions options) : this(
+			marketplaceWebServiceClient, logger, options)
 		{
 			_feedSubmissionCallbackService = feedSubmissionCallbackService;
 		}
 
-		internal FeedSubmissionProcessor(IMarketplaceWebServiceClient marketplaceWebServiceClient, EasyMwsOptions options)
+		internal FeedSubmissionProcessor(IMarketplaceWebServiceClient marketplaceWebServiceClient, IEasyMwsLogger logger, EasyMwsOptions options)
 		{
 			_marketplaceWebServiceClient = marketplaceWebServiceClient;
 			_feedSubmissionCallbackService = _feedSubmissionCallbackService ?? new FeedSubmissionCallbackService();
+			_logger = logger;
 			_options = options;
 		}
 
@@ -44,6 +47,8 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var missingInformationExceptionMessage = "Cannot submit queued feed to amazon due to missing feed submission information";
 
 			if (feedSubmission?.FeedSubmissionData == null) throw new ArgumentNullException(missingInformationExceptionMessage);
+
+			_logger.Info($"Attempting to submit the next feed in queue to Amazon: {feedSubmission.RegionAndTypeComputed}.");
 
 			var feedSubmissionData = feedSubmission.GetPropertiesContainer();
 			if (feedSubmissionData?.FeedType == null) throw new ArgumentException(missingInformationExceptionMessage);
@@ -62,6 +67,10 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 				var response = _marketplaceWebServiceClient.SubmitFeed(submitFeedRequest);
 
+				var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
+				var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
+				_logger.Info($"Request to MWS.SubmitFeed was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']", new RequestInfo(timestamp, requestId));
+
 				return response?.SubmitFeedResult?.FeedSubmissionInfo?.FeedSubmissionId;
 			}
 		}
@@ -71,12 +80,16 @@ namespace MountainWarehouse.EasyMWS.Processors
 			feedSubmission.FeedSubmissionId = feedSubmissionId;
 			feedSubmission.SubmissionRetryCount = 0;
 			_feedSubmissionCallbackService.Update(feedSubmission);
+
+			_logger.Info($"Moving {feedSubmission.RegionAndTypeComputed} to queue of feed submissions that await processing results.");
 		}
 
 		public void MoveToRetryQueue(FeedSubmissionCallback feedSubmission)
 		{
 			feedSubmission.SubmissionRetryCount++;
 			_feedSubmissionCallbackService.Update(feedSubmission);
+
+			_logger.Warn($"Moving {feedSubmission.RegionAndTypeComputed} to retry queue. Retry count is now '{feedSubmission.SubmissionRetryCount}'.");
 		}
 
 		public IEnumerable<FeedSubmissionCallback> GetAllSubmittedFeedsFromQueue(AmazonRegion region, string merchantId) =>
@@ -88,9 +101,15 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public List<(string FeedSubmissionId, string FeedProcessingStatus)> RequestFeedSubmissionStatusesFromAmazon(IEnumerable<string> feedSubmissionIdList, string merchant)
 		{
+			_logger.Info($"Attempting to request feed submission statuses for all feeds in queue.");
+
 			var request = new GetFeedSubmissionListRequest() {FeedSubmissionIdList = new IdList(), Merchant = merchant};
 			request.FeedSubmissionIdList.Id.AddRange(feedSubmissionIdList);
 			var response = _marketplaceWebServiceClient.GetFeedSubmissionList(request);
+
+			var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
+			var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
+			_logger.Info($"Request to MWS.GetFeedSubmissionList was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']", new RequestInfo(timestamp, requestId));
 
 			var responseInfo = new List<(string FeedSubmissionId, string IsProcessingComplete)>();
 
@@ -99,6 +118,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				responseInfo.Add((feedSubmissionInfo.FeedSubmissionId, feedSubmissionInfo.FeedProcessingStatus));
 			}
 
+			_logger.Info($"AmazonMWS request for feed submission statuses succeeded.");
 			return responseInfo;
 		}
 
@@ -149,6 +169,8 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public (Stream processingReport, string md5hash) GetFeedSubmissionResultFromAmazon(FeedSubmissionCallback feedSubmissionCallback)
 		{
+			_logger.Info($"Attempting to request the feed submission result for the next feed in queue from Amazon: {feedSubmissionCallback.RegionAndTypeComputed}.");
+
 			var reportResultStream = new MemoryStream();
 			var request = new GetFeedSubmissionResultRequest
 			{
@@ -159,12 +181,47 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			var response = _marketplaceWebServiceClient.GetFeedSubmissionResult(request);
 
-			return (reportResultStream, response.GetFeedSubmissionResultResult.ContentMD5);
+			var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
+			var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
+			_logger.Info($"Request to MWS.GetFeedSubmissionResult was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']", new RequestInfo(timestamp, requestId));
+			_logger.Info($"Feed submission result request from Amazon has succeeded for {feedSubmissionCallback.RegionAndTypeComputed}.");
+
+			return (reportResultStream, response?.GetFeedSubmissionResultResult?.ContentMD5);
 		}
 
 		public void RemoveFromQueue(FeedSubmissionCallback feedSubmissionCallback)
 		{
 			_feedSubmissionCallbackService.Delete(feedSubmissionCallback);
+		}
+
+		public void CleanUpFeedSubmissionQueue(AmazonRegion region, string merchant)
+		{
+			_logger.Info("Executing cleanup of feed submission requests queue.");
+			var expiredFeedSubmissions = _feedSubmissionCallbackService.GetAll()
+				.Where(fscs => fscs.AmazonRegion == region && fscs.MerchantId == merchant
+							   && fscs.FeedSubmissionId == null
+				               && fscs.SubmissionRetryCount > _options.FeedSubmissionMaxRetryCount);
+
+			if (expiredFeedSubmissions.Any())
+			{
+				_logger.Warn("The following feed submission requests have exceeded their retry limit and will now be deleted :");
+				foreach (var feedSubmission in expiredFeedSubmissions)
+				{
+					_feedSubmissionCallbackService.Delete(feedSubmission);
+					_logger.Warn($"Feed submission request {feedSubmission.RegionAndTypeComputed} deleted from queue.");
+				}
+			}
+			
+
+			var expiredFeedProcessingResultRequests = _feedSubmissionCallbackService.GetAll()
+				.Where(fscs => fscs.AmazonRegion == region && fscs.MerchantId == merchant
+							   && fscs.FeedSubmissionId != null
+				               && fscs.SubmissionRetryCount > _options.FeedResultFailedChecksumMaxRetryCount);
+
+			foreach (var feedSubmission in expiredFeedProcessingResultRequests)
+			{
+				_feedSubmissionCallbackService.Delete(feedSubmission);
+			}
 		}
 
 		private bool IsFeedReadyForSubmission(FeedSubmissionCallback feedSubmission)

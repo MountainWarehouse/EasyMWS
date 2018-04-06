@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Model;
 using Newtonsoft.Json;
@@ -8,7 +9,16 @@ namespace MountainWarehouse.EasyMWS.Data
 {
     public class FeedSubmissionCallback
     {
-		[Key]
+	    private string _regionAndType;
+
+	    [NotMapped]
+	    public string RegionAndTypeComputed
+	    {
+		    // this field is populated based on ReportRequestData which, once set in the ctor, should never change again for the same entity.
+			get { return _regionAndType = _regionAndType ?? this.GetRegionAndTypeString(); }
+	    }
+
+	    [Key]
 	    public int Id { get; set; }
 	    public int SubmissionRetryCount { get; set; }
 	    public DateTime LastSubmitted { get; set; }
@@ -33,14 +43,24 @@ namespace MountainWarehouse.EasyMWS.Data
 	    public bool HasErrors { get; set; }
 	    public string SubmissionErrorData { get; set; }
 
-	    #endregion
+		#endregion
 
+		[Obsolete("This constructor should never be used directly. But it has to exist as required by EF. Use other overloads instead!")]
 		public FeedSubmissionCallback()
 		{
 		}
 
-		public FeedSubmissionCallback(Callback callback) => (TypeName, MethodName, Data, DataTypeName) =
-			(callback.TypeName, callback.MethodName, callback.Data, callback.DataTypeName);
+	    public FeedSubmissionCallback(Callback callback, string feedSubmissionData)
+	    {
+			if(callback == null || string.IsNullOrEmpty(feedSubmissionData))
+				throw new ArgumentException("Callback data or FeedSubmissionData not provided, but are required.");
+
+		    TypeName = callback.TypeName;
+		    MethodName = callback.MethodName;
+		    Data = callback.Data;
+		    DataTypeName = callback.DataTypeName;
+		    FeedSubmissionData = feedSubmissionData;
+	    }
 	}
 
 	internal static class FeedSubmissionCallbackExtensions
@@ -48,6 +68,12 @@ namespace MountainWarehouse.EasyMWS.Data
 		internal static FeedSubmissionPropertiesContainer GetPropertiesContainer(this FeedSubmissionCallback source)
 		{
 			return JsonConvert.DeserializeObject<FeedSubmissionPropertiesContainer>(source.FeedSubmissionData);
+		}
+
+		internal static string GetRegionAndTypeString(this FeedSubmissionCallback source)
+		{
+			var feedType = GetPropertiesContainer(source)?.FeedType;
+			return $"[region:'{source.AmazonRegion.ToString()}', feedType:'{feedType}']";
 		}
 	}
 }
