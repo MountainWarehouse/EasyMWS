@@ -744,8 +744,10 @@ namespace EasyMWS.Tests.Processors
 		{
 			// Arrange
 			var merchantId = "testMerchantId";
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
 
-			var reportRequestCallback = new ReportRequestCallback
+			var reportRequestCallback = new ReportRequestCallback(new Callback("","","",""), serializedReportRequestData)
 			{
 				Data = null,
 				AmazonRegion = AmazonRegion.Europe,
@@ -888,16 +890,18 @@ namespace EasyMWS.Tests.Processors
 
 			var testReportRequestCallbacks = new List<ReportRequestCallback>
 			{
-				new ReportRequestCallback {Id = 1, RequestRetryCount = 0, ReportRequestData = serializedReportRequestData},
-				new ReportRequestCallback {Id = 2, RequestRetryCount = 1, ReportRequestData = serializedReportRequestData},
-				new ReportRequestCallback {Id = 3, RequestRetryCount = 2, ReportRequestData = serializedReportRequestData},
-				new ReportRequestCallback {Id = 4, RequestRetryCount = 3, ReportRequestData = serializedReportRequestData},
-				new ReportRequestCallback {Id = 5, RequestRetryCount = 4, ReportRequestData = serializedReportRequestData},
-				new ReportRequestCallback {Id = 6, RequestRetryCount = 5, ReportRequestData = serializedReportRequestData}
+				new ReportRequestCallback {Id = 1, RequestRetryCount = 0, ReportRequestData = serializedReportRequestData, AmazonRegion = _region, MerchantId = _merchantId },
+				new ReportRequestCallback {Id = 2, RequestRetryCount = 1, ReportRequestData = serializedReportRequestData, AmazonRegion = _region, MerchantId = _merchantId },
+				new ReportRequestCallback {Id = 3, RequestRetryCount = 2, ReportRequestData = serializedReportRequestData, AmazonRegion = _region, MerchantId = _merchantId },
+				new ReportRequestCallback {Id = 4, RequestRetryCount = 3, ReportRequestData = serializedReportRequestData, AmazonRegion = _region, MerchantId = _merchantId },
+				new ReportRequestCallback {Id = 5, RequestRetryCount = 4, ReportRequestData = serializedReportRequestData, AmazonRegion = _region, MerchantId = _merchantId },
+				new ReportRequestCallback {Id = 6, RequestRetryCount = 5, ReportRequestData = serializedReportRequestData, AmazonRegion = _region, MerchantId = _merchantId },
+				new ReportRequestCallback {Id = 7, RequestRetryCount = 5, ReportRequestData = serializedReportRequestData, AmazonRegion = AmazonRegion.Brazil, MerchantId = _merchantId },
+				new ReportRequestCallback {Id = 8, RequestRetryCount = 5, ReportRequestData = serializedReportRequestData, AmazonRegion = _region, MerchantId = "someDifferentMerchantId" }
 			}.AsQueryable();
 			_reportRequestCallbackServiceMock.Setup(x => x.GetAll()).Returns(testReportRequestCallbacks);
 
-			_requestReportProcessor.CleanupReportRequests();
+			_requestReportProcessor.CleanupReportRequests(_region, _merchantId);
 			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestCallback>()), Times.Exactly(1));
 		}
 	}

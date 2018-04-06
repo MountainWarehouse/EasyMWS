@@ -149,11 +149,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    }
 	    }
 
-	    public void CleanupReportRequests()
+	    public void CleanupReportRequests(AmazonRegion region, string merchant)
 	    {
 			_logger.Info("Executing cleanup of report requests queue.");
 		    var expiredReportRequests = _reportRequestCallbackService.GetAll()
-			    .Where(rrc => rrc.RequestRetryCount > _options.ReportRequestMaxRetryCount);
+			    .Where(rrc => rrc.AmazonRegion == region && rrc.MerchantId == merchant
+				&& rrc.RequestRetryCount > _options.ReportRequestMaxRetryCount);
 
 		    if (expiredReportRequests.Any())
 		    {

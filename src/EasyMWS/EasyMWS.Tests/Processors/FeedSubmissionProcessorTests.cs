@@ -49,7 +49,6 @@ namespace EasyMWS.Tests.Processors
 					AmazonRegion = AmazonRegion.Europe,
 					Id = 1,
 					FeedSubmissionId = "testSubmissionId1",
-					FeedSubmissionData = "testFeedSubmissionData"
 				}
 			};
 
