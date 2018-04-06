@@ -66,79 +66,79 @@ namespace MountainWarehouse.EasyMWS.Model
 	    /// <summary>
 		/// The Canada marketplace. Shares the same amazon MWS endpoint with US and Mexico.
 		/// </summary>
-		public static MwsMarketplace Canada = new MwsMarketplace(
+		public static readonly MwsMarketplace Canada = new MwsMarketplace(
 			"Canada", "CA", "A2EUQ1WTGCTBG2", MwsEndpoint.NorthAmerica);
 
 		/// <summary>
 		/// The US marketplace. Shares the same amazon MWS endpoint with Canada and Mexico.
 		/// </summary>
-		public static MwsMarketplace US = new MwsMarketplace(
+		public static readonly MwsMarketplace US = new MwsMarketplace(
 			"US", "US", "ATVPDKIKX0DER", MwsEndpoint.NorthAmerica);
 
 		/// <summary>
 		/// The Mexico marketplace. Shares the same amazon MWS endpoint with US and Canada.
 		/// </summary>
-		public static MwsMarketplace Mexico = new MwsMarketplace(
+		public static readonly MwsMarketplace Mexico = new MwsMarketplace(
 			"Mexico", "MX", "A1AM78C64UM0Y8", MwsEndpoint.NorthAmerica);
 
 		/// <summary>
 		/// The Spain marketplace. Shares the same amazon MWS endpoint with UK, France, Germany, and Italy marketplaces.
 		/// </summary>
-		public static MwsMarketplace Spain = new MwsMarketplace(
+		public static readonly MwsMarketplace Spain = new MwsMarketplace(
 			"Spain", "ES", "A1RKKUPIHCS9HS", MwsEndpoint.Europe);
 
 		/// <summary>
 		///  The United Kingdom marketplace. Shares the same amazon MWS endpoint with Spain, France, Germany, and Italy marketplaces.
 		/// </summary>
-		public static MwsMarketplace UK = new MwsMarketplace(
+		public static readonly MwsMarketplace UK = new MwsMarketplace(
 			"UK", "UK", "A1F83G8C2ARO7P", MwsEndpoint.Europe);
 
 		/// <summary>
 		/// The France marketplace. Shares the same amazon MWS endpoint with UK, Spain, Germany, and Italy marketplaces.
 		/// </summary>
-		public static MwsMarketplace France = new MwsMarketplace(
+		public static readonly MwsMarketplace France = new MwsMarketplace(
 			"France", "FR", "A13V1IB3VIYZZH", MwsEndpoint.Europe);
 
 		/// <summary>
 		/// The Germany marketplace. Shares the same amazon MWS endpoint with UK, France, Spain, and Italy marketplaces.
 		/// </summary>
-		public static MwsMarketplace Germany = new MwsMarketplace(
+		public static readonly MwsMarketplace Germany = new MwsMarketplace(
 			"Germany", "DE", "A1PA6795UKMFR9", MwsEndpoint.Europe);
 
 		/// <summary>
 		/// The Italy marketplace. Shares the same amazon MWS endpoint with UK, France, Germany, and Spain marketplaces.
 		/// </summary>
-		public static MwsMarketplace Italy = new MwsMarketplace(
+		public static readonly MwsMarketplace Italy = new MwsMarketplace(
 			"Italy", "IT", "APJ6JRA9NG5V4", MwsEndpoint.Europe);
 
 		/// <summary>
 		/// The Brazil marketplace. Does not share it's amazon MWS endpoint with any other marketplace. 
 		/// </summary>
-		public static MwsMarketplace Brazil = new MwsMarketplace(
+		public static readonly MwsMarketplace Brazil = new MwsMarketplace(
 			"Brazil", "BR", "A2Q3Y263D00KWC", MwsEndpoint.Brazil);
 
 		/// <summary>
 		/// The India marketplace. Does not share it's amazon MWS endpoint with any other marketplace. 
 		/// </summary>
-		public static MwsMarketplace India = new MwsMarketplace(
+		public static readonly MwsMarketplace India = new MwsMarketplace(
 			"India", "IN", "A21TJRUUN4KGV", MwsEndpoint.India);
 
 		/// <summary>
 		/// The China marketplace. Does not share it's amazon MWS endpoint with any other marketplace. 
 		/// </summary>
-		public static MwsMarketplace China = new MwsMarketplace(
+		public static readonly MwsMarketplace China = new MwsMarketplace(
 			"China", "CN", "AAHKV2X7AFYLW", MwsEndpoint.China);
 
 		/// <summary>
 		/// The Japan marketplace. Does not share it's amazon MWS endpoint with any other marketplace. 
 		/// </summary>
-		public static MwsMarketplace Japan = new MwsMarketplace(
+		public static readonly MwsMarketplace Japan = new MwsMarketplace(
 			"Japan", "JP", "A1VC38T7YXB528", MwsEndpoint.Japan);
 
 		/// <summary>
 		/// The Australia marketplace. Does not share it's amazon MWS endpoint with any other marketplace. 
 		/// </summary>
-		public static MwsMarketplace Australia = new MwsMarketplace(
+		public static readonly MwsMarketplace Australia = new MwsMarketplace(
 			"Australia", "AU", "A39IBJ37TRP1C6", MwsEndpoint.Australia);
 	}
 }
