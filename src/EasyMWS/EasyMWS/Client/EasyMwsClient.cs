@@ -10,7 +10,7 @@ using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
 namespace MountainWarehouse.EasyMWS.Client
 {
 	/// <summary>Client for Amazon Marketplace Web Services</summary>
-	public class EasyMwsClient
+	public class EasyMwsClient : IEasyMwsClientWithCallback
 	{
 		private readonly EasyMwsOptions _options;
 		private readonly AmazonRegion _amazonRegion;
