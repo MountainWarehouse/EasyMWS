@@ -192,8 +192,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void ExecuteMethodCallback(ReportRequestCallback reportRequest, Stream stream)
 		{
-			if (reportRequest == null || stream == null) return;
-
 			_logger.Info(
 				$"Attempting to perform method callback for the next downloaded report in queue : {reportRequest.RegionAndTypeComputed}.");
 

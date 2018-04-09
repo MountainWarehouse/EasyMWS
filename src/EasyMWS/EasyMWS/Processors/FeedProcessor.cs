@@ -192,7 +192,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void ExecuteMethodCallback(FeedSubmissionCallback feedSubmission, Stream stream)
 		{
-			if (feedSubmissionCallback == null || stream == null) return;
 			_logger.Info(
 				$"Attempting to perform method callback for the next submitted feed in queue : {feedSubmission.RegionAndTypeComputed}.");
 
