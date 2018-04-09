@@ -71,7 +71,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				var reportInfo = DownloadNextReportInQueueFromAmazon();
 				_reportService.SaveChanges();
 
-				if (reportInfo.reportRequestCallback != null && reportInfo.stream != null)
+				if (reportInfo.stream != null)
 				{
 					PerformCallback(reportInfo.reportRequestCallback, reportInfo.stream);
 				}

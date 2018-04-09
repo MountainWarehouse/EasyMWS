@@ -63,20 +63,17 @@ namespace MountainWarehouse.EasyMWS.Processors
 				var amazonProcessingReport = RequestNextFeedSubmissionInQueueFromAmazon();
 				_feedService.SaveChanges();
 
-				if (amazonProcessingReport.feedSubmissionCallback != null)
+				if (MD5ChecksumHelper.IsChecksumCorrect(amazonProcessingReport.reportContent, amazonProcessingReport.contentMd5))
 				{
-					if (MD5ChecksumHelper.IsChecksumCorrect(amazonProcessingReport.reportContent, amazonProcessingReport.contentMd5))
-					{
-						ExecuteCallback(amazonProcessingReport.feedSubmissionCallback, amazonProcessingReport.reportContent);
-						_logger.Warn($"Checksum verification succeeded for feed submission report for {amazonProcessingReport.feedSubmissionCallback.RegionAndTypeComputed}");
-					}
-					else
-					{
-						_logger.Warn($"Checksum verification failed for feed submission report for {amazonProcessingReport.feedSubmissionCallback.RegionAndTypeComputed}");
-						_feedSubmissionProcessor.MoveToRetryQueue(amazonProcessingReport.feedSubmissionCallback);
-					}
-					_feedService.SaveChanges();
+					ExecuteCallback(amazonProcessingReport.feedSubmissionCallback, amazonProcessingReport.reportContent);
+					_logger.Warn($"Checksum verification succeeded for feed submission report for {amazonProcessingReport.feedSubmissionCallback.RegionAndTypeComputed}");
 				}
+				else
+				{
+					_logger.Warn($"Checksum verification failed for feed submission report for {amazonProcessingReport.feedSubmissionCallback.RegionAndTypeComputed}");
+					_feedSubmissionProcessor.MoveToRetryQueue(amazonProcessingReport.feedSubmissionCallback);
+				}
+				_feedService.SaveChanges();
 			}
 			catch (Exception e)
 			{
