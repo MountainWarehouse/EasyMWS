@@ -7,10 +7,6 @@ using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
 
 namespace MountainWarehouse.EasyMWS.Client
 {
-	/// <summary>
-	/// This EasyMws client can handle QueueReport, QueueFeed and Poll,
-	/// additionally it exposes ReportDownloaded and FeedSubmitted events that are fired as soon as the corresponding action has taken place.
-	/// </summary>
 	public class EasyMwsClientWithEvents : IEasyMwsClientWithEvents
 	{
 		public event EventHandler<ReportDownloadedEventArgs> ReportDownloaded;
@@ -21,7 +17,6 @@ namespace MountainWarehouse.EasyMWS.Client
 		private readonly string _merchantId;
 		private readonly IQueueingProcessor<ReportRequestPropertiesContainer> _reportProcessor;
 		private readonly IQueueingProcessor<FeedSubmissionPropertiesContainer> _feedProcessor;
-		private IEasyMwsLogger _logger;
 
 		internal EasyMwsClientWithEvents(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey,
 			IQueueingProcessor<ReportRequestPropertiesContainer> reportProcessor,
@@ -51,15 +46,21 @@ namespace MountainWarehouse.EasyMWS.Client
 			_merchantId = merchantId;
 			_options = options ?? EasyMwsOptions.Defaults();
 
-			_logger = easyMwsLogger ?? new EasyMwsLogger(isEnabled: false);
+			easyMwsLogger = easyMwsLogger ?? new EasyMwsLogger(isEnabled: false);
 			var mwsClient = new MarketplaceWebServiceClient(accessKeyId, mwsSecretAccessKey, CreateConfig(_amazonRegion));
-			_reportProcessor = _reportProcessor ?? new ReportProcessor(_amazonRegion, _merchantId, _options, mwsClient, _logger);
+			_reportProcessor = _reportProcessor ?? new ReportProcessor(_amazonRegion, _merchantId, _options, mwsClient, easyMwsLogger);
 			((IReportProcessor)_reportProcessor).ReportDownloaded += (sender, args) => { ReportDownloaded?.Invoke(sender, args); };
 
-			_feedProcessor = _feedProcessor ?? new FeedProcessor(_amazonRegion, _merchantId, _options, mwsClient, _logger);
+			_feedProcessor = _feedProcessor ?? new FeedProcessor(_amazonRegion, _merchantId, _options, mwsClient, easyMwsLogger);
 			((IFeedProcessor)_feedProcessor).FeedSubmitted += (sender, args) => { FeedSubmitted?.Invoke(sender, args); };
 		}
 
+		public AmazonRegion AmazonRegion => _amazonRegion;
+
+		public string MerchantId => _merchantId;
+
+		public EasyMwsOptions Options => _options;
+		
 		public void Poll()
 		{
 			_reportProcessor.Poll();
