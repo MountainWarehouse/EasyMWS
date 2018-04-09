@@ -2,6 +2,7 @@
 using System.IO;
 using Moq;
 using MountainWarehouse.EasyMWS;
+using MountainWarehouse.EasyMWS.Client;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Logging;

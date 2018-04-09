@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using Moq;
 using MountainWarehouse.EasyMWS;
+using MountainWarehouse.EasyMWS.CallbackLogic;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
@@ -750,7 +751,7 @@ namespace EasyMWS.Tests.Processors
 			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
 			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
 
-			var reportRequestCallback = new ReportRequestCallback(new Callback("","","",""), serializedReportRequestData)
+			var reportRequestCallback = new ReportRequestCallback(serializedReportRequestData)
 			{
 				Data = null,
 				AmazonRegion = AmazonRegion.Europe,

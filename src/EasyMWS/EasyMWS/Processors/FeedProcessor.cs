@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using MountainWarehouse.EasyMWS.CallbackLogic;
+using MountainWarehouse.EasyMWS.Client;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
@@ -12,7 +14,7 @@ using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS.Processors
 {
-	internal class FeedProcessor : IQueueingProcessor<FeedSubmissionPropertiesContainer>
+	internal class FeedProcessor : IQueueingProcessor<FeedSubmissionPropertiesContainer>, IFeedProcessor
 	{
 		private readonly IFeedSubmissionCallbackService _feedService;
 		private readonly IFeedSubmissionProcessor _feedSubmissionProcessor;
@@ -22,6 +24,8 @@ namespace MountainWarehouse.EasyMWS.Processors
 		private readonly AmazonRegion _region;
 		private readonly string _merchantId;
 		private readonly EasyMwsOptions _options;
+
+		public event EventHandler<FeedSubmittedEventArgs> FeedSubmitted;
 
 		internal FeedProcessor(AmazonRegion region, string merchantId, EasyMwsOptions options, IFeedSubmissionCallbackService feedService, IMarketplaceWebServiceClient mwsClient, IFeedSubmissionProcessor feedSubmissionProcessor, ICallbackActivator callbackActivator, IEasyMwsLogger logger)
 		  : this(region, merchantId, options, mwsClient, logger)
@@ -56,23 +60,41 @@ namespace MountainWarehouse.EasyMWS.Processors
 				RequestFeedSubmissionStatusesFromAmazon();
 				_feedService.SaveChanges();
 
-				var amazonProcessingReport = RequestNextFeedSubmissionInQueueFromAmazon();
+				var processingReportInfo = RequestNextFeedSubmissionInQueueFromAmazon();
 				_feedService.SaveChanges();
 
-				if (amazonProcessingReport.feedSubmissionCallback != null)
+				if (MD5ChecksumHelper.IsChecksumCorrect(processingReportInfo.reportContent, processingReportInfo.contentMd5))
 				{
-					if (MD5ChecksumHelper.IsChecksumCorrect(amazonProcessingReport.reportContent, amazonProcessingReport.contentMd5))
-					{
-						ExecuteCallback(amazonProcessingReport.feedSubmissionCallback, amazonProcessingReport.reportContent);
-						_logger.Warn($"Checksum verification succeeded for feed submission report for {amazonProcessingReport.feedSubmissionCallback.RegionAndTypeComputed}");
-					}
-					else
-					{
-						_logger.Warn($"Checksum verification failed for feed submission report for {amazonProcessingReport.feedSubmissionCallback.RegionAndTypeComputed}");
-						_feedSubmissionProcessor.MoveToRetryQueue(amazonProcessingReport.feedSubmissionCallback);
-					}
+					PerformCallback(processingReportInfo.feedSubmissionCallback, processingReportInfo.reportContent);
+					_logger.Info($"Checksum verification succeeded for feed submission report for {processingReportInfo.feedSubmissionCallback.RegionAndTypeComputed}");
+				}
+				else
+				{
+					_logger.Warn($"Checksum verification failed for feed submission report for {processingReportInfo.feedSubmissionCallback.RegionAndTypeComputed}");
+					_feedSubmissionProcessor.MoveToRetryQueue(processingReportInfo.feedSubmissionCallback);
 					_feedService.SaveChanges();
 				}
+			}
+			catch (Exception e)
+			{
+				_logger.Error(e.Message, e);
+			}
+		}
+
+		private void PerformCallback(FeedSubmissionCallback feedSubmission, Stream feedSubmissionReport)
+		{
+			try
+			{
+				if (feedSubmission.MethodName != null)
+				{
+					ExecuteMethodCallback(feedSubmission, feedSubmissionReport);
+				}
+				else
+				{
+					InvokeFeedSubmittedEvent(feedSubmission, feedSubmissionReport);
+				}
+				_feedSubmissionProcessor.RemoveFromQueue(feedSubmission);
+				_feedService.SaveChanges();
 			}
 			catch (Exception e)
 			{
@@ -91,6 +113,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				_logger.Error(e.Message, e);
 			}
+		}
+
+		public void Queue(FeedSubmissionPropertiesContainer propertiesContainer)
+		{
+			Queue(propertiesContainer, null, null);
 		}
 
 		public void SubmitNextFeedInQueueToAmazon()
@@ -163,34 +190,39 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public void ExecuteCallback(FeedSubmissionCallback feedSubmissionCallback, Stream stream)
+		public void ExecuteMethodCallback(FeedSubmissionCallback feedSubmission, Stream stream)
 		{
-			if (feedSubmissionCallback == null || stream == null) return;
+			_logger.Info(
+				$"Attempting to perform method callback for the next submitted feed in queue : {feedSubmission.RegionAndTypeComputed}.");
 
-			_logger.Info($"Attempting to perform method callback for the next submitted feed in queue : {feedSubmissionCallback.RegionAndTypeComputed}.");
-			try
+			var callback = new Callback(feedSubmission.TypeName, feedSubmission.MethodName,
+				feedSubmission.Data, feedSubmission.DataTypeName);
+
+			_callbackActivator.CallMethod(callback, stream);
+		}
+
+		private void InvokeFeedSubmittedEvent(FeedSubmissionCallback feedSubmission, Stream reportContent)
+		{
+			var feedPropertiesContainer = feedSubmission.GetPropertiesContainer();
+			FeedSubmitted?.Invoke(this, new FeedSubmittedEventArgs
 			{
-				var callback = new Callback(feedSubmissionCallback.TypeName, feedSubmissionCallback.MethodName,
-					feedSubmissionCallback.Data, feedSubmissionCallback.DataTypeName);
-
-				_callbackActivator.CallMethod(callback, stream);
-
-				_feedSubmissionProcessor.RemoveFromQueue(feedSubmissionCallback);
-			}
-			catch (Exception e)
-			{
-				_logger.Error(e.Message, e);
-			}
+				FeedSubmissionReport = reportContent,
+				AmazonRegion = feedSubmission.AmazonRegion,
+				MerchantId = feedSubmission.MerchantId,
+				FeedSubmissionId = feedSubmission.FeedSubmissionId,
+				FeedType = feedPropertiesContainer.FeedType,
+				FeedContent = feedPropertiesContainer.FeedContent
+			});
 		}
 
 		private FeedSubmissionCallback GetSerializedFeedSubmissionCallback(
 		  FeedSubmissionPropertiesContainer propertiesContainer, Action<Stream, object> callbackMethod, object callbackData)
 		{
-			if (propertiesContainer == null || callbackMethod == null) throw new ArgumentNullException();
-			var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
+			if (propertiesContainer == null) throw new ArgumentNullException();
+			
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 
-			return new FeedSubmissionCallback(serializedCallback, serializedPropertiesContainer)
+			var feedSubmission = new FeedSubmissionCallback(serializedPropertiesContainer)
 			{
 				AmazonRegion = _region,
 				MerchantId = _merchantId,
@@ -201,6 +233,17 @@ namespace MountainWarehouse.EasyMWS.Processors
 				SubmissionRetryCount = 0,
 				FeedSubmissionId = null
 			};
+
+			if (callbackMethod != null)
+			{
+				var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
+				feedSubmission.Data = serializedCallback.Data;
+				feedSubmission.TypeName = serializedCallback.TypeName;
+				feedSubmission.MethodName = serializedCallback.MethodName;
+				feedSubmission.DataTypeName = serializedCallback.DataTypeName;
+			}
+
+			return feedSubmission;
 		}
 	}
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using Moq;
 using MountainWarehouse.EasyMWS;
+using MountainWarehouse.EasyMWS.CallbackLogic;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
@@ -44,7 +45,7 @@ namespace EasyMWS.Tests.Processors
 
 			_feedSubmissionCallbacks = new List<FeedSubmissionCallback>
 			{
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+				new FeedSubmissionCallback(serializedPropertiesContainer)
 				{
 					AmazonRegion = AmazonRegion.Europe,
 					Id = 1,
@@ -70,7 +71,7 @@ namespace EasyMWS.Tests.Processors
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 
-			var feedSubmissionWithNonNullFeedSubmissionId1 = new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+			var feedSubmissionWithNonNullFeedSubmissionId1 = new FeedSubmissionCallback(serializedPropertiesContainer)
 			{
 				AmazonRegion = AmazonRegion.Europe,
 				MerchantId = _merchantId,
@@ -78,7 +79,7 @@ namespace EasyMWS.Tests.Processors
 				FeedSubmissionId = "testSubmissionId2",
 				SubmissionRetryCount = 0
 			};
-			var feedSubmissionWithNullFeedSubmissionId1 = new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+			var feedSubmissionWithNullFeedSubmissionId1 = new FeedSubmissionCallback(serializedPropertiesContainer)
 			{
 				AmazonRegion = AmazonRegion.Europe,
 				MerchantId = _merchantId,
@@ -86,7 +87,7 @@ namespace EasyMWS.Tests.Processors
 				FeedSubmissionId = null,
 				SubmissionRetryCount = 0
 			};
-			var feedSubmissionWithNullFeedSubmissionId2 = new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+			var feedSubmissionWithNullFeedSubmissionId2 = new FeedSubmissionCallback(serializedPropertiesContainer)
 			{
 				AmazonRegion = AmazonRegion.Europe,
 				MerchantId = _merchantId,
@@ -113,7 +114,7 @@ namespace EasyMWS.Tests.Processors
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 			var merchantId1 = "test merchant id 1";
-			var feedSubmissionWithDifferentRegion = new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+			var feedSubmissionWithDifferentRegion = new FeedSubmissionCallback(serializedPropertiesContainer)
 			{
 				AmazonRegion = AmazonRegion.Europe,
 				MerchantId = merchantId1,
@@ -121,7 +122,7 @@ namespace EasyMWS.Tests.Processors
 				FeedSubmissionId = null,
 				SubmissionRetryCount = 0
 			};
-			var feedSubmissionWithSameRegionButDifferentMerchantId = new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+			var feedSubmissionWithSameRegionButDifferentMerchantId = new FeedSubmissionCallback(serializedPropertiesContainer)
 			{
 				AmazonRegion = AmazonRegion.Australia,
 				MerchantId = merchantId1,
@@ -129,7 +130,7 @@ namespace EasyMWS.Tests.Processors
 				FeedSubmissionId = null,
 				SubmissionRetryCount = 0
 			};
-			var feedSubmissionWithSameRegionAndMerchantId1 = new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+			var feedSubmissionWithSameRegionAndMerchantId1 = new FeedSubmissionCallback(serializedPropertiesContainer)
 			{
 				AmazonRegion = AmazonRegion.Australia,
 				MerchantId = _merchantId,
@@ -137,7 +138,7 @@ namespace EasyMWS.Tests.Processors
 				FeedSubmissionId = null,
 				SubmissionRetryCount = 0
 			};
-			var feedSubmissionWithSameRegionAndMerchantId2 = new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+			var feedSubmissionWithSameRegionAndMerchantId2 = new FeedSubmissionCallback(serializedPropertiesContainer)
 			{
 				AmazonRegion = AmazonRegion.Australia,
 				MerchantId = _merchantId,
@@ -168,7 +169,7 @@ namespace EasyMWS.Tests.Processors
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 			var testMerchantId = "test merchant id";
-			var feedSubmissionWithNonNullFeedSubmissionId1 = new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+			var feedSubmissionWithNonNullFeedSubmissionId1 = new FeedSubmissionCallback(serializedPropertiesContainer)
 			{
 				AmazonRegion = AmazonRegion.Europe,
 				MerchantId = testMerchantId,
@@ -176,7 +177,7 @@ namespace EasyMWS.Tests.Processors
 				FeedSubmissionId = "testSubmissionId2",
 				SubmissionRetryCount = 0
 			};
-			var feedSubmissionWithNullFeedSubmissionId1 = new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+			var feedSubmissionWithNullFeedSubmissionId1 = new FeedSubmissionCallback(serializedPropertiesContainer)
 			{
 				AmazonRegion = AmazonRegion.Europe,
 				MerchantId = testMerchantId,
@@ -184,7 +185,7 @@ namespace EasyMWS.Tests.Processors
 				FeedSubmissionId = null,
 				SubmissionRetryCount = 0
 			};
-			var feedSubmissionWithNullFeedSubmissionId2 = new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+			var feedSubmissionWithNullFeedSubmissionId2 = new FeedSubmissionCallback(serializedPropertiesContainer)
 			{
 				AmazonRegion = AmazonRegion.Europe,
 				MerchantId = testMerchantId,
@@ -192,7 +193,7 @@ namespace EasyMWS.Tests.Processors
 				FeedSubmissionId = null,
 				SubmissionRetryCount = 0
 			};
-			var feedSubmissionWithNullMerchant = new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+			var feedSubmissionWithNullMerchant = new FeedSubmissionCallback(serializedPropertiesContainer)
 			{
 				AmazonRegion = AmazonRegion.Europe,
 				MerchantId = null,
@@ -226,7 +227,7 @@ namespace EasyMWS.Tests.Processors
 		[Test]
 		public void RequestReportFromAmazon_CalledWithReportRequestCallbackWithNullFeedSubmissionData_ThrowsArgumentException()
 		{
-			Assert.Throws<ArgumentException>(() => _feedSubmissionProcessor.SubmitFeedToAmazon(new FeedSubmissionCallback(It.IsAny<Callback>(), null)));
+			Assert.Throws<ArgumentException>(() => _feedSubmissionProcessor.SubmitFeedToAmazon(new FeedSubmissionCallback(null)));
 		}
 
 		[Test]
@@ -273,7 +274,7 @@ namespace EasyMWS.Tests.Processors
 			var testMerchantId2 = "test merchant id 2";
 			var data = new List<FeedSubmissionCallback>
 			{
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+				new FeedSubmissionCallback(serializedPropertiesContainer)
 				{
 					AmazonRegion = AmazonRegion.Europe,
 					MerchantId = testMerchantId2,
@@ -281,7 +282,7 @@ namespace EasyMWS.Tests.Processors
 					FeedSubmissionId = "FeedSubmissionId1",
 					IsProcessingComplete = false
 				},
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+				new FeedSubmissionCallback(serializedPropertiesContainer)
 				{
 					AmazonRegion = AmazonRegion.Europe,
 					MerchantId = testMerchantId2,
@@ -289,7 +290,7 @@ namespace EasyMWS.Tests.Processors
 					FeedSubmissionId = "FeedSubmissionId2",
 					IsProcessingComplete = false
 				},
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+				new FeedSubmissionCallback(serializedPropertiesContainer)
 				{
 					AmazonRegion = AmazonRegion.Europe,
 					MerchantId = _merchantId,
@@ -297,7 +298,7 @@ namespace EasyMWS.Tests.Processors
 					FeedSubmissionId = "FeedSubmissionId3",
 					IsProcessingComplete = false
 				},
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+				new FeedSubmissionCallback(serializedPropertiesContainer)
 				{
 					AmazonRegion = AmazonRegion.Europe,
 					MerchantId = _merchantId,
@@ -305,7 +306,7 @@ namespace EasyMWS.Tests.Processors
 					FeedSubmissionId = "FeedSubmissionId4",
 					IsProcessingComplete = false
 				},
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+				new FeedSubmissionCallback(serializedPropertiesContainer)
 				{
 					AmazonRegion = AmazonRegion.Europe,
 					MerchantId = _merchantId,
@@ -313,7 +314,7 @@ namespace EasyMWS.Tests.Processors
 					FeedSubmissionId = null,
 					IsProcessingComplete = false
 				},
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+				new FeedSubmissionCallback(serializedPropertiesContainer)
 				{
 					AmazonRegion = AmazonRegion.Europe,
 					MerchantId = _merchantId,
@@ -321,7 +322,7 @@ namespace EasyMWS.Tests.Processors
 					FeedSubmissionId = "FeedSubmissionId5",
 					IsProcessingComplete = true
 				},
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+				new FeedSubmissionCallback(serializedPropertiesContainer)
 				{
 					AmazonRegion = AmazonRegion.NorthAmerica,
 					MerchantId = _merchantId,
@@ -348,7 +349,7 @@ namespace EasyMWS.Tests.Processors
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 			var data = new List<FeedSubmissionCallback>
 			{
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+				new FeedSubmissionCallback(serializedPropertiesContainer)
 				{
 					AmazonRegion = AmazonRegion.Europe,
 					MerchantId = _merchantId,
@@ -356,7 +357,7 @@ namespace EasyMWS.Tests.Processors
 					FeedSubmissionId = "FeedSubmissionId1",
 					IsProcessingComplete = false
 				},
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+				new FeedSubmissionCallback(serializedPropertiesContainer)
 				{
 					AmazonRegion = AmazonRegion.Europe,
 					MerchantId = null,
@@ -364,7 +365,7 @@ namespace EasyMWS.Tests.Processors
 					FeedSubmissionId = "FeedSubmissionId2",
 					IsProcessingComplete = false
 				},
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+				new FeedSubmissionCallback(serializedPropertiesContainer)
 				{
 					AmazonRegion = AmazonRegion.Europe,
 					MerchantId = null,
@@ -372,7 +373,7 @@ namespace EasyMWS.Tests.Processors
 					FeedSubmissionId = "FeedSubmissionId3",
 					IsProcessingComplete = false
 				},
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+				new FeedSubmissionCallback(serializedPropertiesContainer)
 				{
 					AmazonRegion = AmazonRegion.Europe,
 					MerchantId = null,
@@ -380,7 +381,7 @@ namespace EasyMWS.Tests.Processors
 					FeedSubmissionId = "FeedSubmissionId4",
 					IsProcessingComplete = false
 				},
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+				new FeedSubmissionCallback(serializedPropertiesContainer)
 				{
 					AmazonRegion = AmazonRegion.Europe,
 					MerchantId = null,
@@ -388,7 +389,7 @@ namespace EasyMWS.Tests.Processors
 					FeedSubmissionId = "FeedSubmissionId5",
 					IsProcessingComplete = true
 				},
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+				new FeedSubmissionCallback(serializedPropertiesContainer)
 				{
 					AmazonRegion = AmazonRegion.NorthAmerica,
 					MerchantId = null,
@@ -457,7 +458,7 @@ namespace EasyMWS.Tests.Processors
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 			var data = new List<FeedSubmissionCallback>
 			{
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+				new FeedSubmissionCallback(serializedPropertiesContainer)
 				{
 					FeedSubmissionId = "testId",
 					IsProcessingComplete = false,
@@ -488,11 +489,11 @@ namespace EasyMWS.Tests.Processors
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 			var data = new List<FeedSubmissionCallback>
 			{
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer) {FeedSubmissionId = "testId1", IsProcessingComplete = false, SubmissionRetryCount = 0},
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer) {FeedSubmissionId = "testId2", IsProcessingComplete = false, SubmissionRetryCount = 0},
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer) {FeedSubmissionId = "testId3", IsProcessingComplete = false, SubmissionRetryCount = 0},
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer) {FeedSubmissionId = "testId4", IsProcessingComplete = false, SubmissionRetryCount = 0},
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer) {FeedSubmissionId = "testId5", IsProcessingComplete = false, SubmissionRetryCount = 0}
+				new FeedSubmissionCallback(serializedPropertiesContainer) {FeedSubmissionId = "testId1", IsProcessingComplete = false, SubmissionRetryCount = 0},
+				new FeedSubmissionCallback(serializedPropertiesContainer) {FeedSubmissionId = "testId2", IsProcessingComplete = false, SubmissionRetryCount = 0},
+				new FeedSubmissionCallback(serializedPropertiesContainer) {FeedSubmissionId = "testId3", IsProcessingComplete = false, SubmissionRetryCount = 0},
+				new FeedSubmissionCallback(serializedPropertiesContainer) {FeedSubmissionId = "testId4", IsProcessingComplete = false, SubmissionRetryCount = 0},
+				new FeedSubmissionCallback(serializedPropertiesContainer) {FeedSubmissionId = "testId5", IsProcessingComplete = false, SubmissionRetryCount = 0}
 			};
 			_feedSubmissionCallbacks.AddRange(data);
 
@@ -528,8 +529,8 @@ namespace EasyMWS.Tests.Processors
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 			var data = new List<FeedSubmissionCallback>
 			{
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer) {FeedSubmissionId = "testId", IsProcessingComplete = false, SubmissionRetryCount = 0},
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer) {FeedSubmissionId = "testId2", IsProcessingComplete = false, SubmissionRetryCount = 0}
+				new FeedSubmissionCallback(serializedPropertiesContainer) {FeedSubmissionId = "testId", IsProcessingComplete = false, SubmissionRetryCount = 0},
+				new FeedSubmissionCallback(serializedPropertiesContainer) {FeedSubmissionId = "testId2", IsProcessingComplete = false, SubmissionRetryCount = 0}
 			};
 
 			_feedSubmissionCallbacks.AddRange(data);
@@ -554,8 +555,8 @@ namespace EasyMWS.Tests.Processors
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 			var data = new List<FeedSubmissionCallback>
 			{
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer) {FeedSubmissionId = "testId", IsProcessingComplete = false, SubmissionRetryCount = 0},
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer) {FeedSubmissionId = "testId2", IsProcessingComplete = false, SubmissionRetryCount = 0}
+				new FeedSubmissionCallback(serializedPropertiesContainer) {FeedSubmissionId = "testId", IsProcessingComplete = false, SubmissionRetryCount = 0},
+				new FeedSubmissionCallback(serializedPropertiesContainer) {FeedSubmissionId = "testId2", IsProcessingComplete = false, SubmissionRetryCount = 0}
 			};
 
 			_feedSubmissionCallbacks.AddRange(data);
@@ -580,12 +581,12 @@ namespace EasyMWS.Tests.Processors
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 			var testFeedSubmissionCallbacks = new List<FeedSubmissionCallback>
 			{
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer) {Id = 1, SubmissionRetryCount = 0, AmazonRegion = _region, MerchantId = _merchantId },
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer) {Id = 2, SubmissionRetryCount = 1, AmazonRegion = _region, MerchantId = _merchantId },
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer) {Id = 3, SubmissionRetryCount = 2, AmazonRegion = _region, MerchantId = _merchantId },
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer) {Id = 4, SubmissionRetryCount = 3, AmazonRegion = _region, MerchantId = _merchantId },
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer) {Id = 5, SubmissionRetryCount = 4, AmazonRegion = _region, MerchantId = _merchantId, FeedSubmissionId = null },
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer) {Id = 6, SubmissionRetryCount = 5, AmazonRegion = _region, MerchantId = _merchantId, FeedSubmissionId = "testFeedSubmissionId" }
+				new FeedSubmissionCallback(serializedPropertiesContainer) {Id = 1, SubmissionRetryCount = 0, AmazonRegion = _region, MerchantId = _merchantId },
+				new FeedSubmissionCallback(serializedPropertiesContainer) {Id = 2, SubmissionRetryCount = 1, AmazonRegion = _region, MerchantId = _merchantId },
+				new FeedSubmissionCallback(serializedPropertiesContainer) {Id = 3, SubmissionRetryCount = 2, AmazonRegion = _region, MerchantId = _merchantId },
+				new FeedSubmissionCallback(serializedPropertiesContainer) {Id = 4, SubmissionRetryCount = 3, AmazonRegion = _region, MerchantId = _merchantId },
+				new FeedSubmissionCallback(serializedPropertiesContainer) {Id = 5, SubmissionRetryCount = 4, AmazonRegion = _region, MerchantId = _merchantId, FeedSubmissionId = null },
+				new FeedSubmissionCallback(serializedPropertiesContainer) {Id = 6, SubmissionRetryCount = 5, AmazonRegion = _region, MerchantId = _merchantId, FeedSubmissionId = "testFeedSubmissionId" }
 			}.AsQueryable();
 			_feedSubmissionCallbackServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(testFeedSubmissionCallbacks);
 

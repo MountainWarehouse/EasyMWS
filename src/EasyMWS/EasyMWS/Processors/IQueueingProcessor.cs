@@ -7,5 +7,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 	{
 		void Poll();
 		void Queue(T propertiesContainer, Action<Stream, object> callbackMethod, object callbackData);
+		void Queue(T propertiesContainer);
 	}
 }

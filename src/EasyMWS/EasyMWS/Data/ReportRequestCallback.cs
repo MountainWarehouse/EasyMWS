@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MountainWarehouse.EasyMWS.CallbackLogic;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Model;
 using Newtonsoft.Json;
@@ -57,15 +58,15 @@ namespace MountainWarehouse.EasyMWS.Data
 		{
 		}
 
-		public ReportRequestCallback(Callback callback, string reportRequestData)
+		public ReportRequestCallback(string reportRequestData, Callback callback = null)
 		{
-			if(callback == null || string.IsNullOrEmpty(reportRequestData))
+			if(string.IsNullOrEmpty(reportRequestData))
 				throw new ArgumentException("Callback data or ReportRequestData not provided, but are required.");
 
-			TypeName = callback.TypeName;
-			MethodName = callback.MethodName;
-			Data = callback.Data;
-			DataTypeName = callback.DataTypeName;
+			TypeName = callback?.TypeName;
+			MethodName = callback?.MethodName;
+			Data = callback?.Data;
+			DataTypeName = callback?.DataTypeName;
 			ReportRequestData = reportRequestData;
 		}
 	}

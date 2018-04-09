@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Moq;
 using MountainWarehouse.EasyMWS;
+using MountainWarehouse.EasyMWS.CallbackLogic;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
@@ -50,14 +51,14 @@ namespace EasyMWS.Tests.ReportProcessors
 		#region QueueFeed tests 
 
 		[Test]
-		public void QueueFeed_WithNullCallbackMethodArgument_CallsLogErrorOnce()
+		public void QueueFeed_WithNullCallbackMethodArgument_NeverCallsLogError()
 		{
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
 			var callbackMethod = (Action<Stream, object>) null;
 
 			_feedProcessor.Queue(propertiesContainer, callbackMethod, new { Foo = "Bar" });
 
-			_loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<Exception>()), Times.Once);
+			_loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
 		}
 
 		[Test]
@@ -137,7 +138,7 @@ namespace EasyMWS.Tests.ReportProcessors
 
 			_feedSubmissionProcessorMock
 				.Setup(rrp => rrp.GetNextFromQueueOfFeedsToSubmit())
-				.Returns(new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer));
+				.Returns(new FeedSubmissionCallback(serializedPropertiesContainer));
 
 			_feedProcessor.Poll();
 
@@ -155,7 +156,7 @@ namespace EasyMWS.Tests.ReportProcessors
 
 			_feedSubmissionProcessorMock
 				.Setup(rrp => rrp.GetNextFromQueueOfFeedsToSubmit())
-				.Returns(new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer) { LastSubmitted = DateTime.MinValue });
+				.Returns(new FeedSubmissionCallback(serializedPropertiesContainer) { LastSubmitted = DateTime.MinValue });
 			_feedSubmissionCallbackServiceMock.Setup(rrcsm => rrcsm.Update(It.IsAny<FeedSubmissionCallback>()))
 				.Callback((FeedSubmissionCallback arg) =>
 				{
@@ -177,7 +178,7 @@ namespace EasyMWS.Tests.ReportProcessors
 
 			_feedSubmissionProcessorMock
 				.Setup(rrp => rrp.GetNextFromQueueOfFeedsToSubmit())
-				.Returns(new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer) { LastSubmitted = DateTime.MinValue });
+				.Returns(new FeedSubmissionCallback(serializedPropertiesContainer) { LastSubmitted = DateTime.MinValue });
 			_feedSubmissionProcessorMock.Setup(rrp =>
 					rrp.SubmitFeedToAmazon(It.IsAny<FeedSubmissionCallback>()))
 				.Returns("testFeedSubmissionId");
@@ -196,7 +197,7 @@ namespace EasyMWS.Tests.ReportProcessors
 
 			_feedSubmissionProcessorMock
 				.Setup(rrp => rrp.GetNextFromQueueOfFeedsToSubmit())
-				.Returns(new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer) { LastSubmitted = DateTime.MinValue });
+				.Returns(new FeedSubmissionCallback(serializedPropertiesContainer) { LastSubmitted = DateTime.MinValue });
 			_feedSubmissionProcessorMock.Setup(rrp =>
 					rrp.SubmitFeedToAmazon(It.IsAny<FeedSubmissionCallback>()))
 				.Returns((string) null);
@@ -214,7 +215,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 			_feedSubmissionProcessorMock
 				.Setup(rrp => rrp.GetNextFromQueueOfFeedsToSubmit())
-				.Returns(new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer) { LastSubmitted = DateTime.MinValue });
+				.Returns(new FeedSubmissionCallback(serializedPropertiesContainer) { LastSubmitted = DateTime.MinValue });
 			_feedSubmissionProcessorMock.Setup(rrp =>
 					rrp.SubmitFeedToAmazon(It.IsAny<FeedSubmissionCallback>()))
 				.Returns(string.Empty);
@@ -237,7 +238,7 @@ namespace EasyMWS.Tests.ReportProcessors
 
 			_feedSubmissionProcessorMock
 				.Setup(fspm => fspm.GetNextFromQueueOfFeedsToSubmit())
-				.Returns(new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer) { LastSubmitted = DateTime.MinValue });
+				.Returns(new FeedSubmissionCallback(serializedPropertiesContainer) { LastSubmitted = DateTime.MinValue });
 			_feedSubmissionProcessorMock.Setup(fspm =>
 					fspm.SubmitFeedToAmazon(It.IsAny<FeedSubmissionCallback>()))
 				.Returns("testSubmissionId");
@@ -266,7 +267,7 @@ namespace EasyMWS.Tests.ReportProcessors
 
 			_feedSubmissionProcessorMock
 				.Setup(fspm => fspm.GetNextFromQueueOfFeedsToSubmit())
-				.Returns(new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer) { LastSubmitted = DateTime.MinValue });
+				.Returns(new FeedSubmissionCallback(serializedPropertiesContainer) { LastSubmitted = DateTime.MinValue });
 			_feedSubmissionProcessorMock.Setup(fspm =>
 					fspm.SubmitFeedToAmazon(It.IsAny<FeedSubmissionCallback>()))
 				.Returns("testSubmissionId");
@@ -275,7 +276,7 @@ namespace EasyMWS.Tests.ReportProcessors
 				.Returns((testStream, notMatchingMd5Sum));
 			_feedSubmissionProcessorMock.Setup(fspm =>
 					fspm.GetNextFromQueueOfProcessingCompleteFeeds())
-				.Returns(new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer));
+				.Returns(new FeedSubmissionCallback(serializedPropertiesContainer));
 
 			_feedProcessor.Poll();
 
@@ -285,7 +286,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		}
 
 		[Test]
-		public void Poll_WithSubmitSingleQueuedFeedToAmazonResponseMatchingMd5_CallsOnce_ExecuteCallback()
+		public void Poll_WithSubmitSingleQueuedFeedToAmazonResponseMatchingMd5_WithCallbackMethodProvided_CallsOnce_ExecuteCallback()
 		{
 			var testStreamContent = "testStreamContent";	// This is the content for which an MD5 value is computed and used in the test. Do not modify this without the MD5 value.
 			var testStream = StreamHelper.CreateNewMemoryStream(testStreamContent);
@@ -295,7 +296,7 @@ namespace EasyMWS.Tests.ReportProcessors
 
 			_feedSubmissionProcessorMock
 				.Setup(fspm => fspm.GetNextFromQueueOfFeedsToSubmit())
-				.Returns(new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer) { LastSubmitted = DateTime.MinValue });
+				.Returns(new FeedSubmissionCallback(serializedPropertiesContainer) { LastSubmitted = DateTime.MinValue });
 			_feedSubmissionProcessorMock.Setup(fspm =>
 					fspm.SubmitFeedToAmazon(It.IsAny<FeedSubmissionCallback>()))
 				.Returns("testSubmissionId");
@@ -304,7 +305,7 @@ namespace EasyMWS.Tests.ReportProcessors
 				.Returns((testStream, matchingMd5Sum));
 			_feedSubmissionProcessorMock.Setup(fspm =>
 					fspm.GetNextFromQueueOfProcessingCompleteFeeds())
-				.Returns(new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer));
+				.Returns(new FeedSubmissionCallback(serializedPropertiesContainer) { MethodName = "testCallbackMethodName" });
 
 			_feedProcessor.Poll();
 

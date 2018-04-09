@@ -2,6 +2,7 @@
 using System.Linq;
 using Moq;
 using MountainWarehouse.EasyMWS;
+using MountainWarehouse.EasyMWS.CallbackLogic;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
@@ -27,8 +28,8 @@ namespace EasyMWS.Tests.Services
 
 			var feedSubmissionCallbacks = new List<FeedSubmissionCallback>
 		    {
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer){ Id = 2 },
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+				new FeedSubmissionCallback(serializedPropertiesContainer){ Id = 2 },
+				new FeedSubmissionCallback(serializedPropertiesContainer)
 				{
 					Id = 1,
 					AmazonRegion = AmazonRegion.Europe,
