@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 using MountainWarehouse.EasyMWS.Data;
+using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Repositories;
 
 namespace MountainWarehouse.EasyMWS.Services
@@ -10,8 +11,8 @@ namespace MountainWarehouse.EasyMWS.Services
     {
 	    private readonly IFeedSubmissionCallbackRepo _feedRepo;
 
-	    public FeedSubmissionCallbackService(IFeedSubmissionCallbackRepo feedSubmissionCallbackRepo = null) =>
-		    (_feedRepo) = (feedSubmissionCallbackRepo ?? new FeedSubmissionCallbackRepo());
+	    public FeedSubmissionCallbackService(IFeedSubmissionCallbackRepo feedSubmissionCallbackRepo = null, EasyMwsOptions options = null) =>
+		    (_feedRepo) = (feedSubmissionCallbackRepo ?? new FeedSubmissionCallbackRepo(options?.LocalDbConnectionStringOverride));
 
 	    public void Create(FeedSubmissionCallback callback) => _feedRepo.Create(callback);
 	    public void Update(FeedSubmissionCallback callback) => _feedRepo.Update(callback);

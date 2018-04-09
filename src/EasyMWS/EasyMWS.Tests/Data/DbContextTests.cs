@@ -27,12 +27,23 @@ namespace EasyMWS.Tests.Data
 	    }
 
 	    [Test]
-        [Ignore("Will only run if sql server is installed on current machine. Quite slow to fail.")]
-	    public void OnWhere_ReturnsAnyData()
+		[Ignore("Will only run if sql server is installed on current machine. Quite slow to fail.")]
+		public void OnWhere_ReturnsAnyData()
 	    {
 		    var testId = _dbContext.ReportRequestCallbacks.FirstOrDefault(r => r.TypeName == _testTypeName);
 
 			Assert.NotNull(testId);
 	    }
+
+	    [Test]
+	    [Ignore("Will only run if sql server is installed on current machine. Quite slow to fail.")]
+		public void WithCustomConnectionstring_WithValidConnectionstring_DoesNotThrowException()
+	    {
+			_dbContext = new EasyMwsContext("Server=mwsql-dev2;Database=EasyMws;Trusted_Connection=True;");
+
+		    var testId = _dbContext.ReportRequestCallbacks.FirstOrDefault(r => r.TypeName == _testTypeName);
+
+		    Assert.NotNull(testId);
+		}
     }
 }

@@ -8,7 +8,7 @@ namespace MountainWarehouse.EasyMWS.Repositories
     {
 	    private EasyMwsContext _dbContext;
 
-	    internal AmazonReportRepo() => (_dbContext) = (new EasyMwsContext());
+	    internal AmazonReportRepo(string connectionString = null) => (_dbContext) = (new EasyMwsContext(connectionString));
 
 	    public void Create(AmazonReport report) => _dbContext.AmazonReports.Add(report);
 		public void Delete(AmazonReport report) => _dbContext.AmazonReports.Remove(report);

@@ -72,6 +72,12 @@ namespace MountainWarehouse.EasyMWS.Model
 		public TimeSpan KeepAmazonReportsLocallyForTimePeriod { get; set; }
 
 		/// <summary>
+		/// Default=null. If a connection string is specified using this option, the EasyMws local db will run against this connection string, ignoring any connection string contained in a configuration file.<para/>
+		/// ConnectionString default location : .Net Framework / .Net Core projects referencing EasyMws need to provide an app.config file containing a connection string with the "EasyMwsContext" key in the calling executable project.																																																																																																																																								
+		/// </summary>
+		public string LocalDbConnectionStringOverride { get; set; }
+
+	    /// <summary>
 		/// The set of default settings that will be used if no custom settings are specified.<para/>
 		/// <para/>
 		/// ReportRequestMaxRetryCount = 4,<para/>

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using MountainWarehouse.EasyMWS.Data;
+using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Repositories;
 
 namespace MountainWarehouse.EasyMWS.Services
@@ -11,15 +12,11 @@ namespace MountainWarehouse.EasyMWS.Services
 	{
 		private readonly IReportRequestCallbackRepo _reportRequestCallbackRepo;
 
-		internal ReportRequestCallbackService(IReportRequestCallbackRepo reportRequestCallbackRepo) : this()
-		{
-			_reportRequestCallbackRepo = reportRequestCallbackRepo;
-		}
+		internal ReportRequestCallbackService(IReportRequestCallbackRepo reportRequestCallbackRepo, EasyMwsOptions options = null) : this(options)
+			=> (_reportRequestCallbackRepo) = (reportRequestCallbackRepo);
 
-		internal ReportRequestCallbackService()
-		{
-			_reportRequestCallbackRepo = _reportRequestCallbackRepo ?? new ReportRequestCallbackRepo();
-		}
+		internal ReportRequestCallbackService(EasyMwsOptions options = null) => (_reportRequestCallbackRepo) =
+			(_reportRequestCallbackRepo ?? new ReportRequestCallbackRepo(options?.LocalDbConnectionStringOverride));
 
 		public void Create(ReportRequestCallback callback) => _reportRequestCallbackRepo.Create(callback);
 		public async Task CreateAsync(ReportRequestCallback callback) => await _reportRequestCallbackRepo.CreateAsync(callback);

@@ -5,8 +5,19 @@ using Microsoft.Extensions.Configuration;
 
 namespace MountainWarehouse.EasyMWS.Data
 {
-	internal class EasyMwsContext : DbContext
+	internal sealed class EasyMwsContext : DbContext
 	{
+		private string _connectionString;
+		public EasyMwsContext(string connectionString = null)
+		{
+			_connectionString = connectionString;
+
+			if (!string.IsNullOrEmpty(connectionString))
+			{
+				Database.GetDbConnection().ConnectionString = connectionString;
+			}
+		}
+
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
 			try
@@ -26,12 +37,12 @@ namespace MountainWarehouse.EasyMWS.Data
 				.AddXmlFile("App.config")
 				.Build();
 
-			optionsBuilder.UseSqlServer(configuration["connectionStrings:add:EasyMwsContext:connectionString"]);
+			optionsBuilder.UseSqlServer(_connectionString ?? configuration["connectionStrings:add:EasyMwsContext:connectionString"]);
 		}
 
 		private void ConfigureDbContextForDotNetFramework(DbContextOptionsBuilder optionsBuilder)
 		{
-			optionsBuilder.UseSqlServer(ConfigurationManager.ConnectionStrings["EasyMwsContext"].ConnectionString);
+			optionsBuilder.UseSqlServer(_connectionString ?? ConfigurationManager.ConnectionStrings["EasyMwsContext"].ConnectionString);
 		}
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
