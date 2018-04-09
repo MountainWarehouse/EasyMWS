@@ -137,14 +137,14 @@ namespace EasyMWS.Tests.ReportProcessors
 			_reportProcessor.Poll();
 
 			_requestReportProcessor.Verify(
-				rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<AmazonRegion>(), It.IsAny<string>()), Times.Once);
+				rrp => rrp.GetNextFromQueueOfReportsToRequest(), Times.Once);
 		}
 
 		[Test]
 		public void Poll_WithGetNonRequestedReportFromQueueReturningNull_DoesNotRequestAReportFromAmazon()
 		{
 			_requestReportProcessor
-				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest())
 				.Returns((ReportRequestCallback) null);
 
 			_reportProcessor.Poll();
@@ -160,7 +160,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
 
 			_requestReportProcessor
-				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest())
 				.Returns(new ReportRequestCallback{ReportRequestData = serializedReportRequestData });
 
 			_reportProcessor.Poll();
@@ -179,7 +179,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			ReportRequestCallback testReportRequestCallback = null;
 
 			_requestReportProcessor
-				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest())
 				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue, ReportRequestData = serializedReportRequestData});
 			_reportRequestCallbackServiceMock.Setup(rrcsm => rrcsm.Update(It.IsAny<ReportRequestCallback>()))
 				.Callback((ReportRequestCallback arg) =>
@@ -201,7 +201,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
 
 			_requestReportProcessor
-				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest())
 				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue, ReportRequestData = serializedReportRequestData });
 			_requestReportProcessor.Setup(rrp =>
 					rrp.RequestReportFromAmazon(It.IsAny<ReportRequestCallback>()))
@@ -220,7 +220,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
 
 			_requestReportProcessor
-				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest())
 				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue, ReportRequestData = serializedReportRequestData});
 			_requestReportProcessor.Setup(rrp =>
 					rrp.RequestReportFromAmazon(It.IsAny<ReportRequestCallback>()))
@@ -238,7 +238,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
 
 			_requestReportProcessor
-				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<AmazonRegion>(), It.IsAny<string>()))
+				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest())
 				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue, ReportRequestData = serializedReportRequestData});
 			_requestReportProcessor.Setup(rrp =>
 					rrp.RequestReportFromAmazon(It.IsAny<ReportRequestCallback>()))
