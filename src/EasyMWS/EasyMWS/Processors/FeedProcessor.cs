@@ -40,7 +40,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			_callbackActivator = _callbackActivator ?? new CallbackActivator();
 
-			_feedService = _feedService ?? new FeedSubmissionCallbackService();
+			_feedService = _feedService ?? new FeedSubmissionCallbackService(options: _options);
 			_feedSubmissionProcessor = _feedSubmissionProcessor ?? new FeedSubmissionProcessor(mwsClient, _feedService, _logger, _options);
 		}
 

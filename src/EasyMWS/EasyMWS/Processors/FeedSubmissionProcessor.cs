@@ -30,10 +30,10 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		internal FeedSubmissionProcessor(IMarketplaceWebServiceClient marketplaceWebServiceClient, IEasyMwsLogger logger, EasyMwsOptions options)
 		{
-			_marketplaceWebServiceClient = marketplaceWebServiceClient;
-			_feedSubmissionCallbackService = _feedSubmissionCallbackService ?? new FeedSubmissionCallbackService();
-			_logger = logger;
 			_options = options;
+			_logger = logger;
+			_marketplaceWebServiceClient = marketplaceWebServiceClient;
+			_feedSubmissionCallbackService = _feedSubmissionCallbackService ?? new FeedSubmissionCallbackService(options: _options);
 		}
 
 		public FeedSubmissionCallback GetNextFromQueueOfFeedsToSubmit(AmazonRegion region, string merchantId) =>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using MountainWarehouse.EasyMWS.Data;
+using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Repositories;
 
 namespace MountainWarehouse.EasyMWS.Services
@@ -11,8 +12,8 @@ namespace MountainWarehouse.EasyMWS.Services
 	{
 	    private readonly IAmazonReportRepo _amazonReportRepo;
 
-	    internal AmazonReportService(IAmazonReportRepo reportRepo) : this() => (_amazonReportRepo) = (reportRepo);
-	    internal AmazonReportService() => (_amazonReportRepo) = (_amazonReportRepo ?? new AmazonReportRepo());
+	    internal AmazonReportService(IAmazonReportRepo reportRepo, EasyMwsOptions options = null) : this(options) => (_amazonReportRepo) = (reportRepo);
+	    internal AmazonReportService(EasyMwsOptions options = null) => (_amazonReportRepo) = (_amazonReportRepo ?? new AmazonReportRepo(options?.LocalDbConnectionStringOverride));
 
 	    public void Create(AmazonReport report) => _amazonReportRepo.Create(report);
 		public void Delete(AmazonReport report) => _amazonReportRepo.Delete(report);

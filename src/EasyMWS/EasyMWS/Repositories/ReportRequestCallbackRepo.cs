@@ -9,12 +9,9 @@ namespace MountainWarehouse.EasyMWS.Repositories
 {
     internal class ReportRequestCallbackRepo : IReportRequestCallbackRepo
 	{
-	    private EasyMwsContext _dbContext;
+	    private readonly EasyMwsContext _dbContext;
 
-	    internal ReportRequestCallbackRepo()
-	    {
-			_dbContext = new EasyMwsContext();
-	    }
+		internal ReportRequestCallbackRepo(string connectionString = null) => (_dbContext) = (new EasyMwsContext(connectionString));
 
 	    public void Create(ReportRequestCallback callback) => _dbContext.ReportRequestCallbacks.Add(callback);
 	    public async Task CreateAsync(ReportRequestCallback callback) => await _dbContext.ReportRequestCallbacks.AddAsync(callback);

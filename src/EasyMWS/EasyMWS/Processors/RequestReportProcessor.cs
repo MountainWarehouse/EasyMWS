@@ -32,11 +32,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		internal RequestReportProcessor(IMarketplaceWebServiceClient marketplaceWebServiceClient, IEasyMwsLogger logger, EasyMwsOptions options)
 	    {
-		    _marketplaceWebServiceClient = marketplaceWebServiceClient;
-		    _reportRequestCallbackService = _reportRequestCallbackService ?? new ReportRequestCallbackService();
-		    _amazonReportStorageService = _amazonReportStorageService ?? new AmazonReportService();
+		    _options = options;
 		    _logger = logger;
-			_options = options;
+			_marketplaceWebServiceClient = marketplaceWebServiceClient;
+		    _reportRequestCallbackService = _reportRequestCallbackService ?? new ReportRequestCallbackService(_options);
+		    _amazonReportStorageService = _amazonReportStorageService ?? new AmazonReportService(_options);
 	    }
 
 	    public ReportRequestCallback GetNextFromQueueOfReportsToRequest(AmazonRegion region, string merchantId) =>
