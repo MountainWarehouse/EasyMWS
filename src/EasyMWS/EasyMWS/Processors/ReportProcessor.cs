@@ -86,8 +86,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			try
 			{
-				ExecuteMethodCallback(reportRequest, stream);
-
+				if (reportRequest.MethodName != null)
+				{
+					ExecuteMethodCallback(reportRequest, stream);
+				}
+				else
+				{
+					InvokeReportDownloadedEvent(reportRequest, stream);
+				}
 				_requestReportProcessor.RemoveFromQueue(reportRequest);
 				_reportService.SaveChanges();
 			}
@@ -195,7 +201,19 @@ namespace MountainWarehouse.EasyMWS.Processors
 				reportRequest.Data, reportRequest.DataTypeName);
 
 			_callbackActivator.CallMethod(callback, stream);
+		}
 
+		private void InvokeReportDownloadedEvent(ReportRequestCallback reportRequest, Stream stream)
+		{
+			var feedPropertiesContainer = reportRequest.GetPropertiesContainer();
+			ReportDownloaded?.Invoke(this, new ReportDownloadedEventArgs
+			{
+				ReportContent = stream,
+				AmazonRegion = reportRequest.AmazonRegion,
+				MerchantId = reportRequest.MerchantId,
+				GeneratedReportId = reportRequest.GeneratedReportId,
+				ReportType = feedPropertiesContainer.ReportType
+			});
 		}
 
 		private ReportRequestCallback GetSerializedReportRequestCallback(
