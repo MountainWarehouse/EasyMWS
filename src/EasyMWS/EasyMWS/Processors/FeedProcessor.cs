@@ -195,11 +195,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 		private FeedSubmissionCallback GetSerializedFeedSubmissionCallback(
 		  FeedSubmissionPropertiesContainer propertiesContainer, Action<Stream, object> callbackMethod, object callbackData)
 		{
-			if (propertiesContainer == null || callbackMethod == null) throw new ArgumentNullException();
-			var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
+			if (propertiesContainer == null) throw new ArgumentNullException();
+			
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 
-			return new FeedSubmissionCallback(serializedCallback, serializedPropertiesContainer)
+			var feedSubmission = new FeedSubmissionCallback(serializedPropertiesContainer)
 			{
 				AmazonRegion = _region,
 				MerchantId = _merchantId,
@@ -210,6 +210,17 @@ namespace MountainWarehouse.EasyMWS.Processors
 				SubmissionRetryCount = 0,
 				FeedSubmissionId = null
 			};
+
+			if (callbackMethod != null)
+			{
+				var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
+				feedSubmission.Data = serializedCallback.Data;
+				feedSubmission.TypeName = serializedCallback.TypeName;
+				feedSubmission.MethodName = serializedCallback.MethodName;
+				feedSubmission.DataTypeName = serializedCallback.DataTypeName;
+			}
+
+			return feedSubmission;
 		}
 	}
 }

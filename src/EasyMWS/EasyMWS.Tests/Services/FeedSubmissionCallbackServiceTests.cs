@@ -28,8 +28,8 @@ namespace EasyMWS.Tests.Services
 
 			var feedSubmissionCallbacks = new List<FeedSubmissionCallback>
 		    {
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer){ Id = 2 },
-				new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
+				new FeedSubmissionCallback(serializedPropertiesContainer){ Id = 2 },
+				new FeedSubmissionCallback(serializedPropertiesContainer)
 				{
 					Id = 1,
 					AmazonRegion = AmazonRegion.Europe,

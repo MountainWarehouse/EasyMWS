@@ -51,15 +51,15 @@ namespace MountainWarehouse.EasyMWS.Data
 		{
 		}
 
-	    public FeedSubmissionCallback(Callback callback, string feedSubmissionData)
+	    public FeedSubmissionCallback(string feedSubmissionData, Callback callback = null)
 	    {
-			if(callback == null || string.IsNullOrEmpty(feedSubmissionData))
+			if( string.IsNullOrEmpty(feedSubmissionData))
 				throw new ArgumentException("Callback data or FeedSubmissionData not provided, but are required.");
 
-		    TypeName = callback.TypeName;
-		    MethodName = callback.MethodName;
-		    Data = callback.Data;
-		    DataTypeName = callback.DataTypeName;
+		    TypeName = callback?.TypeName;
+		    MethodName = callback?.MethodName;
+		    Data = callback?.Data;
+		    DataTypeName = callback?.DataTypeName;
 		    FeedSubmissionData = feedSubmissionData;
 	    }
 	}

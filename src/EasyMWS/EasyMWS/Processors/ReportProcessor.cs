@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using MountainWarehouse.EasyMWS.CallbackLogic;
 using MountainWarehouse.EasyMWS.Client;
 using MountainWarehouse.EasyMWS.Data;
@@ -192,11 +193,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 		private ReportRequestCallback GetSerializedReportRequestCallback(
 			ReportRequestPropertiesContainer reportRequestContainer, Action<Stream, object> callbackMethod, object callbackData)
 		{
-			if (reportRequestContainer == null || callbackMethod == null) throw new ArgumentNullException();
-			var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
+			if (reportRequestContainer == null) throw new ArgumentNullException();
+			
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(reportRequestContainer);
 
-			return new ReportRequestCallback(serializedCallback, serializedPropertiesContainer)
+			var reportRequest = new ReportRequestCallback(serializedPropertiesContainer)
 			{
 				AmazonRegion = _region,
 				MerchantId = _merchantId,
@@ -206,6 +207,17 @@ namespace MountainWarehouse.EasyMWS.Processors
 				GeneratedReportId = null,
 				RequestRetryCount = 0
 			};
+
+			if (callbackMethod != null)
+			{
+				var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
+				reportRequest.Data = serializedCallback.Data;
+				reportRequest.TypeName = serializedCallback.TypeName;
+				reportRequest.MethodName = serializedCallback.MethodName;
+				reportRequest.DataTypeName = serializedCallback.DataTypeName;
+			}
+
+			return reportRequest;
 		}
 	}
 }
