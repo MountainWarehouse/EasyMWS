@@ -54,10 +54,10 @@ namespace MountainWarehouse.EasyMWS.Client
 			_logger = easyMwsLogger ?? new EasyMwsLogger(isEnabled: false);
 			var mwsClient = new MarketplaceWebServiceClient(accessKeyId, mwsSecretAccessKey, CreateConfig(_amazonRegion));
 			_reportProcessor = _reportProcessor ?? new ReportProcessor(_amazonRegion, _merchantId, _options, mwsClient, _logger);
-			(_reportProcessor as IReportProcessor).ReportDownloaded += (sender, args) => { ReportDownloaded?.Invoke(sender, args); };
+			((IReportProcessor)_reportProcessor).ReportDownloaded += (sender, args) => { ReportDownloaded?.Invoke(sender, args); };
 
 			_feedProcessor = _feedProcessor ?? new FeedProcessor(_amazonRegion, _merchantId, _options, mwsClient, _logger);
-			(_feedProcessor as IFeedProcessor).FeedSubmitted += (sender, args) => { FeedSubmitted?.Invoke(sender, args); };
+			((IFeedProcessor)_feedProcessor).FeedSubmitted += (sender, args) => { FeedSubmitted?.Invoke(sender, args); };
 		}
 
 		public void Poll()
