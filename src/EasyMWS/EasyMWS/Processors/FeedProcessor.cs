@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using MountainWarehouse.EasyMWS.CallbackLogic;
+using MountainWarehouse.EasyMWS.Client;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
@@ -13,7 +14,7 @@ using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS.Processors
 {
-	internal class FeedProcessor : IQueueingProcessor<FeedSubmissionPropertiesContainer>
+	internal class FeedProcessor : IQueueingProcessor<FeedSubmissionPropertiesContainer>, IFeedProcessor
 	{
 		private readonly IFeedSubmissionCallbackService _feedService;
 		private readonly IFeedSubmissionProcessor _feedSubmissionProcessor;
@@ -23,6 +24,8 @@ namespace MountainWarehouse.EasyMWS.Processors
 		private readonly AmazonRegion _region;
 		private readonly string _merchantId;
 		private readonly EasyMwsOptions _options;
+
+		public event EventHandler<FeedSubmittedEventArgs> FeedSubmitted;
 
 		internal FeedProcessor(AmazonRegion region, string merchantId, EasyMwsOptions options, IFeedSubmissionCallbackService feedService, IMarketplaceWebServiceClient mwsClient, IFeedSubmissionProcessor feedSubmissionProcessor, ICallbackActivator callbackActivator, IEasyMwsLogger logger)
 		  : this(region, merchantId, options, mwsClient, logger)

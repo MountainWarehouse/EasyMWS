@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using MountainWarehouse.EasyMWS.CallbackLogic;
+using MountainWarehouse.EasyMWS.Client;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Logging;
@@ -12,7 +13,7 @@ using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS.Processors
 {
-	internal class ReportProcessor : IQueueingProcessor<ReportRequestPropertiesContainer>
+	internal class ReportProcessor : IQueueingProcessor<ReportRequestPropertiesContainer>, IReportProcessor
 	{
 		private readonly IReportRequestCallbackService _reportService;
 		private readonly IRequestReportProcessor _requestReportProcessor;
@@ -23,6 +24,8 @@ namespace MountainWarehouse.EasyMWS.Processors
 		private readonly AmazonRegion _region;
 		private readonly string _merchantId;
 		private readonly EasyMwsOptions _options;
+
+		public event EventHandler<ReportDownloadedEventArgs> ReportDownloaded;
 
 		internal ReportProcessor(AmazonRegion region, string merchantId, EasyMwsOptions options,
 			IReportRequestCallbackService reportService, IMarketplaceWebServiceClient mwsClient,
