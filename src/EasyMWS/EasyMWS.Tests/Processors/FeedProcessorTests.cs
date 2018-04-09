@@ -286,7 +286,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		}
 
 		[Test]
-		public void Poll_WithSubmitSingleQueuedFeedToAmazonResponseMatchingMd5_CallsOnce_ExecuteCallback()
+		public void Poll_WithSubmitSingleQueuedFeedToAmazonResponseMatchingMd5_WithCallbackMethodProvided_CallsOnce_ExecuteCallback()
 		{
 			var testStreamContent = "testStreamContent";	// This is the content for which an MD5 value is computed and used in the test. Do not modify this without the MD5 value.
 			var testStream = StreamHelper.CreateNewMemoryStream(testStreamContent);
@@ -305,7 +305,7 @@ namespace EasyMWS.Tests.ReportProcessors
 				.Returns((testStream, matchingMd5Sum));
 			_feedSubmissionProcessorMock.Setup(fspm =>
 					fspm.GetNextFromQueueOfProcessingCompleteFeeds())
-				.Returns(new FeedSubmissionCallback(serializedPropertiesContainer));
+				.Returns(new FeedSubmissionCallback(serializedPropertiesContainer) { MethodName = "testCallbackMethodName" });
 
 			_feedProcessor.Poll();
 
