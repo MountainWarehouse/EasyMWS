@@ -68,14 +68,28 @@ namespace MountainWarehouse.EasyMWS.Processors
 				RequestReportStatusesFromAmazon();
 				_reportService.SaveChanges();
 
-				var generatedReportRequestCallback = DownloadNextReportInQueueFromAmazon();
+				var reportInfo = DownloadNextReportInQueueFromAmazon();
 				_reportService.SaveChanges();
 
-				if (generatedReportRequestCallback.reportRequestCallback != null && generatedReportRequestCallback.stream != null)
+				if (reportInfo.reportRequestCallback != null && reportInfo.stream != null)
 				{
-					ExecuteCallback(generatedReportRequestCallback.reportRequestCallback, generatedReportRequestCallback.stream);
-					_reportService.SaveChanges();
+					PerformCallback(reportInfo.reportRequestCallback, reportInfo.stream);
 				}
+			}
+			catch (Exception e)
+			{
+				_logger.Error(e.Message, e);
+			}
+		}
+
+		private void PerformCallback(ReportRequestCallback reportRequest, Stream stream)
+		{
+			try
+			{
+				ExecuteMethodCallback(reportRequest, stream);
+
+				_requestReportProcessor.RemoveFromQueue(reportRequest);
+				_reportService.SaveChanges();
 			}
 			catch (Exception e)
 			{
@@ -170,24 +184,18 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public void ExecuteCallback(ReportRequestCallback reportRequest, Stream stream)
+		public void ExecuteMethodCallback(ReportRequestCallback reportRequest, Stream stream)
 		{
 			if (reportRequest == null || stream == null) return;
 
-			_logger.Info($"Attempting to perform method callback for the next downloaded report in queue : {reportRequest.RegionAndTypeComputed}.");
-			try
-			{
-				var callback = new Callback(reportRequest.TypeName, reportRequest.MethodName,
-					reportRequest.Data, reportRequest.DataTypeName);
+			_logger.Info(
+				$"Attempting to perform method callback for the next downloaded report in queue : {reportRequest.RegionAndTypeComputed}.");
 
-				_callbackActivator.CallMethod(callback, stream);
+			var callback = new Callback(reportRequest.TypeName, reportRequest.MethodName,
+				reportRequest.Data, reportRequest.DataTypeName);
 
-				_requestReportProcessor.RemoveFromQueue(reportRequest);
-			}
-			catch (Exception e)
-			{
-				_logger.Error(e.Message, e);
-			}
+			_callbackActivator.CallMethod(callback, stream);
+
 		}
 
 		private ReportRequestCallback GetSerializedReportRequestCallback(
