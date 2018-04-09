@@ -36,7 +36,7 @@ namespace EasyMWS.Tests.Processors
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_feedSubmissionCallbackServiceMock = new Mock<IFeedSubmissionCallbackService>();
 			_loggerMock = new Mock<IEasyMwsLogger>();
-			_feedSubmissionProcessor = new FeedSubmissionProcessor(_marketplaceWebServiceClientMock.Object,
+			_feedSubmissionProcessor = new FeedSubmissionProcessor(_region, _merchantId,_marketplaceWebServiceClientMock.Object,
 				_feedSubmissionCallbackServiceMock.Object, _loggerMock.Object, _easyMwsOptions);
 
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
@@ -70,11 +70,10 @@ namespace EasyMWS.Tests.Processors
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 
-			var testMerchantId = "test merchant id";
 			var feedSubmissionWithNonNullFeedSubmissionId1 = new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
 			{
 				AmazonRegion = AmazonRegion.Europe,
-				MerchantId = testMerchantId,
+				MerchantId = _merchantId,
 				Id = 2,
 				FeedSubmissionId = "testSubmissionId2",
 				SubmissionRetryCount = 0
@@ -82,7 +81,7 @@ namespace EasyMWS.Tests.Processors
 			var feedSubmissionWithNullFeedSubmissionId1 = new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
 			{
 				AmazonRegion = AmazonRegion.Europe,
-				MerchantId = testMerchantId,
+				MerchantId = _merchantId,
 				Id = 3,
 				FeedSubmissionId = null,
 				SubmissionRetryCount = 0
@@ -90,7 +89,7 @@ namespace EasyMWS.Tests.Processors
 			var feedSubmissionWithNullFeedSubmissionId2 = new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
 			{
 				AmazonRegion = AmazonRegion.Europe,
-				MerchantId = testMerchantId,
+				MerchantId = _merchantId,
 				Id = 4,
 				FeedSubmissionId = null,
 				SubmissionRetryCount = 0
@@ -102,7 +101,7 @@ namespace EasyMWS.Tests.Processors
 			_feedSubmissionCallbacks.Add(feedSubmissionWithNullFeedSubmissionId2);
 
 			var feedSubmissionCallback =
-				_feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit(AmazonRegion.Europe, testMerchantId);
+				_feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit();
 
 			Assert.IsNotNull(feedSubmissionCallback);
 			Assert.AreEqual(feedSubmissionWithNullFeedSubmissionId1.Id, feedSubmissionCallback.Id);
@@ -114,7 +113,6 @@ namespace EasyMWS.Tests.Processors
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 			var merchantId1 = "test merchant id 1";
-			var merchantId2 = "test merchant id 2";
 			var feedSubmissionWithDifferentRegion = new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
 			{
 				AmazonRegion = AmazonRegion.Europe,
@@ -134,7 +132,7 @@ namespace EasyMWS.Tests.Processors
 			var feedSubmissionWithSameRegionAndMerchantId1 = new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
 			{
 				AmazonRegion = AmazonRegion.Australia,
-				MerchantId = merchantId2,
+				MerchantId = _merchantId,
 				Id = 3,
 				FeedSubmissionId = null,
 				SubmissionRetryCount = 0
@@ -142,7 +140,7 @@ namespace EasyMWS.Tests.Processors
 			var feedSubmissionWithSameRegionAndMerchantId2 = new FeedSubmissionCallback(new Callback("", "", "", ""), serializedPropertiesContainer)
 			{
 				AmazonRegion = AmazonRegion.Australia,
-				MerchantId = merchantId2,
+				MerchantId = _merchantId,
 				Id = 4,
 				FeedSubmissionId = null,
 				SubmissionRetryCount = 0
@@ -154,8 +152,11 @@ namespace EasyMWS.Tests.Processors
 			_feedSubmissionCallbacks.Add(feedSubmissionWithSameRegionAndMerchantId1);
 			_feedSubmissionCallbacks.Add(feedSubmissionWithSameRegionAndMerchantId2);
 
+			_feedSubmissionProcessor = new FeedSubmissionProcessor(AmazonRegion.Australia, _merchantId, _marketplaceWebServiceClientMock.Object,
+				_feedSubmissionCallbackServiceMock.Object, _loggerMock.Object, _easyMwsOptions);
+
 			var feedSubmissionCallback =
-				_feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit(AmazonRegion.Australia, merchantId2);
+				_feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit();
 
 			Assert.IsNotNull(feedSubmissionCallback);
 			Assert.AreEqual(feedSubmissionWithSameRegionAndMerchantId1.Id, feedSubmissionCallback.Id);
@@ -206,8 +207,11 @@ namespace EasyMWS.Tests.Processors
 			_feedSubmissionCallbacks.Add(feedSubmissionWithNullFeedSubmissionId2);
 			_feedSubmissionCallbacks.Add(feedSubmissionWithNullMerchant);
 
+			_feedSubmissionProcessor = new FeedSubmissionProcessor(_region, null, _marketplaceWebServiceClientMock.Object,
+				_feedSubmissionCallbackServiceMock.Object, _loggerMock.Object, _easyMwsOptions);
+
 			var feedSubmissionCallback =
-				_feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit(AmazonRegion.Europe, null);
+				_feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit();
 
 			Assert.IsNull(feedSubmissionCallback);
 		}
@@ -330,7 +334,7 @@ namespace EasyMWS.Tests.Processors
 			_feedSubmissionCallbacks.AddRange(data);
 
 			// Act
-			var listSubmittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeedsFromQueue(_region, _merchantId);
+			var listSubmittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeedsFromQueue();
 
 			// Assert
 			Assert.AreEqual(2, listSubmittedFeeds.Count());
@@ -396,8 +400,11 @@ namespace EasyMWS.Tests.Processors
 
 			_feedSubmissionCallbacks.AddRange(data);
 
+			_feedSubmissionProcessor = new FeedSubmissionProcessor(_region, null, _marketplaceWebServiceClientMock.Object,
+				_feedSubmissionCallbackServiceMock.Object, _loggerMock.Object, _easyMwsOptions);
+
 			// Act
-			var listOfSubmittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeedsFromQueue(_region, null);
+			var listOfSubmittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeedsFromQueue();
 
 			// Assert
 			Assert.IsEmpty(listOfSubmittedFeeds);
@@ -582,7 +589,7 @@ namespace EasyMWS.Tests.Processors
 			}.AsQueryable();
 			_feedSubmissionCallbackServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(testFeedSubmissionCallbacks);
 
-			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_region, _merchantId);
+			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue();
 			_feedSubmissionCallbackServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionCallback>()), Times.Exactly(2));
 		}
 	}

@@ -46,7 +46,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_callbackActivator = _callbackActivator ?? new CallbackActivator();
 			_amazonReportService = _amazonReportService ?? new AmazonReportService(_options);
 			_reportService = _reportService ?? new ReportRequestCallbackService(_options);
-			_requestReportProcessor = _requestReportProcessor ?? new RequestReportProcessor(mwsClient, _reportService, _amazonReportService, _logger, _options);
+			_requestReportProcessor = _requestReportProcessor ?? new RequestReportProcessor(_region, _merchantId, mwsClient, _reportService, _amazonReportService, _logger, _options);
 		}
 
 
@@ -55,7 +55,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_logger.Info("EasyMwsClient: Executing polling action for report requests.");
 			try
 			{
-				_requestReportProcessor.CleanupReportRequests(_region, _merchantId);
+				_requestReportProcessor.CleanupReportRequests();
 
 				RequestNextReportInQueueFromAmazon();
 				_reportService.SaveChanges();
@@ -93,7 +93,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void RequestNextReportInQueueFromAmazon()
 		{
-			var reportRequest = _requestReportProcessor.GetNextFromQueueOfReportsToRequest(_region, _merchantId);
+			var reportRequest = _requestReportProcessor.GetNextFromQueueOfReportsToRequest();
 
 			if (reportRequest == null) return;
 			
@@ -126,7 +126,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			try
 			{
-				var reportRequestCallbacksPendingReports = _requestReportProcessor.GetAllPendingReportFromQueue(_region, _merchantId).ToList();
+				var reportRequestCallbacksPendingReports = _requestReportProcessor.GetAllPendingReportFromQueue().ToList();
 
 				if (!reportRequestCallbacksPendingReports.Any()) return;
 
@@ -144,7 +144,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public (ReportRequestCallback reportRequestCallback, Stream stream) DownloadNextReportInQueueFromAmazon()
 		{
-			var reportToDownload = _requestReportProcessor.GetNextFromQueueOfReportsToDownload(_region, _merchantId);
+			var reportToDownload = _requestReportProcessor.GetNextFromQueueOfReportsToDownload();
 			if (reportToDownload == null) return (null, null);
 
 			try

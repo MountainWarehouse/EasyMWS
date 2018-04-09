@@ -22,16 +22,22 @@ namespace MountainWarehouse.EasyMWS.Processors
 	    private readonly IMarketplaceWebServiceClient _marketplaceWebServiceClient;
 	    private readonly IEasyMwsLogger _logger;
 		private readonly EasyMwsOptions _options;
+	    private readonly AmazonRegion _region;
+	    private readonly string _merchantId;
 
-		internal RequestReportProcessor(IMarketplaceWebServiceClient marketplaceWebServiceClient,
-		    IReportRequestCallbackService reportRequestCallbackService, IAmazonReportService amazonReportStorageService, IEasyMwsLogger logger, EasyMwsOptions options) : this(marketplaceWebServiceClient, logger, options)
+	    internal RequestReportProcessor(AmazonRegion region, string merchantId,
+		    IMarketplaceWebServiceClient marketplaceWebServiceClient,
+		    IReportRequestCallbackService reportRequestCallbackService, IAmazonReportService amazonReportStorageService,
+		    IEasyMwsLogger logger, EasyMwsOptions options) : this(region, merchantId, marketplaceWebServiceClient, logger, options)
 	    {
 		    _reportRequestCallbackService = reportRequestCallbackService;
 		    _amazonReportStorageService = amazonReportStorageService;
 	    }
 
-		internal RequestReportProcessor(IMarketplaceWebServiceClient marketplaceWebServiceClient, IEasyMwsLogger logger, EasyMwsOptions options)
+	    internal RequestReportProcessor(AmazonRegion region, string merchantId, IMarketplaceWebServiceClient marketplaceWebServiceClient, IEasyMwsLogger logger, EasyMwsOptions options)
 	    {
+		    _region = region;
+		    _merchantId = merchantId;
 		    _options = options;
 		    _logger = logger;
 			_marketplaceWebServiceClient = marketplaceWebServiceClient;
@@ -39,9 +45,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    _amazonReportStorageService = _amazonReportStorageService ?? new AmazonReportService(_options);
 	    }
 
-	    public ReportRequestCallback GetNextFromQueueOfReportsToRequest(AmazonRegion region, string merchantId) =>
-		    string.IsNullOrEmpty(merchantId) ? null : _reportRequestCallbackService.GetAll()
-				    .FirstOrDefault(rrc => rrc.AmazonRegion == region && rrc.MerchantId == merchantId
+	    public ReportRequestCallback GetNextFromQueueOfReportsToRequest() =>
+		    string.IsNullOrEmpty(_merchantId) ? null : _reportRequestCallbackService.GetAll()
+				    .FirstOrDefault(rrc => rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId
 					    && rrc.RequestReportId == null
 					    && RetryIntervalHelper.IsRetryPeriodAwaited(rrc.LastRequested, rrc.RequestRetryCount,
 						    _options.ReportRequestRetryInitialDelay, _options.ReportRequestRetryInterval, _options.ReportRequestRetryType)
@@ -96,9 +102,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_reportRequestCallbackService.Update(reportRequestCallback);
 	    }
 
-	    public IEnumerable<ReportRequestCallback> GetAllPendingReportFromQueue(AmazonRegion region, string merchantId) =>
-		    string.IsNullOrEmpty(merchantId) ? new List<ReportRequestCallback>().AsEnumerable() : _reportRequestCallbackService.Where(
-			    rrcs => rrcs.AmazonRegion == region && rrcs.MerchantId == merchantId
+	    public IEnumerable<ReportRequestCallback> GetAllPendingReportFromQueue() =>
+		    string.IsNullOrEmpty(_merchantId) ? new List<ReportRequestCallback>().AsEnumerable() : _reportRequestCallbackService.Where(
+			    rrcs => rrcs.AmazonRegion == _region && rrcs.MerchantId == _merchantId
 			            && rrcs.RequestReportId != null
 			            && rrcs.GeneratedReportId == null);
 
@@ -149,11 +155,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    }
 	    }
 
-	    public void CleanupReportRequests(AmazonRegion region, string merchant)
+	    public void CleanupReportRequests()
 	    {
 			_logger.Info("Executing cleanup of report requests queue.");
 		    var expiredReportRequests = _reportRequestCallbackService.GetAll()
-			    .Where(rrc => rrc.AmazonRegion == region && rrc.MerchantId == merchant
+			    .Where(rrc => rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId
 				&& rrc.RequestRetryCount > _options.ReportRequestMaxRetryCount);
 
 		    if (expiredReportRequests.Any())
@@ -213,9 +219,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 	    }
 
 
-	    public ReportRequestCallback GetNextFromQueueOfReportsToDownload(AmazonRegion region, string merchantId) =>
-		    string.IsNullOrEmpty(merchantId) ? null : _reportRequestCallbackService.FirstOrDefault(
-			    rrc => rrc.AmazonRegion == region && rrc.MerchantId == merchantId
+	    public ReportRequestCallback GetNextFromQueueOfReportsToDownload() =>
+		    string.IsNullOrEmpty(_merchantId) ? null : _reportRequestCallbackService.FirstOrDefault(
+			    rrc => rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId
 			           && rrc.RequestReportId != null
 			           && rrc.GeneratedReportId != null);
 
