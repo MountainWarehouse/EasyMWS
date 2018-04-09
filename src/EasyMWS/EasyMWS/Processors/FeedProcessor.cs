@@ -41,14 +41,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_callbackActivator = _callbackActivator ?? new CallbackActivator();
 
 			_feedService = _feedService ?? new FeedSubmissionCallbackService(options: _options);
-			_feedSubmissionProcessor = _feedSubmissionProcessor ?? new FeedSubmissionProcessor(mwsClient, _feedService, _logger, _options);
+			_feedSubmissionProcessor = _feedSubmissionProcessor ?? new FeedSubmissionProcessor(_region, _merchantId, mwsClient, _feedService, _logger, _options);
 		}
 
 		public void Poll()
 		{
 			try
 			{
-				_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_region, _merchantId);
+				_feedSubmissionProcessor.CleanUpFeedSubmissionQueue();
 
 				SubmitNextFeedInQueueToAmazon();
 				_feedService.SaveChanges();
@@ -95,7 +95,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void SubmitNextFeedInQueueToAmazon()
 		{
-			var feedSubmission = _feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit(_region, _merchantId);
+			var feedSubmission = _feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit();
 
 			if (feedSubmission == null) return;
 			
@@ -128,7 +128,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			try
 			{
-				var submittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeedsFromQueue(_region, _merchantId).ToList();
+				var submittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeedsFromQueue().ToList();
 
 				if (!submittedFeeds.Any())
 					return;
@@ -147,7 +147,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public (FeedSubmissionCallback feedSubmissionCallback, Stream reportContent, string contentMd5) RequestNextFeedSubmissionInQueueFromAmazon()
 		{
-			var nextFeedWithProcessingComplete = _feedSubmissionProcessor.GetNextFromQueueOfProcessingCompleteFeeds(_region, _merchantId);
+			var nextFeedWithProcessingComplete = _feedSubmissionProcessor.GetNextFromQueueOfProcessingCompleteFeeds();
 			if (nextFeedWithProcessingComplete == null) return (null, null, null);
 
 			try
