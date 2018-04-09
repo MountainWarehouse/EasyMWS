@@ -13,6 +13,7 @@
     <Product>EasyMWS</Product>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Description>MWS Client (initially for reports) that abstracts away the request/check/download cycle and can run across multiple nodes.</Description>
+    <PackageLicenseUrl>http://aws.amazon.com/apache2.0</PackageLicenseUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
