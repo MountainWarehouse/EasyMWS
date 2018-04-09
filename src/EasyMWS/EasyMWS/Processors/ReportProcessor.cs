@@ -95,6 +95,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
+		public void Queue(ReportRequestPropertiesContainer propertiesContainer)
+		{
+			Queue(propertiesContainer, null, null);
+		}
+
 		public void RequestNextReportInQueueFromAmazon()
 		{
 			var reportRequest = _requestReportProcessor.GetNextFromQueueOfReportsToRequest();

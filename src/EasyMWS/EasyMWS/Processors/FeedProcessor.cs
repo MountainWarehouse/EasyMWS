@@ -97,6 +97,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
+		public void Queue(FeedSubmissionPropertiesContainer propertiesContainer)
+		{
+			Queue(propertiesContainer, null, null);
+		}
+
 		public void SubmitNextFeedInQueueToAmazon()
 		{
 			var feedSubmission = _feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit();
