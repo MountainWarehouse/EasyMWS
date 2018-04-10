@@ -21,14 +21,19 @@ namespace MountainWarehouse.EasyMWS.Data
 			{
 				ReportRequestCallbacks.FirstOrDefault(x => x.Id == 1);
 			}
-			catch (SqlException e)
+			catch (Exception e)
 			{
-				Database.Migrate();
+				if (e is SqlException || e is DbUpdateException)
+				{
+					Database.Migrate();
+					return;
+				}
+				throw;
 			}
 		}
 
 		private string _connectionString;
-		public EasyMwsContext(string connectionString = null)
+		public EasyMwsContext(string connectionString = null) : this()
 		{
 			_connectionString = connectionString;
 
