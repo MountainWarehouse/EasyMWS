@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using MountainWarehouse.EasyMWS;
+using MountainWarehouse.EasyMWS.CallbackLogic;
 using NUnit.Framework;
 
 namespace EasyMWS.Tests
