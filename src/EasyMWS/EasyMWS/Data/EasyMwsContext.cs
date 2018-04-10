@@ -1,5 +1,8 @@
-﻿using System.Configuration;
+﻿using System;
+using System.Configuration;
+using System.Data.SqlClient;
 using System.IO;
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
@@ -7,6 +10,23 @@ namespace MountainWarehouse.EasyMWS.Data
 {
 	internal sealed class EasyMwsContext : DbContext
 	{
+		public EasyMwsContext()
+		{
+			CreateDatabaseWithMigrationsIfNotExists();
+		}
+
+		private void CreateDatabaseWithMigrationsIfNotExists()
+		{
+			try
+			{
+				ReportRequestCallbacks.FirstOrDefault(x => x.Id == 1);
+			}
+			catch (SqlException e)
+			{
+				Database.Migrate();
+			}
+		}
+
 		private string _connectionString;
 		public EasyMwsContext(string connectionString = null)
 		{
