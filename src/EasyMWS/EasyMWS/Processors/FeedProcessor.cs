@@ -60,24 +60,29 @@ namespace MountainWarehouse.EasyMWS.Processors
 				RequestFeedSubmissionStatusesFromAmazon();
 				_feedService.SaveChanges();
 
-				var processingReportInfo = RequestNextFeedSubmissionInQueueFromAmazon();
+				var reportInfo = RequestNextFeedSubmissionInQueueFromAmazon();
 				_feedService.SaveChanges();
 
-				if (MD5ChecksumHelper.IsChecksumCorrect(processingReportInfo.reportContent, processingReportInfo.contentMd5))
-				{
-					PerformCallback(processingReportInfo.feedSubmissionCallback, processingReportInfo.reportContent);
-					_logger.Info($"Checksum verification succeeded for feed submission report for {processingReportInfo.feedSubmissionCallback.RegionAndTypeComputed}");
-				}
-				else
-				{
-					_logger.Warn($"Checksum verification failed for feed submission report for {processingReportInfo.feedSubmissionCallback.RegionAndTypeComputed}");
-					_feedSubmissionProcessor.MoveToRetryQueue(processingReportInfo.feedSubmissionCallback);
-					_feedService.SaveChanges();
-				}
+				if (reportInfo.reportContent != null) ProcessReportInfo(reportInfo);
 			}
 			catch (Exception e)
 			{
 				_logger.Error(e.Message, e);
+			}
+		}
+
+		private void ProcessReportInfo((FeedSubmissionCallback feedSubmissionCallback, Stream reportContent, string contentMd5) reportInfo)
+		{
+			if (MD5ChecksumHelper.IsChecksumCorrect(reportInfo.reportContent, reportInfo.contentMd5))
+			{
+				PerformCallback(reportInfo.feedSubmissionCallback, reportInfo.reportContent);
+				_logger.Info($"Checksum verification succeeded for feed submission report for {reportInfo.feedSubmissionCallback.RegionAndTypeComputed}");
+			}
+			else
+			{
+				_logger.Warn($"Checksum verification failed for feed submission report for {reportInfo.feedSubmissionCallback.RegionAndTypeComputed}");
+				_feedSubmissionProcessor.MoveToRetryQueue(reportInfo.feedSubmissionCallback);
+				_feedService.SaveChanges();
 			}
 		}
 
@@ -203,6 +208,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		private void InvokeFeedSubmittedEvent(FeedSubmissionCallback feedSubmission, Stream reportContent)
 		{
+			_logger.Info(
+				$"Invoking FeedSubmitted event for the next submitted feed in queue : {feedSubmission.RegionAndTypeComputed}.");
+
 			var feedPropertiesContainer = feedSubmission.GetPropertiesContainer();
 			FeedSubmitted?.Invoke(this, new FeedSubmittedEventArgs
 			{
