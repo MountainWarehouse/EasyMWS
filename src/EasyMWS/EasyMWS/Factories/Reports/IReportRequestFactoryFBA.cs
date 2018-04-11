@@ -179,7 +179,6 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
 		/// <returns></returns>
-		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		ReportRequestPropertiesContainer GenerateRestockInventoryReport(MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		/// <summary>
