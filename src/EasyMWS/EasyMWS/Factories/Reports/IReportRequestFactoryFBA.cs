@@ -221,5 +221,11 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		ReportRequestPropertiesContainer GenerateRequestForReportFbaFeePreviewReport(DateTime startDate, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		#endregion
+
+		#region FBA Suggested Replen Report
+
+		ReportRequestPropertiesContainer GenerateSuggestedFbaReplenReport(MwsMarketplaceGroup requestedMarketplaces = null);
+
+		#endregion
 	}
 }
