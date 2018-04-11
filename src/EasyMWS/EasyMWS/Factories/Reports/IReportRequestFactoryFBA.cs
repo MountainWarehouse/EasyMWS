@@ -179,8 +179,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
 		/// <returns></returns>
-		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		ReportRequestPropertiesContainer GenerateRequestForReportGetRestockInventoryRecommendationsReport(MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer GenerateRestockInventoryReport(MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_STRANDED_INVENTORY_LOADER_DATA_ <para />
@@ -221,5 +220,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		ReportRequestPropertiesContainer GenerateRequestForReportFbaFeePreviewReport(DateTime startDate, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		#endregion
+
+	
 	}
 }
