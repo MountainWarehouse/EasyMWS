@@ -222,10 +222,6 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 
 		#endregion
 
-		#region FBA Suggested Replen Report
-
-		ReportRequestPropertiesContainer GenerateSuggestedFbaReplenReport(MwsMarketplaceGroup requestedMarketplaces = null);
-
-		#endregion
+	
 	}
 }

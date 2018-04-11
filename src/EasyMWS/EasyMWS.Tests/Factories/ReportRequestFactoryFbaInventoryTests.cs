@@ -1274,15 +1274,13 @@ namespace EasyMWS.Tests.Factories
 			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
+
 		[Test]
 		public void
-			GenerateRequestForReportGetRestockInventoryRecommendationsReport_WithEuropeanMarketplacesProvided_ReturnsRequest()
+			GenerateRequestForReportGetRestockInventoryRecommendationsReport_WithUSMarketplacesProvided_ReturnsRequest()
 		{
-			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.UK)
-				.AddMarketplace(MwsMarketplace.Germany)
-				.AddMarketplace(MwsMarketplace.France)
-				.AddMarketplace(MwsMarketplace.Italy)
-				.AddMarketplace(MwsMarketplace.Spain);
+			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US);
+			
 			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
@@ -1291,32 +1289,27 @@ namespace EasyMWS.Tests.Factories
 			Assert.NotNull(reportRequest);
 		}
 
+
 		[Test]
 		public void
-			GenerateRequestForReportGetRestockInventoryRecommendationsReport_WithAmericanMarketplacesProvided_ReturnsRequest()
+			GenerateSuggestedFbaReplenReport_NotValidMarketPlaceRequested_ShouldThrowArgumentException()
 		{
-			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US)
-				.AddMarketplace(MwsMarketplace.Canada)
-				.AddMarketplace(MwsMarketplace.Mexico);
+			var marketPlaceGroup = new MwsMarketplaceGroup(MwsMarketplace.UK);
 			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest =
-				_reportRequestFactoryFBA.GenerateRequestForReportGetRestockInventoryRecommendationsReport(marketplaceGroup);
-
-			Assert.NotNull(reportRequest);
+			Assert.Throws<ArgumentException>(() => _reportRequestFactoryFBA.GenerateRequestForReportGetRestockInventoryRecommendationsReport(marketPlaceGroup), "Should have thrown exception for unsupported marketplace");
 		}
 
 		[Test]
 		public void
-			GenerateRequestForReportGetRestockInventoryRecommendationsReport_WithNonUsOrEUMarketplaceProvided_ReturnsRequest()
+			GenerateSuggestedFbaReplenReport_WithNoMarketplaceProvided_ShouldReturnMarketPlaceIdNotSet()
 		{
-			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Australia);
 			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest =
-				_reportRequestFactoryFBA.GenerateRequestForReportGetRestockInventoryRecommendationsReport(marketplaceGroup);
+			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetRestockInventoryRecommendationsReport();
 
 			Assert.NotNull(reportRequest);
+			Assert.IsNull(reportRequest.MarketplaceIdList);
 		}
 
 		[Test]
