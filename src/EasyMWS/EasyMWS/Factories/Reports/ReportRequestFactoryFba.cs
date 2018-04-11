@@ -127,7 +127,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
 
-		public ReportRequestPropertiesContainer GenerateRequestForReportGetRestockInventoryRecommendationsReport(
+		public ReportRequestPropertiesContainer GenerateRestockInventoryReport(
 			MwsMarketplaceGroup requestedMarketplaces = null)
 			=> ReportGeneratorHelper.GenerateReportRequest("_GET_RESTOCK_INVENTORY_RECOMMENDATIONS_REPORT_",
 				ContentUpdateFrequency.NearRealTime,

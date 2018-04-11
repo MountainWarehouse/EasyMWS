@@ -1256,7 +1256,7 @@ namespace EasyMWS.Tests.Factories
 		{
 			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetRestockInventoryRecommendationsReport();
+			var reportRequest = _reportRequestFactoryFBA.GenerateRestockInventoryReport();
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -1268,7 +1268,7 @@ namespace EasyMWS.Tests.Factories
 		{
 			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetRestockInventoryRecommendationsReport(null);
+			var reportRequest = _reportRequestFactoryFBA.GenerateRestockInventoryReport(null);
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -1284,7 +1284,7 @@ namespace EasyMWS.Tests.Factories
 			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_reportRequestFactoryFBA.GenerateRequestForReportGetRestockInventoryRecommendationsReport(marketplaceGroup);
+				_reportRequestFactoryFBA.GenerateRestockInventoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -1297,7 +1297,7 @@ namespace EasyMWS.Tests.Factories
 			var marketPlaceGroup = new MwsMarketplaceGroup(MwsMarketplace.UK);
 			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			Assert.Throws<ArgumentException>(() => _reportRequestFactoryFBA.GenerateRequestForReportGetRestockInventoryRecommendationsReport(marketPlaceGroup), "Should have thrown exception for unsupported marketplace");
+			Assert.Throws<ArgumentException>(() => _reportRequestFactoryFBA.GenerateRestockInventoryReport(marketPlaceGroup), "Should have thrown exception for unsupported marketplace");
 		}
 
 		[Test]
@@ -1306,7 +1306,7 @@ namespace EasyMWS.Tests.Factories
 		{
 			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetRestockInventoryRecommendationsReport();
+			var reportRequest = _reportRequestFactoryFBA.GenerateRestockInventoryReport();
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -1317,7 +1317,7 @@ namespace EasyMWS.Tests.Factories
 		{
 			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _reportRequestFactoryFBA.GenerateRequestForReportGetRestockInventoryRecommendationsReport();
+			var reportRequest = _reportRequestFactoryFBA.GenerateRestockInventoryReport();
 
 			Assert.AreEqual("_GET_RESTOCK_INVENTORY_RECOMMENDATIONS_REPORT_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequest.UpdateFrequency);
