@@ -166,6 +166,16 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 				startDate: startDate, endDate: endDate ?? DateTime.UtcNow);
 
 		#endregion
-	}
 
+		#region FBA Customer Concessions Reports
+
+		public ReportRequestPropertiesContainer FbaReturnsReport(
+			MwsMarketplaceGroup requestedMarketplaces = null)
+			=> ReportGeneratorHelper.GenerateReportRequest("_GET_FBA_FULFILLMENT_CUSTOMER_RETURNS_DATA_",
+				ContentUpdateFrequency.Daily,
+				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
+				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
+
+		#endregion
+	}
 }

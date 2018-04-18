@@ -215,12 +215,27 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// To successfully generate a report, specify the StartDate parameter of a minimum 72 hours prior to NOW and EndDate to NOW.<para />
 		/// For FBA sellers in the NA and EU only. For Marketplace and Seller Central sellers.						<para />																					
 		/// </summary>
+		/// <param name="endDate">To successfully generate a report, specify EndDate to NOW.</param>
 		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="startDate">To successfully generate a report, specify the StartDate parameter of a minimum 72 hours prior to NOW</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer GenerateRequestForReportFbaFeePreviewReport(DateTime startDate, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		#endregion
 
-	
+
+		#region FBA Customer Concessions Reports
+
+		/// <summary>
+		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_CUSTOMER_RETURNS_DATA_ <para />
+		/// Tab-delimited flat file. Contains customer returned items received at an Amazon fulfillment center, including Return Reason and Disposition.<para />
+		/// Content updated daily. For FBA sellers only. For Marketplace and Seller Central sellers.<para />
+		/// </summary>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <returns></returns>
+		ReportRequestPropertiesContainer FbaReturnsReport(MwsMarketplaceGroup requestedMarketplacesGroup = null);
+
+		#endregion
+
 	}
 }
