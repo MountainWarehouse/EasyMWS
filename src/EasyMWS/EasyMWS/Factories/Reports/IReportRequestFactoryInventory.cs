@@ -2,7 +2,13 @@
 
 namespace MountainWarehouse.EasyMWS.Factories.Reports
 {
-    public interface IReportRequestFactoryInventory
+	/// <summary>
+	/// Factory that can generate report requests for amazon MWS client.<para />
+	/// At least one MarketplaceId value is required for Listings Reports. No MarketplaceId value is required for reports that are not Listings Reports. <para />
+	/// When providing no MarketplaceId value for a reports that is not a Listings Reports, data for all marketplaces the seller is registered in will be shown.<para />
+	/// For more info see : https://docs.developer.amazonservices.com/en_UK/reports/Reports_ReportType.html
+	/// </summary>
+	public interface IReportRequestFactoryInventory
     {
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_MERCHANT_LISTINGS_ALL_DATA_ <para />
