@@ -7,7 +7,8 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 	/// <summary>
 	/// Factory that can generate report requests for amazon MWS client.<para />
 	/// At least one MarketplaceId value is required for Listings Reports. No MarketplaceId value is required for reports that are not Listings Reports. <para />
-	/// When providing no MarketplaceId value for a reports that is not a Listings Reports, data for all marketplaces the seller is registered in will be shown.
+	/// When providing no MarketplaceId value for a reports that is not a Listings Reports, data for all marketplaces the seller is registered in will be shown.<para />
+	/// For more info see : https://docs.developer.amazonservices.com/en_UK/reports/Reports_ReportType.html
 	/// </summary>
 	public interface IReportRequestFactoryFba
 	{
@@ -20,7 +21,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer GenerateRequestForReportGetAfnInventoryData(MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaAmazonFulfilledInventoryReport(MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_AFN_INVENTORY_DATA_BY_COUNTRY_ <para />
@@ -31,7 +32,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
 		/// <returns></returns>a
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		ReportRequestPropertiesContainer GenerateRequestForReportGetAfnInventoryDataByCountry(MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaMultiCountryInventoryReport(MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_EXCESS_INVENTORY_DATA_ <para />
@@ -42,18 +43,20 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
 		/// <returns></returns>
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		ReportRequestPropertiesContainer GenerateRequestForReportGetExcessInventoryData(MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaManageExcessInventoryReport(MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_CROSS_BORDER_INVENTORY_MOVEMENT_DATA_ <para />
 		/// Tab delimited flat file. Contains historical data of shipments that crossed country borders. <para />
 		/// For export shipments or for shipments using Amazon's European Fulfillment Network (note that Amazon's European Fulfillment Network is for Seller Central sellers only). <para />
-		/// Content updated daily. For Marketplace and Seller Central sellers.
+		/// Content updated daily. For Marketplace and Seller Central sellers.<para />
+		/// 
+		/// Possible deprecated : present in http://s3.amazonaws.com documentation, but missing in https://docs.developer.amazonservices.com documentation.
 		/// </summary>
 		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
 		/// <returns></returns>
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		ReportRequestPropertiesContainer GenerateRequestForReportGetFulfillmentCrossBorderInventoryMovementData(MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaCrossBorderInventoryMovementReport(MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_CURRENT_INVENTORY_DATA_ <para />
@@ -63,7 +66,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
 		/// <returns></returns>
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		ReportRequestPropertiesContainer GenerateRequestForReportGetFbaFulfillmentCurrentInventoryData(MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaDailyInventoryHistoryReport(MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_INBOUND_NONCOMPLIANCE_DATA_ <para />
@@ -74,7 +77,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
 		/// <returns></returns>
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		ReportRequestPropertiesContainer GenerateRequestForReportGetFbaFulfillmentInboundNoncomplianceData(MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaInboundPerformanceReport(MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_INVENTORY_ADJUSTMENTS_DATA_ <para />
@@ -84,7 +87,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
 		/// <returns></returns>
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		ReportRequestPropertiesContainer GenerateRequestForReportGetFbaFulfillmentInventoryAdjustmentsData(MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaInventoryAdjustmentsReport(MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_INVENTORY_HEALTH_DATA_ <para />
@@ -94,7 +97,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
 		/// <returns></returns>
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		ReportRequestPropertiesContainer GenerateRequestForReportGetFbaFulfillmentInventoryHealthData(MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaInventoryHealthReport(MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_INVENTORY_RECEIPTS_DATA_ <para />
@@ -105,7 +108,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
 		/// <returns></returns>
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		ReportRequestPropertiesContainer GenerateRequestForReportGetFbaFulfillmentInventoryReceiptsData(MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaReceivedInventoryReport(MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_INVENTORY_SUMMARY_DATA_ <para />
@@ -116,7 +119,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
 		/// <returns></returns>
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		ReportRequestPropertiesContainer GenerateRequestForReportGetFbaFulfillmentInventorySummaryData(MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaInventoryEventDetailReport(MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_MONTHLY_INVENTORY_DATA_ <para />
@@ -126,7 +129,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
 		/// <returns></returns>
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		ReportRequestPropertiesContainer GenerateRequestForReportGetFbaFulfillmentMonthlyInventoryData(MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaMonthlyInventoryHistoryReport(MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_INVENTORY_AGED_DATA_ <para />
@@ -137,7 +140,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
 		/// <returns></returns>
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		ReportRequestPropertiesContainer GenerateRequestForReportGetFbaInventoryAgedData(MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaInventoryAgeReport(MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_MYI_ALL_INVENTORY_DATA_ <para />
@@ -148,7 +151,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
 		/// <returns></returns>
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		ReportRequestPropertiesContainer GenerateRequestForReportGetFbaMyiAllInventoryData(MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaManageInventoryArchived(MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_MYI_UNSUPPRESSED_INVENTORY_DATA_ <para />
@@ -158,7 +161,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer GenerateRequestForReportGetFbaMyiUnsuppressedInventoryData(MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaManageInventory(MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_RESERVED_INVENTORY_DATA_ <para />
@@ -169,7 +172,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
 		/// <returns></returns>
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		ReportRequestPropertiesContainer GenerateRequestForReportGetReservedInventoryData(MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaReservedInventoryReport(MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_RESTOCK_INVENTORY_RECOMMENDATIONS_REPORT_ <para />
@@ -179,7 +182,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer GenerateRestockInventoryReport(MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer RestockInventoryReport(MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_STRANDED_INVENTORY_LOADER_DATA_ <para />
@@ -191,7 +194,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
 		/// <returns></returns>
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		ReportRequestPropertiesContainer GenerateRequestForReportGetStrandedInventoryLoaderData(MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaBulkFixStrandedInventoryReport(MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_STRANDED_INVENTORY_UI_DATA_ <para />
@@ -202,7 +205,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
 		/// <returns></returns>
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
-		ReportRequestPropertiesContainer GenerateRequestForReportGetStrandedInventoryUiData(MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaStrandedInventoryReport(MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		#endregion
 
@@ -215,12 +218,29 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// To successfully generate a report, specify the StartDate parameter of a minimum 72 hours prior to NOW and EndDate to NOW.<para />
 		/// For FBA sellers in the NA and EU only. For Marketplace and Seller Central sellers.						<para />																					
 		/// </summary>
+		/// <param name="endDate">To successfully generate a report, specify EndDate to NOW. If endDate is not specified, it is set automatically to NOW.</param>
 		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="startDate">To successfully generate a report, specify the StartDate parameter to a minimum of 72 hours prior to NOW</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer GenerateRequestForReportFbaFeePreviewReport(DateTime startDate, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaFeePreviewReport(DateTime startDate, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		#endregion
 
-	
+
+		#region FBA Customer Concessions Reports
+
+		/// <summary>
+		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_CUSTOMER_RETURNS_DATA_ <para />
+		/// Tab-delimited flat file. Contains customer returned items received at an Amazon fulfillment center, including Return Reason and Disposition.<para />
+		/// Content updated daily. For FBA sellers only. For Marketplace and Seller Central sellers.<para />
+		/// </summary>
+		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <returns></returns>
+		ReportRequestPropertiesContainer FbaReturnsReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+
+		#endregion
+
 	}
 }
