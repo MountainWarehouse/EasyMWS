@@ -168,8 +168,8 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 
 		#region FBA Customer Concessions Reports
 
-		public ReportRequestPropertiesContainer FbaReturnsReport(DateTime startDate,
-			DateTime? endDate, MwsMarketplaceGroup requestedMarketplaces = null)
+		public ReportRequestPropertiesContainer FbaReturnsReport(DateTime? startDate = null,
+			DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplaces = null)
 			=> ReportGeneratorHelper.GenerateReportRequest("_GET_FBA_FULFILLMENT_CUSTOMER_RETURNS_DATA_",
 				ContentUpdateFrequency.Daily,
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
