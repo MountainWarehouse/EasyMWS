@@ -218,9 +218,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// To successfully generate a report, specify the StartDate parameter of a minimum 72 hours prior to NOW and EndDate to NOW.<para />
 		/// For FBA sellers in the NA and EU only. For Marketplace and Seller Central sellers.						<para />																					
 		/// </summary>
-		/// <param name="endDate">To successfully generate a report, specify EndDate to NOW.</param>
+		/// <param name="endDate">To successfully generate a report, specify EndDate to NOW. If endDate is not specified, it is set automatically to NOW.</param>
 		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
-		/// <param name="startDate">To successfully generate a report, specify the StartDate parameter of a minimum 72 hours prior to NOW</param>
+		/// <param name="startDate">To successfully generate a report, specify the StartDate parameter to a minimum of 72 hours prior to NOW</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer FbaFeePreviewReport(DateTime startDate, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
@@ -234,9 +234,11 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// Tab-delimited flat file. Contains customer returned items received at an Amazon fulfillment center, including Return Reason and Disposition.<para />
 		/// Content updated daily. For FBA sellers only. For Marketplace and Seller Central sellers.<para />
 		/// </summary>
+		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FbaReturnsReport(MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaReturnsReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		#endregion
 

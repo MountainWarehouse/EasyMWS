@@ -156,8 +156,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		public ReportRequestPropertiesContainer FbaFeePreviewReport(DateTime startDate,
-			DateTime? endDate,
-			MwsMarketplaceGroup requestedMarketplaces = null)
+			DateTime? endDate, MwsMarketplaceGroup requestedMarketplaces = null)
 			=> ReportGeneratorHelper.GenerateReportRequest("_GET_FBA_ESTIMATED_FBA_FEES_TXT_DATA_",
 				ContentUpdateFrequency.AtLeast72Hours,
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonEurope() + MwsMarketplace.US + MwsMarketplace.Canada +
@@ -169,12 +168,13 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 
 		#region FBA Customer Concessions Reports
 
-		public ReportRequestPropertiesContainer FbaReturnsReport(
-			MwsMarketplaceGroup requestedMarketplaces = null)
+		public ReportRequestPropertiesContainer FbaReturnsReport(DateTime startDate,
+			DateTime? endDate, MwsMarketplaceGroup requestedMarketplaces = null)
 			=> ReportGeneratorHelper.GenerateReportRequest("_GET_FBA_FULFILLMENT_CUSTOMER_RETURNS_DATA_",
 				ContentUpdateFrequency.Daily,
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
-				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList());
+				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList(),
+				startDate: startDate, endDate: endDate);
 
 		#endregion
 	}
