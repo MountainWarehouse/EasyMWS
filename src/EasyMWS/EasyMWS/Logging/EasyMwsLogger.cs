@@ -65,7 +65,7 @@ namespace MountainWarehouse.EasyMWS.Logging
 			if (e is MarketplaceWebServiceException mwsWebServiceException)
 			{
 				eventArgs.RequestInfo = new RequestInfo(
-					mwsWebServiceException.ResponseHeaderMetadata.Timestamp,
+					mwsWebServiceException.ResponseHeaderMetadata?.Timestamp,
 					mwsWebServiceException.RequestId,
 					mwsWebServiceException.StatusCode,
 					mwsWebServiceException.ErrorType,
