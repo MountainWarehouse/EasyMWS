@@ -32,15 +32,10 @@ namespace MountainWarehouse.EasyMWS.Data
 			}
 		}
 
-		private string _connectionString;
+		private readonly string _connectionString;
 		public EasyMwsContext(string connectionString = null) : this()
 		{
 			_connectionString = connectionString;
-
-			if (!string.IsNullOrEmpty(connectionString))
-			{
-				Database.GetDbConnection().ConnectionString = connectionString;
-			}
 		}
 
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
