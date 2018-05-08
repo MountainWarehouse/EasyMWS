@@ -19,7 +19,7 @@ namespace MountainWarehouse.EasyMWS.Data
 		{
 			try
 			{
-				ReportRequestCallbacks.FirstOrDefault(x => x.Id == 1);
+				TestDbConnection();
 			}
 			catch (Exception e)
 			{
@@ -30,6 +30,11 @@ namespace MountainWarehouse.EasyMWS.Data
 				}
 				throw;
 			}
+		}
+
+		private void TestDbConnection()
+		{
+			var testAnyEntitiesQuery = ReportRequestCallbacks.Any();
 		}
 
 		private readonly string _connectionString;
@@ -57,12 +62,26 @@ namespace MountainWarehouse.EasyMWS.Data
 				.AddXmlFile("App.config")
 				.Build();
 
-			optionsBuilder.UseSqlServer(_connectionString ?? configuration["connectionStrings:add:EasyMwsContext:connectionString"]);
+			var conn = new SqlConnectionStringBuilder(_connectionString ?? configuration["connectionStrings:add:EasyMwsContext:connectionString"]);
+			OverrideDefaultConnectionStringProperties(conn);
+
+			optionsBuilder.UseSqlServer(conn.ToString(), opt => opt.EnableRetryOnFailure());
 		}
 
 		private void ConfigureDbContextForDotNetFramework(DbContextOptionsBuilder optionsBuilder)
 		{
-			optionsBuilder.UseSqlServer(_connectionString ?? ConfigurationManager.ConnectionStrings["EasyMwsContext"].ConnectionString);
+			var conn = new SqlConnectionStringBuilder(_connectionString ?? ConfigurationManager.ConnectionStrings["EasyMwsContext"].ConnectionString);
+			OverrideDefaultConnectionStringProperties(conn);
+
+			optionsBuilder.UseSqlServer(conn.ToString());
+		}
+
+		private void OverrideDefaultConnectionStringProperties(SqlConnectionStringBuilder connectionString)
+		{
+			connectionString.ConnectRetryCount = connectionString.ConnectRetryCount != 1 ? connectionString.ConnectRetryCount : 5;
+			connectionString.ConnectRetryInterval = connectionString.ConnectRetryInterval != 10 ? connectionString.ConnectRetryInterval : 3;
+			connectionString.MaxPoolSize = connectionString.MaxPoolSize != 100 ? connectionString.MaxPoolSize : 300;
+			connectionString.ConnectTimeout = connectionString.ConnectTimeout != 15 ? connectionString.ConnectTimeout : 300;
 		}
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
