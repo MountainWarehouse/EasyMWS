@@ -239,7 +239,8 @@ namespace MountainWarehouse.EasyMWS.Processors
 				HasErrors = false,
 				SubmissionErrorData = null,
 				SubmissionRetryCount = 0,
-				FeedSubmissionId = null
+				FeedSubmissionId = null,
+				FeedType = propertiesContainer.FeedType
 			};
 
 			if (callbackMethod != null)

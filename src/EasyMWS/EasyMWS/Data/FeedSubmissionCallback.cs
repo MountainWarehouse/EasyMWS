@@ -16,7 +16,7 @@ namespace MountainWarehouse.EasyMWS.Data
 	    public string RegionAndTypeComputed
 	    {
 		    // this field is populated based on ReportRequestData which, once set in the ctor, should never change again for the same entity.
-			get { return _regionAndType = _regionAndType ?? this.GetRegionAndTypeString(); }
+			get { return _regionAndType = _regionAndType ?? $"[AmazonRegion:'{AmazonRegion.ToString()}', FeedType:'{FeedType}']"; }
 	    }
 
 	    [Key]
@@ -33,6 +33,7 @@ namespace MountainWarehouse.EasyMWS.Data
 
 		#region Data necessary to request a report from amazon.
 	    public AmazonRegion AmazonRegion { get; set; }
+	    public string FeedType { get; set; }
 	    public string MerchantId { get; set; }
 		public string FeedSubmissionData { get; set; }
 		#endregion
@@ -69,12 +70,6 @@ namespace MountainWarehouse.EasyMWS.Data
 		internal static FeedSubmissionPropertiesContainer GetPropertiesContainer(this FeedSubmissionCallback source)
 		{
 			return JsonConvert.DeserializeObject<FeedSubmissionPropertiesContainer>(source.FeedSubmissionData);
-		}
-
-		internal static string GetRegionAndTypeString(this FeedSubmissionCallback source)
-		{
-			var feedType = GetPropertiesContainer(source)?.FeedType;
-			return $"[region:'{source.AmazonRegion.ToString()}', feedType:'{feedType}']";
 		}
 	}
 }
