@@ -229,7 +229,8 @@ namespace MountainWarehouse.EasyMWS.Processors
 				ContentUpdateFrequency = reportRequestContainer.UpdateFrequency,
 				RequestReportId = null,
 				GeneratedReportId = null,
-				RequestRetryCount = 0
+				RequestRetryCount = 0,
+				ReportType = reportRequestContainer.ReportType
 			};
 
 			if (callbackMethod != null)
