@@ -12,24 +12,12 @@ namespace MountainWarehouse.EasyMWS.Data
 	{
 		public EasyMwsContext()
 		{
-			CreateDatabaseWithMigrationsIfNotExists();
+			ApplyMigrationsAndCreateDatabaseIfNotExists();
 		}
 
-		private void CreateDatabaseWithMigrationsIfNotExists()
+		private void ApplyMigrationsAndCreateDatabaseIfNotExists()
 		{
-			try
-			{
-				ReportRequestCallbacks.FirstOrDefault(x => x.Id == 1);
-			}
-			catch (Exception e)
-			{
-				if (e is SqlException || e is DbUpdateException)
-				{
-					Database.Migrate();
-					return;
-				}
-				throw;
-			}
+			Database.Migrate();
 		}
 
 		private string _connectionString;
