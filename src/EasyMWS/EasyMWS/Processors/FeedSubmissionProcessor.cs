@@ -70,6 +70,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				};
 
 				var response = _marketplaceWebServiceClient.SubmitFeed(submitFeedRequest);
+				stream.Close();
 
 				var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
 				var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
