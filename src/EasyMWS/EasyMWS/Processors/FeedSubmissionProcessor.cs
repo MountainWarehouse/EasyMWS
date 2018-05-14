@@ -97,12 +97,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_logger.Warn($"Moving {feedSubmission.RegionAndTypeComputed} to retry queue. Retry count is now '{feedSubmission.SubmissionRetryCount}'.");
 		}
 
-		public IEnumerable<FeedSubmissionCallback> GetAllSubmittedFeedsFromQueue() =>
-			string.IsNullOrEmpty(_merchantId) ? new List<FeedSubmissionCallback>().AsEnumerable() : _feedSubmissionCallbackService.Where(
+		public IEnumerable<string> GetIdsForSubmittedFeedsFromQueue() =>
+			string.IsNullOrEmpty(_merchantId) ? new List<string>().AsEnumerable() : _feedSubmissionCallbackService.Where(
 				rrcs => rrcs.AmazonRegion == _region && rrcs.MerchantId == _merchantId
 				        && rrcs.FeedSubmissionId != null
 						&& rrcs.IsProcessingComplete == false
-				);
+				).Select(f => f.FeedSubmissionId);
 
 		public List<(string FeedSubmissionId, string FeedProcessingStatus)> RequestFeedSubmissionStatusesFromAmazon(IEnumerable<string> feedSubmissionIdList, string merchant)
 		{
