@@ -95,18 +95,19 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-	    public void GetNextFromQueueOfReportsToGenerate(ReportRequestCallback reportRequestCallback, string reportRequestId)
+	    public void MoveToQueueOfReportsToGenerate(ReportRequestCallback reportRequestCallback, string reportRequestId)
 	    {
 		    reportRequestCallback.RequestReportId = reportRequestId;
 		    reportRequestCallback.RequestRetryCount = 0;
 			_reportRequestCallbackService.Update(reportRequestCallback);
 	    }
 
-	    public IEnumerable<ReportRequestCallback> GetAllPendingReportFromQueue() =>
-		    string.IsNullOrEmpty(_merchantId) ? new List<ReportRequestCallback>().AsEnumerable() : _reportRequestCallbackService.Where(
-			    rrcs => rrcs.AmazonRegion == _region && rrcs.MerchantId == _merchantId
+	    public IEnumerable<string> GetAllPendingReportFromQueue() =>
+		    string.IsNullOrEmpty(_merchantId) ? new List<string>().AsEnumerable() : _reportRequestCallbackService
+			.Where(rrcs => rrcs.AmazonRegion == _region && rrcs.MerchantId == _merchantId
 			            && rrcs.RequestReportId != null
-			            && rrcs.GeneratedReportId == null);
+			            && rrcs.GeneratedReportId == null)
+			.Select(r => r.RequestReportId);
 
 		public List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> GetReportProcessingStatusesFromAmazon(IEnumerable<string> requestIdList, string merchant)
 	    {
@@ -121,12 +122,17 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			var responseInformation = new List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)>();
 
-		    foreach (var reportRequestInfo in response.GetReportRequestListResult.ReportRequestInfo)
+		    if (response != null)
 		    {
-			    responseInformation.Add((reportRequestInfo.ReportRequestId, reportRequestInfo.GeneratedReportId, reportRequestInfo.ReportProcessingStatus));
+			    foreach (var reportRequestInfo in response.GetReportRequestListResult.ReportRequestInfo)
+			    {
+				    responseInformation.Add(
+					    (reportRequestInfo.ReportRequestId, reportRequestInfo.GeneratedReportId, reportRequestInfo
+						    .ReportProcessingStatus));
+			    }
 		    }
 
-			return responseInformation;
+		    return responseInformation;
 	    }
 
 	    public void MoveReportsToGeneratedQueue(List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> reportsStatusInformation)

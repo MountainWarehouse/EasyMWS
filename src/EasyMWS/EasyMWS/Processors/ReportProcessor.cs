@@ -141,7 +141,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				}
 				else
 				{
-					_requestReportProcessor.GetNextFromQueueOfReportsToGenerate(reportRequest, reportRequestId);
+					_requestReportProcessor.MoveToQueueOfReportsToGenerate(reportRequest, reportRequestId);
 					_logger.Info($"AmazonMWS request succeeded for {reportRequest.RegionAndTypeComputed}. ReportRequestId:'{reportRequestId}'");
 				}
 			}
@@ -156,13 +156,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			try
 			{
-				var reportRequestCallbacksPendingReports = _requestReportProcessor.GetAllPendingReportFromQueue().ToList();
+				var pendingReportsRequestIds = _requestReportProcessor.GetAllPendingReportFromQueue().ToList();
 
-				if (!reportRequestCallbacksPendingReports.Any()) return;
+				if (!pendingReportsRequestIds.Any()) return;
 
-				var reportRequestIds = reportRequestCallbacksPendingReports.Select(x => x.RequestReportId);
-
-				var reportRequestStatuses = _requestReportProcessor.GetReportProcessingStatusesFromAmazon(reportRequestIds, _merchantId);
+				var reportRequestStatuses = _requestReportProcessor.GetReportProcessingStatusesFromAmazon(pendingReportsRequestIds, _merchantId);
 
 				_requestReportProcessor.QueueReportsAccordingToProcessingStatus(reportRequestStatuses);
 			}

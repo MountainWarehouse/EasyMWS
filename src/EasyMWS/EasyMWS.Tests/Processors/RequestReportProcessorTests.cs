@@ -388,7 +388,7 @@ namespace EasyMWS.Tests.Processors
 		{
 			var reportRequestId = "testReportRequestId";
 
-			 _requestReportProcessor.GetNextFromQueueOfReportsToGenerate(_reportRequestCallbacks[0], reportRequestId);
+			 _requestReportProcessor.MoveToQueueOfReportsToGenerate(_reportRequestCallbacks[0], reportRequestId);
 
 			Assert.AreEqual("testReportRequestId", _reportRequestCallbacks[0].RequestReportId);
 			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.Once);
@@ -452,7 +452,7 @@ namespace EasyMWS.Tests.Processors
 			
 			// Assert
 			Assert.AreEqual(2, listPendingReports.Count());
-			Assert.IsTrue(listPendingReports.Count(sf => sf.Id == 4 || sf.Id == 5) == 2);
+			Assert.IsTrue(listPendingReports.Count(sf => sf == "Report1" || sf == "Report2") == 2);
 		}
 
 		[Test]
