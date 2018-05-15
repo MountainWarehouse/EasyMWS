@@ -37,7 +37,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_options = options;
 			_logger = logger;
 			_marketplaceWebServiceClient = marketplaceWebServiceClient;
-			_feedSubmissionCallbackService = _feedSubmissionCallbackService ?? new FeedSubmissionCallbackService(options: _options);
+			_feedSubmissionCallbackService = _feedSubmissionCallbackService ?? new FeedSubmissionCallbackService(options: _options, logger: logger);
 		}
 
 		public FeedSubmissionCallback GetNextFromQueueOfFeedsToSubmit() =>
