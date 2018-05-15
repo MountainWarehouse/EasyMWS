@@ -11,7 +11,7 @@ namespace MountainWarehouse.EasyMWS.Services
 		void Create(ReportRequestCallback callback);
 		Task CreateAsync(ReportRequestCallback callback);
 		void Update(ReportRequestCallback callback);
-		void Delete(ReportRequestCallback callback);
+		void Delete(int id);
 		void SaveChanges();
 		Task SaveChangesAsync();
 		IQueryable<ReportRequestCallback> GetAll();

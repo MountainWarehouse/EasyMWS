@@ -50,7 +50,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			_callbackActivator = _callbackActivator ?? new CallbackActivator();
 			_amazonReportService = _amazonReportService ?? new AmazonReportService(_options);
-			_reportService = _reportService ?? new ReportRequestCallbackService(_options);
+			_reportService = _reportService ?? new ReportRequestCallbackService(_options, _logger);
 			_requestReportProcessor = _requestReportProcessor ?? new RequestReportProcessor(_region, _merchantId, mwsClient, _reportService, _amazonReportService, _logger, _options);
 		}
 
@@ -94,7 +94,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				{
 					InvokeReportDownloadedEvent(reportRequest, stream);
 				}
-				_requestReportProcessor.RemoveFromQueue(reportRequest);
+				_requestReportProcessor.RemoveFromQueue(reportRequest.Id);
 				_reportService.SaveChanges();
 			}
 			catch (Exception e)

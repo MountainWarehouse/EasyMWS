@@ -12,7 +12,7 @@ namespace MountainWarehouse.EasyMWS.Repositories
 	    void Create(ReportRequestCallback callback);
 	    Task CreateAsync(ReportRequestCallback callback);
 	    void Update(ReportRequestCallback callback);
-	    void Delete(ReportRequestCallback callback);
+	    void Delete(int id);
 	    IQueryable<ReportRequestCallback> GetAll();
 		void SaveChanges();
 	    Task SaveChangesAsync();
