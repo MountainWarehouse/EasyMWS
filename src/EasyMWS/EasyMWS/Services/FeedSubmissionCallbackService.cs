@@ -16,7 +16,7 @@ namespace MountainWarehouse.EasyMWS.Services
 
 	    public void Create(FeedSubmissionCallback callback) => _feedRepo.Create(callback);
 	    public void Update(FeedSubmissionCallback callback) => _feedRepo.Update(callback);
-		public void Delete(FeedSubmissionCallback callback) => _feedRepo.Delete(callback);
+		public void Delete(int id) => _feedRepo.Delete(id);
 		public void SaveChanges() => _feedRepo.SaveChanges();
 		public IQueryable<FeedSubmissionCallback> GetAll() => _feedRepo.GetAll().OrderBy(x => x.Id);
 		public IQueryable<FeedSubmissionCallback> Where(Expression<Func<FeedSubmissionCallback, bool>> predicate) => _feedRepo.GetAll().OrderBy(x => x.Id).Where(predicate);

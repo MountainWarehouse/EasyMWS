@@ -20,7 +20,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		FeedSubmissionCallback GetNextFromQueueOfProcessingCompleteFeeds();
 		(Stream processingReport, string md5hash) GetFeedSubmissionResultFromAmazon(FeedSubmissionCallback feedSubmissionCallback);
-		void RemoveFromQueue(FeedSubmissionCallback feedSubmissionCallback);
+		void RemoveFromQueue(int feedSubmissionId);
 		void MoveToRetryQueue(FeedSubmissionCallback feedSubmission);
 		void CleanUpFeedSubmissionQueue();
 	}

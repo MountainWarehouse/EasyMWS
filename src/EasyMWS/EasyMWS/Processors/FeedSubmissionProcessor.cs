@@ -194,9 +194,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 			return (reportResultStream, response?.GetFeedSubmissionResultResult?.ContentMD5);
 		}
 
-		public void RemoveFromQueue(FeedSubmissionCallback feedSubmissionCallback)
+		public void RemoveFromQueue(int feedSubmissionId)
 		{
-			_feedSubmissionCallbackService.Delete(feedSubmissionCallback);
+			_feedSubmissionCallbackService.Delete(feedSubmissionId);
 		}
 
 		public void CleanUpFeedSubmissionQueue()
@@ -205,27 +205,29 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var expiredFeedSubmissions = _feedSubmissionCallbackService.GetAll()
 				.Where(fscs => fscs.AmazonRegion == _region && fscs.MerchantId == _merchantId
 							   && fscs.FeedSubmissionId == null
-				               && fscs.SubmissionRetryCount > _options.FeedSubmissionMaxRetryCount);
+				               && fscs.SubmissionRetryCount > _options.FeedSubmissionMaxRetryCount)
+				.Select(f =>new {f.Id, f.RegionAndTypeComputed});
 
 			if (expiredFeedSubmissions.Any())
 			{
 				_logger.Warn("The following feed submission requests have exceeded their retry limit and will now be deleted :");
 				foreach (var feedSubmission in expiredFeedSubmissions)
 				{
-					_feedSubmissionCallbackService.Delete(feedSubmission);
+					_feedSubmissionCallbackService.Delete(feedSubmission.Id);
 					_logger.Warn($"Feed submission request {feedSubmission.RegionAndTypeComputed} deleted from queue.");
 				}
 			}
 			
 
-			var expiredFeedProcessingResultRequests = _feedSubmissionCallbackService.GetAll()
+			var expiredFeedProcessingResultRequestIds = _feedSubmissionCallbackService.GetAll()
 				.Where(fscs => fscs.AmazonRegion == _region && fscs.MerchantId == _merchantId
 							   && fscs.FeedSubmissionId != null
-				               && fscs.SubmissionRetryCount > _options.FeedResultFailedChecksumMaxRetryCount);
+				               && fscs.SubmissionRetryCount > _options.FeedResultFailedChecksumMaxRetryCount)
+				.Select(f => f.Id);
 
-			foreach (var feedSubmission in expiredFeedProcessingResultRequests)
+			foreach (var id in expiredFeedProcessingResultRequestIds)
 			{
-				_feedSubmissionCallbackService.Delete(feedSubmission);
+				_feedSubmissionCallbackService.Delete(id);
 			}
 		}
 

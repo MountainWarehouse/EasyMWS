@@ -98,7 +98,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				{
 					InvokeFeedSubmittedEvent(feedSubmission, feedSubmissionReport);
 				}
-				_feedSubmissionProcessor.RemoveFromQueue(feedSubmission);
+				_feedSubmissionProcessor.RemoveFromQueue(feedSubmission.Id);
 				_feedService.SaveChanges();
 			}
 			catch (Exception e)
