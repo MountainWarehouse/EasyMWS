@@ -216,8 +216,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				AmazonRegion = feedSubmission.AmazonRegion,
 				MerchantId = feedSubmission.MerchantId,
 				FeedSubmissionId = feedSubmission.FeedSubmissionId,
-				FeedType = feedPropertiesContainer.FeedType,
-				FeedContent = feedPropertiesContainer.FeedContent
+				FeedType = feedPropertiesContainer.FeedType
 			});
 		}
 
