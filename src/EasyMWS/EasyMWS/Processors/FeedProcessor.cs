@@ -111,7 +111,33 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			try
 			{
-				_feedService.Create(GetSerializedFeedSubmissionCallback(propertiesContainer, callbackMethod, callbackData));
+				if (propertiesContainer == null) throw new ArgumentNullException();
+
+				var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
+
+				var feedSubmission = new FeedSubmissionEntry(serializedPropertiesContainer)
+				{
+					AmazonRegion = _region,
+					MerchantId = _merchantId,
+					LastSubmitted = DateTime.MinValue,
+					IsProcessingComplete = false,
+					HasErrors = false,
+					SubmissionErrorData = null,
+					SubmissionRetryCount = 0,
+					FeedSubmissionId = null,
+					FeedType = propertiesContainer.FeedType
+				};
+
+				if (callbackMethod != null)
+				{
+					var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
+					feedSubmission.Data = serializedCallback.Data;
+					feedSubmission.TypeName = serializedCallback.TypeName;
+					feedSubmission.MethodName = serializedCallback.MethodName;
+					feedSubmission.DataTypeName = serializedCallback.DataTypeName;
+				}
+
+				_feedService.Create(feedSubmission);
 				_feedService.SaveChanges();
 			}
 			catch (Exception e)
@@ -217,38 +243,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 				FeedSubmissionId = feedSubmission.FeedSubmissionId,
 				FeedType = feedSubmission.FeedType
 			});
-		}
-
-		private FeedSubmissionEntry GetSerializedFeedSubmissionCallback(
-		  FeedSubmissionPropertiesContainer propertiesContainer, Action<Stream, object> callbackMethod, object callbackData)
-		{
-			if (propertiesContainer == null) throw new ArgumentNullException();
-			
-			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
-
-			var feedSubmission = new FeedSubmissionEntry(serializedPropertiesContainer)
-			{
-				AmazonRegion = _region,
-				MerchantId = _merchantId,
-				LastSubmitted = DateTime.MinValue,
-				IsProcessingComplete = false,
-				HasErrors = false,
-				SubmissionErrorData = null,
-				SubmissionRetryCount = 0,
-				FeedSubmissionId = null,
-				FeedType = propertiesContainer.FeedType
-			};
-
-			if (callbackMethod != null)
-			{
-				var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
-				feedSubmission.Data = serializedCallback.Data;
-				feedSubmission.TypeName = serializedCallback.TypeName;
-				feedSubmission.MethodName = serializedCallback.MethodName;
-				feedSubmission.DataTypeName = serializedCallback.DataTypeName;
-			}
-
-			return feedSubmission;
 		}
 	}
 }
