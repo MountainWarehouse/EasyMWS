@@ -125,7 +125,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 					SubmissionErrorData = null,
 					SubmissionRetryCount = 0,
 					FeedSubmissionId = null,
-					FeedType = propertiesContainer.FeedType
+					FeedType = propertiesContainer.FeedType,
+					Details = new FeedSubmissionDetails
+					{
+						FeedContent = propertiesContainer.FeedContent
+					}
 				};
 
 				if (callbackMethod != null)

@@ -50,14 +50,15 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			var missingInformationExceptionMessage = "Cannot submit queued feed to amazon due to missing feed submission information";
 
-			if (feedSubmission?.FeedSubmissionData == null) throw new ArgumentNullException(missingInformationExceptionMessage);
+			if (feedSubmission?.FeedSubmissionData == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Feed submission data is null.");
+			if (string.IsNullOrEmpty(feedSubmission.Details?.FeedContent)) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Feed content is missing.");
+			if (string.IsNullOrEmpty(feedSubmission?.FeedType)) throw new ArgumentException($"{missingInformationExceptionMessage}: Feed type is missing.");
 
 			_logger.Info($"Attempting to submit the next feed in queue to Amazon: {feedSubmission.RegionAndTypeComputed}.");
 
 			var feedSubmissionData = feedSubmission.GetPropertiesContainer();
-			if (feedSubmission?.FeedType == null) throw new ArgumentException(missingInformationExceptionMessage);
 
-			using (var stream = StreamHelper.CreateNewMemoryStream(feedSubmissionData.FeedContent))
+			using (var stream = StreamHelper.CreateNewMemoryStream(feedSubmission.Details.FeedContent))
 			{
 				var submitFeedRequest = new SubmitFeedRequest
 				{

@@ -45,7 +45,10 @@ namespace MountainWarehouse.EasyMWS.Data
 	    public bool HasErrors { get; set; }
 	    public string SubmissionErrorData { get; set; }
 
-		#endregion
+
+	    public virtual FeedSubmissionDetails Details { get; set; }
+
+	    #endregion
 
 		[Obsolete("This constructor should never be used directly. But it has to exist as required by EF. Use other overloads instead!")]
 		public FeedSubmissionEntry()
