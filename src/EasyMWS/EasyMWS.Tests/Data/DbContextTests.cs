@@ -14,15 +14,15 @@ namespace EasyMWS.Tests.Data
 	    public void Setup()
 	    {
 			_dbContext = new EasyMwsContext();
-		    _dbContext.ReportRequestCallbacks.Add(new ReportRequestEntry {TypeName = _testTypeName });
+		    _dbContext.ReportRequestEntries.Add(new ReportRequestEntry {TypeName = _testTypeName });
 		    _dbContext.SaveChanges();
 	    }
 
 	    [TearDown]
 	    public void TearDown()
 	    {
-		    var testReport = _dbContext.ReportRequestCallbacks.First(r => r.TypeName == _testTypeName);
-		    _dbContext.ReportRequestCallbacks.Remove(testReport);
+		    var testReport = _dbContext.ReportRequestEntries.First(r => r.TypeName == _testTypeName);
+		    _dbContext.ReportRequestEntries.Remove(testReport);
 		    _dbContext.SaveChanges();
 	    }
 
@@ -30,7 +30,7 @@ namespace EasyMWS.Tests.Data
 		[Ignore("Will only run if sql server is installed on current machine. Quite slow to fail.")]
 		public void OnWhere_ReturnsAnyData()
 	    {
-		    var testId = _dbContext.ReportRequestCallbacks.FirstOrDefault(r => r.TypeName == _testTypeName);
+		    var testId = _dbContext.ReportRequestEntries.FirstOrDefault(r => r.TypeName == _testTypeName);
 
 			Assert.NotNull(testId);
 	    }
@@ -41,7 +41,7 @@ namespace EasyMWS.Tests.Data
 	    {
 			_dbContext = new EasyMwsContext("Server=mwsql-dev2;Database=EasyMws;Trusted_Connection=True;");
 
-		    var testId = _dbContext.ReportRequestCallbacks.FirstOrDefault(r => r.TypeName == _testTypeName);
+		    var testId = _dbContext.ReportRequestEntries.FirstOrDefault(r => r.TypeName == _testTypeName);
 
 		    Assert.NotNull(testId);
 		}

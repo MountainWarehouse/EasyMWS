@@ -66,7 +66,7 @@ namespace MountainWarehouse.EasyMWS.Data
 				.HasIndex(e => new { e.FeedSubmissionId });
 		}
 
-		internal DbSet<ReportRequestEntry> ReportRequestCallbacks { get; set; }
+		internal DbSet<ReportRequestEntry> ReportRequestEntries { get; set; }
 		internal DbSet<FeedSubmissionEntry> FeedSubmissionEntries { get; set; }
 		internal DbSet<AmazonReport> AmazonReports { get; set; }
 	}

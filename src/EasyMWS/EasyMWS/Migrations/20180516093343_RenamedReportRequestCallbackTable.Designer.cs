@@ -12,9 +12,10 @@ using System;
 namespace MountainWarehouse.EasyMWS.Migrations
 {
     [DbContext(typeof(EasyMwsContext))]
-    partial class EasyMwsContextModelSnapshot : ModelSnapshot
+    [Migration("20180516093343_RenamedReportRequestCallbackTable")]
+    partial class RenamedReportRequestCallbackTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
