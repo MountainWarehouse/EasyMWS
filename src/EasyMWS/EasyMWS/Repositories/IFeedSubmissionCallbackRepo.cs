@@ -7,7 +7,7 @@ namespace MountainWarehouse.EasyMWS.Repositories
     {
 	    void Create(FeedSubmissionCallback callback);
 	    void Update(FeedSubmissionCallback callback);
-	    void Delete(FeedSubmissionCallback callback);
+	    void Delete(int id);
 	    IQueryable<FeedSubmissionCallback> GetAll();
 	    void SaveChanges();
 	}

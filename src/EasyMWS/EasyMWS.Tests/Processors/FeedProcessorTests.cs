@@ -252,7 +252,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			_feedProcessor.Poll();
 
 			_callbackActivatorMock.Verify(cam => cam.CallMethod(It.IsAny<Callback>(), It.IsAny<Stream>()), Times.Never);
-			_feedSubmissionProcessorMock.Verify(fspm => fspm.RemoveFromQueue(It.IsAny<FeedSubmissionCallback>()), Times.Never);
+			_feedSubmissionProcessorMock.Verify(fspm => fspm.RemoveFromQueue(It.IsAny<int>()), Times.Never);
 			_feedSubmissionProcessorMock.Verify(fspm => fspm.MoveToRetryQueue(It.IsAny<FeedSubmissionCallback>()), Times.Never);
 		}
 
@@ -281,7 +281,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			_feedProcessor.Poll();
 
 			_callbackActivatorMock.Verify(cam => cam.CallMethod(It.IsAny<Callback>(), It.IsAny<Stream>()), Times.Never);
-			_feedSubmissionProcessorMock.Verify(fspm => fspm.RemoveFromQueue(It.IsAny<FeedSubmissionCallback>()), Times.Never);
+			_feedSubmissionProcessorMock.Verify(fspm => fspm.RemoveFromQueue(It.IsAny<int>()), Times.Never);
 			_feedSubmissionProcessorMock.Verify(fspm => fspm.MoveToRetryQueue(It.IsAny<FeedSubmissionCallback>()), Times.Once);
 		}
 
@@ -310,7 +310,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			_feedProcessor.Poll();
 
 			_callbackActivatorMock.Verify(cam => cam.CallMethod(It.IsAny<Callback>(), It.IsAny<Stream>()), Times.Once);
-			_feedSubmissionProcessorMock.Verify(fspm => fspm.RemoveFromQueue(It.IsAny<FeedSubmissionCallback>()), Times.Once);
+			_feedSubmissionProcessorMock.Verify(fspm => fspm.RemoveFromQueue(It.IsAny<int>()), Times.Once);
 			_feedSubmissionProcessorMock.Verify(fspm => fspm.MoveToRetryQueue(It.IsAny<FeedSubmissionCallback>()), Times.Never);
 		}
 

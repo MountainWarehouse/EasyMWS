@@ -50,7 +50,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			_callbackActivator = _callbackActivator ?? new CallbackActivator();
 			_amazonReportService = _amazonReportService ?? new AmazonReportService(_options);
-			_reportService = _reportService ?? new ReportRequestCallbackService(_options);
+			_reportService = _reportService ?? new ReportRequestCallbackService(_options, _logger);
 			_requestReportProcessor = _requestReportProcessor ?? new RequestReportProcessor(_region, _merchantId, mwsClient, _reportService, _amazonReportService, _logger, _options);
 		}
 
@@ -94,7 +94,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				{
 					InvokeReportDownloadedEvent(reportRequest, stream);
 				}
-				_requestReportProcessor.RemoveFromQueue(reportRequest);
+				_requestReportProcessor.RemoveFromQueue(reportRequest.Id);
 				_reportService.SaveChanges();
 			}
 			catch (Exception e)
@@ -141,7 +141,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				}
 				else
 				{
-					_requestReportProcessor.GetNextFromQueueOfReportsToGenerate(reportRequest, reportRequestId);
+					_requestReportProcessor.MoveToQueueOfReportsToGenerate(reportRequest, reportRequestId);
 					_logger.Info($"AmazonMWS request succeeded for {reportRequest.RegionAndTypeComputed}. ReportRequestId:'{reportRequestId}'");
 				}
 			}
@@ -156,13 +156,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			try
 			{
-				var reportRequestCallbacksPendingReports = _requestReportProcessor.GetAllPendingReportFromQueue().ToList();
+				var pendingReportsRequestIds = _requestReportProcessor.GetAllPendingReportFromQueue().ToList();
 
-				if (!reportRequestCallbacksPendingReports.Any()) return;
+				if (!pendingReportsRequestIds.Any()) return;
 
-				var reportRequestIds = reportRequestCallbacksPendingReports.Select(x => x.RequestReportId);
-
-				var reportRequestStatuses = _requestReportProcessor.GetReportProcessingStatusesFromAmazon(reportRequestIds, _merchantId);
+				var reportRequestStatuses = _requestReportProcessor.GetReportProcessingStatusesFromAmazon(pendingReportsRequestIds, _merchantId);
 
 				_requestReportProcessor.QueueReportsAccordingToProcessingStatus(reportRequestStatuses);
 			}

@@ -37,7 +37,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_options = options;
 			_logger = logger;
 			_marketplaceWebServiceClient = marketplaceWebServiceClient;
-			_feedSubmissionCallbackService = _feedSubmissionCallbackService ?? new FeedSubmissionCallbackService(options: _options);
+			_feedSubmissionCallbackService = _feedSubmissionCallbackService ?? new FeedSubmissionCallbackService(options: _options, logger: logger);
 		}
 
 		public FeedSubmissionCallback GetNextFromQueueOfFeedsToSubmit() =>
@@ -70,6 +70,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				};
 
 				var response = _marketplaceWebServiceClient.SubmitFeed(submitFeedRequest);
+				stream.Close();
 
 				var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
 				var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
@@ -96,12 +97,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_logger.Warn($"Moving {feedSubmission.RegionAndTypeComputed} to retry queue. Retry count is now '{feedSubmission.SubmissionRetryCount}'.");
 		}
 
-		public IEnumerable<FeedSubmissionCallback> GetAllSubmittedFeedsFromQueue() =>
-			string.IsNullOrEmpty(_merchantId) ? new List<FeedSubmissionCallback>().AsEnumerable() : _feedSubmissionCallbackService.Where(
+		public IEnumerable<string> GetIdsForSubmittedFeedsFromQueue() =>
+			string.IsNullOrEmpty(_merchantId) ? new List<string>().AsEnumerable() : _feedSubmissionCallbackService.Where(
 				rrcs => rrcs.AmazonRegion == _region && rrcs.MerchantId == _merchantId
 				        && rrcs.FeedSubmissionId != null
 						&& rrcs.IsProcessingComplete == false
-				);
+				).Select(f => f.FeedSubmissionId);
 
 		public List<(string FeedSubmissionId, string FeedProcessingStatus)> RequestFeedSubmissionStatusesFromAmazon(IEnumerable<string> feedSubmissionIdList, string merchant)
 		{
@@ -193,9 +194,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 			return (reportResultStream, response?.GetFeedSubmissionResultResult?.ContentMD5);
 		}
 
-		public void RemoveFromQueue(FeedSubmissionCallback feedSubmissionCallback)
+		public void RemoveFromQueue(int feedSubmissionId)
 		{
-			_feedSubmissionCallbackService.Delete(feedSubmissionCallback);
+			_feedSubmissionCallbackService.Delete(feedSubmissionId);
 		}
 
 		public void CleanUpFeedSubmissionQueue()
@@ -204,27 +205,29 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var expiredFeedSubmissions = _feedSubmissionCallbackService.GetAll()
 				.Where(fscs => fscs.AmazonRegion == _region && fscs.MerchantId == _merchantId
 							   && fscs.FeedSubmissionId == null
-				               && fscs.SubmissionRetryCount > _options.FeedSubmissionMaxRetryCount);
+				               && fscs.SubmissionRetryCount > _options.FeedSubmissionMaxRetryCount)
+				.Select(f =>new {f.Id, f.RegionAndTypeComputed});
 
 			if (expiredFeedSubmissions.Any())
 			{
 				_logger.Warn("The following feed submission requests have exceeded their retry limit and will now be deleted :");
 				foreach (var feedSubmission in expiredFeedSubmissions)
 				{
-					_feedSubmissionCallbackService.Delete(feedSubmission);
+					_feedSubmissionCallbackService.Delete(feedSubmission.Id);
 					_logger.Warn($"Feed submission request {feedSubmission.RegionAndTypeComputed} deleted from queue.");
 				}
 			}
 			
 
-			var expiredFeedProcessingResultRequests = _feedSubmissionCallbackService.GetAll()
+			var expiredFeedProcessingResultRequestIds = _feedSubmissionCallbackService.GetAll()
 				.Where(fscs => fscs.AmazonRegion == _region && fscs.MerchantId == _merchantId
 							   && fscs.FeedSubmissionId != null
-				               && fscs.SubmissionRetryCount > _options.FeedResultFailedChecksumMaxRetryCount);
+				               && fscs.SubmissionRetryCount > _options.FeedResultFailedChecksumMaxRetryCount)
+				.Select(f => f.Id);
 
-			foreach (var feedSubmission in expiredFeedProcessingResultRequests)
+			foreach (var id in expiredFeedProcessingResultRequestIds)
 			{
-				_feedSubmissionCallbackService.Delete(feedSubmission);
+				_feedSubmissionCallbackService.Delete(id);
 			}
 		}
 

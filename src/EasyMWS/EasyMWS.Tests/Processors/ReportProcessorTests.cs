@@ -211,7 +211,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			_reportProcessor.Poll();
 
 			_requestReportProcessor.Verify(
-				rrp => rrp.GetNextFromQueueOfReportsToGenerate(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()), Times.Once);
+				rrp => rrp.MoveToQueueOfReportsToGenerate(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()), Times.Once);
 		}
 
 		[Test]
