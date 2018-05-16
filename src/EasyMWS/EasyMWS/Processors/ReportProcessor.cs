@@ -107,7 +107,32 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			try
 			{
-				_reportService.Create(GetSerializedReportRequestCallback(propertiesContainer, callbackMethod, callbackData));
+				if (propertiesContainer == null) throw new ArgumentNullException();
+
+				var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
+
+				var reportRequest = new ReportRequestEntry(serializedPropertiesContainer)
+				{
+					AmazonRegion = _region,
+					MerchantId = _merchantId,
+					LastRequested = DateTime.MinValue,
+					ContentUpdateFrequency = propertiesContainer.UpdateFrequency,
+					RequestReportId = null,
+					GeneratedReportId = null,
+					RequestRetryCount = 0,
+					ReportType = propertiesContainer.ReportType
+				};
+
+				if (callbackMethod != null)
+				{
+					var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
+					reportRequest.Data = serializedCallback.Data;
+					reportRequest.TypeName = serializedCallback.TypeName;
+					reportRequest.MethodName = serializedCallback.MethodName;
+					reportRequest.DataTypeName = serializedCallback.DataTypeName;
+				}
+
+				_reportService.Create(reportRequest);
 				_reportService.SaveChanges();
 			}
 			catch (Exception e)
@@ -209,37 +234,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 				GeneratedReportId = reportRequest.GeneratedReportId,
 				ReportType = reportRequest.ReportType
 			});
-		}
-
-		private ReportRequestEntry GetSerializedReportRequestCallback(
-			ReportRequestPropertiesContainer reportRequestContainer, Action<Stream, object> callbackMethod, object callbackData)
-		{
-			if (reportRequestContainer == null) throw new ArgumentNullException();
-			
-			var serializedPropertiesContainer = JsonConvert.SerializeObject(reportRequestContainer);
-
-			var reportRequest = new ReportRequestEntry(serializedPropertiesContainer)
-			{
-				AmazonRegion = _region,
-				MerchantId = _merchantId,
-				LastRequested = DateTime.MinValue,
-				ContentUpdateFrequency = reportRequestContainer.UpdateFrequency,
-				RequestReportId = null,
-				GeneratedReportId = null,
-				RequestRetryCount = 0,
-				ReportType = reportRequestContainer.ReportType
-			};
-
-			if (callbackMethod != null)
-			{
-				var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
-				reportRequest.Data = serializedCallback.Data;
-				reportRequest.TypeName = serializedCallback.TypeName;
-				reportRequest.MethodName = serializedCallback.MethodName;
-				reportRequest.DataTypeName = serializedCallback.DataTypeName;
-			}
-
-			return reportRequest;
 		}
 	}
 }
