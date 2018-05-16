@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS.Data
 {
-	public class ReportRequestCallback
+	public class ReportRequestEntry
 	{
 		private string _regionAndType;
 		[NotMapped]
@@ -55,11 +55,11 @@ namespace MountainWarehouse.EasyMWS.Data
 
 
 
-		public ReportRequestCallback()
+		public ReportRequestEntry()
 		{
 		}
 
-		public ReportRequestCallback(string reportRequestData, Callback callback = null)
+		public ReportRequestEntry(string reportRequestData, Callback callback = null)
 		{
 			if(string.IsNullOrEmpty(reportRequestData))
 				throw new ArgumentException("Callback data or ReportRequestData not provided, but are required.");
@@ -74,7 +74,7 @@ namespace MountainWarehouse.EasyMWS.Data
 
 	internal static class ReportRequestCallbackExtensions
 	{
-		internal static ReportRequestPropertiesContainer GetPropertiesContainer(this ReportRequestCallback source)
+		internal static ReportRequestPropertiesContainer GetPropertiesContainer(this ReportRequestEntry source)
 		{
 			return JsonConvert.DeserializeObject<ReportRequestPropertiesContainer>(source.ReportRequestData);
 		}

@@ -79,21 +79,21 @@ namespace EasyMWS.Tests.ReportProcessors
 			var reportRequestContainer =
 				new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.NearRealTime);
 			var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
-			ReportRequestCallback createReportRequestCallbackObject = null;
-			_reportRequestCallbackServiceMock.Setup(rrcsm => rrcsm.Create(It.IsAny<ReportRequestCallback>()))
-				.Callback<ReportRequestCallback>((p) => { createReportRequestCallbackObject = p; });
+			ReportRequestEntry createReportRequestEntryObject = null;
+			_reportRequestCallbackServiceMock.Setup(rrcsm => rrcsm.Create(It.IsAny<ReportRequestEntry>()))
+				.Callback<ReportRequestEntry>((p) => { createReportRequestEntryObject = p; });
 			_reportProcessor.Queue(reportRequestContainer, callbackMethod, new {Foo = "Bar"});
 
-			_reportRequestCallbackServiceMock.Verify(rrcsm => rrcsm.Create(It.IsAny<ReportRequestCallback>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(rrcsm => rrcsm.Create(It.IsAny<ReportRequestEntry>()), Times.Once);
 			Assert.AreEqual(JsonConvert.SerializeObject(reportRequestContainer),
-				createReportRequestCallbackObject.ReportRequestData);
-			Assert.AreEqual(AmazonRegion.Europe, createReportRequestCallbackObject.AmazonRegion);
-			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, createReportRequestCallbackObject.ContentUpdateFrequency);
-			Assert.AreEqual(DateTime.MinValue, createReportRequestCallbackObject.LastRequested);
-			Assert.NotNull(createReportRequestCallbackObject.TypeName);
-			Assert.NotNull(createReportRequestCallbackObject.Data);
-			Assert.NotNull(createReportRequestCallbackObject.DataTypeName);
-			Assert.NotNull(createReportRequestCallbackObject.MethodName);
+				createReportRequestEntryObject.ReportRequestData);
+			Assert.AreEqual(AmazonRegion.Europe, createReportRequestEntryObject.AmazonRegion);
+			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, createReportRequestEntryObject.ContentUpdateFrequency);
+			Assert.AreEqual(DateTime.MinValue, createReportRequestEntryObject.LastRequested);
+			Assert.NotNull(createReportRequestEntryObject.TypeName);
+			Assert.NotNull(createReportRequestEntryObject.Data);
+			Assert.NotNull(createReportRequestEntryObject.DataTypeName);
+			Assert.NotNull(createReportRequestEntryObject.MethodName);
 		}
 
 		[Test]
@@ -146,12 +146,12 @@ namespace EasyMWS.Tests.ReportProcessors
 		{
 			_requestReportProcessor
 				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest())
-				.Returns((ReportRequestCallback) null);
+				.Returns((ReportRequestEntry) null);
 
 			_reportProcessor.Poll();
 
 			_requestReportProcessor.Verify(
-				rrp => rrp.RequestReportFromAmazon(It.IsAny<ReportRequestCallback>()), Times.Never);
+				rrp => rrp.RequestReportFromAmazon(It.IsAny<ReportRequestEntry>()), Times.Never);
 		}
 
 		[Test]
@@ -162,12 +162,12 @@ namespace EasyMWS.Tests.ReportProcessors
 
 			_requestReportProcessor
 				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest())
-				.Returns(new ReportRequestCallback{ReportRequestData = serializedReportRequestData });
+				.Returns(new ReportRequestEntry{ReportRequestData = serializedReportRequestData });
 
 			_reportProcessor.Poll();
 
 			_requestReportProcessor.Verify(
-				rrp => rrp.RequestReportFromAmazon(It.IsAny<ReportRequestCallback>()), Times.Once);
+				rrp => rrp.RequestReportFromAmazon(It.IsAny<ReportRequestEntry>()), Times.Once);
 		}
 
 		[Test]
@@ -177,21 +177,21 @@ namespace EasyMWS.Tests.ReportProcessors
 			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
 			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
 
-			ReportRequestCallback testReportRequestCallback = null;
+			ReportRequestEntry testReportRequestEntry = null;
 
 			_requestReportProcessor
 				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest())
-				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue, ReportRequestData = serializedReportRequestData});
-			_reportRequestCallbackServiceMock.Setup(rrcsm => rrcsm.Update(It.IsAny<ReportRequestCallback>()))
-				.Callback((ReportRequestCallback arg) =>
+				.Returns(new ReportRequestEntry {LastRequested = DateTime.MinValue, ReportRequestData = serializedReportRequestData});
+			_reportRequestCallbackServiceMock.Setup(rrcsm => rrcsm.Update(It.IsAny<ReportRequestEntry>()))
+				.Callback((ReportRequestEntry arg) =>
 				{
-					testReportRequestCallback = arg;
+					testReportRequestEntry = arg;
 				});
 
 			_reportProcessor.Poll();
 
-			Assert.IsTrue(DateTime.UtcNow - testReportRequestCallback.LastRequested < TimeSpan.FromHours(1));
-			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestCallback>()), Times.AtLeastOnce);
+			Assert.IsTrue(DateTime.UtcNow - testReportRequestEntry.LastRequested < TimeSpan.FromHours(1));
+			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestEntry>()), Times.AtLeastOnce);
 			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.AtLeastOnce);
 		}
 
@@ -203,15 +203,15 @@ namespace EasyMWS.Tests.ReportProcessors
 
 			_requestReportProcessor
 				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest())
-				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue, ReportRequestData = serializedReportRequestData });
+				.Returns(new ReportRequestEntry {LastRequested = DateTime.MinValue, ReportRequestData = serializedReportRequestData });
 			_requestReportProcessor.Setup(rrp =>
-					rrp.RequestReportFromAmazon(It.IsAny<ReportRequestCallback>()))
+					rrp.RequestReportFromAmazon(It.IsAny<ReportRequestEntry>()))
 				.Returns("testReportRequestId");
 
 			_reportProcessor.Poll();
 
 			_requestReportProcessor.Verify(
-				rrp => rrp.MoveToQueueOfReportsToGenerate(It.IsAny<ReportRequestCallback>(), It.IsAny<string>()), Times.Once);
+				rrp => rrp.MoveToQueueOfReportsToGenerate(It.IsAny<ReportRequestEntry>(), It.IsAny<string>()), Times.Once);
 		}
 
 		[Test]
@@ -222,13 +222,13 @@ namespace EasyMWS.Tests.ReportProcessors
 
 			_requestReportProcessor
 				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest())
-				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue, ReportRequestData = serializedReportRequestData});
+				.Returns(new ReportRequestEntry {LastRequested = DateTime.MinValue, ReportRequestData = serializedReportRequestData});
 			_requestReportProcessor.Setup(rrp =>
-					rrp.RequestReportFromAmazon(It.IsAny<ReportRequestCallback>()))
+					rrp.RequestReportFromAmazon(It.IsAny<ReportRequestEntry>()))
 				.Returns((string) null);
 
 			_reportProcessor.Poll();
-			_requestReportProcessor.Verify(rrp => rrp.MoveToRetryQueue(It.IsAny<ReportRequestCallback>()),
+			_requestReportProcessor.Verify(rrp => rrp.MoveToRetryQueue(It.IsAny<ReportRequestEntry>()),
 				Times.Once);
 		}
 
@@ -240,15 +240,15 @@ namespace EasyMWS.Tests.ReportProcessors
 
 			_requestReportProcessor
 				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest())
-				.Returns(new ReportRequestCallback {LastRequested = DateTime.MinValue, ReportRequestData = serializedReportRequestData});
+				.Returns(new ReportRequestEntry {LastRequested = DateTime.MinValue, ReportRequestData = serializedReportRequestData});
 			_requestReportProcessor.Setup(rrp =>
-					rrp.RequestReportFromAmazon(It.IsAny<ReportRequestCallback>()))
+					rrp.RequestReportFromAmazon(It.IsAny<ReportRequestEntry>()))
 				.Returns(string.Empty);
 
 
 			_reportProcessor.Poll();
 
-			_requestReportProcessor.Verify(rrp => rrp.MoveToRetryQueue(It.IsAny<ReportRequestCallback>()),
+			_requestReportProcessor.Verify(rrp => rrp.MoveToRetryQueue(It.IsAny<ReportRequestEntry>()),
 				Times.Once);
 		}
 		#endregion

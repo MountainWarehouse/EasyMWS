@@ -26,9 +26,9 @@ namespace EasyMWS.Tests.Services
 	    {
 		    var reportRequestPropertiesContainer = new ReportRequestPropertiesContainer("_Report_Type_", ContentUpdateFrequency.NearRealTime, new List<string>(MwsMarketplaceGroup.AmazonEurope()));
 
-		    var reportRequestCallback = new List<ReportRequestCallback>
+		    var reportRequestCallback = new List<ReportRequestEntry>
 		    {
-			    new ReportRequestCallback
+			    new ReportRequestEntry
 				{
 					AmazonRegion = AmazonRegion.Europe,
 					Data = "testData",
@@ -40,7 +40,7 @@ namespace EasyMWS.Tests.Services
 					ContentUpdateFrequency = 0,
 					Id = 1
 				},
-				new ReportRequestCallback{Id = 2}
+				new ReportRequestEntry{Id = 2}
 		    };
 
 			_reportRequestCallbackReportMock = new Mock<IReportRequestCallbackRepo>();

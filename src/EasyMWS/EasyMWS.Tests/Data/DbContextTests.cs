@@ -14,7 +14,7 @@ namespace EasyMWS.Tests.Data
 	    public void Setup()
 	    {
 			_dbContext = new EasyMwsContext();
-		    _dbContext.ReportRequestCallbacks.Add(new ReportRequestCallback {TypeName = _testTypeName });
+		    _dbContext.ReportRequestCallbacks.Add(new ReportRequestEntry {TypeName = _testTypeName });
 		    _dbContext.SaveChanges();
 	    }
 

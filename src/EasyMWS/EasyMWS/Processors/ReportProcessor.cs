@@ -82,7 +82,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		private void PerformCallback(ReportRequestCallback reportRequest, Stream stream)
+		private void PerformCallback(ReportRequestEntry reportRequest, Stream stream)
 		{
 			try
 			{
@@ -170,7 +170,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public (ReportRequestCallback reportRequestCallback, Stream stream) DownloadNextReportInQueueFromAmazon()
+		public (ReportRequestEntry reportRequestCallback, Stream stream) DownloadNextReportInQueueFromAmazon()
 		{
 			var reportToDownload = _requestReportProcessor.GetNextFromQueueOfReportsToDownload();
 			if (reportToDownload == null) return (null, null);
@@ -188,7 +188,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public void ExecuteMethodCallback(ReportRequestCallback reportRequest, Stream stream)
+		public void ExecuteMethodCallback(ReportRequestEntry reportRequest, Stream stream)
 		{
 			_logger.Info(
 				$"Attempting to perform method callback for the next downloaded report in queue : {reportRequest.RegionAndTypeComputed}.");
@@ -199,7 +199,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_callbackActivator.CallMethod(callback, stream);
 		}
 
-		private void InvokeReportDownloadedEvent(ReportRequestCallback reportRequest, Stream stream)
+		private void InvokeReportDownloadedEvent(ReportRequestEntry reportRequest, Stream stream)
 		{
 			var feedPropertiesContainer = reportRequest.GetPropertiesContainer();
 			ReportDownloaded?.Invoke(this, new ReportDownloadedEventArgs
@@ -212,14 +212,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 			});
 		}
 
-		private ReportRequestCallback GetSerializedReportRequestCallback(
+		private ReportRequestEntry GetSerializedReportRequestCallback(
 			ReportRequestPropertiesContainer reportRequestContainer, Action<Stream, object> callbackMethod, object callbackData)
 		{
 			if (reportRequestContainer == null) throw new ArgumentNullException();
 			
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(reportRequestContainer);
 
-			var reportRequest = new ReportRequestCallback(serializedPropertiesContainer)
+			var reportRequest = new ReportRequestEntry(serializedPropertiesContainer)
 			{
 				AmazonRegion = _region,
 				MerchantId = _merchantId,

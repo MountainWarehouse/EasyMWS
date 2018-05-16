@@ -20,9 +20,9 @@ namespace MountainWarehouse.EasyMWS.Services
 		internal ReportRequestCallbackService(EasyMwsOptions options = null, IEasyMwsLogger logger = null) => (_reportRequestCallbackRepo, _logger) =
 			(_reportRequestCallbackRepo ?? new ReportRequestCallbackRepo(options?.LocalDbConnectionStringOverride), logger);
 
-		public void Create(ReportRequestCallback callback) => _reportRequestCallbackRepo.Create(callback);
-		public async Task CreateAsync(ReportRequestCallback callback) => await _reportRequestCallbackRepo.CreateAsync(callback);
-		public void Update(ReportRequestCallback callback) => _reportRequestCallbackRepo.Update(callback);
+		public void Create(ReportRequestEntry entry) => _reportRequestCallbackRepo.Create(entry);
+		public async Task CreateAsync(ReportRequestEntry entry) => await _reportRequestCallbackRepo.CreateAsync(entry);
+		public void Update(ReportRequestEntry entry) => _reportRequestCallbackRepo.Update(entry);
 		public void Delete(int id)
 		{
 			try
@@ -40,16 +40,16 @@ namespace MountainWarehouse.EasyMWS.Services
 
 		public void SaveChanges() => _reportRequestCallbackRepo.SaveChanges();
 		public async Task SaveChangesAsync() => await _reportRequestCallbackRepo.SaveChangesAsync();
-		public IQueryable<ReportRequestCallback> GetAll() => _reportRequestCallbackRepo.GetAll().OrderBy(x => x.Id);
+		public IQueryable<ReportRequestEntry> GetAll() => _reportRequestCallbackRepo.GetAll().OrderBy(x => x.Id);
 
-		public IQueryable<ReportRequestCallback> Where(Expression<Func<ReportRequestCallback, bool>> predicate) => _reportRequestCallbackRepo.GetAll().OrderBy(x => x.Id).Where(predicate);
+		public IQueryable<ReportRequestEntry> Where(Expression<Func<ReportRequestEntry, bool>> predicate) => _reportRequestCallbackRepo.GetAll().OrderBy(x => x.Id).Where(predicate);
 
-		public ReportRequestCallback First() => _reportRequestCallbackRepo.GetAll().OrderBy(x => x.Id).First();
-		public ReportRequestCallback FirstOrDefault() => _reportRequestCallbackRepo.GetAll().OrderBy(x => x.Id).FirstOrDefault();
-		public ReportRequestCallback FirstOrDefault(Expression<Func<ReportRequestCallback, bool>> predicate) => _reportRequestCallbackRepo.GetAll().OrderBy(x => x.Id).FirstOrDefault(predicate);
+		public ReportRequestEntry First() => _reportRequestCallbackRepo.GetAll().OrderBy(x => x.Id).First();
+		public ReportRequestEntry FirstOrDefault() => _reportRequestCallbackRepo.GetAll().OrderBy(x => x.Id).FirstOrDefault();
+		public ReportRequestEntry FirstOrDefault(Expression<Func<ReportRequestEntry, bool>> predicate) => _reportRequestCallbackRepo.GetAll().OrderBy(x => x.Id).FirstOrDefault(predicate);
 
-		public ReportRequestCallback Last() => _reportRequestCallbackRepo.GetAll().OrderByDescending(x => x.Id).First();
-		public ReportRequestCallback LastOrDefault() => _reportRequestCallbackRepo.GetAll().OrderByDescending(x => x.Id).FirstOrDefault();
-		public ReportRequestCallback LastOrDefault(Expression<Func<ReportRequestCallback, bool>> predicate) => _reportRequestCallbackRepo.GetAll().OrderByDescending(x => x.Id).FirstOrDefault(predicate);
+		public ReportRequestEntry Last() => _reportRequestCallbackRepo.GetAll().OrderByDescending(x => x.Id).First();
+		public ReportRequestEntry LastOrDefault() => _reportRequestCallbackRepo.GetAll().OrderByDescending(x => x.Id).FirstOrDefault();
+		public ReportRequestEntry LastOrDefault(Expression<Func<ReportRequestEntry, bool>> predicate) => _reportRequestCallbackRepo.GetAll().OrderByDescending(x => x.Id).FirstOrDefault(predicate);
 	}
 }

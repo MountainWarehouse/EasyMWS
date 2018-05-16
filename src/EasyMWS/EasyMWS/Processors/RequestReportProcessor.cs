@@ -45,7 +45,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    _amazonReportStorageService = _amazonReportStorageService ?? new AmazonReportService(_options);
 	    }
 
-	    public ReportRequestCallback GetNextFromQueueOfReportsToRequest() =>
+	    public ReportRequestEntry GetNextFromQueueOfReportsToRequest() =>
 		    string.IsNullOrEmpty(_merchantId) ? null : _reportRequestCallbackService.GetAll()
 				    .FirstOrDefault(rrc => rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId
 					    && rrc.RequestReportId == null
@@ -53,20 +53,20 @@ namespace MountainWarehouse.EasyMWS.Processors
 						    _options.ReportRequestRetryInitialDelay, _options.ReportRequestRetryInterval, _options.ReportRequestRetryType)
 				    );
 		
-	    public string RequestReportFromAmazon(ReportRequestCallback reportRequestCallback)
+	    public string RequestReportFromAmazon(ReportRequestEntry reportRequestEntry)
 	    {
 		    var missingInformationExceptionMessage = "Cannot submit queued feed to amazon due to missing feed submission information";
 
-			if (reportRequestCallback?.ReportRequestData == null) throw new ArgumentNullException(missingInformationExceptionMessage);
+			if (reportRequestEntry?.ReportRequestData == null) throw new ArgumentNullException(missingInformationExceptionMessage);
 
-			var reportRequestData = reportRequestCallback.GetPropertiesContainer();
+			var reportRequestData = reportRequestEntry.GetPropertiesContainer();
 		    if (reportRequestData?.ReportType == null) throw new ArgumentException(missingInformationExceptionMessage);
 
-			_logger.Info($"Attempting to request the next report in queue from Amazon: {reportRequestCallback.RegionAndTypeComputed}.");
+			_logger.Info($"Attempting to request the next report in queue from Amazon: {reportRequestEntry.RegionAndTypeComputed}.");
 
 			var reportRequest = new RequestReportRequest
 			{
-				Merchant = reportRequestCallback.MerchantId,
+				Merchant = reportRequestEntry.MerchantId,
 				ReportType = reportRequestData.ReportType
 			};
 
@@ -95,11 +95,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-	    public void MoveToQueueOfReportsToGenerate(ReportRequestCallback reportRequestCallback, string reportRequestId)
+	    public void MoveToQueueOfReportsToGenerate(ReportRequestEntry reportRequestEntry, string reportRequestId)
 	    {
-		    reportRequestCallback.RequestReportId = reportRequestId;
-		    reportRequestCallback.RequestRetryCount = 0;
-			_reportRequestCallbackService.Update(reportRequestCallback);
+		    reportRequestEntry.RequestReportId = reportRequestId;
+		    reportRequestEntry.RequestRetryCount = 0;
+			_reportRequestCallbackService.Update(reportRequestEntry);
 	    }
 
 	    public IEnumerable<string> GetAllPendingReportFromQueue() =>
@@ -233,22 +233,22 @@ namespace MountainWarehouse.EasyMWS.Processors
 	    }
 
 
-	    public ReportRequestCallback GetNextFromQueueOfReportsToDownload() =>
+	    public ReportRequestEntry GetNextFromQueueOfReportsToDownload() =>
 		    string.IsNullOrEmpty(_merchantId) ? null : _reportRequestCallbackService.FirstOrDefault(
 			    rrc => rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId
 			           && rrc.RequestReportId != null
 			           && rrc.GeneratedReportId != null);
 
-	    public Stream DownloadGeneratedReportFromAmazon(ReportRequestCallback reportRequestCallback)
+	    public Stream DownloadGeneratedReportFromAmazon(ReportRequestEntry reportRequestEntry)
 	    {
-		    _logger.Info($"Attempting to download the next report in queue from Amazon: {reportRequestCallback.RegionAndTypeComputed}.");
+		    _logger.Info($"Attempting to download the next report in queue from Amazon: {reportRequestEntry.RegionAndTypeComputed}.");
 
 			var reportResultStream = new MemoryStream();
 		    var getReportRequest = new GetReportRequest
 		    {
-			    ReportId = reportRequestCallback.GeneratedReportId,
+			    ReportId = reportRequestEntry.GeneratedReportId,
 			    Report = reportResultStream,
-			    Merchant = reportRequestCallback.MerchantId
+			    Merchant = reportRequestEntry.MerchantId
 		    };
 
 		    var response = _marketplaceWebServiceClient.GetReport(getReportRequest);
@@ -257,16 +257,16 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
 		    var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
 			_logger.Info($"Request to MWS.GetReport was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']", new RequestInfo(timestamp, requestId));
-			_logger.Info($"Report download from Amazon has succeeded for {reportRequestCallback.RegionAndTypeComputed}.");
+			_logger.Info($"Report download from Amazon has succeeded for {reportRequestEntry.RegionAndTypeComputed}.");
 
 			if (_options.KeepAmazonReportsInLocalDbAfterCallbackIsPerformed)
 		    {
 			    _logger.Info($"Backup report storage in local easyMws database is enabled. To disable it, update the KeepAmazonReportsInLocalDbAfterCallbackIsPerformed option.");
 
-				var requestPropertyContainer = reportRequestCallback.GetPropertiesContainer();
+				var requestPropertyContainer = reportRequestEntry.GetPropertiesContainer();
 			    var reportType = requestPropertyContainer?.ReportType ?? "unknown";
 
-			    _logger.Info($"Proceeding to save backup report content in EasyMws internal database for {reportRequestCallback.RegionAndTypeComputed}");
+			    _logger.Info($"Proceeding to save backup report content in EasyMws internal database for {reportRequestEntry.RegionAndTypeComputed}");
 				StoreAmazonReportToInternalStorage(reportContentStream, reportType, requestId, timestamp);
 		    }
 
@@ -278,13 +278,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    _reportRequestCallbackService.Delete(reportRequestCallbackId);
 	    }
 
-	    public void MoveToRetryQueue(ReportRequestCallback reportRequestCallback)
+	    public void MoveToRetryQueue(ReportRequestEntry reportRequestEntry)
 	    {
-			reportRequestCallback.RequestRetryCount++;
+			reportRequestEntry.RequestRetryCount++;
 
-		    _reportRequestCallbackService.Update(reportRequestCallback);
+		    _reportRequestCallbackService.Update(reportRequestEntry);
 
-		    _logger.Warn($"Moving {reportRequestCallback.RegionAndTypeComputed} to retry queue. Retry count is now '{reportRequestCallback.RequestRetryCount}'.");
+		    _logger.Warn($"Moving {reportRequestEntry.RegionAndTypeComputed} to retry queue. Retry count is now '{reportRequestEntry.RequestRetryCount}'.");
 		}
 
 	    private void StoreAmazonReportToInternalStorage(Stream reportContent, string reportType, string requestId, string timestamp)

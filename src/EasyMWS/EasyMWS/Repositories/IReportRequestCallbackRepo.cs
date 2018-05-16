@@ -9,11 +9,11 @@ namespace MountainWarehouse.EasyMWS.Repositories
 {
     internal interface IReportRequestCallbackRepo
     {
-	    void Create(ReportRequestCallback callback);
-	    Task CreateAsync(ReportRequestCallback callback);
-	    void Update(ReportRequestCallback callback);
+	    void Create(ReportRequestEntry entry);
+	    Task CreateAsync(ReportRequestEntry entry);
+	    void Update(ReportRequestEntry entry);
 	    void Delete(int id);
-	    IQueryable<ReportRequestCallback> GetAll();
+	    IQueryable<ReportRequestEntry> GetAll();
 		void SaveChanges();
 	    Task SaveChangesAsync();
 
