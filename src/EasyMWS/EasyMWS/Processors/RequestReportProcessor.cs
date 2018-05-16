@@ -55,19 +55,19 @@ namespace MountainWarehouse.EasyMWS.Processors
 		
 	    public string RequestReportFromAmazon(ReportRequestEntry reportRequestEntry)
 	    {
-		    var missingInformationExceptionMessage = "Cannot submit queued feed to amazon due to missing feed submission information";
+		    var missingInformationExceptionMessage = "Cannot request report from amazon due to missing report request information";
 
-			if (reportRequestEntry?.ReportRequestData == null) throw new ArgumentNullException(missingInformationExceptionMessage);
+			if (reportRequestEntry?.ReportRequestData == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Report request data is null.");
+		    if (string.IsNullOrEmpty(reportRequestEntry.ReportType)) throw new ArgumentException($"{missingInformationExceptionMessage}: Report Type is missing.");
 
 			var reportRequestData = reportRequestEntry.GetPropertiesContainer();
-		    if (reportRequestData?.ReportType == null) throw new ArgumentException(missingInformationExceptionMessage);
 
 			_logger.Info($"Attempting to request the next report in queue from Amazon: {reportRequestEntry.RegionAndTypeComputed}.");
 
 			var reportRequest = new RequestReportRequest
 			{
 				Merchant = reportRequestEntry.MerchantId,
-				ReportType = reportRequestData.ReportType
+				ReportType = reportRequestEntry.ReportType
 			};
 
 		    if (reportRequestData.MarketplaceIdList != null)
@@ -263,8 +263,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    {
 			    _logger.Info($"Backup report storage in local easyMws database is enabled. To disable it, update the KeepAmazonReportsInLocalDbAfterCallbackIsPerformed option.");
 
-				var requestPropertyContainer = reportRequestEntry.GetPropertiesContainer();
-			    var reportType = requestPropertyContainer?.ReportType ?? "unknown";
+			    var reportType = reportRequestEntry?.ReportType ?? "unknown";
 
 			    _logger.Info($"Proceeding to save backup report content in EasyMws internal database for {reportRequestEntry.RegionAndTypeComputed}");
 				StoreAmazonReportToInternalStorage(reportContentStream, reportType, requestId, timestamp);

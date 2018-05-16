@@ -51,7 +51,8 @@ namespace EasyMWS.Tests.Processors
 					Id = 1,
 					RequestReportId = null,
 					GeneratedReportId = null,
-					ReportRequestData = "{\"UpdateFrequency\":0,\"ReportType\":\"_GET_AFN_INVENTORY_DATA_\",\"Merchant\":null,\"MwsAuthToken\":null,\"Region\":20,\"MarketplaceIdList\":null}"
+					ReportRequestData = "{\"UpdateFrequency\":0,\"Merchant\":null,\"MwsAuthToken\":null,\"Region\":20,\"MarketplaceIdList\":null}",
+					ReportType = "_GET_AFN_INVENTORY_DATA_"
 				}
 			};
 
@@ -339,16 +340,17 @@ namespace EasyMWS.Tests.Processors
 
 			var reportRequestPropertiesContainer = new ReportRequestPropertiesContainer("testReportType800",
 				ContentUpdateFrequency.Unknown, new List<string> {"testMpId1", "testMpId2"}, new DateTime(1000, 10, 10), new DateTime(2000, 12, 20), "testOptions");
-			var reportRequestCallback = new ReportRequestEntry
+			var reportRequestEntry = new ReportRequestEntry
 			{
 				MerchantId = "testMerchant800",
-				ReportRequestData = JsonConvert.SerializeObject(reportRequestPropertiesContainer)
+				ReportRequestData = JsonConvert.SerializeObject(reportRequestPropertiesContainer),
+				ReportType = reportRequestPropertiesContainer.ReportType
 			};
 			var requestReportRequest = (RequestReportRequest) null;
 			_marketplaceWebServiceClientMock.Setup(mwscm => mwscm.RequestReport(It.IsAny<RequestReportRequest>()))
 				.Callback<RequestReportRequest>((rrr) => { requestReportRequest = rrr; });
 
-			_requestReportProcessor.RequestReportFromAmazon(reportRequestCallback);
+			_requestReportProcessor.RequestReportFromAmazon(reportRequestEntry);
 
 			Assert.AreEqual("testMerchant800", requestReportRequest.Merchant);
 			Assert.AreEqual("testReportType800", requestReportRequest.ReportType);
@@ -367,7 +369,8 @@ namespace EasyMWS.Tests.Processors
 			var reportRequestCallback = new ReportRequestEntry
 			{
 				MerchantId = "testMerchant800",
-				ReportRequestData = JsonConvert.SerializeObject(reportRequestPropertiesContainer)
+				ReportRequestData = JsonConvert.SerializeObject(reportRequestPropertiesContainer),
+				ReportType = reportRequestPropertiesContainer.ReportType
 			};
 			var requestReportRequest = (RequestReportRequest)null;
 			_marketplaceWebServiceClientMock.Setup(mwscm => mwscm.RequestReport(It.IsAny<RequestReportRequest>()))
@@ -786,7 +789,8 @@ namespace EasyMWS.Tests.Processors
 				Id = 4,
 				RequestReportId = "Report3",
 				GeneratedReportId = "GeneratedIdTest1",
-				ReportRequestData = JsonConvert.SerializeObject(propertiesContainer)
+				ReportRequestData = JsonConvert.SerializeObject(propertiesContainer),
+				ReportType = propertiesContainer.ReportType
 			};
 			_reportRequestCallbacks.Add(reportRequestCallback);
 			AmazonReport amazonReportCreateArgument = null;

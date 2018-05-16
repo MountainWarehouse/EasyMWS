@@ -38,7 +38,8 @@ namespace EasyMWS.Tests.Services
 					LastRequested = DateTime.MinValue,
 					DataTypeName = "testDataTypeName",
 					ContentUpdateFrequency = 0,
-					Id = 1
+					Id = 1,
+					ReportType = reportRequestPropertiesContainer.ReportType
 				},
 				new ReportRequestEntry{Id = 2}
 		    };
@@ -60,7 +61,7 @@ namespace EasyMWS.Tests.Services
 			Assert.AreEqual("testMethodName", reportRequestCallback.MethodName);
 			Assert.AreEqual("testTypeName", reportRequestCallback.TypeName);
 			Assert.AreEqual("testDataTypeName", reportRequestCallback.DataTypeName);
-			Assert.AreEqual("_Report_Type_", reportRequestData.ReportType);
+			Assert.AreEqual("_Report_Type_", reportRequestCallback.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequestData.UpdateFrequency);
 			CollectionAssert.AreEquivalent(new List<string>(MwsMarketplaceGroup.AmazonEurope()), reportRequestData.MarketplaceIdList);
 		}

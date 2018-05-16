@@ -201,14 +201,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		private void InvokeReportDownloadedEvent(ReportRequestEntry reportRequest, Stream stream)
 		{
-			var feedPropertiesContainer = reportRequest.GetPropertiesContainer();
 			ReportDownloaded?.Invoke(this, new ReportDownloadedEventArgs
 			{
 				ReportContent = stream,
 				AmazonRegion = reportRequest.AmazonRegion,
 				MerchantId = reportRequest.MerchantId,
 				GeneratedReportId = reportRequest.GeneratedReportId,
-				ReportType = feedPropertiesContainer.ReportType
+				ReportType = reportRequest.ReportType
 			});
 		}
 

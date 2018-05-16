@@ -34,7 +34,7 @@ namespace EasyMWS.Tests.Services
 					DataTypeName = "testDataTypeName",
 					MethodName = "testMethodName",
 					Data = "testData",
-					FeedType = "testFeedType",
+					FeedType = propertiesContainer.FeedType,
 					FeedSubmissionData = JsonConvert.SerializeObject(propertiesContainer)
 				}
 			};
