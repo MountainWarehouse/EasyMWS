@@ -67,7 +67,7 @@ namespace MountainWarehouse.EasyMWS.Data
 		}
 
 		internal DbSet<ReportRequestCallback> ReportRequestCallbacks { get; set; }
-		internal DbSet<FeedSubmissionEntry> FeedSubmissionCallbacks { get; set; }
+		internal DbSet<FeedSubmissionEntry> FeedSubmissionEntries { get; set; }
 		internal DbSet<AmazonReport> AmazonReports { get; set; }
 	}
 }
