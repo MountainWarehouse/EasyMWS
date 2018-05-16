@@ -16,8 +16,8 @@ namespace MountainWarehouse.EasyMWS.Services
 	    public FeedSubmissionCallbackService(IFeedSubmissionCallbackRepo feedSubmissionCallbackRepo = null, IEasyMwsLogger logger = null, EasyMwsOptions options = null) =>
 		    (_feedRepo, _logger) = (feedSubmissionCallbackRepo ?? new FeedSubmissionCallbackRepo(options?.LocalDbConnectionStringOverride), logger);
 
-	    public void Create(FeedSubmissionCallback callback) => _feedRepo.Create(callback);
-	    public void Update(FeedSubmissionCallback callback) => _feedRepo.Update(callback);
+	    public void Create(FeedSubmissionEntry entry) => _feedRepo.Create(entry);
+	    public void Update(FeedSubmissionEntry entry) => _feedRepo.Update(entry);
 		public void Delete(int id)
 	    {
 		    try
@@ -39,13 +39,13 @@ namespace MountainWarehouse.EasyMWS.Services
 	    }
 
 	    public void SaveChanges() => _feedRepo.SaveChanges();
-		public IQueryable<FeedSubmissionCallback> GetAll() => _feedRepo.GetAll().OrderBy(x => x.Id);
-		public IQueryable<FeedSubmissionCallback> Where(Expression<Func<FeedSubmissionCallback, bool>> predicate) => _feedRepo.GetAll().OrderBy(x => x.Id).Where(predicate);
-		public FeedSubmissionCallback First() => _feedRepo.GetAll().OrderBy(x => x.Id).First();
-		public FeedSubmissionCallback FirstOrDefault() => _feedRepo.GetAll().OrderBy(x => x.Id).FirstOrDefault();
-		public FeedSubmissionCallback FirstOrDefault(Expression<Func<FeedSubmissionCallback, bool>> predicate) => _feedRepo.GetAll().OrderBy(x => x.Id).FirstOrDefault(predicate);
-		public FeedSubmissionCallback Last() => _feedRepo.GetAll().OrderByDescending(x => x.Id).First();
-		public FeedSubmissionCallback LastOrDefault() => _feedRepo.GetAll().OrderByDescending(x => x.Id).FirstOrDefault();
-		public FeedSubmissionCallback LastOrDefault(Expression<Func<FeedSubmissionCallback, bool>> predicate) => _feedRepo.GetAll().OrderByDescending(x => x.Id).FirstOrDefault(predicate);
+		public IQueryable<FeedSubmissionEntry> GetAll() => _feedRepo.GetAll().OrderBy(x => x.Id);
+		public IQueryable<FeedSubmissionEntry> Where(Expression<Func<FeedSubmissionEntry, bool>> predicate) => _feedRepo.GetAll().OrderBy(x => x.Id).Where(predicate);
+		public FeedSubmissionEntry First() => _feedRepo.GetAll().OrderBy(x => x.Id).First();
+		public FeedSubmissionEntry FirstOrDefault() => _feedRepo.GetAll().OrderBy(x => x.Id).FirstOrDefault();
+		public FeedSubmissionEntry FirstOrDefault(Expression<Func<FeedSubmissionEntry, bool>> predicate) => _feedRepo.GetAll().OrderBy(x => x.Id).FirstOrDefault(predicate);
+		public FeedSubmissionEntry Last() => _feedRepo.GetAll().OrderByDescending(x => x.Id).First();
+		public FeedSubmissionEntry LastOrDefault() => _feedRepo.GetAll().OrderByDescending(x => x.Id).FirstOrDefault();
+		public FeedSubmissionEntry LastOrDefault(Expression<Func<FeedSubmissionEntry, bool>> predicate) => _feedRepo.GetAll().OrderByDescending(x => x.Id).FirstOrDefault(predicate);
 	}
 }

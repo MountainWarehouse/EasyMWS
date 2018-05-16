@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS.Data
 {
-    public class FeedSubmissionCallback
+    public class FeedSubmissionEntry
     {
 	    private string _regionAndType;
 
@@ -48,11 +48,11 @@ namespace MountainWarehouse.EasyMWS.Data
 		#endregion
 
 		[Obsolete("This constructor should never be used directly. But it has to exist as required by EF. Use other overloads instead!")]
-		public FeedSubmissionCallback()
+		public FeedSubmissionEntry()
 		{
 		}
 
-	    public FeedSubmissionCallback(string feedSubmissionData, Callback callback = null)
+	    public FeedSubmissionEntry(string feedSubmissionData, Callback callback = null)
 	    {
 			if( string.IsNullOrEmpty(feedSubmissionData))
 				throw new ArgumentException("Callback data or FeedSubmissionData not provided, but are required.");
@@ -67,7 +67,7 @@ namespace MountainWarehouse.EasyMWS.Data
 
 	internal static class FeedSubmissionCallbackExtensions
 	{
-		internal static FeedSubmissionPropertiesContainer GetPropertiesContainer(this FeedSubmissionCallback source)
+		internal static FeedSubmissionPropertiesContainer GetPropertiesContainer(this FeedSubmissionEntry source)
 		{
 			return JsonConvert.DeserializeObject<FeedSubmissionPropertiesContainer>(source.FeedSubmissionData);
 		}

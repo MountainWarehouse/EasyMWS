@@ -7,9 +7,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 {
 	internal interface IFeedSubmissionProcessor
 	{
-		FeedSubmissionCallback GetNextFromQueueOfFeedsToSubmit();
-		string SubmitFeedToAmazon(FeedSubmissionCallback feedSubmission);
-		void MoveToQueueOfSubmittedFeeds(FeedSubmissionCallback feedSubmission, string feedSubmissionId);
+		FeedSubmissionEntry GetNextFromQueueOfFeedsToSubmit();
+		string SubmitFeedToAmazon(FeedSubmissionEntry feedSubmission);
+		void MoveToQueueOfSubmittedFeeds(FeedSubmissionEntry feedSubmission, string feedSubmissionId);
 		IEnumerable<string> GetIdsForSubmittedFeedsFromQueue();
 
 		List<(string FeedSubmissionId, string FeedProcessingStatus)> RequestFeedSubmissionStatusesFromAmazon(
@@ -18,10 +18,10 @@ namespace MountainWarehouse.EasyMWS.Processors
 		void QueueFeedsAccordingToProcessingStatus(
 			List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses);
 
-		FeedSubmissionCallback GetNextFromQueueOfProcessingCompleteFeeds();
-		(Stream processingReport, string md5hash) GetFeedSubmissionResultFromAmazon(FeedSubmissionCallback feedSubmissionCallback);
+		FeedSubmissionEntry GetNextFromQueueOfProcessingCompleteFeeds();
+		(Stream processingReport, string md5hash) GetFeedSubmissionResultFromAmazon(FeedSubmissionEntry feedSubmissionEntry);
 		void RemoveFromQueue(int feedSubmissionId);
-		void MoveToRetryQueue(FeedSubmissionCallback feedSubmission);
+		void MoveToRetryQueue(FeedSubmissionEntry feedSubmission);
 		void CleanUpFeedSubmissionQueue();
 	}
 }

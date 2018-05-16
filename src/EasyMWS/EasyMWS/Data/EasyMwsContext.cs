@@ -62,12 +62,12 @@ namespace MountainWarehouse.EasyMWS.Data
 		{
 			modelBuilder.Entity<ReportRequestCallback>()
 				.HasIndex(e => new {e.RequestReportId, e.GeneratedReportId});
-			modelBuilder.Entity<FeedSubmissionCallback>()
+			modelBuilder.Entity<FeedSubmissionEntry>()
 				.HasIndex(e => new { e.FeedSubmissionId });
 		}
 
 		internal DbSet<ReportRequestCallback> ReportRequestCallbacks { get; set; }
-		internal DbSet<FeedSubmissionCallback> FeedSubmissionCallbacks { get; set; }
+		internal DbSet<FeedSubmissionEntry> FeedSubmissionCallbacks { get; set; }
 		internal DbSet<AmazonReport> AmazonReports { get; set; }
 	}
 }

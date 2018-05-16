@@ -5,10 +5,10 @@ namespace MountainWarehouse.EasyMWS.Repositories
 {
     internal interface IFeedSubmissionCallbackRepo
     {
-	    void Create(FeedSubmissionCallback callback);
-	    void Update(FeedSubmissionCallback callback);
+	    void Create(FeedSubmissionEntry entry);
+	    void Update(FeedSubmissionEntry entry);
 	    void Delete(int id);
-	    IQueryable<FeedSubmissionCallback> GetAll();
+	    IQueryable<FeedSubmissionEntry> GetAll();
 	    void SaveChanges();
 	}
 }

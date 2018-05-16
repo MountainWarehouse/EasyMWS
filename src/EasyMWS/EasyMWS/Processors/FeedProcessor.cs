@@ -71,7 +71,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		private void ProcessReportInfo((FeedSubmissionCallback feedSubmissionCallback, Stream reportContent, string contentMd5) reportInfo)
+		private void ProcessReportInfo((FeedSubmissionEntry feedSubmissionCallback, Stream reportContent, string contentMd5) reportInfo)
 		{
 			if (MD5ChecksumHelper.IsChecksumCorrect(reportInfo.reportContent, reportInfo.contentMd5))
 			{
@@ -86,7 +86,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		private void PerformCallback(FeedSubmissionCallback feedSubmission, Stream feedSubmissionReport)
+		private void PerformCallback(FeedSubmissionEntry feedSubmission, Stream feedSubmissionReport)
 		{
 			try
 			{
@@ -175,7 +175,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public (FeedSubmissionCallback feedSubmissionCallback, Stream reportContent, string contentMd5) RequestNextFeedSubmissionInQueueFromAmazon()
+		public (FeedSubmissionEntry feedSubmissionCallback, Stream reportContent, string contentMd5) RequestNextFeedSubmissionInQueueFromAmazon()
 		{
 			var nextFeedWithProcessingComplete = _feedSubmissionProcessor.GetNextFromQueueOfProcessingCompleteFeeds();
 			if (nextFeedWithProcessingComplete == null) return (null, null, null);
@@ -193,7 +193,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public void ExecuteMethodCallback(FeedSubmissionCallback feedSubmission, Stream stream)
+		public void ExecuteMethodCallback(FeedSubmissionEntry feedSubmission, Stream stream)
 		{
 			_logger.Info(
 				$"Attempting to perform method callback for the next submitted feed in queue : {feedSubmission.RegionAndTypeComputed}.");
@@ -204,7 +204,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_callbackActivator.CallMethod(callback, stream);
 		}
 
-		private void InvokeFeedSubmittedEvent(FeedSubmissionCallback feedSubmission, Stream reportContent)
+		private void InvokeFeedSubmittedEvent(FeedSubmissionEntry feedSubmission, Stream reportContent)
 		{
 			_logger.Info(
 				$"Invoking FeedSubmitted event for the next submitted feed in queue : {feedSubmission.RegionAndTypeComputed}.");
@@ -220,14 +220,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 			});
 		}
 
-		private FeedSubmissionCallback GetSerializedFeedSubmissionCallback(
+		private FeedSubmissionEntry GetSerializedFeedSubmissionCallback(
 		  FeedSubmissionPropertiesContainer propertiesContainer, Action<Stream, object> callbackMethod, object callbackData)
 		{
 			if (propertiesContainer == null) throw new ArgumentNullException();
 			
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 
-			var feedSubmission = new FeedSubmissionCallback(serializedPropertiesContainer)
+			var feedSubmission = new FeedSubmissionEntry(serializedPropertiesContainer)
 			{
 				AmazonRegion = _region,
 				MerchantId = _merchantId,

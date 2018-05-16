@@ -26,10 +26,10 @@ namespace EasyMWS.Tests.Services
 			    new List<string>(MwsMarketplaceGroup.AmazonEurope()));
 		    var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 
-			var feedSubmissionCallbacks = new List<FeedSubmissionCallback>
+			var feedSubmissionCallbacks = new List<FeedSubmissionEntry>
 		    {
-				new FeedSubmissionCallback(serializedPropertiesContainer){ Id = 2 },
-				new FeedSubmissionCallback(serializedPropertiesContainer)
+				new FeedSubmissionEntry(serializedPropertiesContainer){ Id = 2 },
+				new FeedSubmissionEntry(serializedPropertiesContainer)
 				{
 					Id = 1,
 					AmazonRegion = AmazonRegion.Europe,
