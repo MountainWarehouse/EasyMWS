@@ -12,6 +12,7 @@ namespace MountainWarehouse.EasyMWS.Model
 		/// <summary>
 		/// The actual content of the feed itself, in XML or flat file format.
 		/// </summary>
+		[IgnoreDataMember]
 		public string FeedContent { get; set; }
 
 		/// <summary>
@@ -53,8 +54,6 @@ namespace MountainWarehouse.EasyMWS.Model
 	    /// <param name="marketplaceIdList"></param>
 	    public FeedSubmissionPropertiesContainer(string feedContent, string feedType, bool? purgeAndReplace = null, List<string> marketplaceIdList = null)
 	    {
-		    if (string.IsNullOrEmpty(feedContent)) throw new ArgumentException("FeedContent was not specified, but it is required.");
-
 			FeedContent = feedContent;
 		    FeedType = feedType;
 		    PurgeAndReplace = purgeAndReplace;

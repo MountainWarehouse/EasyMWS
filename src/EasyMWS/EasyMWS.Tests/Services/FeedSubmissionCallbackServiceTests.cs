@@ -59,7 +59,6 @@ namespace EasyMWS.Tests.Services
 		    Assert.AreEqual("testTypeName", feedSubmissionEntry.TypeName);
 		    Assert.AreEqual("testDataTypeName", feedSubmissionEntry.DataTypeName);
 		    Assert.AreEqual("testFeedType", feedSubmissionEntry.FeedType);
-		    Assert.AreEqual("testFeedContent", feedSubmissionData.FeedContent);
 			CollectionAssert.AreEquivalent(new List<string>(MwsMarketplaceGroup.AmazonEurope()), feedSubmissionData.MarketplaceIdList);
 		}
 	}
