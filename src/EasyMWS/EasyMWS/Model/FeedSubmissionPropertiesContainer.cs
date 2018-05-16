@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 
 namespace MountainWarehouse.EasyMWS.Model
 {
@@ -16,6 +17,7 @@ namespace MountainWarehouse.EasyMWS.Model
 		/// <summary>
 		/// A FeedType value indicating how the data should be processed.
 		/// </summary>
+		[IgnoreDataMember]
 		public string FeedType { get; set; }
 
 		#endregion
@@ -51,7 +53,6 @@ namespace MountainWarehouse.EasyMWS.Model
 	    /// <param name="marketplaceIdList"></param>
 	    public FeedSubmissionPropertiesContainer(string feedContent, string feedType, bool? purgeAndReplace = null, List<string> marketplaceIdList = null)
 	    {
-		    if (string.IsNullOrEmpty(feedType)) throw new ArgumentException("FeedType was not specified, but it is required.");
 		    if (string.IsNullOrEmpty(feedContent)) throw new ArgumentException("FeedContent was not specified, but it is required.");
 
 			FeedContent = feedContent;

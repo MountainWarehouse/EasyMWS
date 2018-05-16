@@ -55,14 +55,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_logger.Info($"Attempting to submit the next feed in queue to Amazon: {feedSubmission.RegionAndTypeComputed}.");
 
 			var feedSubmissionData = feedSubmission.GetPropertiesContainer();
-			if (feedSubmissionData?.FeedType == null) throw new ArgumentException(missingInformationExceptionMessage);
+			if (feedSubmission?.FeedType == null) throw new ArgumentException(missingInformationExceptionMessage);
 
 			using (var stream = StreamHelper.CreateNewMemoryStream(feedSubmissionData.FeedContent))
 			{
 				var submitFeedRequest = new SubmitFeedRequest
 				{
 					Merchant = feedSubmission.MerchantId,
-					FeedType = feedSubmissionData.FeedType,
+					FeedType = feedSubmission.FeedType,
 					FeedContent = stream,
 					MarketplaceIdList = feedSubmissionData.MarketplaceIdList == null ? null : new IdList {Id = feedSubmissionData.MarketplaceIdList},
 					PurgeAndReplace = feedSubmissionData.PurgeAndReplace ?? false,

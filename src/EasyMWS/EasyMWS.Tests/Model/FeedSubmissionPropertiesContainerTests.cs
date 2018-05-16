@@ -23,18 +23,5 @@ namespace EasyMWS.Tests.Model
 			    new FeedSubmissionPropertiesContainer(null, "test")));
 	    }
 
-	    [Test]
-	    public void FeedSubmissionPropertiesContainer_InitializationWithEmptyFeedType_ThrowsException()
-	    {
-		    Assert.Throws<ArgumentException>((() =>
-			    new FeedSubmissionPropertiesContainer("test", "")));
-	    }
-
-	    [Test]
-	    public void FeedSubmissionPropertiesContainer_InitializationWithNullFeedType_ThrowsException()
-	    {
-		    Assert.Throws<ArgumentException>((() =>
-			    new FeedSubmissionPropertiesContainer("test", null)));
-	    }
 	}
 }

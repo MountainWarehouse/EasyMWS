@@ -209,14 +209,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_logger.Info(
 				$"Invoking FeedSubmitted event for the next submitted feed in queue : {feedSubmission.RegionAndTypeComputed}.");
 
-			var feedPropertiesContainer = feedSubmission.GetPropertiesContainer();
 			FeedSubmitted?.Invoke(this, new FeedSubmittedEventArgs
 			{
 				FeedSubmissionReport = reportContent,
 				AmazonRegion = feedSubmission.AmazonRegion,
 				MerchantId = feedSubmission.MerchantId,
 				FeedSubmissionId = feedSubmission.FeedSubmissionId,
-				FeedType = feedPropertiesContainer.FeedType
+				FeedType = feedSubmission.FeedType
 			});
 		}
 

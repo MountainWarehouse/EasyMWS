@@ -37,6 +37,7 @@ namespace EasyMWS.Tests.Services
 					DataTypeName = "testDataTypeName",
 					MethodName = "testMethodName",
 					Data = "testData",
+					FeedType = "testFeedType",
 					FeedSubmissionData = JsonConvert.SerializeObject(propertiesContainer)
 				}
 			};
@@ -49,15 +50,15 @@ namespace EasyMWS.Tests.Services
 	    [Test]
 	    public void FirstOrDefault_TwoInQueue_ReturnsFirstObjectPopulatedWithCorrectData()
 	    {
-			var feedSubmissionCallback = _feedSubmissionCallbackService.FirstOrDefault();
-		    var feedSubmissionData = JsonConvert.DeserializeObject<FeedSubmissionPropertiesContainer>(feedSubmissionCallback.FeedSubmissionData);
+			var feedSubmissionEntry = _feedSubmissionCallbackService.FirstOrDefault();
+		    var feedSubmissionData = JsonConvert.DeserializeObject<FeedSubmissionPropertiesContainer>(feedSubmissionEntry.FeedSubmissionData);
 
-		    Assert.AreEqual(AmazonRegion.Europe, feedSubmissionCallback.AmazonRegion);
-		    Assert.AreEqual("testData", feedSubmissionCallback.Data);
-		    Assert.AreEqual("testMethodName", feedSubmissionCallback.MethodName);
-		    Assert.AreEqual("testTypeName", feedSubmissionCallback.TypeName);
-		    Assert.AreEqual("testDataTypeName", feedSubmissionCallback.DataTypeName);
-		    Assert.AreEqual("testFeedType", feedSubmissionData.FeedType);
+		    Assert.AreEqual(AmazonRegion.Europe, feedSubmissionEntry.AmazonRegion);
+		    Assert.AreEqual("testData", feedSubmissionEntry.Data);
+		    Assert.AreEqual("testMethodName", feedSubmissionEntry.MethodName);
+		    Assert.AreEqual("testTypeName", feedSubmissionEntry.TypeName);
+		    Assert.AreEqual("testDataTypeName", feedSubmissionEntry.DataTypeName);
+		    Assert.AreEqual("testFeedType", feedSubmissionEntry.FeedType);
 		    Assert.AreEqual("testFeedContent", feedSubmissionData.FeedContent);
 			CollectionAssert.AreEquivalent(new List<string>(MwsMarketplaceGroup.AmazonEurope()), feedSubmissionData.MarketplaceIdList);
 		}
