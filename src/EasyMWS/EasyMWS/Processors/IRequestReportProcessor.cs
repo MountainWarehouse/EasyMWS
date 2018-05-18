@@ -9,12 +9,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 	{
 		ReportRequestCallback GetNextFromQueueOfReportsToRequest();
 		string RequestReportFromAmazon(ReportRequestCallback reportRequestCallback);
-		void GetNextFromQueueOfReportsToGenerate(ReportRequestCallback reportRequestCallback, string reportRequestId);
-		IEnumerable<ReportRequestCallback> GetAllPendingReportFromQueue();
+		void MoveToQueueOfReportsToGenerate(ReportRequestCallback reportRequestCallback, string reportRequestId);
+		IEnumerable<string> GetAllPendingReportFromQueue();
 		List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> GetReportProcessingStatusesFromAmazon(IEnumerable<string> requestIdList, string merchant);
 		ReportRequestCallback GetNextFromQueueOfReportsToDownload();
 		Stream DownloadGeneratedReportFromAmazon(ReportRequestCallback reportRequestCallback);
-		void RemoveFromQueue(ReportRequestCallback reportRequestCallback);
+		void RemoveFromQueue(int reportRequestCallbackId);
 		void MoveToRetryQueue(ReportRequestCallback reportRequestCallback);
 		void QueueReportsAccordingToProcessingStatus(
 			List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> reportGenerationStatuses);

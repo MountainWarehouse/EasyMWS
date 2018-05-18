@@ -279,7 +279,7 @@ namespace EasyMWS.Tests.Processors
 					AmazonRegion = AmazonRegion.Europe,
 					MerchantId = testMerchantId2,
 					Id = 2,
-					FeedSubmissionId = "FeedSubmissionId1",
+					FeedSubmissionId = "FeedSubmissionId2",
 					IsProcessingComplete = false
 				},
 				new FeedSubmissionCallback(serializedPropertiesContainer)
@@ -287,14 +287,6 @@ namespace EasyMWS.Tests.Processors
 					AmazonRegion = AmazonRegion.Europe,
 					MerchantId = testMerchantId2,
 					Id = 3,
-					FeedSubmissionId = "FeedSubmissionId2",
-					IsProcessingComplete = false
-				},
-				new FeedSubmissionCallback(serializedPropertiesContainer)
-				{
-					AmazonRegion = AmazonRegion.Europe,
-					MerchantId = _merchantId,
-					Id = 4,
 					FeedSubmissionId = "FeedSubmissionId3",
 					IsProcessingComplete = false
 				},
@@ -302,8 +294,16 @@ namespace EasyMWS.Tests.Processors
 				{
 					AmazonRegion = AmazonRegion.Europe,
 					MerchantId = _merchantId,
-					Id = 5,
+					Id = 4,
 					FeedSubmissionId = "FeedSubmissionId4",
+					IsProcessingComplete = false
+				},
+				new FeedSubmissionCallback(serializedPropertiesContainer)
+				{
+					AmazonRegion = AmazonRegion.Europe,
+					MerchantId = _merchantId,
+					Id = 5,
+					FeedSubmissionId = "FeedSubmissionId5",
 					IsProcessingComplete = false
 				},
 				new FeedSubmissionCallback(serializedPropertiesContainer)
@@ -318,16 +318,16 @@ namespace EasyMWS.Tests.Processors
 				{
 					AmazonRegion = AmazonRegion.Europe,
 					MerchantId = _merchantId,
-					Id = 6,
-					FeedSubmissionId = "FeedSubmissionId5",
+					Id = 7,
+					FeedSubmissionId = "FeedSubmissionId7",
 					IsProcessingComplete = true
 				},
 				new FeedSubmissionCallback(serializedPropertiesContainer)
 				{
 					AmazonRegion = AmazonRegion.NorthAmerica,
 					MerchantId = _merchantId,
-					Id = 7,
-					FeedSubmissionId = "FeedSubmissionId6",
+					Id = 8,
+					FeedSubmissionId = "FeedSubmissionId8",
 					IsProcessingComplete = false
 				}
 			};
@@ -335,11 +335,11 @@ namespace EasyMWS.Tests.Processors
 			_feedSubmissionCallbacks.AddRange(data);
 
 			// Act
-			var listSubmittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeedsFromQueue();
+			var listSubmittedFeeds = _feedSubmissionProcessor.GetIdsForSubmittedFeedsFromQueue();
 
 			// Assert
 			Assert.AreEqual(2, listSubmittedFeeds.Count());
-			Assert.IsTrue(listSubmittedFeeds.Count(sf => sf.Id == 4 || sf.Id == 5) == 2);
+			Assert.IsTrue(listSubmittedFeeds.Count(sf => sf == "FeedSubmissionId4" || sf == "FeedSubmissionId5") == 2);
 		}
 
 		[Test]
@@ -405,7 +405,7 @@ namespace EasyMWS.Tests.Processors
 				_feedSubmissionCallbackServiceMock.Object, _loggerMock.Object, _easyMwsOptions);
 
 			// Act
-			var listOfSubmittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeedsFromQueue();
+			var listOfSubmittedFeeds = _feedSubmissionProcessor.GetIdsForSubmittedFeedsFromQueue();
 
 			// Assert
 			Assert.IsEmpty(listOfSubmittedFeeds);
@@ -478,7 +478,7 @@ namespace EasyMWS.Tests.Processors
 			Assert.IsTrue(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").IsProcessingComplete);
 			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").SubmissionRetryCount);
 			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionCallback>()), Times.Once);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionCallback>()), Times.Never);
+			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<int>()), Times.Never);
 		}
 
 		[Test]
@@ -519,7 +519,7 @@ namespace EasyMWS.Tests.Processors
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId5").IsProcessingComplete);
 			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId5").SubmissionRetryCount);
 			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionCallback>()), Times.Exactly(5));
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionCallback>()), Times.Never);
+			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<int>()), Times.Never);
 		}
 
 		[Test]
@@ -545,7 +545,7 @@ namespace EasyMWS.Tests.Processors
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").IsProcessingComplete);
 			Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").SubmissionRetryCount);
 			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionCallback>()), Times.Once);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionCallback>()), Times.Never);
+			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<int>()), Times.Never);
 		}
 
 		[Test]
@@ -571,7 +571,7 @@ namespace EasyMWS.Tests.Processors
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").IsProcessingComplete);
 			Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").SubmissionRetryCount);
 			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionCallback>()), Times.Once);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionCallback>()), Times.Never);
+			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<int>()), Times.Never);
 		}
 
 		[Test]
@@ -591,7 +591,7 @@ namespace EasyMWS.Tests.Processors
 			_feedSubmissionCallbackServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(testFeedSubmissionCallbacks);
 
 			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue();
-			_feedSubmissionCallbackServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionCallback>()), Times.Exactly(2));
+			_feedSubmissionCallbackServiceMock.Verify(x => x.Delete(It.IsAny<int>()), Times.Exactly(2));
 		}
 	}
 }

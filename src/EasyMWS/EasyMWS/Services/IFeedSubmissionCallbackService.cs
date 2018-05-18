@@ -9,7 +9,7 @@ namespace MountainWarehouse.EasyMWS.Services
     {
 	    void Create(FeedSubmissionCallback callback);
 	    void Update(FeedSubmissionCallback callback);
-	    void Delete(FeedSubmissionCallback callback);
+	    void Delete(int id);
 	    void SaveChanges();
 	    IQueryable<FeedSubmissionCallback> GetAll();
 	    IQueryable<FeedSubmissionCallback> Where(Expression<Func<FeedSubmissionCallback, bool>> predicate);

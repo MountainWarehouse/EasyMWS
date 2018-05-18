@@ -44,7 +44,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			_callbackActivator = _callbackActivator ?? new CallbackActivator();
 
-			_feedService = _feedService ?? new FeedSubmissionCallbackService(options: _options);
+			_feedService = _feedService ?? new FeedSubmissionCallbackService(options: _options, logger: logger);
 			_feedSubmissionProcessor = _feedSubmissionProcessor ?? new FeedSubmissionProcessor(_region, _merchantId, mwsClient, _feedService, _logger, _options);
 		}
 
@@ -98,7 +98,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				{
 					InvokeFeedSubmittedEvent(feedSubmission, feedSubmissionReport);
 				}
-				_feedSubmissionProcessor.RemoveFromQueue(feedSubmission);
+				_feedSubmissionProcessor.RemoveFromQueue(feedSubmission.Id);
 				_feedService.SaveChanges();
 			}
 			catch (Exception e)
@@ -160,14 +160,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			try
 			{
-				var submittedFeeds = _feedSubmissionProcessor.GetAllSubmittedFeedsFromQueue().ToList();
+				var feedSubmissionIds = _feedSubmissionProcessor.GetIdsForSubmittedFeedsFromQueue().ToList();
 
-				if (!submittedFeeds.Any())
+				if (!feedSubmissionIds.Any())
 					return;
 
-				var feedSubmissionIdList = submittedFeeds.Select(x => x.FeedSubmissionId);
-
-				var feedSubmissionResults = _feedSubmissionProcessor.RequestFeedSubmissionStatusesFromAmazon(feedSubmissionIdList, _merchantId);
+				var feedSubmissionResults = _feedSubmissionProcessor.RequestFeedSubmissionStatusesFromAmazon(feedSubmissionIds, _merchantId);
 
 				_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(feedSubmissionResults);
 			}
@@ -218,8 +216,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				AmazonRegion = feedSubmission.AmazonRegion,
 				MerchantId = feedSubmission.MerchantId,
 				FeedSubmissionId = feedSubmission.FeedSubmissionId,
-				FeedType = feedPropertiesContainer.FeedType,
-				FeedContent = feedPropertiesContainer.FeedContent
+				FeedType = feedPropertiesContainer.FeedType
 			});
 		}
 
