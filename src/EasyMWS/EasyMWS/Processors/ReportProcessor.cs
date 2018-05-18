@@ -82,7 +82,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		private void PerformCallback(ReportRequestCallback reportRequest, Stream stream)
+		private void PerformCallback(ReportRequestEntry reportRequest, Stream stream)
 		{
 			try
 			{
@@ -107,7 +107,32 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			try
 			{
-				_reportService.Create(GetSerializedReportRequestCallback(propertiesContainer, callbackMethod, callbackData));
+				if (propertiesContainer == null) throw new ArgumentNullException();
+
+				var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
+
+				var reportRequest = new ReportRequestEntry(serializedPropertiesContainer)
+				{
+					AmazonRegion = _region,
+					MerchantId = _merchantId,
+					LastRequested = DateTime.MinValue,
+					ContentUpdateFrequency = propertiesContainer.UpdateFrequency,
+					RequestReportId = null,
+					GeneratedReportId = null,
+					RequestRetryCount = 0,
+					ReportType = propertiesContainer.ReportType
+				};
+
+				if (callbackMethod != null)
+				{
+					var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
+					reportRequest.Data = serializedCallback.Data;
+					reportRequest.TypeName = serializedCallback.TypeName;
+					reportRequest.MethodName = serializedCallback.MethodName;
+					reportRequest.DataTypeName = serializedCallback.DataTypeName;
+				}
+
+				_reportService.Create(reportRequest);
 				_reportService.SaveChanges();
 			}
 			catch (Exception e)
@@ -170,7 +195,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public (ReportRequestCallback reportRequestCallback, Stream stream) DownloadNextReportInQueueFromAmazon()
+		public (ReportRequestEntry reportRequestCallback, Stream stream) DownloadNextReportInQueueFromAmazon()
 		{
 			var reportToDownload = _requestReportProcessor.GetNextFromQueueOfReportsToDownload();
 			if (reportToDownload == null) return (null, null);
@@ -188,7 +213,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public void ExecuteMethodCallback(ReportRequestCallback reportRequest, Stream stream)
+		public void ExecuteMethodCallback(ReportRequestEntry reportRequest, Stream stream)
 		{
 			_logger.Info(
 				$"Attempting to perform method callback for the next downloaded report in queue : {reportRequest.RegionAndTypeComputed}.");
@@ -199,48 +224,16 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_callbackActivator.CallMethod(callback, stream);
 		}
 
-		private void InvokeReportDownloadedEvent(ReportRequestCallback reportRequest, Stream stream)
+		private void InvokeReportDownloadedEvent(ReportRequestEntry reportRequest, Stream stream)
 		{
-			var feedPropertiesContainer = reportRequest.GetPropertiesContainer();
 			ReportDownloaded?.Invoke(this, new ReportDownloadedEventArgs
 			{
 				ReportContent = stream,
 				AmazonRegion = reportRequest.AmazonRegion,
 				MerchantId = reportRequest.MerchantId,
 				GeneratedReportId = reportRequest.GeneratedReportId,
-				ReportType = feedPropertiesContainer.ReportType
+				ReportType = reportRequest.ReportType
 			});
-		}
-
-		private ReportRequestCallback GetSerializedReportRequestCallback(
-			ReportRequestPropertiesContainer reportRequestContainer, Action<Stream, object> callbackMethod, object callbackData)
-		{
-			if (reportRequestContainer == null) throw new ArgumentNullException();
-			
-			var serializedPropertiesContainer = JsonConvert.SerializeObject(reportRequestContainer);
-
-			var reportRequest = new ReportRequestCallback(serializedPropertiesContainer)
-			{
-				AmazonRegion = _region,
-				MerchantId = _merchantId,
-				LastRequested = DateTime.MinValue,
-				ContentUpdateFrequency = reportRequestContainer.UpdateFrequency,
-				RequestReportId = null,
-				GeneratedReportId = null,
-				RequestRetryCount = 0,
-				ReportType = reportRequestContainer.ReportType
-			};
-
-			if (callbackMethod != null)
-			{
-				var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
-				reportRequest.Data = serializedCallback.Data;
-				reportRequest.TypeName = serializedCallback.TypeName;
-				reportRequest.MethodName = serializedCallback.MethodName;
-				reportRequest.DataTypeName = serializedCallback.DataTypeName;
-			}
-
-			return reportRequest;
 		}
 	}
 }

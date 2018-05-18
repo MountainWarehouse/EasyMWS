@@ -40,29 +40,30 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_feedSubmissionCallbackService = _feedSubmissionCallbackService ?? new FeedSubmissionCallbackService(options: _options, logger: logger);
 		}
 
-		public FeedSubmissionCallback GetNextFromQueueOfFeedsToSubmit() =>
+		public FeedSubmissionEntry GetNextFromQueueOfFeedsToSubmit() =>
 			string.IsNullOrEmpty(_merchantId) ? null : _feedSubmissionCallbackService.GetAll()
 				.FirstOrDefault(fscs => fscs.AmazonRegion == _region && fscs.MerchantId == _merchantId
 				&& IsFeedInASubmitFeedQueue(fscs)
 				&& IsFeedReadyForSubmission(fscs));
 
-		public string SubmitFeedToAmazon(FeedSubmissionCallback feedSubmission)
+		public string SubmitFeedToAmazon(FeedSubmissionEntry feedSubmission)
 		{
 			var missingInformationExceptionMessage = "Cannot submit queued feed to amazon due to missing feed submission information";
 
-			if (feedSubmission?.FeedSubmissionData == null) throw new ArgumentNullException(missingInformationExceptionMessage);
+			if (feedSubmission?.FeedSubmissionData == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Feed submission data is null.");
+			if (string.IsNullOrEmpty(feedSubmission.Details?.FeedContent)) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Feed content is missing.");
+			if (string.IsNullOrEmpty(feedSubmission?.FeedType)) throw new ArgumentException($"{missingInformationExceptionMessage}: Feed type is missing.");
 
 			_logger.Info($"Attempting to submit the next feed in queue to Amazon: {feedSubmission.RegionAndTypeComputed}.");
 
 			var feedSubmissionData = feedSubmission.GetPropertiesContainer();
-			if (feedSubmissionData?.FeedType == null) throw new ArgumentException(missingInformationExceptionMessage);
 
-			using (var stream = StreamHelper.CreateNewMemoryStream(feedSubmissionData.FeedContent))
+			using (var stream = StreamHelper.CreateNewMemoryStream(feedSubmission.Details.FeedContent))
 			{
 				var submitFeedRequest = new SubmitFeedRequest
 				{
 					Merchant = feedSubmission.MerchantId,
-					FeedType = feedSubmissionData.FeedType,
+					FeedType = feedSubmission.FeedType,
 					FeedContent = stream,
 					MarketplaceIdList = feedSubmissionData.MarketplaceIdList == null ? null : new IdList {Id = feedSubmissionData.MarketplaceIdList},
 					PurgeAndReplace = feedSubmissionData.PurgeAndReplace ?? false,
@@ -80,7 +81,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public void MoveToQueueOfSubmittedFeeds(FeedSubmissionCallback feedSubmission, string feedSubmissionId)
+		public void MoveToQueueOfSubmittedFeeds(FeedSubmissionEntry feedSubmission, string feedSubmissionId)
 		{
 			feedSubmission.FeedSubmissionId = feedSubmissionId;
 			feedSubmission.SubmissionRetryCount = 0;
@@ -89,7 +90,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_logger.Info($"Moving {feedSubmission.RegionAndTypeComputed} to queue of feed submissions that await processing results.");
 		}
 
-		public void MoveToRetryQueue(FeedSubmissionCallback feedSubmission)
+		public void MoveToRetryQueue(FeedSubmissionEntry feedSubmission)
 		{
 			feedSubmission.SubmissionRetryCount++;
 			_feedSubmissionCallbackService.Update(feedSubmission);
@@ -165,22 +166,22 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public FeedSubmissionCallback GetNextFromQueueOfProcessingCompleteFeeds()
+		public FeedSubmissionEntry GetNextFromQueueOfProcessingCompleteFeeds()
 			=> string.IsNullOrEmpty(_merchantId) ? null : _feedSubmissionCallbackService.FirstOrDefault(
 				ffscs => ffscs.AmazonRegion == _region && ffscs.MerchantId == _merchantId
 				&& ffscs.FeedSubmissionId != null
 				&& ffscs.IsProcessingComplete == true
 				&& IsReadyForRequestingSubmissionResult(ffscs));
 
-		public (Stream processingReport, string md5hash) GetFeedSubmissionResultFromAmazon(FeedSubmissionCallback feedSubmissionCallback)
+		public (Stream processingReport, string md5hash) GetFeedSubmissionResultFromAmazon(FeedSubmissionEntry feedSubmissionEntry)
 		{
-			_logger.Info($"Attempting to request the feed submission result for the next feed in queue from Amazon: {feedSubmissionCallback.RegionAndTypeComputed}.");
+			_logger.Info($"Attempting to request the feed submission result for the next feed in queue from Amazon: {feedSubmissionEntry.RegionAndTypeComputed}.");
 
 			var reportResultStream = new MemoryStream();
 			var request = new GetFeedSubmissionResultRequest
 			{
-				FeedSubmissionId = feedSubmissionCallback.FeedSubmissionId,
-				Merchant = feedSubmissionCallback.MerchantId,
+				FeedSubmissionId = feedSubmissionEntry.FeedSubmissionId,
+				Merchant = feedSubmissionEntry.MerchantId,
 				FeedSubmissionResult = reportResultStream
 			};
 
@@ -189,7 +190,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
 			var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
 			_logger.Info($"Request to MWS.GetFeedSubmissionResult was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']", new RequestInfo(timestamp, requestId));
-			_logger.Info($"Feed submission result request from Amazon has succeeded for {feedSubmissionCallback.RegionAndTypeComputed}.");
+			_logger.Info($"Feed submission result request from Amazon has succeeded for {feedSubmissionEntry.RegionAndTypeComputed}.");
 
 			return (reportResultStream, response?.GetFeedSubmissionResultResult?.ContentMD5);
 		}
@@ -231,7 +232,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		private bool IsFeedReadyForSubmission(FeedSubmissionCallback feedSubmission)
+		private bool IsFeedReadyForSubmission(FeedSubmissionEntry feedSubmission)
 		{
 			var isInRetryQueueAndReadyForRetry = feedSubmission.SubmissionRetryCount > 0
 			        && RetryIntervalHelper.IsRetryPeriodAwaited(feedSubmission.LastSubmitted, 
@@ -243,7 +244,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			return isInRetryQueueAndReadyForRetry || isNotInRetryState;
 		}
 
-		private bool IsReadyForRequestingSubmissionResult(FeedSubmissionCallback feedSubmission)
+		private bool IsReadyForRequestingSubmissionResult(FeedSubmissionEntry feedSubmission)
 		{
 			var isInRetryQueueAndReadyForRetry = feedSubmission.SubmissionRetryCount > 0
 			        && RetryIntervalHelper.IsRetryPeriodAwaited(feedSubmission.LastSubmitted,
@@ -255,7 +256,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			return isInRetryQueueAndReadyForRetry || isNotInRetryState;
 		}
 
-		private bool IsFeedInASubmitFeedQueue(FeedSubmissionCallback feedSubmission)
+		private bool IsFeedInASubmitFeedQueue(FeedSubmissionEntry feedSubmission)
 		{
 			return feedSubmission.FeedSubmissionId == null;
 		}

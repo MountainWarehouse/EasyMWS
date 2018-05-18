@@ -26,9 +26,9 @@ namespace EasyMWS.Tests.Services
 	    {
 		    var reportRequestPropertiesContainer = new ReportRequestPropertiesContainer("_Report_Type_", ContentUpdateFrequency.NearRealTime, new List<string>(MwsMarketplaceGroup.AmazonEurope()));
 
-		    var reportRequestCallback = new List<ReportRequestCallback>
+		    var reportRequestCallback = new List<ReportRequestEntry>
 		    {
-			    new ReportRequestCallback
+			    new ReportRequestEntry
 				{
 					AmazonRegion = AmazonRegion.Europe,
 					Data = "testData",
@@ -38,9 +38,10 @@ namespace EasyMWS.Tests.Services
 					LastRequested = DateTime.MinValue,
 					DataTypeName = "testDataTypeName",
 					ContentUpdateFrequency = 0,
-					Id = 1
+					Id = 1,
+					ReportType = reportRequestPropertiesContainer.ReportType
 				},
-				new ReportRequestCallback{Id = 2}
+				new ReportRequestEntry{Id = 2}
 		    };
 
 			_reportRequestCallbackReportMock = new Mock<IReportRequestCallbackRepo>();
@@ -60,7 +61,7 @@ namespace EasyMWS.Tests.Services
 			Assert.AreEqual("testMethodName", reportRequestCallback.MethodName);
 			Assert.AreEqual("testTypeName", reportRequestCallback.TypeName);
 			Assert.AreEqual("testDataTypeName", reportRequestCallback.DataTypeName);
-			Assert.AreEqual("_Report_Type_", reportRequestData.ReportType);
+			Assert.AreEqual("_Report_Type_", reportRequestCallback.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequestData.UpdateFrequency);
 			CollectionAssert.AreEquivalent(new List<string>(MwsMarketplaceGroup.AmazonEurope()), reportRequestData.MarketplaceIdList);
 		}

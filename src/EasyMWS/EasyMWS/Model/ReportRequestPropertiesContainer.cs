@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using MountainWarehouse.EasyMWS.Enums;
 
 namespace MountainWarehouse.EasyMWS.Model
@@ -12,6 +13,7 @@ namespace MountainWarehouse.EasyMWS.Model
 		/// <summary>
 		/// A value of the ReportType that indicates the type of report to request.
 		/// </summary>
+		[IgnoreDataMember]
 		public string ReportType { get; set; }
 
 		#endregion
@@ -53,9 +55,6 @@ namespace MountainWarehouse.EasyMWS.Model
 		/// <param name="updateFrequency"></param>
 		public ReportRequestPropertiesContainer(string reportType, ContentUpdateFrequency updateFrequency, List<string> marketplaceIdList = null, DateTime? startDate = null, DateTime? endDate = null, string reportOptions = null)
 		{
-			if (string.IsNullOrEmpty(reportType))
-				throw new ArgumentException("ReportType was not specified, but it is required.");
-
 			ReportType = reportType;
 			MarketplaceIdList = marketplaceIdList;
 			UpdateFrequency = updateFrequency;

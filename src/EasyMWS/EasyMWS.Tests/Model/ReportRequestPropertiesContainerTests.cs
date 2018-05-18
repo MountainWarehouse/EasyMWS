@@ -27,20 +27,6 @@ namespace EasyMWS.Tests.Model
 			_callbackData = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Daily, new List<string>());
 		}
 
-	    [Test]
-	    public void ReportRequestPropertiesContainer_InitializationWithEmptyReportType_ThrowsException()
-	    {
-		    Assert.Throws<ArgumentException>((() =>
-			    new ReportRequestPropertiesContainer("", ContentUpdateFrequency.Unknown)));
-	    }
-
-	    [Test]
-	    public void ReportRequestPropertiesContainer_InitializationWithNullReportType_ThrowsException()
-	    {
-		    Assert.Throws<ArgumentException>((() =>
-			    new ReportRequestPropertiesContainer(null, ContentUpdateFrequency.Unknown)));
-	    }
-
 		[Test]
 	    public void ReportRequestPropertiesContainer_IsSerializedAndDeserialized_AsExpected()
 	    {
@@ -79,7 +65,6 @@ namespace EasyMWS.Tests.Model
 		    _callbackActivator.CallMethod(serialized, new MemoryStream());
 		    Assert.IsTrue(_called);
 
-			Assert.AreEqual(testReportType, _callbackData.ReportType);
 		    Assert.AreEqual(testUpdateFrequency, _callbackData.UpdateFrequency);
 		    CollectionAssert.AreEqual(marketplaceIdList, _callbackData.MarketplaceIdList);
 		}

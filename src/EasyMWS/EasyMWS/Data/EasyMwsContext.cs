@@ -60,14 +60,14 @@ namespace MountainWarehouse.EasyMWS.Data
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
-			modelBuilder.Entity<ReportRequestCallback>()
+			modelBuilder.Entity<ReportRequestEntry>()
 				.HasIndex(e => new {e.RequestReportId, e.GeneratedReportId});
-			modelBuilder.Entity<FeedSubmissionCallback>()
+			modelBuilder.Entity<FeedSubmissionEntry>()
 				.HasIndex(e => new { e.FeedSubmissionId });
 		}
 
-		internal DbSet<ReportRequestCallback> ReportRequestCallbacks { get; set; }
-		internal DbSet<FeedSubmissionCallback> FeedSubmissionCallbacks { get; set; }
+		internal DbSet<ReportRequestEntry> ReportRequestEntries { get; set; }
+		internal DbSet<FeedSubmissionEntry> FeedSubmissionEntries { get; set; }
 		internal DbSet<AmazonReport> AmazonReports { get; set; }
 	}
 }

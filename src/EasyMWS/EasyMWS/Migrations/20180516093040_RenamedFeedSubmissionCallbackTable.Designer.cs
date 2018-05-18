@@ -12,9 +12,10 @@ using System;
 namespace MountainWarehouse.EasyMWS.Migrations
 {
     [DbContext(typeof(EasyMwsContext))]
-    partial class EasyMwsContextModelSnapshot : ModelSnapshot
+    [Migration("20180516093040_RenamedFeedSubmissionCallbackTable")]
+    partial class RenamedFeedSubmissionCallbackTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -39,17 +40,6 @@ namespace MountainWarehouse.EasyMWS.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("AmazonReports");
-                });
-
-            modelBuilder.Entity("MountainWarehouse.EasyMWS.Data.FeedSubmissionDetails", b =>
-                {
-                    b.Property<int>("FeedSubmissionEntryId");
-
-                    b.Property<string>("FeedContent");
-
-                    b.HasKey("FeedSubmissionEntryId");
-
-                    b.ToTable("FeedSubmissionDetails");
                 });
 
             modelBuilder.Entity("MountainWarehouse.EasyMWS.Data.FeedSubmissionEntry", b =>
@@ -92,7 +82,7 @@ namespace MountainWarehouse.EasyMWS.Migrations
                     b.ToTable("FeedSubmissionEntries");
                 });
 
-            modelBuilder.Entity("MountainWarehouse.EasyMWS.Data.ReportRequestEntry", b =>
+            modelBuilder.Entity("MountainWarehouse.EasyMWS.Data.ReportRequestCallback", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
@@ -127,15 +117,7 @@ namespace MountainWarehouse.EasyMWS.Migrations
 
                     b.HasIndex("RequestReportId", "GeneratedReportId");
 
-                    b.ToTable("ReportRequestEntries");
-                });
-
-            modelBuilder.Entity("MountainWarehouse.EasyMWS.Data.FeedSubmissionDetails", b =>
-                {
-                    b.HasOne("MountainWarehouse.EasyMWS.Data.FeedSubmissionEntry", "FeedSubmissionEntry")
-                        .WithOne("Details")
-                        .HasForeignKey("MountainWarehouse.EasyMWS.Data.FeedSubmissionDetails", "FeedSubmissionEntryId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                    b.ToTable("ReportRequestCallbacks");
                 });
 #pragma warning restore 612, 618
         }
