@@ -16,6 +16,7 @@ namespace MountainWarehouse.EasyMWS.Repositories
 	    IQueryable<ReportRequestEntry> GetAll();
 		void SaveChanges();
 	    Task SaveChangesAsync();
+	    void Dispose();
 
     }
 }

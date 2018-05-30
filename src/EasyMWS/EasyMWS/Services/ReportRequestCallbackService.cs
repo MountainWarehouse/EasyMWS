@@ -9,7 +9,7 @@ using MountainWarehouse.EasyMWS.Repositories;
 
 namespace MountainWarehouse.EasyMWS.Services
 {
-	internal class ReportRequestCallbackService : IReportRequestCallbackService
+	internal class ReportRequestCallbackService : IReportRequestCallbackService, IDisposable
 	{
 		private readonly IReportRequestCallbackRepo _reportRequestCallbackRepo;
 		private readonly IEasyMwsLogger _logger;
@@ -51,5 +51,9 @@ namespace MountainWarehouse.EasyMWS.Services
 		public ReportRequestEntry Last() => _reportRequestCallbackRepo.GetAll().OrderByDescending(x => x.Id).First();
 		public ReportRequestEntry LastOrDefault() => _reportRequestCallbackRepo.GetAll().OrderByDescending(x => x.Id).FirstOrDefault();
 		public ReportRequestEntry LastOrDefault(Expression<Func<ReportRequestEntry, bool>> predicate) => _reportRequestCallbackRepo.GetAll().OrderByDescending(x => x.Id).FirstOrDefault(predicate);
+		public void Dispose()
+		{
+			_reportRequestCallbackRepo.Dispose();
+		}
 	}
 }

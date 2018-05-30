@@ -16,19 +16,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 {
 	internal class FeedSubmissionProcessor : IFeedSubmissionProcessor
 	{
-		private readonly IFeedSubmissionCallbackService _feedSubmissionCallbackService;
 		private readonly IMarketplaceWebServiceClient _marketplaceWebServiceClient;
 		private readonly IEasyMwsLogger _logger;
 		private readonly EasyMwsOptions _options;
 		private readonly AmazonRegion _region;
 		private readonly string _merchantId;
-
-		internal FeedSubmissionProcessor(AmazonRegion region, string merchantId, IMarketplaceWebServiceClient marketplaceWebServiceClient,
-			IFeedSubmissionCallbackService feedSubmissionCallbackService, IEasyMwsLogger logger, EasyMwsOptions options) : this(
-			region, merchantId, marketplaceWebServiceClient, logger, options)
-		{
-			_feedSubmissionCallbackService = feedSubmissionCallbackService;
-		}
 
 		internal FeedSubmissionProcessor(AmazonRegion region, string merchantId, IMarketplaceWebServiceClient marketplaceWebServiceClient, IEasyMwsLogger logger, EasyMwsOptions options)
 		{
@@ -37,11 +29,10 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_options = options;
 			_logger = logger;
 			_marketplaceWebServiceClient = marketplaceWebServiceClient;
-			_feedSubmissionCallbackService = _feedSubmissionCallbackService ?? new FeedSubmissionCallbackService(options: _options, logger: logger);
 		}
 
-		public FeedSubmissionEntry GetNextFromQueueOfFeedsToSubmit() =>
-			string.IsNullOrEmpty(_merchantId) ? null : _feedSubmissionCallbackService.GetAll()
+		public FeedSubmissionEntry GetNextFromQueueOfFeedsToSubmit(IFeedSubmissionCallbackService feedSubmissionService) =>
+			string.IsNullOrEmpty(_merchantId) ? null : feedSubmissionService.GetAll()
 				.FirstOrDefault(fscs => fscs.AmazonRegion == _region && fscs.MerchantId == _merchantId
 				&& IsFeedInASubmitFeedQueue(fscs)
 				&& IsFeedReadyForSubmission(fscs));
@@ -81,25 +72,27 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public void MoveToQueueOfSubmittedFeeds(FeedSubmissionEntry feedSubmission, string feedSubmissionId)
+		public void MoveToQueueOfSubmittedFeeds(IFeedSubmissionCallbackService feedSubmissionService, FeedSubmissionEntry feedSubmission, string feedSubmissionId)
 		{
 			feedSubmission.FeedSubmissionId = feedSubmissionId;
 			feedSubmission.SubmissionRetryCount = 0;
-			_feedSubmissionCallbackService.Update(feedSubmission);
+			feedSubmissionService.Update(feedSubmission);
+			feedSubmissionService.SaveChanges();
 
 			_logger.Info($"Moving {feedSubmission.RegionAndTypeComputed} to queue of feed submissions that await processing results.");
 		}
 
-		public void MoveToRetryQueue(FeedSubmissionEntry feedSubmission)
+		public void MoveToRetryQueue(IFeedSubmissionCallbackService feedSubmissionService, FeedSubmissionEntry feedSubmission)
 		{
 			feedSubmission.SubmissionRetryCount++;
-			_feedSubmissionCallbackService.Update(feedSubmission);
+			feedSubmissionService.Update(feedSubmission);
+			feedSubmissionService.SaveChanges();
 
 			_logger.Warn($"Moving {feedSubmission.RegionAndTypeComputed} to retry queue. Retry count is now '{feedSubmission.SubmissionRetryCount}'.");
 		}
 
-		public IEnumerable<string> GetIdsForSubmittedFeedsFromQueue() =>
-			string.IsNullOrEmpty(_merchantId) ? new List<string>().AsEnumerable() : _feedSubmissionCallbackService.Where(
+		public IEnumerable<string> GetIdsForSubmittedFeedsFromQueue(IFeedSubmissionCallbackService feedSubmissionService) =>
+			string.IsNullOrEmpty(_merchantId) ? new List<string>().AsEnumerable() : feedSubmissionService.Where(
 				rrcs => rrcs.AmazonRegion == _region && rrcs.MerchantId == _merchantId
 				        && rrcs.FeedSubmissionId != null
 						&& rrcs.IsProcessingComplete == false
@@ -128,18 +121,18 @@ namespace MountainWarehouse.EasyMWS.Processors
 			return responseInfo;
 		}
 
-		public void QueueFeedsAccordingToProcessingStatus(List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses)
+		public void QueueFeedsAccordingToProcessingStatus(IFeedSubmissionCallbackService feedSubmissionService, List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses)
 		{
 			foreach (var feedSubmissionInfo in feedProcessingStatuses)
 			{
-				var feedSubmissionCallback = _feedSubmissionCallbackService.FirstOrDefault(fsc => fsc.FeedSubmissionId == feedSubmissionInfo.FeedSubmissionId);
+				var feedSubmissionCallback = feedSubmissionService.FirstOrDefault(fsc => fsc.FeedSubmissionId == feedSubmissionInfo.FeedSubmissionId);
 				if(feedSubmissionCallback == null) continue;
 
 				if (feedSubmissionInfo.FeedProcessingStatus == "_DONE_")
 				{
 					feedSubmissionCallback.IsProcessingComplete = true;
 					feedSubmissionCallback.SubmissionRetryCount = 0;
-					_feedSubmissionCallbackService.Update(feedSubmissionCallback);
+					feedSubmissionService.Update(feedSubmissionCallback);
 				}
 				else if (feedSubmissionInfo.FeedProcessingStatus == "_AWAITING_ASYNCHRONOUS_REPLY_"
 				           || feedSubmissionInfo.FeedProcessingStatus == "_IN_PROGRESS_"
@@ -149,25 +142,27 @@ namespace MountainWarehouse.EasyMWS.Processors
 				{
 					feedSubmissionCallback.IsProcessingComplete = false;
 					feedSubmissionCallback.SubmissionRetryCount = 0;
-					_feedSubmissionCallbackService.Update(feedSubmissionCallback);
+					feedSubmissionService.Update(feedSubmissionCallback);
 				}
 				else if (feedSubmissionInfo.FeedProcessingStatus == "_CANCELLED_")
 				{
 					feedSubmissionCallback.IsProcessingComplete = false;
 					feedSubmissionCallback.SubmissionRetryCount++;
-					_feedSubmissionCallbackService.Update(feedSubmissionCallback);
+					feedSubmissionService.Update(feedSubmissionCallback);
 				}
 				else
 				{
 					feedSubmissionCallback.IsProcessingComplete = false;
 					feedSubmissionCallback.SubmissionRetryCount++;
-					_feedSubmissionCallbackService.Update(feedSubmissionCallback);
+					feedSubmissionService.Update(feedSubmissionCallback);
 				}
 			}
+
+			feedSubmissionService.SaveChanges();
 		}
 
-		public FeedSubmissionEntry GetNextFromQueueOfProcessingCompleteFeeds()
-			=> string.IsNullOrEmpty(_merchantId) ? null : _feedSubmissionCallbackService.FirstOrDefault(
+		public FeedSubmissionEntry GetNextFromQueueOfProcessingCompleteFeeds(IFeedSubmissionCallbackService feedSubmissionService)
+			=> string.IsNullOrEmpty(_merchantId) ? null : feedSubmissionService.FirstOrDefault(
 				ffscs => ffscs.AmazonRegion == _region && ffscs.MerchantId == _merchantId
 				&& ffscs.FeedSubmissionId != null
 				&& ffscs.IsProcessingComplete == true
@@ -195,15 +190,16 @@ namespace MountainWarehouse.EasyMWS.Processors
 			return (reportResultStream, response?.GetFeedSubmissionResultResult?.ContentMD5);
 		}
 
-		public void RemoveFromQueue(int feedSubmissionId)
+		public void RemoveFromQueue(IFeedSubmissionCallbackService feedSubmissionService, int feedSubmissionId)
 		{
-			_feedSubmissionCallbackService.Delete(feedSubmissionId);
+			feedSubmissionService.Delete(feedSubmissionId);
+			feedSubmissionService.SaveChanges();
 		}
 
-		public void CleanUpFeedSubmissionQueue()
+		public void CleanUpFeedSubmissionQueue(IFeedSubmissionCallbackService feedSubmissionService)
 		{
 			_logger.Info("Executing cleanup of feed submission requests queue.");
-			var expiredFeedSubmissions = _feedSubmissionCallbackService.GetAll()
+			var expiredFeedSubmissions = feedSubmissionService.GetAll()
 				.Where(fscs => fscs.AmazonRegion == _region && fscs.MerchantId == _merchantId
 							   && fscs.FeedSubmissionId == null
 				               && fscs.SubmissionRetryCount > _options.FeedSubmissionMaxRetryCount)
@@ -214,13 +210,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 				_logger.Warn("The following feed submission requests have exceeded their retry limit and will now be deleted :");
 				foreach (var feedSubmission in expiredFeedSubmissions)
 				{
-					_feedSubmissionCallbackService.Delete(feedSubmission.Id);
+					feedSubmissionService.Delete(feedSubmission.Id);
 					_logger.Warn($"Feed submission request {feedSubmission.RegionAndTypeComputed} deleted from queue.");
 				}
 			}
 			
 
-			var expiredFeedProcessingResultRequestIds = _feedSubmissionCallbackService.GetAll()
+			var expiredFeedProcessingResultRequestIds = feedSubmissionService.GetAll()
 				.Where(fscs => fscs.AmazonRegion == _region && fscs.MerchantId == _merchantId
 							   && fscs.FeedSubmissionId != null
 				               && fscs.SubmissionRetryCount > _options.FeedResultFailedChecksumMaxRetryCount)
@@ -228,8 +224,10 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			foreach (var id in expiredFeedProcessingResultRequestIds)
 			{
-				_feedSubmissionCallbackService.Delete(id);
+				feedSubmissionService.Delete(id);
 			}
+
+			feedSubmissionService.SaveChanges();
 		}
 
 		private bool IsFeedReadyForSubmission(FeedSubmissionEntry feedSubmission)

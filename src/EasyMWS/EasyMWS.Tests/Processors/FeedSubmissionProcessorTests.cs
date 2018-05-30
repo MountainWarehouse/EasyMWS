@@ -37,8 +37,7 @@ namespace EasyMWS.Tests.Processors
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_feedSubmissionCallbackServiceMock = new Mock<IFeedSubmissionCallbackService>();
 			_loggerMock = new Mock<IEasyMwsLogger>();
-			_feedSubmissionProcessor = new FeedSubmissionProcessor(_region, _merchantId,_marketplaceWebServiceClientMock.Object,
-				_feedSubmissionCallbackServiceMock.Object, _loggerMock.Object, _easyMwsOptions);
+			_feedSubmissionProcessor = new FeedSubmissionProcessor(_region, _merchantId,_marketplaceWebServiceClientMock.Object, _loggerMock.Object, _easyMwsOptions);
 
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
@@ -102,7 +101,7 @@ namespace EasyMWS.Tests.Processors
 			_feedSubmissionCallbacks.Add(feedSubmissionWithNullFeedSubmissionId2);
 
 			var feedSubmissionCallback =
-				_feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit();
+				_feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit(_feedSubmissionCallbackServiceMock.Object);
 
 			Assert.IsNotNull(feedSubmissionCallback);
 			Assert.AreEqual(feedSubmissionWithNullFeedSubmissionId1.Id, feedSubmissionCallback.Id);
@@ -153,11 +152,10 @@ namespace EasyMWS.Tests.Processors
 			_feedSubmissionCallbacks.Add(feedSubmissionWithSameRegionAndMerchantId1);
 			_feedSubmissionCallbacks.Add(feedSubmissionWithSameRegionAndMerchantId2);
 
-			_feedSubmissionProcessor = new FeedSubmissionProcessor(AmazonRegion.Australia, _merchantId, _marketplaceWebServiceClientMock.Object,
-				_feedSubmissionCallbackServiceMock.Object, _loggerMock.Object, _easyMwsOptions);
+			_feedSubmissionProcessor = new FeedSubmissionProcessor(AmazonRegion.Australia, _merchantId, _marketplaceWebServiceClientMock.Object, _loggerMock.Object, _easyMwsOptions);
 
 			var feedSubmissionCallback =
-				_feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit();
+				_feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit(_feedSubmissionCallbackServiceMock.Object);
 
 			Assert.IsNotNull(feedSubmissionCallback);
 			Assert.AreEqual(feedSubmissionWithSameRegionAndMerchantId1.Id, feedSubmissionCallback.Id);
@@ -208,11 +206,10 @@ namespace EasyMWS.Tests.Processors
 			_feedSubmissionCallbacks.Add(feedSubmissionWithNullFeedSubmissionId2);
 			_feedSubmissionCallbacks.Add(feedSubmissionWithNullMerchant);
 
-			_feedSubmissionProcessor = new FeedSubmissionProcessor(_region, null, _marketplaceWebServiceClientMock.Object,
-				_feedSubmissionCallbackServiceMock.Object, _loggerMock.Object, _easyMwsOptions);
+			_feedSubmissionProcessor = new FeedSubmissionProcessor(_region, null, _marketplaceWebServiceClientMock.Object, _loggerMock.Object, _easyMwsOptions);
 
 			var feedSubmissionCallback =
-				_feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit();
+				_feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit(It.IsAny<IFeedSubmissionCallbackService>());
 
 			Assert.IsNull(feedSubmissionCallback);
 		}
@@ -235,7 +232,7 @@ namespace EasyMWS.Tests.Processors
 		{
 			var testFeedSubmissionId = "testFeedSubmissionId";
 
-			_feedSubmissionProcessor.MoveToQueueOfSubmittedFeeds(_feedSubmissionCallbacks[0], testFeedSubmissionId);
+			_feedSubmissionProcessor.MoveToQueueOfSubmittedFeeds(_feedSubmissionCallbackServiceMock.Object, _feedSubmissionCallbacks[0], testFeedSubmissionId);
 
 			Assert.AreEqual("testFeedSubmissionId", _feedSubmissionCallbacks[0].FeedSubmissionId);
 			_feedSubmissionCallbackServiceMock.Verify(x => x.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
@@ -246,7 +243,7 @@ namespace EasyMWS.Tests.Processors
 		{
 			Assert.AreEqual(0, _feedSubmissionCallbacks.First().SubmissionRetryCount);
 
-			_feedSubmissionProcessor.MoveToRetryQueue(_feedSubmissionCallbacks.First());
+			_feedSubmissionProcessor.MoveToRetryQueue(_feedSubmissionCallbackServiceMock.Object, _feedSubmissionCallbacks.First());
 
 			Assert.AreEqual(1, _feedSubmissionCallbacks.First().SubmissionRetryCount);
 			_feedSubmissionCallbackServiceMock.Verify(x => x.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
@@ -257,9 +254,9 @@ namespace EasyMWS.Tests.Processors
 		{
 			Assert.AreEqual(0, _feedSubmissionCallbacks.First().SubmissionRetryCount);
 
-			_feedSubmissionProcessor.MoveToRetryQueue(_feedSubmissionCallbacks.First());
-			_feedSubmissionProcessor.MoveToRetryQueue(_feedSubmissionCallbacks.First());
-			_feedSubmissionProcessor.MoveToRetryQueue(_feedSubmissionCallbacks.First());
+			_feedSubmissionProcessor.MoveToRetryQueue(_feedSubmissionCallbackServiceMock.Object, _feedSubmissionCallbacks.First());
+			_feedSubmissionProcessor.MoveToRetryQueue(_feedSubmissionCallbackServiceMock.Object, _feedSubmissionCallbacks.First());
+			_feedSubmissionProcessor.MoveToRetryQueue(_feedSubmissionCallbackServiceMock.Object, _feedSubmissionCallbacks.First());
 
 			Assert.AreEqual(3, _feedSubmissionCallbacks.First().SubmissionRetryCount);
 			_feedSubmissionCallbackServiceMock.Verify(x => x.Update(It.IsAny<FeedSubmissionEntry>()), Times.Exactly(3));
@@ -335,7 +332,7 @@ namespace EasyMWS.Tests.Processors
 			_feedSubmissionCallbacks.AddRange(data);
 
 			// Act
-			var listSubmittedFeeds = _feedSubmissionProcessor.GetIdsForSubmittedFeedsFromQueue();
+			var listSubmittedFeeds = _feedSubmissionProcessor.GetIdsForSubmittedFeedsFromQueue(_feedSubmissionCallbackServiceMock.Object);
 
 			// Assert
 			Assert.AreEqual(2, listSubmittedFeeds.Count());
@@ -401,11 +398,10 @@ namespace EasyMWS.Tests.Processors
 
 			_feedSubmissionCallbacks.AddRange(data);
 
-			_feedSubmissionProcessor = new FeedSubmissionProcessor(_region, null, _marketplaceWebServiceClientMock.Object,
-				_feedSubmissionCallbackServiceMock.Object, _loggerMock.Object, _easyMwsOptions);
+			_feedSubmissionProcessor = new FeedSubmissionProcessor(_region, null, _marketplaceWebServiceClientMock.Object, _loggerMock.Object, _easyMwsOptions);
 
 			// Act
-			var listOfSubmittedFeeds = _feedSubmissionProcessor.GetIdsForSubmittedFeedsFromQueue();
+			var listOfSubmittedFeeds = _feedSubmissionProcessor.GetIdsForSubmittedFeedsFromQueue(It.IsAny<IFeedSubmissionCallbackService>());
 
 			// Assert
 			Assert.IsEmpty(listOfSubmittedFeeds);
@@ -473,7 +469,7 @@ namespace EasyMWS.Tests.Processors
 				("testId", "_DONE_")
 			};
 
-			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(resultsInfo);
+			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(_feedSubmissionCallbackServiceMock.Object, resultsInfo);
 
 			Assert.IsTrue(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").IsProcessingComplete);
 			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").SubmissionRetryCount);
@@ -506,7 +502,7 @@ namespace EasyMWS.Tests.Processors
 				("testId5", "_UNCONFIRMED_")
 			};
 
-			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(resultsInfo);
+			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(_feedSubmissionCallbackServiceMock.Object, resultsInfo);
 
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId1").IsProcessingComplete);
 			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId1").SubmissionRetryCount);
@@ -540,7 +536,7 @@ namespace EasyMWS.Tests.Processors
 				("testId", "_CANCELLED_"),
 			};
 
-			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(resultsInfo);
+			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(_feedSubmissionCallbackServiceMock.Object, resultsInfo);
 
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").IsProcessingComplete);
 			Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").SubmissionRetryCount);
@@ -566,7 +562,7 @@ namespace EasyMWS.Tests.Processors
 				("testId", "_SOME_MADE_UP_STATUS_")
 			};
 			 
-			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(resultsInfo);
+			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(_feedSubmissionCallbackServiceMock.Object, resultsInfo);
 
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").IsProcessingComplete);
 			Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").SubmissionRetryCount);
@@ -590,7 +586,7 @@ namespace EasyMWS.Tests.Processors
 			}.AsQueryable();
 			_feedSubmissionCallbackServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(testFeedSubmissionCallbacks);
 
-			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue();
+			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_feedSubmissionCallbackServiceMock.Object);
 			_feedSubmissionCallbackServiceMock.Verify(x => x.Delete(It.IsAny<int>()), Times.Exactly(2));
 		}
 	}

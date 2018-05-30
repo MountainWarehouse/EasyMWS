@@ -19,5 +19,10 @@ namespace MountainWarehouse.EasyMWS.Repositories
 
 		public IQueryable<FeedSubmissionEntry> GetAll() => _dbContext.FeedSubmissionEntries.AsQueryable();
 		public void SaveChanges() => _dbContext.SaveChanges();
+
+		public void Dispose()
+		{
+			_dbContext.Dispose();
+		}
 	}
 }

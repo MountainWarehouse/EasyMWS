@@ -8,13 +8,17 @@ using MountainWarehouse.EasyMWS.Repositories;
 
 namespace MountainWarehouse.EasyMWS.Services
 {
-    internal class FeedSubmissionCallbackService : IFeedSubmissionCallbackService
-    {
+    internal class FeedSubmissionCallbackService : IFeedSubmissionCallbackService, IDisposable
+	{
 	    private readonly IFeedSubmissionCallbackRepo _feedRepo;
 	    private readonly IEasyMwsLogger _logger;
 
-	    public FeedSubmissionCallbackService(IFeedSubmissionCallbackRepo feedSubmissionCallbackRepo = null, IEasyMwsLogger logger = null, EasyMwsOptions options = null) =>
-		    (_feedRepo, _logger) = (feedSubmissionCallbackRepo ?? new FeedSubmissionCallbackRepo(options?.LocalDbConnectionStringOverride), logger);
+		internal FeedSubmissionCallbackService(IFeedSubmissionCallbackRepo feedSubmissionRepo, EasyMwsOptions options = null,
+			IEasyMwsLogger logger = null) : this(options, logger)
+			=> (_feedRepo) = (feedSubmissionRepo);
+
+		public FeedSubmissionCallbackService(EasyMwsOptions options = null, IEasyMwsLogger logger = null) =>
+		    (_feedRepo, _logger) = (_feedRepo ?? new FeedSubmissionCallbackRepo(options?.LocalDbConnectionStringOverride), logger);
 
 	    public void Create(FeedSubmissionEntry entry) => _feedRepo.Create(entry);
 	    public void Update(FeedSubmissionEntry entry) => _feedRepo.Update(entry);
@@ -47,5 +51,9 @@ namespace MountainWarehouse.EasyMWS.Services
 		public FeedSubmissionEntry Last() => _feedRepo.GetAll().OrderByDescending(x => x.Id).First();
 		public FeedSubmissionEntry LastOrDefault() => _feedRepo.GetAll().OrderByDescending(x => x.Id).FirstOrDefault();
 		public FeedSubmissionEntry LastOrDefault(Expression<Func<FeedSubmissionEntry, bool>> predicate) => _feedRepo.GetAll().OrderByDescending(x => x.Id).FirstOrDefault(predicate);
+		public void Dispose()
+		{
+			_feedRepo.Dispose();
+		}
 	}
 }
