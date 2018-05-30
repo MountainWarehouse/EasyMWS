@@ -126,6 +126,8 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 				feedSubmissionService.Create(feedSubmission);
 				feedSubmissionService.SaveChanges();
+
+				_logger.Info($"EasyMwsClient: The following feed was queued for submission to Amazon {feedSubmission.RegionAndTypeComputed}.");
 			}
 			catch (Exception e)
 			{

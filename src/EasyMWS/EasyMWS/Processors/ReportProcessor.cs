@@ -118,6 +118,8 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 				reportRequestService.Create(reportRequest);
 				reportRequestService.SaveChanges();
+
+				_logger.Info($"EasyMwsClient: The following report was queued for download from Amazon {reportRequest.RegionAndTypeComputed}.");
 			}
 			catch (Exception e)
 			{
