@@ -474,7 +474,7 @@ namespace EasyMWS.Tests.Processors
 			Assert.IsTrue(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").IsProcessingComplete);
 			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").SubmissionRetryCount);
 			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<int>()), Times.Never);
+			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
 		}
 
 		[Test]
@@ -515,7 +515,7 @@ namespace EasyMWS.Tests.Processors
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId5").IsProcessingComplete);
 			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId5").SubmissionRetryCount);
 			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Exactly(5));
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<int>()), Times.Never);
+			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
 		}
 
 		[Test]
@@ -541,7 +541,7 @@ namespace EasyMWS.Tests.Processors
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").IsProcessingComplete);
 			Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").SubmissionRetryCount);
 			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<int>()), Times.Never);
+			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
 		}
 
 		[Test]
@@ -567,7 +567,7 @@ namespace EasyMWS.Tests.Processors
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").IsProcessingComplete);
 			Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").SubmissionRetryCount);
 			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<int>()), Times.Never);
+			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
 		}
 
 		[Test]
@@ -587,7 +587,7 @@ namespace EasyMWS.Tests.Processors
 			_feedSubmissionCallbackServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(testFeedSubmissionCallbacks);
 
 			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_feedSubmissionCallbackServiceMock.Object);
-			_feedSubmissionCallbackServiceMock.Verify(x => x.Delete(It.IsAny<int>()), Times.Exactly(2));
+			_feedSubmissionCallbackServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Exactly(2));
 		}
 	}
 }

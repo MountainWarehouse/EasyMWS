@@ -621,7 +621,7 @@ namespace EasyMWS.Tests.Processors
 			Assert.IsNull(_reportRequestCallbacks.First(x => x.Id == 7).RequestReportId);
 			Assert.AreEqual(1, _reportRequestCallbacks.First(x => x.Id == 7).RequestRetryCount);
 			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestEntry>()), Times.Exactly(5));
-			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<int>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
 		}
 
 		[Test]
@@ -909,7 +909,7 @@ namespace EasyMWS.Tests.Processors
 			_reportRequestCallbackServiceMock.Setup(x => x.GetAll()).Returns(testReportRequestCallbacks);
 
 			_requestReportProcessor.CleanupReportRequests(_reportRequestCallbackServiceMock.Object);
-			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<int>()), Times.Exactly(1));
+			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Exactly(1));
 		}
 	}
 }

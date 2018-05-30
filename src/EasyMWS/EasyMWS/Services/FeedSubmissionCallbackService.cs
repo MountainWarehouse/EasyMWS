@@ -22,21 +22,21 @@ namespace MountainWarehouse.EasyMWS.Services
 
 	    public void Create(FeedSubmissionEntry entry) => _feedRepo.Create(entry);
 	    public void Update(FeedSubmissionEntry entry) => _feedRepo.Update(entry);
-		public void Delete(int id)
+		public void Delete(FeedSubmissionEntry entry)
 	    {
 		    try
 		    {
-			    _feedRepo.Delete(id);
+			    _feedRepo.Delete(entry);
 			}
 		    catch (Exception e)
 		    {
-			    if (!_feedRepo.GetAll().Where(fs => fs.Id == id).Select(f => f.Id).Any())
+			    if (!_feedRepo.GetAll().Where(fs => fs.Id == entry.Id).Select(f => f.Id).Any())
 			    {
-				    _logger.Error($"Delete FeedSubmissionCallback entity with ID: {id} failed. It is likely the entity has already been deleted.",e);
+				    _logger.Error($"Delete FeedSubmissionCallback entity with ID: {entry.Id} failed. It is likely the entity has already been deleted.",e);
 			    }
 			    else
 			    {
-				    _logger.Error($"Delete FeedSubmissionCallback entity with ID: {id} failed. See exception info for more details", e);
+				    _logger.Error($"Delete FeedSubmissionCallback entity with ID: {entry.Id} failed. See exception info for more details", e);
 			    }
 		    }
 		    

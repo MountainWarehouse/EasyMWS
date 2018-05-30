@@ -251,7 +251,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			_feedProcessor.PollFeeds(_feedSubmissionCallbackServiceMock.Object);
 
 			_callbackActivatorMock.Verify(cam => cam.CallMethod(It.IsAny<Callback>(), It.IsAny<Stream>()), Times.Never);
-			_feedSubmissionProcessorMock.Verify(fspm => fspm.RemoveFromQueue(It.IsAny<IFeedSubmissionCallbackService>(),It.IsAny<int>()), Times.Never);
+			_feedSubmissionProcessorMock.Verify(fspm => fspm.RemoveFromQueue(It.IsAny<IFeedSubmissionCallbackService>(),It.IsAny<FeedSubmissionEntry>()), Times.Never);
 			_feedSubmissionProcessorMock.Verify(fspm => fspm.MoveToRetryQueue(It.IsAny<IFeedSubmissionCallbackService>(),It.IsAny<FeedSubmissionEntry>()), Times.Never);
 		}
 
@@ -280,7 +280,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			_feedProcessor.PollFeeds(_feedSubmissionCallbackServiceMock.Object);
 
 			_callbackActivatorMock.Verify(cam => cam.CallMethod(It.IsAny<Callback>(), It.IsAny<Stream>()), Times.Never);
-			_feedSubmissionProcessorMock.Verify(fspm => fspm.RemoveFromQueue(It.IsAny<IFeedSubmissionCallbackService>(),It.IsAny<int>()), Times.Never);
+			_feedSubmissionProcessorMock.Verify(fspm => fspm.RemoveFromQueue(It.IsAny<IFeedSubmissionCallbackService>(),It.IsAny<FeedSubmissionEntry>()), Times.Never);
 			_feedSubmissionProcessorMock.Verify(fspm => fspm.MoveToRetryQueue(It.IsAny<IFeedSubmissionCallbackService>(),It.IsAny<FeedSubmissionEntry>()), Times.Once);
 		}
 
@@ -309,7 +309,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			_feedProcessor.PollFeeds(_feedSubmissionCallbackServiceMock.Object);
 
 			_callbackActivatorMock.Verify(cam => cam.CallMethod(It.IsAny<Callback>(), It.IsAny<Stream>()), Times.Once);
-			_feedSubmissionProcessorMock.Verify(fspm => fspm.RemoveFromQueue(It.IsAny<IFeedSubmissionCallbackService>(),It.IsAny<int>()), Times.Once);
+			_feedSubmissionProcessorMock.Verify(fspm => fspm.RemoveFromQueue(It.IsAny<IFeedSubmissionCallbackService>(),It.IsAny<FeedSubmissionEntry>()), Times.Once);
 			_feedSubmissionProcessorMock.Verify(fspm => fspm.MoveToRetryQueue(It.IsAny<IFeedSubmissionCallbackService>(),It.IsAny<FeedSubmissionEntry>()), Times.Never);
 		}
 

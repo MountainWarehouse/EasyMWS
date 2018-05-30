@@ -82,7 +82,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			try
 			{
 				ExecuteMethodCallback(feedSubmission, feedSubmissionReport);
-				_feedSubmissionProcessor.RemoveFromQueue(feedSubmissionService, feedSubmission.Id);
+				_feedSubmissionProcessor.RemoveFromQueue(feedSubmissionService, feedSubmission);
 			}
 			catch (Exception e)
 			{

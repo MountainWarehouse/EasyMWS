@@ -7,7 +7,7 @@ namespace MountainWarehouse.EasyMWS.Repositories
     {
 	    void Create(FeedSubmissionEntry entry);
 	    void Update(FeedSubmissionEntry entry);
-	    void Delete(int id);
+	    void Delete(FeedSubmissionEntry entry);
 	    IQueryable<FeedSubmissionEntry> GetAll();
 	    void SaveChanges();
 	    void Dispose();

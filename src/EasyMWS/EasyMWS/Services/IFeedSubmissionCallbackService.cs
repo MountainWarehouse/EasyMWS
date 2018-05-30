@@ -9,7 +9,7 @@ namespace MountainWarehouse.EasyMWS.Services
     {
 	    void Create(FeedSubmissionEntry entry);
 	    void Update(FeedSubmissionEntry entry);
-	    void Delete(int id);
+	    void Delete(FeedSubmissionEntry entry);
 	    void SaveChanges();
 	    IQueryable<FeedSubmissionEntry> GetAll();
 	    IQueryable<FeedSubmissionEntry> Where(Expression<Func<FeedSubmissionEntry, bool>> predicate);

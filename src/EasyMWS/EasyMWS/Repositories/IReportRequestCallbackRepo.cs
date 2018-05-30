@@ -12,7 +12,7 @@ namespace MountainWarehouse.EasyMWS.Repositories
 	    void Create(ReportRequestEntry entry);
 	    Task CreateAsync(ReportRequestEntry entry);
 	    void Update(ReportRequestEntry entry);
-	    void Delete(int id);
+	    void Delete(ReportRequestEntry entry);
 	    IQueryable<ReportRequestEntry> GetAll();
 		void SaveChanges();
 	    Task SaveChangesAsync();

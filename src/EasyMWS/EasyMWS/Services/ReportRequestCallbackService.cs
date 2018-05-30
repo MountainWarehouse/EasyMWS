@@ -23,17 +23,17 @@ namespace MountainWarehouse.EasyMWS.Services
 		public void Create(ReportRequestEntry entry) => _reportRequestCallbackRepo.Create(entry);
 		public async Task CreateAsync(ReportRequestEntry entry) => await _reportRequestCallbackRepo.CreateAsync(entry);
 		public void Update(ReportRequestEntry entry) => _reportRequestCallbackRepo.Update(entry);
-		public void Delete(int id)
+		public void Delete(ReportRequestEntry entry)
 		{
 			try
 			{
-				_reportRequestCallbackRepo.Delete(id);
+				_reportRequestCallbackRepo.Delete(entry);
 			}
 			catch (Exception e)
 			{
-				_logger.Error(!_reportRequestCallbackRepo.GetAll().Where(rr => rr.Id == id).Select(r => r.Id).Any()
-						? $"Delete ReportRequestCallback entity with ID: {id} failed. It is likely the entity has already been deleted."
-						: $"Delete ReportRequestCallback entity with ID: {id} failed. See exception info for more details", e);
+				_logger.Error(!_reportRequestCallbackRepo.GetAll().Where(rr => rr.Id == entry.Id).Select(r => r.Id).Any()
+						? $"Delete ReportRequestCallback entity with ID: {entry.Id} failed. It is likely the entity has already been deleted."
+						: $"Delete ReportRequestCallback entity with ID: {entry.Id} failed. See exception info for more details", e);
 			}
 
 		}

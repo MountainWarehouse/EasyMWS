@@ -10,11 +10,11 @@ namespace MountainWarehouse.EasyMWS.Repositories
 		internal FeedSubmissionCallbackRepo(string connectionString = null) => (_dbContext) = (new EasyMwsContext(connectionString));
 		public void Create(FeedSubmissionEntry entry) => _dbContext.FeedSubmissionEntries.Add(entry);
 		public void Update(FeedSubmissionEntry entry) => _dbContext.Update(entry);
-		public void Delete(int id)
+		public void Delete(FeedSubmissionEntry entry)
 		{
 			// it might be expected for an entity to be already removed, if dealing with multiple similar clients instances e.g. using hangfire for creating tasks.
 			// if this happens let the exception be thrown, as it will be caught and logged anyway
-			_dbContext.FeedSubmissionEntries.Remove(new FeedSubmissionEntry { Id = id });
+			_dbContext.FeedSubmissionEntries.Remove(entry);
 		}
 
 		public IQueryable<FeedSubmissionEntry> GetAll() => _dbContext.FeedSubmissionEntries.AsQueryable();

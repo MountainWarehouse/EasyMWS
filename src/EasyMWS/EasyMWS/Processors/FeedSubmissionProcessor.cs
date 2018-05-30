@@ -190,9 +190,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 			return (reportResultStream, response?.GetFeedSubmissionResultResult?.ContentMD5);
 		}
 
-		public void RemoveFromQueue(IFeedSubmissionCallbackService feedSubmissionService, int feedSubmissionId)
+		public void RemoveFromQueue(IFeedSubmissionCallbackService feedSubmissionService, FeedSubmissionEntry entry)
 		{
-			feedSubmissionService.Delete(feedSubmissionId);
+			feedSubmissionService.Delete(entry);
 			feedSubmissionService.SaveChanges();
 		}
 
@@ -202,15 +202,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var expiredFeedSubmissions = feedSubmissionService.GetAll()
 				.Where(fscs => fscs.AmazonRegion == _region && fscs.MerchantId == _merchantId
 							   && fscs.FeedSubmissionId == null
-				               && fscs.SubmissionRetryCount > _options.FeedSubmissionMaxRetryCount)
-				.Select(f =>new {f.Id, f.RegionAndTypeComputed});
+				               && fscs.SubmissionRetryCount > _options.FeedSubmissionMaxRetryCount);
 
 			if (expiredFeedSubmissions.Any())
 			{
 				_logger.Warn("The following feed submission requests have exceeded their retry limit and will now be deleted :");
 				foreach (var feedSubmission in expiredFeedSubmissions)
 				{
-					feedSubmissionService.Delete(feedSubmission.Id);
+					feedSubmissionService.Delete(feedSubmission);
 					_logger.Warn($"Feed submission request {feedSubmission.RegionAndTypeComputed} deleted from queue.");
 				}
 			}
@@ -219,12 +218,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var expiredFeedProcessingResultRequestIds = feedSubmissionService.GetAll()
 				.Where(fscs => fscs.AmazonRegion == _region && fscs.MerchantId == _merchantId
 							   && fscs.FeedSubmissionId != null
-				               && fscs.SubmissionRetryCount > _options.FeedResultFailedChecksumMaxRetryCount)
-				.Select(f => f.Id);
+				               && fscs.SubmissionRetryCount > _options.FeedResultFailedChecksumMaxRetryCount);
 
-			foreach (var id in expiredFeedProcessingResultRequestIds)
+			foreach (var feedSubmission in expiredFeedProcessingResultRequestIds)
 			{
-				feedSubmissionService.Delete(id);
+				feedSubmissionService.Delete(feedSubmission);
 			}
 
 			feedSubmissionService.SaveChanges();

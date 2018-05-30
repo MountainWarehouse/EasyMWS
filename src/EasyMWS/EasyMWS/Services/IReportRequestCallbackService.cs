@@ -11,7 +11,7 @@ namespace MountainWarehouse.EasyMWS.Services
 		void Create(ReportRequestEntry entry);
 		Task CreateAsync(ReportRequestEntry entry);
 		void Update(ReportRequestEntry entry);
-		void Delete(int id);
+		void Delete(ReportRequestEntry entry);
 		void SaveChanges();
 		Task SaveChangesAsync();
 		IQueryable<ReportRequestEntry> GetAll();

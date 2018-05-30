@@ -79,7 +79,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			try
 			{
 				ExecuteMethodCallback(reportRequest, stream);
-				_requestReportProcessor.RemoveFromQueue(reportRequestService, reportRequest.Id);
+				_requestReportProcessor.RemoveFromQueue(reportRequestService, reportRequest);
 			}
 			catch (Exception e)
 			{
