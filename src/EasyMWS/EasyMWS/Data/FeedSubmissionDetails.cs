@@ -11,6 +11,6 @@ namespace MountainWarehouse.EasyMWS.Data
 		[Key, ForeignKey("FeedSubmissionEntry")]
 	    public int FeedSubmissionEntryId { get; set; }
 
-	    public FeedSubmissionEntry FeedSubmissionEntry { get; set; }
+	    public virtual FeedSubmissionEntry FeedSubmissionEntry { get; set; }
     }
 }
