@@ -14,7 +14,7 @@ using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS.Processors
 {
-	internal class FeedProcessor : IQueueingProcessor<FeedSubmissionPropertiesContainer>, IFeedProcessor
+	internal class FeedProcessor : IQueueingProcessor<FeedSubmissionPropertiesContainer>
 	{
 		private readonly IFeedSubmissionCallbackService _feedService;
 		private readonly IFeedSubmissionProcessor _feedSubmissionProcessor;
@@ -24,8 +24,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 		private readonly AmazonRegion _region;
 		private readonly string _merchantId;
 		private readonly EasyMwsOptions _options;
-
-		public event EventHandler<FeedSubmittedEventArgs> FeedSubmitted;
 
 		internal FeedProcessor(AmazonRegion region, string merchantId, EasyMwsOptions options, IFeedSubmissionCallbackService feedService, IMarketplaceWebServiceClient mwsClient, IFeedSubmissionProcessor feedSubmissionProcessor, ICallbackActivator callbackActivator, IEasyMwsLogger logger)
 		  : this(region, merchantId, options, mwsClient, logger)
@@ -90,14 +88,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			try
 			{
-				if (feedSubmission.MethodName != null)
-				{
-					ExecuteMethodCallback(feedSubmission, feedSubmissionReport);
-				}
-				else
-				{
-					InvokeFeedSubmittedEvent(feedSubmission, feedSubmissionReport);
-				}
+				ExecuteMethodCallback(feedSubmission, feedSubmissionReport);
 				_feedSubmissionProcessor.RemoveFromQueue(feedSubmission.Id);
 				_feedService.SaveChanges();
 			}
@@ -232,21 +223,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 				feedSubmission.Data, feedSubmission.DataTypeName);
 
 			_callbackActivator.CallMethod(callback, stream);
-		}
-
-		private void InvokeFeedSubmittedEvent(FeedSubmissionEntry feedSubmission, Stream reportContent)
-		{
-			_logger.Info(
-				$"Invoking FeedSubmitted event for the next submitted feed in queue : {feedSubmission.RegionAndTypeComputed}.");
-
-			FeedSubmitted?.Invoke(this, new FeedSubmittedEventArgs
-			{
-				FeedSubmissionReport = reportContent,
-				AmazonRegion = feedSubmission.AmazonRegion,
-				MerchantId = feedSubmission.MerchantId,
-				FeedSubmissionId = feedSubmission.FeedSubmissionId,
-				FeedType = feedSubmission.FeedType
-			});
 		}
 	}
 }
