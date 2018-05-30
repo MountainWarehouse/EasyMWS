@@ -16,12 +16,12 @@ namespace MountainWarehouse.EasyMWS.Client
 		private readonly AmazonRegion _amazonRegion;
 		private readonly string _merchantId;
 		private readonly IReportQueueingProcessor _reportProcessor;
-		private readonly IQueueingProcessor<FeedSubmissionPropertiesContainer> _feedProcessor;
+		private readonly IFeedQueueingProcessor _feedProcessor;
 		private readonly IEasyMwsLogger _easyMwsLogger;
 
 		internal EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey,
 			IReportQueueingProcessor reportProcessor,
-			IQueueingProcessor<FeedSubmissionPropertiesContainer> feedProcessor, IEasyMwsLogger easyMwsLogger,
+			IFeedQueueingProcessor feedProcessor, IEasyMwsLogger easyMwsLogger,
 			EasyMwsOptions options)
 			: this(region, merchantId, accessKeyId, mwsSecretAccessKey, easyMwsLogger, options)
 		{
@@ -65,9 +65,13 @@ namespace MountainWarehouse.EasyMWS.Client
 			using (var reportRequestService = new ReportRequestCallbackService(_options, _easyMwsLogger))
 			{
 				_reportProcessor.PollReports(reportRequestService);
-				_feedProcessor.Poll();
-			}
 				
+			}
+			using (var feedSubmissionService = new FeedSubmissionCallbackService(_options, _easyMwsLogger))
+			{
+				_feedProcessor.PollFeeds(feedSubmissionService);
+
+			}
 		}
 
 		
@@ -83,7 +87,10 @@ namespace MountainWarehouse.EasyMWS.Client
 		public void QueueFeed(FeedSubmissionPropertiesContainer feedSubmissionContainer,
 			Action<Stream, object> callbackMethod, object callbackData)
 		{
-			_feedProcessor.Queue(feedSubmissionContainer, callbackMethod, callbackData);
+			using (var feedSubmissionService = new FeedSubmissionCallbackService(_options, _easyMwsLogger))
+			{
+				_feedProcessor.QueueFeed(feedSubmissionService, feedSubmissionContainer, callbackMethod, callbackData);
+			}
 		}
 
 		#region Helpers for creating the MarketplaceWebServiceClient

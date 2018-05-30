@@ -26,7 +26,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		private readonly EasyMwsOptions _options;
 
 		internal ReportProcessor(AmazonRegion region, string merchantId, EasyMwsOptions options,
-			IReportRequestCallbackService reportService, IMarketplaceWebServiceClient mwsClient,
+			IMarketplaceWebServiceClient mwsClient,
 			IRequestReportProcessor requestReportProcessor, ICallbackActivator callbackActivator,
 			IAmazonReportService amazonReportService, IEasyMwsLogger logger)
 			: this(region, merchantId, options, mwsClient, logger)

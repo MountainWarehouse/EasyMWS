@@ -19,13 +19,13 @@ namespace EasyMWS.Tests
 		private EasyMwsClient _easyMwsClient;
 		private Mock<IEasyMwsLogger> _loggerMock;
 
-		private Mock<IQueueingProcessor<FeedSubmissionPropertiesContainer>> _feedProcessorMock;
+		private Mock<IFeedQueueingProcessor> _feedProcessorMock;
 		private Mock<IReportQueueingProcessor> _reportProcessorMock;
 
 		[SetUp]
 		public void SetUp()
 		{
-			_feedProcessorMock = new Mock<IQueueingProcessor<FeedSubmissionPropertiesContainer>>();
+			_feedProcessorMock = new Mock<IFeedQueueingProcessor>();
 			_reportProcessorMock = new Mock<IReportQueueingProcessor>();
 			_loggerMock = new Mock<IEasyMwsLogger>();
 			_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", "test", "test", _reportProcessorMock.Object,
@@ -95,7 +95,7 @@ namespace EasyMWS.Tests
 		{
 			_easyMwsClient.Poll();
 
-			_feedProcessorMock.Verify(fpm => fpm.Poll(), Times.Once);
+			_feedProcessorMock.Verify(fpm => fpm.PollFeeds(It.IsAny<IFeedSubmissionCallbackService>()), Times.Once);
 		}
 
 		[Test]
@@ -115,7 +115,7 @@ namespace EasyMWS.Tests
 				new Action<Stream, object>((
 					(stream, o) => { })), new { });
 
-			_feedProcessorMock.Verify(rpm => rpm.Queue(It.IsAny<FeedSubmissionPropertiesContainer>(), It.IsAny<Action<Stream, object>>(), It.IsAny<object>()), Times.Once);
+			_feedProcessorMock.Verify(rpm => rpm.QueueFeed(It.IsAny<IFeedSubmissionCallbackService>(), It.IsAny<FeedSubmissionPropertiesContainer>(), It.IsAny<Action<Stream, object>>(), It.IsAny<object>()), Times.Once);
 		}
 	}
 }

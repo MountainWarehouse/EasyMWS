@@ -45,7 +45,7 @@ namespace EasyMWS.Tests.ReportProcessors
 				.Returns(new Callback("", "", "", ""));
 
 			_reportProcessor = new ReportProcessor(AmazonRegion.Europe, "testMerchantId1", options,
-				_reportRequestCallbackServiceMock.Object, _marketplaceWebServiceClientMock.Object, _requestReportProcessor.Object, _callbackActivatorMock.Object, _amazonReportServiceMock.Object, _loggerMock.Object);
+				 _marketplaceWebServiceClientMock.Object, _requestReportProcessor.Object, _callbackActivatorMock.Object, _amazonReportServiceMock.Object, _loggerMock.Object);
 		}
 
 

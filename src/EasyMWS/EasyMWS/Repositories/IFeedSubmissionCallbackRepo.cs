@@ -10,5 +10,6 @@ namespace MountainWarehouse.EasyMWS.Repositories
 	    void Delete(int id);
 	    IQueryable<FeedSubmissionEntry> GetAll();
 	    void SaveChanges();
+	    void Dispose();
 	}
 }
