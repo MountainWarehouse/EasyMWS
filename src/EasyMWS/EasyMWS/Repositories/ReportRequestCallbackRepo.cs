@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using MountainWarehouse.EasyMWS.Data;
@@ -7,7 +8,7 @@ using MountainWarehouse.EasyMWS.Data;
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 namespace MountainWarehouse.EasyMWS.Repositories
 {
-    internal class ReportRequestCallbackRepo : IReportRequestCallbackRepo
+    internal class ReportRequestCallbackRepo : IReportRequestCallbackRepo, IDisposable
 	{
 	    private readonly EasyMwsContext _dbContext;
 
@@ -23,5 +24,9 @@ namespace MountainWarehouse.EasyMWS.Repositories
 	    public void SaveChanges() => _dbContext.SaveChanges();
 	    public async Task SaveChangesAsync() => await _dbContext.SaveChangesAsync();
 		public IQueryable<ReportRequestEntry> GetAll() => _dbContext.ReportRequestEntries.AsQueryable();
+		public void Dispose()
+		{
+			_dbContext.Dispose();
+		}
 	}
 }

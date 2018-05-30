@@ -5,6 +5,7 @@ using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Logging;
 using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Processors;
+using MountainWarehouse.EasyMWS.Services;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
 
 namespace MountainWarehouse.EasyMWS.Client
@@ -14,11 +15,12 @@ namespace MountainWarehouse.EasyMWS.Client
 		private readonly EasyMwsOptions _options;
 		private readonly AmazonRegion _amazonRegion;
 		private readonly string _merchantId;
-		private readonly IQueueingProcessor<ReportRequestPropertiesContainer> _reportProcessor;
+		private readonly IReportQueueingProcessor _reportProcessor;
 		private readonly IQueueingProcessor<FeedSubmissionPropertiesContainer> _feedProcessor;
+		private readonly IEasyMwsLogger _easyMwsLogger;
 
 		internal EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey,
-			IQueueingProcessor<ReportRequestPropertiesContainer> reportProcessor,
+			IReportQueueingProcessor reportProcessor,
 			IQueueingProcessor<FeedSubmissionPropertiesContainer> feedProcessor, IEasyMwsLogger easyMwsLogger,
 			EasyMwsOptions options)
 			: this(region, merchantId, accessKeyId, mwsSecretAccessKey, easyMwsLogger, options)
@@ -45,10 +47,10 @@ namespace MountainWarehouse.EasyMWS.Client
 			_merchantId = merchantId;
 			_options = options ?? EasyMwsOptions.Defaults();
 
-			easyMwsLogger = easyMwsLogger ?? new EasyMwsLogger(isEnabled: false);
+			_easyMwsLogger = easyMwsLogger ?? new EasyMwsLogger(isEnabled: false);
 			var mwsClient = new MarketplaceWebServiceClient(accessKeyId, mwsSecretAccessKey, CreateConfig(_amazonRegion));
-			_reportProcessor = _reportProcessor ?? new ReportProcessor(_amazonRegion, _merchantId, _options, mwsClient, easyMwsLogger);
-			_feedProcessor = _feedProcessor ?? new FeedProcessor(_amazonRegion, _merchantId, _options, mwsClient, easyMwsLogger);
+			_reportProcessor = _reportProcessor ?? new ReportProcessor(_amazonRegion, _merchantId, _options, mwsClient, _easyMwsLogger);
+			_feedProcessor = _feedProcessor ?? new FeedProcessor(_amazonRegion, _merchantId, _options, mwsClient, _easyMwsLogger);
 
 		}
 
@@ -60,15 +62,22 @@ namespace MountainWarehouse.EasyMWS.Client
 
 		public void Poll()
 		{
-			_reportProcessor.Poll();
-			_feedProcessor.Poll();
+			using (var reportRequestService = new ReportRequestCallbackService(_options, _easyMwsLogger))
+			{
+				_reportProcessor.PollReports(reportRequestService);
+				_feedProcessor.Poll();
+			}
+				
 		}
 
 		
 		public void QueueReport(ReportRequestPropertiesContainer reportRequestContainer,
 			Action<Stream, object> callbackMethod, object callbackData)
 		{
-			_reportProcessor.Queue(reportRequestContainer, callbackMethod, callbackData);
+			using (var reportRequestService = new ReportRequestCallbackService(_options, _easyMwsLogger))
+			{
+				_reportProcessor.QueueReport(reportRequestService, reportRequestContainer, callbackMethod, callbackData);
+			}
 		}
 
 		public void QueueFeed(FeedSubmissionPropertiesContainer feedSubmissionContainer,

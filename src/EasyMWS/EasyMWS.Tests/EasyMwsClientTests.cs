@@ -8,6 +8,7 @@ using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Logging;
 using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Processors;
+using MountainWarehouse.EasyMWS.Services;
 using NUnit.Framework;
 
 namespace EasyMWS.Tests
@@ -19,13 +20,13 @@ namespace EasyMWS.Tests
 		private Mock<IEasyMwsLogger> _loggerMock;
 
 		private Mock<IQueueingProcessor<FeedSubmissionPropertiesContainer>> _feedProcessorMock;
-		private Mock<IQueueingProcessor<ReportRequestPropertiesContainer>> _reportProcessorMock;
+		private Mock<IReportQueueingProcessor> _reportProcessorMock;
 
 		[SetUp]
 		public void SetUp()
 		{
 			_feedProcessorMock = new Mock<IQueueingProcessor<FeedSubmissionPropertiesContainer>>();
-			_reportProcessorMock = new Mock<IQueueingProcessor<ReportRequestPropertiesContainer>>();
+			_reportProcessorMock = new Mock<IReportQueueingProcessor>();
 			_loggerMock = new Mock<IEasyMwsLogger>();
 			_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", "test", "test", _reportProcessorMock.Object,
 				_feedProcessorMock.Object, _loggerMock.Object, EasyMwsOptions.Defaults());
@@ -86,7 +87,7 @@ namespace EasyMWS.Tests
 		{
 			_easyMwsClient.Poll();
 
-			_reportProcessorMock.Verify(rpm => rpm.Poll(), Times.Once);
+			_reportProcessorMock.Verify(rpm => rpm.PollReports(It.IsAny<IReportRequestCallbackService>()), Times.Once);
 		}
 
 		[Test]
@@ -104,7 +105,7 @@ namespace EasyMWS.Tests
 				new Action<Stream, object>((
 					(stream, o) => { })), new { });
 
-			_reportProcessorMock.Verify(rpm => rpm.Queue(It.IsAny<ReportRequestPropertiesContainer>(), It.IsAny<Action<Stream, object>>(), It.IsAny<object>()), Times.Once);
+			_reportProcessorMock.Verify(rpm => rpm.QueueReport(It.IsAny<IReportRequestCallbackService>(),It.IsAny<ReportRequestPropertiesContainer>(), It.IsAny<Action<Stream, object>>(), It.IsAny<object>()), Times.Once);
 		}
 
 		[Test]

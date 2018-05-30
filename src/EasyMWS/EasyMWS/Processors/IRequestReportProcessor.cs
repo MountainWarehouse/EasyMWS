@@ -2,23 +2,24 @@
 using System.IO;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
+using MountainWarehouse.EasyMWS.Services;
 
 namespace MountainWarehouse.EasyMWS.Processors
 {
 	internal interface IRequestReportProcessor
 	{
-		ReportRequestEntry GetNextFromQueueOfReportsToRequest();
+		ReportRequestEntry GetNextFromQueueOfReportsToRequest(IReportRequestCallbackService reportRequestService);
 		string RequestReportFromAmazon(ReportRequestEntry reportRequestEntry);
-		void MoveToQueueOfReportsToGenerate(ReportRequestEntry reportRequestEntry, string reportRequestId);
-		IEnumerable<string> GetAllPendingReportFromQueue();
+		void MoveToQueueOfReportsToGenerate(IReportRequestCallbackService reportRequestService, ReportRequestEntry reportRequestEntry, string reportRequestId);
+		IEnumerable<string> GetAllPendingReportFromQueue(IReportRequestCallbackService reportRequestService);
 		List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> GetReportProcessingStatusesFromAmazon(IEnumerable<string> requestIdList, string merchant);
-		ReportRequestEntry GetNextFromQueueOfReportsToDownload();
+		ReportRequestEntry GetNextFromQueueOfReportsToDownload(IReportRequestCallbackService reportRequestService);
 		Stream DownloadGeneratedReportFromAmazon(ReportRequestEntry reportRequestEntry);
-		void RemoveFromQueue(int reportRequestCallbackId);
-		void MoveToRetryQueue(ReportRequestEntry reportRequestEntry);
-		void QueueReportsAccordingToProcessingStatus(
+		void RemoveFromQueue(IReportRequestCallbackService reportRequestService, int reportRequestCallbackId);
+		void MoveToRetryQueue(IReportRequestCallbackService reportRequestService, ReportRequestEntry reportRequestEntry);
+		void QueueReportsAccordingToProcessingStatus(IReportRequestCallbackService reportRequestService,
 			List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> reportGenerationStatuses);
-		void CleanupReportRequests();
+		void CleanupReportRequests(IReportRequestCallbackService reportRequestService);
 	}
 }
 		
