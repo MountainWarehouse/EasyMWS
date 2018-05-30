@@ -50,12 +50,16 @@ namespace MountainWarehouse.EasyMWS.Data
 				.AddXmlFile("App.config")
 				.Build();
 
-			optionsBuilder.UseSqlServer(_connectionString ?? configuration["connectionStrings:add:EasyMwsContext:connectionString"]);
+			optionsBuilder
+				.UseLazyLoadingProxies()
+				.UseSqlServer(_connectionString ?? configuration["connectionStrings:add:EasyMwsContext:connectionString"]);
 		}
 
 		private void ConfigureDbContextForDotNetFramework(DbContextOptionsBuilder optionsBuilder)
 		{
-			optionsBuilder.UseSqlServer(_connectionString ?? ConfigurationManager.ConnectionStrings["EasyMwsContext"].ConnectionString);
+			optionsBuilder
+				.UseLazyLoadingProxies()
+				.UseSqlServer(_connectionString ?? ConfigurationManager.ConnectionStrings["EasyMwsContext"].ConnectionString);
 		}
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
