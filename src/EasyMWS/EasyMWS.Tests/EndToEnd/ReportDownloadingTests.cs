@@ -35,6 +35,7 @@ namespace EasyMWS.Tests.EndToEnd
 	    {
 		    _dbContext = new EasyMwsContext();
 		    _actualCallbackObject = null;
+		    _actualReportContent = null;
 
 			_loggerMock = new Mock<IEasyMwsLogger>();
 		    _mwsClientMock = new Mock<IMarketplaceWebServiceClient>();
@@ -57,14 +58,16 @@ namespace EasyMWS.Tests.EndToEnd
 		}
 
 		private static object _actualCallbackObject;
+	    private static Stream _actualReportContent;
 	    public static void ReportDownloadCallback(Stream stream, object o)
 	    {
 		    _actualCallbackObject = o;
+		    _actualReportContent = stream;
 	    }
 
 	    [Test]
 	    public void
-		    GivenQueuingReport_WhenCallbackDataIsNull_NullCallbackDataIsSerializedAndDeserializedSuccessfully_AndCallbackIsInvoked()
+		    GivenQueuingReportAndPolling_WhenCallbackDataIsNull_NullCallbackDataIsSerializedAndDeserializedSuccessfully_AndCallbackIsInvoked()
 	    {
 			// arrange
 		    var validReportType = $"{_testEntriesIdentifier}_VALID_REPORT_TYPE_";
@@ -74,8 +77,9 @@ namespace EasyMWS.Tests.EndToEnd
 		    var reportRequestContainer = GenerateReportContainer(validReportType);
 			Setup_RequestReport_Returns_ReportRequestWasGenerated(validReportType, expectedReportRequestId);
 		    Setup_GetReportRequestList_Returns_ReportsGeneratedSuccessfully(expectedReportRequestId, expectedGeneratedReportId, expectedReportProcessingStatus);
-		    Setup_GetReport_Returns_ReportContentStream(expectedGeneratedReportId);
+		    Setup_GetReport_Returns_ReportContentStream(expectedGeneratedReportId, "testReportContent");
 		    _actualCallbackObject = new object();
+		    _actualReportContent = null;
 
 			// act - queue report
 			_easyMwsClient.QueueReport(reportRequestContainer, ReportDownloadCallback, null);
@@ -107,13 +111,62 @@ namespace EasyMWS.Tests.EndToEnd
 			    It.IsAny<RequestInfo>()));
 
 			Assert.IsNull(_actualCallbackObject);
+			Assert.NotNull(_actualReportContent);
 		    _mwsClientMock.Verify(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()), Times.Once);
 		    _mwsClientMock.Verify(mws => mws.GetReportRequestList(It.IsAny<GetReportRequestListRequest>()), Times.Once);
 		    _mwsClientMock.Verify(mws => mws.GetReport(It.IsAny<GetReportRequest>()), Times.Once);
 		}
 
-	    [Test]
-	    public void GivenReportWithInvalidType_WhenTryingToDownloadReport_ThenReportRequestIsDeletedFromDatabase()
+		[Test]
+		public void
+			GivenQueuingReportAndPolling_WhenAllDataIsValid_TheReportIsDownloaded_AndIsReturnedInTheCallbackMethodAlongWithTheCallbackData()
+		{
+			// arrange
+			var validReportType = $"{_testEntriesIdentifier}_VALID_REPORT_TYPE_";
+			var expectedReportRequestId = "test report request Id";
+			var expectedGeneratedReportId = "test generated report Id";
+			var expectedReportProcessingStatus = "_DONE_";
+			var reportRequestContainer = GenerateReportContainer(validReportType);
+			var expectedCallbackData = ("test", "callback", "data");
+			var expectedReportContent = "testReportContent";
+			Setup_RequestReport_Returns_ReportRequestWasGenerated(validReportType, expectedReportRequestId);
+			Setup_GetReportRequestList_Returns_ReportsGeneratedSuccessfully(expectedReportRequestId, expectedGeneratedReportId, expectedReportProcessingStatus);
+			Setup_GetReport_Returns_ReportContentStream(expectedGeneratedReportId, expectedReportContent);
+			_actualCallbackObject = null;
+			_actualReportContent = null;
+			
+
+			// act - queue report
+			_easyMwsClient.QueueReport(reportRequestContainer, ReportDownloadCallback, expectedCallbackData);
+
+			// assert - null callback data serialization step does not crash
+			_loggerMock.Verify(l => l.Info(It.Is<string>(msg => msg.StartsWith("The following report was queued for download")),
+				It.IsAny<RequestInfo>()));
+
+			// act - Poll report request process, in order for the queuedReport delegate to be invoked.
+			_easyMwsClient.Poll();
+
+			// assert - null callback data deserialization step does not crash, and callback was invoked successfully
+			_loggerMock.Verify(l => l.Info(It.Is<string>(msg => msg.EndsWith("Executing cleanup of report requests queue.")),
+				It.IsAny<RequestInfo>()));
+			_loggerMock.Verify(l => l.Info(It.Is<string>(msg => msg.StartsWith("Request to MWS.RequestReport was successful!")),
+				It.IsAny<RequestInfo>()));
+			_loggerMock.Verify(l => l.Info(It.Is<string>(msg => msg.StartsWith("Attempting to request report processing statuses")),
+				It.IsAny<RequestInfo>()));
+			_loggerMock.Verify(l => l.Info(It.Is<string>(msg => msg.StartsWith("Report download from Amazon has succeeded")),
+				It.IsAny<RequestInfo>()));
+			_loggerMock.Verify(l => l.Info(It.Is<string>(msg => msg.StartsWith("Attempting to perform method callback")),
+				It.IsAny<RequestInfo>()));
+
+			Assert.AreEqual(expectedCallbackData, _actualCallbackObject);
+			Assert.AreEqual(expectedReportContent, _actualReportContent == null ? null : new StreamReader(_actualReportContent).ReadToEnd());
+			_mwsClientMock.Verify(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()), Times.Once);
+			_mwsClientMock.Verify(mws => mws.GetReportRequestList(It.IsAny<GetReportRequestListRequest>()), Times.Once);
+			_mwsClientMock.Verify(mws => mws.GetReport(It.IsAny<GetReportRequest>()), Times.Once);
+		}
+
+		[Test]
+	    public void GivenQueuingReportAndPolling_WhenReportHasAnInvalidType_AndRequestIsRejectedByAmazon_ThenReportRequestIsDeletedFromQueue()
 	    {
 			// arrange
 		    var invalidReportType = $"{_testEntriesIdentifier}_INVALID_REPORT_TYPE_";
@@ -208,9 +261,9 @@ namespace EasyMWS.Tests.EndToEnd
 				.Returns(response);
 		}
 
-		private void Setup_GetReport_Returns_ReportContentStream(string expectedGeneratedReportId)
+		private void Setup_GetReport_Returns_ReportContentStream(string expectedGeneratedReportId, string reportContent)
 		{
-			var stream = StreamHelper.CreateNewMemoryStream("testReportContent");
+			var stream = StreamHelper.CreateNewMemoryStream(reportContent);
 			var response = new GetReportResponse
 			{
 				ResponseHeaderMetadata = new ResponseHeaderMetadata("requestId", "responseContext", "timestamp")
