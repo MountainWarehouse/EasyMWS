@@ -897,19 +897,21 @@ namespace EasyMWS.Tests.Processors
 
 			var testReportRequestCallbacks = new List<ReportRequestEntry>
 			{
-				new ReportRequestEntry {Id = 1, RequestRetryCount = 0, ReportRequestData = serializedReportRequestData, AmazonRegion = _region, MerchantId = _merchantId },
-				new ReportRequestEntry {Id = 2, RequestRetryCount = 1, ReportRequestData = serializedReportRequestData, AmazonRegion = _region, MerchantId = _merchantId },
-				new ReportRequestEntry {Id = 3, RequestRetryCount = 2, ReportRequestData = serializedReportRequestData, AmazonRegion = _region, MerchantId = _merchantId },
-				new ReportRequestEntry {Id = 4, RequestRetryCount = 3, ReportRequestData = serializedReportRequestData, AmazonRegion = _region, MerchantId = _merchantId },
-				new ReportRequestEntry {Id = 5, RequestRetryCount = 4, ReportRequestData = serializedReportRequestData, AmazonRegion = _region, MerchantId = _merchantId },
-				new ReportRequestEntry {Id = 6, RequestRetryCount = 5, ReportRequestData = serializedReportRequestData, AmazonRegion = _region, MerchantId = _merchantId },
+				new ReportRequestEntry {Id = 1, RequestRetryCount = 0, ReportRequestData = serializedReportRequestData, DateCreated = DateTime.UtcNow.AddDays(-2), AmazonRegion = _region, MerchantId = _merchantId },
+				new ReportRequestEntry {Id = 2, RequestRetryCount = 1, ReportRequestData = serializedReportRequestData, DateCreated = DateTime.UtcNow.AddDays(-1).AddHours(-1), AmazonRegion = _region, MerchantId = _merchantId },
+				new ReportRequestEntry {Id = 3, RequestRetryCount = 2, ReportRequestData = serializedReportRequestData, DateCreated = DateTime.UtcNow.AddDays(-1).AddHours(1),  AmazonRegion = _region, MerchantId = _merchantId },
+				new ReportRequestEntry {Id = 4, RequestRetryCount = 3, ReportRequestData = serializedReportRequestData, DateCreated = DateTime.UtcNow.AddHours(-6), AmazonRegion = _region, MerchantId = _merchantId },
+				new ReportRequestEntry {Id = 5, RequestRetryCount = 4, ReportRequestData = serializedReportRequestData, DateCreated = DateTime.UtcNow.AddHours(-6), AmazonRegion = _region, MerchantId = _merchantId },
+				new ReportRequestEntry {Id = 6, RequestRetryCount = 5, ReportRequestData = serializedReportRequestData, DateCreated = DateTime.UtcNow.AddHours(-6), AmazonRegion = _region, MerchantId = _merchantId },
 				new ReportRequestEntry {Id = 7, RequestRetryCount = 5, ReportRequestData = serializedReportRequestData, AmazonRegion = AmazonRegion.Brazil, MerchantId = _merchantId },
 				new ReportRequestEntry {Id = 8, RequestRetryCount = 5, ReportRequestData = serializedReportRequestData, AmazonRegion = _region, MerchantId = "someDifferentMerchantId" }
 			}.AsQueryable();
 			_reportRequestCallbackServiceMock.Setup(x => x.GetAll()).Returns(testReportRequestCallbacks);
 
 			_requestReportProcessor.CleanupReportRequests(_reportRequestCallbackServiceMock.Object);
-			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Exactly(1));
+
+			// Id=6 deleted - ReportRequestMaxRetryCount. Id=1,2 deleted ReportDownloadRequestEntryExpirationPeriod=1day exceeded.
+			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Exactly(3));
 		}
 	}
 }

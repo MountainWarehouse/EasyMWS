@@ -106,6 +106,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 					AmazonRegion = _region,
 					MerchantId = _merchantId,
 					LastRequested = DateTime.MinValue,
+					DateCreated = DateTime.UtcNow,
 					ContentUpdateFrequency = propertiesContainer.UpdateFrequency,
 					RequestReportId = null,
 					GeneratedReportId = null,

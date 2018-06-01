@@ -77,7 +77,18 @@ namespace MountainWarehouse.EasyMWS.Model
 		/// </summary>
 		public string LocalDbConnectionStringOverride { get; set; }
 
+		/// <summary>
+		/// Default=1day. Sets the expiration period of report download request entries. If a request entry is not completed before the expiration period, then it is automatically removed from queue.
+		/// </summary>
+	    public TimeSpan ReportDownloadRequestEntryExpirationPeriod { get; set; }
+
 	    /// <summary>
+	    /// Default=2days. Sets the expiration period of feed submission request entries. If a request entry is not completed before the expiration period, then it is automatically removed from queue.
+	    /// </summary>
+	    public TimeSpan FeedSubmissionRequestEntryExpirationPeriod { get; set; }
+
+
+		/// <summary>
 		/// The set of default settings that will be used if no custom settings are specified.<para/>
 		/// <para/>
 		/// ReportRequestMaxRetryCount = 4,<para/>
@@ -96,7 +107,7 @@ namespace MountainWarehouse.EasyMWS.Model
 		/// KeepAmazonReportsInLocalDbAfterCallbackIsPerformed = false,<para/>
 		/// KeepAmazonReportsLocallyForTimePeriod = Days(1)<para/>
 		/// </summary>
-	    public static EasyMwsOptions Defaults()
+		public static EasyMwsOptions Defaults()
 	    {
 		    return new EasyMwsOptions
 		    {
@@ -114,8 +125,11 @@ namespace MountainWarehouse.EasyMWS.Model
 			    FeedResultFailedChecksumMaxRetryCount = 3,
 
 			    KeepAmazonReportsInLocalDbAfterCallbackIsPerformed = false,
-			    KeepAmazonReportsLocallyForTimePeriod = TimeSpan.FromDays(1)
-		    };
+			    KeepAmazonReportsLocallyForTimePeriod = TimeSpan.FromDays(1),
+
+			    ReportDownloadRequestEntryExpirationPeriod = TimeSpan.FromDays(1),
+				FeedSubmissionRequestEntryExpirationPeriod = TimeSpan.FromDays(2)
+			};
 		}
 	}
 

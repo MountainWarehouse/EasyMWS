@@ -108,6 +108,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 					AmazonRegion = _region,
 					MerchantId = _merchantId,
 					LastSubmitted = DateTime.MinValue,
+					DateCreated = DateTime.UtcNow,
 					IsProcessingComplete = false,
 					HasErrors = false,
 					SubmissionErrorData = null,

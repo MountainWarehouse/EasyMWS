@@ -155,21 +155,31 @@ namespace MountainWarehouse.EasyMWS.Processors
 	    {
 			_logger.Info("Executing cleanup of report requests queue.");
 			var expiredReportRequests = reportRequestService.GetAll()
-				.Where(rrc => rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId
-				                && rrc.RequestRetryCount > _options.ReportRequestMaxRetryCount);
+				.Where(rrc => (rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId) && IsRetryCountExceeded(rrc));
 
-			if (expiredReportRequests.Any())
+			foreach (var expiredReport in expiredReportRequests)
 			{
-				_logger.Warn("The following report requests have exceeded their retry limit and will now be deleted :");
-				foreach (var expiredReport in expiredReportRequests)
-				{
-					reportRequestService.Delete(expiredReport);
-					_logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue.");
-				}
+				reportRequestService.Delete(expiredReport);
+				_logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: The retry count of '{_options.ReportRequestMaxRetryCount}' was exceeded while trying to request the report from Amazon.");
 			}
+
+		    var entriesWithExpirationPeriodExceeded = reportRequestService.GetAll()
+			    .Where(rrc => (rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId) && IsExpirationPeriodExceeded(rrc));
+
+		    foreach (var expiredReport in entriesWithExpirationPeriodExceeded)
+		    {
+			    reportRequestService.Delete(expiredReport);
+			    _logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: Expiration period of '{_options.ReportDownloadRequestEntryExpirationPeriod.Hours} hours' was exceeded.");
+		    }
 
 			reportRequestService.SaveChanges();
 	    }
+
+	    private bool IsRetryCountExceeded(ReportRequestEntry reportRequestEntry) => 
+			(reportRequestEntry.RequestRetryCount > _options.ReportRequestMaxRetryCount);
+
+	    private bool IsExpirationPeriodExceeded(ReportRequestEntry reportRequestEntry) =>
+			(DateTime.Compare(reportRequestEntry.DateCreated, DateTime.UtcNow.Subtract(_options.ReportDownloadRequestEntryExpirationPeriod)) < 0);
 
 		public void QueueReportsAccordingToProcessingStatus(IReportRequestCallbackService reportRequestService,
 			List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> reportGenerationStatuses)

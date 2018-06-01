@@ -204,16 +204,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 							   && fscs.FeedSubmissionId == null
 				               && fscs.SubmissionRetryCount > _options.FeedSubmissionMaxRetryCount);
 
-			if (expiredFeedSubmissions.Any())
+			foreach (var feedSubmission in expiredFeedSubmissions)
 			{
-				_logger.Warn("The following feed submission requests have exceeded their retry limit and will now be deleted :");
-				foreach (var feedSubmission in expiredFeedSubmissions)
-				{
-					feedSubmissionService.Delete(feedSubmission);
-					_logger.Warn($"Feed submission request {feedSubmission.RegionAndTypeComputed} deleted from queue.");
-				}
+				feedSubmissionService.Delete(feedSubmission);
+				_logger.Warn($"Feed submission entry {feedSubmission.RegionAndTypeComputed} deleted from queue. Reason: A feedSubmissionId could not be obtained from amazon for the feed submission request, retry count of '{_options.FeedSubmissionMaxRetryCount}' was exceeded.");
 			}
-			
 
 			var expiredFeedProcessingResultRequestIds = feedSubmissionService.GetAll()
 				.Where(fscs => fscs.AmazonRegion == _region && fscs.MerchantId == _merchantId
@@ -223,10 +218,23 @@ namespace MountainWarehouse.EasyMWS.Processors
 			foreach (var feedSubmission in expiredFeedProcessingResultRequestIds)
 			{
 				feedSubmissionService.Delete(feedSubmission);
+				_logger.Warn($"Feed submission entry {feedSubmission.RegionAndTypeComputed} deleted from queue. Reason: While the feed might have been submitted to amazon, the checksum verification was retried and failed for '{_options.FeedResultFailedChecksumMaxRetryCount} times' for the Feed Submission Report content received from Amazon.");
+			}
+
+			var entriesWithExpirationPeriodExceeded = feedSubmissionService.GetAll()
+				.Where(fse => fse.AmazonRegion == _region && fse.MerchantId == _merchantId && IsExpirationPeriodExceeded(fse));
+
+			foreach (var feedSubmission in entriesWithExpirationPeriodExceeded)
+			{
+				feedSubmissionService.Delete(feedSubmission);
+				_logger.Warn($"Feed submission entry {feedSubmission.RegionAndTypeComputed} deleted from queue. Reason: Expiration period of '{_options.FeedSubmissionRequestEntryExpirationPeriod.Hours} hours' was exceeded.");
 			}
 
 			feedSubmissionService.SaveChanges();
 		}
+
+		private bool IsExpirationPeriodExceeded(FeedSubmissionEntry feedSubmissionEntry) =>
+			(DateTime.Compare(feedSubmissionEntry.DateCreated, DateTime.UtcNow.Subtract(_options.FeedSubmissionRequestEntryExpirationPeriod)) < 0);
 
 		private bool IsFeedReadyForSubmission(FeedSubmissionEntry feedSubmission)
 		{
