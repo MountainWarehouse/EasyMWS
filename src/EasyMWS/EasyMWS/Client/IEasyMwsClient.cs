@@ -9,7 +9,7 @@ namespace MountainWarehouse.EasyMWS.Client
 	/// EasyMws client for downloading reports from Amazon / submitting feeds to Amazon.<para/>
 	/// This client type expects callback method references when queuing reports or feeds, and invokes those callback methods when the respective actions have happened.
 	/// </summary>
-    public interface IEasyMwsClientWithCallback
+    public interface IEasyMwsClient
     {
 		/// <summary>
 		/// The amazon region used to initialize the client

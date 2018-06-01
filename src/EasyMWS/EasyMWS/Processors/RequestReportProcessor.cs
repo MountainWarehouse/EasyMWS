@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
@@ -94,8 +95,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    }
 		    catch (Exception e)
 		    {
-				_logger.Error($"Request to MWS.RequestReport failed!", e);
-			    return null;
+			    if (e is MarketplaceWebServiceException exception && exception.StatusCode == HttpStatusCode.BadRequest)
+			    {
+				    _logger.Error($"Request to MWS.RequestReport failed! [HttpStatusCode:'{exception.StatusCode}',ErrorType:'{exception.ErrorType}', ErrorCode:'{exception.ErrorCode}']", e);
+					return HttpStatusCode.BadRequest.ToString();
+			    }
+
+			    _logger.Error($"Request to MWS.RequestReport failed!", e);
+				return null;
 			}
 		}
 

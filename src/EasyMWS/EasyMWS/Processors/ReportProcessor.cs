@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Runtime.CompilerServices;
 using MountainWarehouse.EasyMWS.CallbackLogic;
 using MountainWarehouse.EasyMWS.Client;
@@ -119,7 +120,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				reportRequestService.Create(reportRequest);
 				reportRequestService.SaveChanges();
 
-				_logger.Info($"EasyMwsClient: The following report was queued for download from Amazon {reportRequest.RegionAndTypeComputed}.");
+				_logger.Info($"The following report was queued for download from Amazon {reportRequest.RegionAndTypeComputed}.");
 			}
 			catch (Exception e)
 			{
@@ -150,6 +151,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 				{
 					_requestReportProcessor.MoveToRetryQueue(reportRequestService, reportRequest);
 					_logger.Warn($"AmazonMWS request failed for {reportRequest.RegionAndTypeComputed}");
+				}
+				else if (reportRequestId == HttpStatusCode.BadRequest.ToString())
+				{
+					_requestReportProcessor.RemoveFromQueue(reportRequestService, reportRequest);
+					_logger.Warn($"AmazonMWS request failed for {reportRequest.RegionAndTypeComputed}. The report request was removed from queue.");
 				}
 				else
 				{
