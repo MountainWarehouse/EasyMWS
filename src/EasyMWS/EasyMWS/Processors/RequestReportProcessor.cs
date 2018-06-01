@@ -18,20 +18,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 {
     internal class RequestReportProcessor : IRequestReportProcessor
     {
-	    private readonly IAmazonReportService _amazonReportStorageService;
 	    private readonly IMarketplaceWebServiceClient _marketplaceWebServiceClient;
 	    private readonly IEasyMwsLogger _logger;
 		private readonly EasyMwsOptions _options;
 	    private readonly AmazonRegion _region;
 	    private readonly string _merchantId;
-
-	    internal RequestReportProcessor(AmazonRegion region, string merchantId,
-		    IMarketplaceWebServiceClient marketplaceWebServiceClient,
-		    IAmazonReportService amazonReportStorageService,
-		    IEasyMwsLogger logger, EasyMwsOptions options) : this(region, merchantId, marketplaceWebServiceClient, logger, options)
-	    {
-		    _amazonReportStorageService = amazonReportStorageService;
-	    }
 
 	    internal RequestReportProcessor(AmazonRegion region, string merchantId, IMarketplaceWebServiceClient marketplaceWebServiceClient, IEasyMwsLogger logger, EasyMwsOptions options)
 	    {
@@ -40,7 +31,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    _options = options;
 		    _logger = logger;
 			_marketplaceWebServiceClient = marketplaceWebServiceClient;
-		    _amazonReportStorageService = _amazonReportStorageService ?? new AmazonReportService(_options);
 	    }
 
 	    public ReportRequestEntry GetNextFromQueueOfReportsToRequest(IReportRequestCallbackService reportRequestService)
@@ -267,16 +257,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_logger.Info($"Request to MWS.GetReport was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']", new RequestInfo(timestamp, requestId));
 			_logger.Info($"Report download from Amazon has succeeded for {reportRequestEntry.RegionAndTypeComputed}.");
 
-			if (_options.KeepAmazonReportsInLocalDbAfterCallbackIsPerformed)
-		    {
-			    _logger.Info($"Backup report storage in local easyMws database is enabled. To disable it, update the KeepAmazonReportsInLocalDbAfterCallbackIsPerformed option.");
-
-			    var reportType = reportRequestEntry?.ReportType ?? "unknown";
-
-			    _logger.Info($"Proceeding to save backup report content in EasyMws internal database for {reportRequestEntry.RegionAndTypeComputed}");
-				StoreAmazonReportToInternalStorage(reportContentStream, reportType, requestId, timestamp);
-		    }
-
 			return reportContentStream;
 	    }
 
@@ -296,24 +276,5 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_logger.Warn(
 				$"Moving {reportRequestEntry.RegionAndTypeComputed} to retry queue. Retry count is now '{reportRequestEntry.RequestRetryCount}'.");
 	    }
-
-	    private void StoreAmazonReportToInternalStorage(Stream reportContent, string reportType, string requestId, string timestamp)
-	    {
-			var sb = new StringBuilder();
-			var sr = new StreamReader(reportContent);
-		    reportContent.Position = 0;
-		    sb.Append(sr.ReadToEnd());
-		    reportContent.Position = 0;
-
-		    _amazonReportStorageService.Create(new AmazonReport
-		    {
-			    Content = sb.ToString(),
-				DateCreated = DateTime.UtcNow,
-				ReportType = reportType,
-				DownloadRequestId = requestId,
-				DownloadTimestamp = timestamp
-			});
-			_amazonReportStorageService.SaveChanges();
-		}
     }
 }

@@ -58,20 +58,6 @@ namespace MountainWarehouse.EasyMWS.Model
 		public int FeedResultFailedChecksumMaxRetryCount { get; set; }
 
 		/// <summary>
-		/// Default=false. Normally reports downloaded from amazon are not stored in the local EasyMws database.<para/>
-		/// If this is set to 'True', all reports downloaded from Amazon will be stored in the local EasyMws database, so they will be available after the QueueReport callback method is called.<para/>
-		/// Any stored reports will automatically be deleted after a period of time specified with the 'KeepAmazonReportsLocallyForTimePeriod' option.<para/>
-		/// The purpose of this option is to provide access to any downloaded reports in case something goes wrong with the QueueReport callback, without the need to queue the same report again.
-		/// </summary>
-		public bool KeepAmazonReportsInLocalDbAfterCallbackIsPerformed { get; set; }
-
-		/// <summary>
-		/// Default=1day. If the 'KeepAmazonReportsLocallyAfterCallbackIsPerformed' option is enabled (it is disabled by default),<para/>
-		/// this option specify for how long any reports downloaded from Amazon will be kept in the local database before they are automatically deleted.
-		/// </summary>
-		public TimeSpan KeepAmazonReportsLocallyForTimePeriod { get; set; }
-
-		/// <summary>
 		/// Default=null. If a connection string is specified using this option, the EasyMws local db will run against this connection string, ignoring any connection string contained in a configuration file.<para/>
 		/// ConnectionString default location : .Net Framework / .Net Core projects referencing EasyMws need to provide an app.config file containing a connection string with the "EasyMwsContext" key in the calling executable project.																																																																																																																																								
 		/// </summary>
@@ -123,9 +109,6 @@ namespace MountainWarehouse.EasyMWS.Model
 
 			    FeedResultFailedChecksumRetryInterval = TimeSpan.FromMinutes(2),
 			    FeedResultFailedChecksumMaxRetryCount = 3,
-
-			    KeepAmazonReportsInLocalDbAfterCallbackIsPerformed = false,
-			    KeepAmazonReportsLocallyForTimePeriod = TimeSpan.FromDays(1),
 
 			    ReportDownloadRequestEntryExpirationPeriod = TimeSpan.FromDays(1),
 				FeedSubmissionRequestEntryExpirationPeriod = TimeSpan.FromDays(2)

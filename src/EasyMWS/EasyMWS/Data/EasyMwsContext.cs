@@ -1,8 +1,5 @@
-﻿using System;
-using System.Configuration;
-using System.Data.SqlClient;
+﻿using System.Configuration;
 using System.IO;
-using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
@@ -72,6 +69,5 @@ namespace MountainWarehouse.EasyMWS.Data
 
 		internal DbSet<ReportRequestEntry> ReportRequestEntries { get; set; }
 		internal DbSet<FeedSubmissionEntry> FeedSubmissionEntries { get; set; }
-		internal DbSet<AmazonReport> AmazonReports { get; set; }
 	}
 }

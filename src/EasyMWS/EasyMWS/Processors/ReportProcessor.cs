@@ -19,7 +19,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 	{
 		private readonly IRequestReportProcessor _requestReportProcessor;
 		private readonly ICallbackActivator _callbackActivator;
-		private readonly IAmazonReportService _amazonReportService;
 		private readonly IEasyMwsLogger _logger;
 
 		private readonly AmazonRegion _region;
@@ -28,13 +27,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		internal ReportProcessor(AmazonRegion region, string merchantId, EasyMwsOptions options,
 			IMarketplaceWebServiceClient mwsClient,
-			IRequestReportProcessor requestReportProcessor, ICallbackActivator callbackActivator,
-			IAmazonReportService amazonReportService, IEasyMwsLogger logger)
+			IRequestReportProcessor requestReportProcessor, ICallbackActivator callbackActivator, IEasyMwsLogger logger)
 			: this(region, merchantId, options, mwsClient, logger)
 		{
 			_requestReportProcessor = requestReportProcessor;
 			_callbackActivator = callbackActivator;
-			_amazonReportService = amazonReportService;
 		}
 
 		internal ReportProcessor(AmazonRegion region, string merchantId, EasyMwsOptions options,
@@ -46,8 +43,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_logger = logger;
 
 			_callbackActivator = _callbackActivator ?? new CallbackActivator();
-			_amazonReportService = _amazonReportService ?? new AmazonReportService(_options);
-			_requestReportProcessor = _requestReportProcessor ?? new RequestReportProcessor(_region, _merchantId, mwsClient, _amazonReportService, _logger, _options);
+			_requestReportProcessor = _requestReportProcessor ?? new RequestReportProcessor(_region, _merchantId, mwsClient, _logger, _options);
 		}
 
 
@@ -84,6 +80,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 			catch (Exception e)
 			{
+				_requestReportProcessor.MoveToRetryQueue(reportRequestService, reportRequest);
 				_logger.Error(e.Message, e);
 			}
 		}

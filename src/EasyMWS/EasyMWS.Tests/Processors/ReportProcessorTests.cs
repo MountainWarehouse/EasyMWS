@@ -26,7 +26,6 @@ namespace EasyMWS.Tests.ReportProcessors
 		private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
 		private Mock<IRequestReportProcessor> _requestReportProcessor;
 		private Mock<ICallbackActivator> _callbackActivatorMock;
-		private Mock<IAmazonReportService> _amazonReportServiceMock;
 		private Mock<IEasyMwsLogger> _loggerMock;
 		private static bool _called;
 
@@ -38,14 +37,13 @@ namespace EasyMWS.Tests.ReportProcessors
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_requestReportProcessor = new Mock<IRequestReportProcessor>();
 			_callbackActivatorMock = new Mock<ICallbackActivator>();
-			_amazonReportServiceMock = new Mock<IAmazonReportService>();
 			_loggerMock = new Mock<IEasyMwsLogger>();
 
 			_callbackActivatorMock.Setup(cam => cam.SerializeCallback(It.IsAny<Action<Stream, object>>(), It.IsAny<object>()))
 				.Returns(new Callback("", "", "", ""));
 
 			_reportProcessor = new ReportProcessor(AmazonRegion.Europe, "testMerchantId1", options,
-				 _marketplaceWebServiceClientMock.Object, _requestReportProcessor.Object, _callbackActivatorMock.Object, _amazonReportServiceMock.Object, _loggerMock.Object);
+				 _marketplaceWebServiceClientMock.Object, _requestReportProcessor.Object, _callbackActivatorMock.Object, _loggerMock.Object);
 		}
 
 
