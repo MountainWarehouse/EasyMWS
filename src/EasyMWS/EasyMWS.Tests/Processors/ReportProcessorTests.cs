@@ -52,14 +52,16 @@ namespace EasyMWS.Tests.ReportProcessors
 		#region QueueReport tests 
 
 		[Test]
-		public void QueueReport_WithNullCallbackMethodArgument_NeverCallsLogError()
+		public void QueueReport_WithNullCallbackMethodArgument_CatchesNullArgumentExceptionAndDoesNotQueueReport()
 		{
 			var reportRequestContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
 			var callbackMethod = (Action<Stream, object>) null;
 
 			_reportProcessor.QueueReport(_reportRequestCallbackServiceMock.Object, reportRequestContainer, callbackMethod, new {Foo = "Bar"});
 
-			_loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
+			_reportRequestCallbackServiceMock.Verify(rrcs => rrcs.Create(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestCallbackServiceMock.Verify(rrcs => rrcs.SaveChanges(), Times.Never);
+			_loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<ArgumentNullException>()), Times.Once);
 		}
 
 		[Test]

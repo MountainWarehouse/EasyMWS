@@ -92,6 +92,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			try
 			{
+				if (callbackMethod == null)
+				{
+					throw new ArgumentNullException(nameof(callbackMethod),"The callback method cannot be null, as it has to be invoked once the report has been downloaded, in order to provide access to the report content.");
+				}
+
 				if (propertiesContainer == null) throw new ArgumentNullException();
 
 				var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
@@ -108,14 +113,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 					ReportType = propertiesContainer.ReportType
 				};
 
-				if (callbackMethod != null)
-				{
-					var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
-					reportRequest.Data = serializedCallback.Data;
-					reportRequest.TypeName = serializedCallback.TypeName;
-					reportRequest.MethodName = serializedCallback.MethodName;
-					reportRequest.DataTypeName = serializedCallback.DataTypeName;
-				}
+				var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
+				reportRequest.Data = serializedCallback.Data;
+				reportRequest.TypeName = serializedCallback.TypeName;
+				reportRequest.MethodName = serializedCallback.MethodName;
+				reportRequest.DataTypeName = serializedCallback.DataTypeName;
 
 				reportRequestService.Create(reportRequest);
 				reportRequestService.SaveChanges();
@@ -126,11 +128,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				_logger.Error(e.Message, e);
 			}
-		}
-
-		public void QueueReport(IReportRequestCallbackService reportRequestService, ReportRequestPropertiesContainer propertiesContainer)
-		{
-			QueueReport(reportRequestService, propertiesContainer, null, null);
 		}
 
 		public void RequestNextReportInQueueFromAmazon(IReportRequestCallbackService reportRequestService)

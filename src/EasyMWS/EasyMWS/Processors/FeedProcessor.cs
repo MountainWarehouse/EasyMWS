@@ -94,6 +94,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			try
 			{
+				if (callbackMethod == null)
+				{
+					throw new ArgumentNullException(nameof(callbackMethod), "The callback method cannot be null, as it has to be invoked once the report has been downloaded, in order to provide access to the report content.");
+				}
+
 				if (propertiesContainer == null) throw new ArgumentNullException();
 
 				var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
@@ -114,15 +119,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 						FeedContent = propertiesContainer.FeedContent
 					}
 				};
-
-				if (callbackMethod != null)
-				{
-					var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
-					feedSubmission.Data = serializedCallback.Data;
-					feedSubmission.TypeName = serializedCallback.TypeName;
-					feedSubmission.MethodName = serializedCallback.MethodName;
-					feedSubmission.DataTypeName = serializedCallback.DataTypeName;
-				}
+				
+				var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
+				feedSubmission.Data = serializedCallback.Data;
+				feedSubmission.TypeName = serializedCallback.TypeName;
+				feedSubmission.MethodName = serializedCallback.MethodName;
+				feedSubmission.DataTypeName = serializedCallback.DataTypeName;
 
 				feedSubmissionService.Create(feedSubmission);
 				feedSubmissionService.SaveChanges();
@@ -133,11 +135,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				_logger.Error(e.Message, e);
 			}
-		}
-
-		public void QueueFeed(IFeedSubmissionCallbackService feedSubmissionService, FeedSubmissionPropertiesContainer propertiesContainer)
-		{
-			QueueFeed(feedSubmissionService, propertiesContainer, null, null);
 		}
 
 		public void SubmitNextFeedInQueueToAmazon(IFeedSubmissionCallbackService feedSubmissionService)

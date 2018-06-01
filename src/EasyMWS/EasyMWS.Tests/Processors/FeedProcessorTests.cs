@@ -57,7 +57,9 @@ namespace EasyMWS.Tests.ReportProcessors
 
 			_feedProcessor.QueueFeed(_feedSubmissionCallbackServiceMock.Object, propertiesContainer, callbackMethod, new { Foo = "Bar" });
 
-			_loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
+			_feedSubmissionCallbackServiceMock.Verify(rrcs => rrcs.Create(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionCallbackServiceMock.Verify(rrcs => rrcs.SaveChanges(), Times.Never);
+			_loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<ArgumentNullException>()), Times.Once);
 		}
 
 		[Test]

@@ -11,6 +11,5 @@ namespace MountainWarehouse.EasyMWS.Processors
 	{
 		void PollFeeds(IFeedSubmissionCallbackService feedSubmissionService);
 		void QueueFeed(IFeedSubmissionCallbackService feedSubmissionService, FeedSubmissionPropertiesContainer propertiesContainer, Action<Stream, object> callbackMethod, object callbackData);
-		void QueueFeed(IFeedSubmissionCallbackService feedSubmissionService, FeedSubmissionPropertiesContainer propertiesContainer);
 	}
 }
