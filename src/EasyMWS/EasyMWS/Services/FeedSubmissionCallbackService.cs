@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using MountainWarehouse.EasyMWS.Data;
@@ -42,7 +43,12 @@ namespace MountainWarehouse.EasyMWS.Services
 		    
 	    }
 
-	    public void SaveChanges() => _feedRepo.SaveChanges();
+		public void DeleteRange(IEnumerable<FeedSubmissionEntry> entries)
+		{
+			_feedRepo.DeleteRange(entries);
+		}
+
+		public void SaveChanges() => _feedRepo.SaveChanges();
 		public IQueryable<FeedSubmissionEntry> GetAll() => _feedRepo.GetAll().OrderBy(x => x.Id);
 		public IQueryable<FeedSubmissionEntry> Where(Expression<Func<FeedSubmissionEntry, bool>> predicate) => _feedRepo.GetAll().OrderBy(x => x.Id).Where(predicate);
 		public FeedSubmissionEntry First() => _feedRepo.GetAll().OrderBy(x => x.Id).First();

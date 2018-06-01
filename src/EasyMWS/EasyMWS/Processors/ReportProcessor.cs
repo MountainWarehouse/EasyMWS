@@ -131,6 +131,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
+		public void PurgeQueue(IReportRequestCallbackService reportRequestService)
+		{
+			var entriesToDelete = reportRequestService.GetAll().Where(rre => rre.AmazonRegion == _region && rre.MerchantId == _merchantId);
+			reportRequestService.DeleteRange(entriesToDelete);
+			reportRequestService.SaveChanges();
+		}
+
 		public void RequestNextReportInQueueFromAmazon(IReportRequestCallbackService reportRequestService)
 		{
 			var reportRequest = _requestReportProcessor.GetNextFromQueueOfReportsToRequest(reportRequestService);

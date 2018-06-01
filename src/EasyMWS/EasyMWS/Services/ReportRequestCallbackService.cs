@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -36,6 +37,11 @@ namespace MountainWarehouse.EasyMWS.Services
 						: $"Delete ReportRequestCallback entity with ID: {entry.Id} failed. See exception info for more details", e);
 			}
 
+		}
+
+		public void DeleteRange(IEnumerable<ReportRequestEntry> entries)
+		{
+			_reportRequestCallbackRepo.DeleteRange(entries);
 		}
 
 		public void SaveChanges() => _reportRequestCallbackRepo.SaveChanges();

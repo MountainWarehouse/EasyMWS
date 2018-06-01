@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using MountainWarehouse.EasyMWS.CallbackLogic;
-using MountainWarehouse.EasyMWS.Client;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
@@ -136,6 +135,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				_logger.Error(e.Message, e);
 			}
+		}
+
+		public void PurgeQueue(IFeedSubmissionCallbackService feedSubmissionService)
+		{
+			var entriesToDelete = feedSubmissionService.GetAll().Where(rre => rre.AmazonRegion == _region && rre.MerchantId == _merchantId);
+			feedSubmissionService.DeleteRange(entriesToDelete);
+			feedSubmissionService.SaveChanges();
 		}
 
 		public void SubmitNextFeedInQueueToAmazon(IFeedSubmissionCallbackService feedSubmissionService)
