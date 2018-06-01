@@ -232,7 +232,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		public void Poll_WithGetNextFeedFromProcessingCompleteQueueReturningNull_NeverCalls_ExecuteCallbackOrMoveToRetryQueue()
 		{
 			var testStreamContent = "testStreamContent";
-			var testStream = StreamHelper.CreateNewMemoryStream(testStreamContent);
+			var testStream = StreamHelper.CreateMemoryStream(testStreamContent);
 			var notMatchingMd5Sum = "AAAAAAAAAAAAAAAA";
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent","testFeedType");
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
@@ -261,7 +261,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		public void Poll_WithSubmitSingleQueuedFeedToAmazonResponseNotMatchingMd5_NeverCalls_ExecuteCallback()
 		{
 			var testStreamContent = "testStreamContent";
-			var testStream = StreamHelper.CreateNewMemoryStream(testStreamContent);
+			var testStream = StreamHelper.CreateMemoryStream(testStreamContent);
 			var notMatchingMd5Sum = "AAAAAAAAAAAAAAAA";
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
@@ -290,7 +290,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		public void Poll_WithSubmitSingleQueuedFeedToAmazonResponseMatchingMd5_WithCallbackMethodProvided_CallsOnce_ExecuteCallback()
 		{
 			var testStreamContent = "testStreamContent";	// This is the content for which an MD5 value is computed and used in the test. Do not modify this without the MD5 value.
-			var testStream = StreamHelper.CreateNewMemoryStream(testStreamContent);
+			var testStream = StreamHelper.CreateMemoryStream(testStreamContent);
 			var matchingMd5Sum = "rD4TzLgdje+H2K2NattkqQ==";    // This is the MD5 value for testStreamContent="testStreamContent". Do not modify this without the stream content.
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);

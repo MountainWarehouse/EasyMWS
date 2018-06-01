@@ -145,12 +145,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 	    {
 			_logger.Info("Executing cleanup of report requests queue.");
 			var expiredReportRequests = reportRequestService.GetAll()
-				.Where(rrc => (rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId) && IsRetryCountExceeded(rrc));
+				.Where(rrc => (rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId) && rrc.Details == null && IsRequestRetryCountExceeded(rrc));
 
 			foreach (var expiredReport in expiredReportRequests)
 			{
 				reportRequestService.Delete(expiredReport);
-				_logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: The retry count of '{_options.ReportRequestMaxRetryCount}' was exceeded while trying to request the report from Amazon.");
+				_logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: Failure while trying to request the report from Amazon. Retry count exceeded : {_options.ReportRequestMaxRetryCount}.");
 			}
 
 		    var entriesWithExpirationPeriodExceeded = reportRequestService.GetAll()
@@ -162,13 +162,26 @@ namespace MountainWarehouse.EasyMWS.Processors
 			    _logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: Expiration period of '{_options.ReportDownloadRequestEntryExpirationPeriod.Hours} hours' was exceeded.");
 		    }
 
+			var entriesWithCallbackInvocationRetryCountExceeded = reportRequestService.GetAll()
+				.Where(rrc => (rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId) && rrc.Details != null && IsReportRequestEntryCallbackInvocationRetryCountExceeded(rrc));
+
+		    foreach (var expiredReport in entriesWithCallbackInvocationRetryCountExceeded)
+		    {
+			    reportRequestService.Delete(expiredReport);
+			    _logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: The report was downloaded successfully but the callback method provided at QueueReport could not be invoked. Retry count exceeded : {_options.ReportReadyCallbackInvocationMaxRetryCount}");
+		    }
+
 			reportRequestService.SaveChanges();
 	    }
 
-	    private bool IsRetryCountExceeded(ReportRequestEntry reportRequestEntry) => 
+	    private bool IsRequestRetryCountExceeded(ReportRequestEntry reportRequestEntry) => 
 			(reportRequestEntry.RequestRetryCount > _options.ReportRequestMaxRetryCount);
 
-	    private bool IsExpirationPeriodExceeded(ReportRequestEntry reportRequestEntry) =>
+		private bool IsReportRequestEntryCallbackInvocationRetryCountExceeded(ReportRequestEntry reportRequestEntry) =>
+		    (reportRequestEntry.RequestRetryCount > _options.ReportReadyCallbackInvocationMaxRetryCount); 
+
+
+		private bool IsExpirationPeriodExceeded(ReportRequestEntry reportRequestEntry) =>
 			(DateTime.Compare(reportRequestEntry.DateCreated, DateTime.UtcNow.Subtract(_options.ReportDownloadRequestEntryExpirationPeriod)) < 0);
 
 		public void QueueReportsAccordingToProcessingStatus(IReportRequestCallbackService reportRequestService,
@@ -234,10 +247,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 				: reportRequestService.FirstOrDefault(
 					rrc => rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId
 					        && rrc.RequestReportId != null
-					        && rrc.GeneratedReportId != null);
+					        && rrc.GeneratedReportId != null
+							&& rrc.Details == null);
 	    }
 
-	    public Stream DownloadGeneratedReportFromAmazon(ReportRequestEntry reportRequestEntry)
+	    public MemoryStream DownloadGeneratedReportFromAmazon(ReportRequestEntry reportRequestEntry)
 	    {
 		    _logger.Info($"Attempting to download the next report in queue from Amazon: {reportRequestEntry.RegionAndTypeComputed}.");
 
@@ -251,7 +265,10 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		    var response = _marketplaceWebServiceClient.GetReport(getReportRequest);
 
-		    var reportContentStream = getReportRequest.Report;
+		    var reportContentStream = new MemoryStream();
+			getReportRequest.Report.CopyTo(reportContentStream);
+		    reportContentStream.Position = 0;
+
 			var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
 		    var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
 			_logger.Info($"Request to MWS.GetReport was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']", new RequestInfo(timestamp, requestId));

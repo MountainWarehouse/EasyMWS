@@ -13,6 +13,11 @@ namespace MountainWarehouse.EasyMWS.Model
 	    public int ReportRequestMaxRetryCount { get; set; }
 
 		/// <summary>
+		/// Default=3. After a report has been downloaded from amazon, the delegate provided for the ReportQueue method is invoked. If the invocation fails, this option specifies how many times the invocation will be retried.
+		/// </summary>
+	    public int ReportReadyCallbackInvocationMaxRetryCount { get; set; }
+
+	    /// <summary>
 		/// Default=GeometricProgression. When requesting a report from amazon fails, specify the time series type for request retries.
 		/// </summary>
 		public RetryPeriodType ReportRequestRetryType { get; set; }
@@ -78,6 +83,7 @@ namespace MountainWarehouse.EasyMWS.Model
 		/// The set of default settings that will be used if no custom settings are specified.<para/>
 		/// <para/>
 		/// ReportRequestMaxRetryCount = 4,<para/>
+		/// ReportReadyCallbackInvocationMaxRetryCount = 3,<para/>
 		/// ReportRequestRetryType = GeometricProgression,<para/>
 		/// ReportRequestRetryInitialDelay = Minutes(15),<para/>
 		/// ReportRequestRetryInterval = Hours(1),<para/>
@@ -90,15 +96,17 @@ namespace MountainWarehouse.EasyMWS.Model
 		/// FeedResultFailedChecksumRetryInterval = Minutes(2),<para/>
 		/// FeedResultFailedChecksumMaxRetryCount = 3,<para/>
 		/// <para/>
-		/// KeepAmazonReportsInLocalDbAfterCallbackIsPerformed = false,<para/>
-		/// KeepAmazonReportsLocallyForTimePeriod = Days(1)<para/>
+		/// ReportDownloadRequestEntryExpirationPeriod = Days(1),<para/>
+		/// FeedSubmissionRequestEntryExpirationPeriod = Days(2),<para/>
 		/// </summary>
 		public static EasyMwsOptions Defaults()
 	    {
 		    return new EasyMwsOptions
 		    {
 			    ReportRequestMaxRetryCount = 4,
-			    ReportRequestRetryType = RetryPeriodType.GeometricProgression,
+			    ReportReadyCallbackInvocationMaxRetryCount = 3,
+
+				ReportRequestRetryType = RetryPeriodType.GeometricProgression,
 			    ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(15),
 			    ReportRequestRetryInterval = TimeSpan.FromHours(1),
 

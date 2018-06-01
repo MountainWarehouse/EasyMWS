@@ -4,7 +4,7 @@ namespace MountainWarehouse.EasyMWS.Helpers
 {
     public static class StreamHelper
     {
-	    public static Stream CreateNewMemoryStream(string streamContent)
+	    public static Stream CreateMemoryStream(string streamContent)
 	    {
 			MemoryStream stream = new MemoryStream();
 			StreamWriter writer = new StreamWriter(stream);
@@ -13,5 +13,15 @@ namespace MountainWarehouse.EasyMWS.Helpers
 		    stream.Position = 0;
 		    return stream;
 	    }
-    }
+
+	    public static MemoryStream GetStreamFromBytes(byte[] byteArray)
+	    {
+			return new MemoryStream(byteArray);
+	    }
+
+	    public static byte[] GetBytesFromStream(MemoryStream stream)
+	    {
+		    return stream.ToArray();
+	    }
+	}
 }

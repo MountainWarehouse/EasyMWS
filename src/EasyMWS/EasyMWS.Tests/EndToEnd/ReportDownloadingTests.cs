@@ -263,7 +263,7 @@ namespace EasyMWS.Tests.EndToEnd
 
 		private void Setup_GetReport_Returns_ReportContentStream(string expectedGeneratedReportId, string reportContent)
 		{
-			var stream = StreamHelper.CreateNewMemoryStream(reportContent);
+			var stream = StreamHelper.CreateMemoryStream(reportContent);
 			var response = new GetReportResponse
 			{
 				ResponseHeaderMetadata = new ResponseHeaderMetadata("requestId", "responseContext", "timestamp")

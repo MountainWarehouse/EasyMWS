@@ -49,7 +49,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			var feedSubmissionData = feedSubmission.GetPropertiesContainer();
 
-			using (var stream = StreamHelper.CreateNewMemoryStream(feedSubmission.Details.FeedContent))
+			using (var stream = StreamHelper.CreateMemoryStream(feedSubmission.Details.FeedContent))
 			{
 				var submitFeedRequest = new SubmitFeedRequest
 				{
@@ -207,7 +207,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			foreach (var feedSubmission in expiredFeedSubmissions)
 			{
 				feedSubmissionService.Delete(feedSubmission);
-				_logger.Warn($"Feed submission entry {feedSubmission.RegionAndTypeComputed} deleted from queue. Reason: A feedSubmissionId could not be obtained from amazon for the feed submission request, retry count of '{_options.FeedSubmissionMaxRetryCount}' was exceeded.");
+				_logger.Warn($"Feed submission entry {feedSubmission.RegionAndTypeComputed} deleted from queue. Reason: A feedSubmissionId could not be obtained from amazon for the feed submission request. Retry count exceeded : {_options.FeedSubmissionMaxRetryCount}.");
 			}
 
 			var expiredFeedProcessingResultRequestIds = feedSubmissionService.GetAll()
@@ -218,7 +218,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			foreach (var feedSubmission in expiredFeedProcessingResultRequestIds)
 			{
 				feedSubmissionService.Delete(feedSubmission);
-				_logger.Warn($"Feed submission entry {feedSubmission.RegionAndTypeComputed} deleted from queue. Reason: While the feed might have been submitted to amazon, the checksum verification was retried and failed for '{_options.FeedResultFailedChecksumMaxRetryCount} times' for the Feed Submission Report content received from Amazon.");
+				_logger.Warn($"Feed submission entry {feedSubmission.RegionAndTypeComputed} deleted from queue. Reason: While the feed might have been submitted to amazon, the checksum verification failed for the Feed Submission Report content received from Amazon. Retry count exceeded : {_options.FeedResultFailedChecksumMaxRetryCount}.");
 			}
 
 			var entriesWithExpirationPeriodExceeded = feedSubmissionService.GetAll()

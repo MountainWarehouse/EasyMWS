@@ -7,6 +7,7 @@ using MountainWarehouse.EasyMWS.CallbackLogic;
 using MountainWarehouse.EasyMWS.Client;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
+using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Logging;
 using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Services;
@@ -64,6 +65,8 @@ namespace MountainWarehouse.EasyMWS.Processors
 				{
 					PerformCallback(reportRequestService, reportInfo.reportRequestCallback, reportInfo.stream);
 				}
+
+				PerformCallbackForPreviouslyDownloadedReports(reportRequestService);
 			}
 			catch (Exception e)
 			{
@@ -71,7 +74,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		private void PerformCallback(IReportRequestCallbackService reportRequestService, ReportRequestEntry reportRequest, Stream stream)
+		private void PerformCallback(IReportRequestCallbackService reportRequestService, ReportRequestEntry reportRequest, MemoryStream stream)
 		{
 			try
 			{
@@ -80,8 +83,32 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 			catch (Exception e)
 			{
+				reportRequest.Details = new ReportRequestDetails{ReportContent = StreamHelper.GetBytesFromStream(stream)};
+				reportRequestService.Update(reportRequest);
+				reportRequestService.SaveChanges();
+
 				_requestReportProcessor.MoveToRetryQueue(reportRequestService, reportRequest);
-				_logger.Error(e.Message, e);
+				_logger.Error($"Method callback failed for {reportRequest.RegionAndTypeComputed}. Placing report request entry to retry queue. Current retry count is :{reportRequest.RequestRetryCount}. {e.Message}", e);
+			}
+		}
+
+		private void PerformCallbackForPreviouslyDownloadedReports(IReportRequestCallbackService reportRequestService)
+		{
+			var previouslyDownloadedReports = reportRequestService.GetAll()
+				.Where(rre => rre.AmazonRegion == _region && rre.MerchantId == _merchantId && rre.Details != null);
+
+			foreach (var reportEntry in previouslyDownloadedReports)
+			{
+				try
+				{
+					ExecuteMethodCallback(reportEntry);
+					_requestReportProcessor.RemoveFromQueue(reportRequestService, reportEntry);
+				}
+				catch (Exception e)
+				{
+					_requestReportProcessor.MoveToRetryQueue(reportRequestService, reportEntry);
+					_logger.Error($"Method callback failed for {reportEntry.RegionAndTypeComputed}. Placing report request entry to retry queue. Current retry count is :{reportEntry.RequestRetryCount}. {e.Message}", e);
+				}
 			}
 		}
 
@@ -192,7 +219,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public (ReportRequestEntry reportRequestCallback, Stream stream) DownloadNextReportInQueueFromAmazon(IReportRequestCallbackService reportRequestService)
+		public (ReportRequestEntry reportRequestCallback, MemoryStream stream) DownloadNextReportInQueueFromAmazon(IReportRequestCallbackService reportRequestService)
 		{
 			var reportToDownload = _requestReportProcessor.GetNextFromQueueOfReportsToDownload(reportRequestService);
 			if (reportToDownload == null) return (null, null);
@@ -218,6 +245,17 @@ namespace MountainWarehouse.EasyMWS.Processors
 				reportRequest.Data, reportRequest.DataTypeName);
 
 			_callbackActivator.CallMethod(callback, stream);
+		}
+
+		public void ExecuteMethodCallback(ReportRequestEntry reportRequest)
+		{
+			_logger.Info(
+				$"Attempting to perform method callback for the next downloaded report in queue : {reportRequest.RegionAndTypeComputed}.");
+
+			var callback = new Callback(reportRequest.TypeName, reportRequest.MethodName,
+				reportRequest.Data, reportRequest.DataTypeName);
+
+			_callbackActivator.CallMethod(callback, StreamHelper.GetStreamFromBytes(reportRequest.Details?.ReportContent));
 		}
 	}
 }
