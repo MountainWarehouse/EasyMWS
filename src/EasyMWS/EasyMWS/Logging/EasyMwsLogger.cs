@@ -34,7 +34,7 @@ namespace MountainWarehouse.EasyMWS.Logging
 					Message = message
 				};
 
-				eventArgs.Message = $"{JsonConvert.SerializeObject(messageObject, Formatting.None)}";
+				eventArgs.Message = $"EasyMws: {JsonConvert.SerializeObject(messageObject, Formatting.None)}";
 				eventArgs.RequestInfo = requestInfo;
 			}
 
@@ -77,7 +77,7 @@ namespace MountainWarehouse.EasyMWS.Logging
 					Message = message
 				};
 
-				eventArgs.Message = $"{JsonConvert.SerializeObject(messageObject, Formatting.None)}";
+				eventArgs.Message = $"EasyMws: {JsonConvert.SerializeObject(messageObject, Formatting.None)}";
 				
 			}
 
