@@ -177,20 +177,16 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void RequestFeedSubmissionStatusesFromAmazon(IFeedSubmissionCallbackService feedSubmissionService)
 		{
-			try
+			var feedSubmissionIds = _feedSubmissionProcessor.GetIdsForSubmittedFeedsFromQueue(feedSubmissionService).ToList();
+
+			if (!feedSubmissionIds.Any())
+				return;
+
+			var feedSubmissionResults = _feedSubmissionProcessor.RequestFeedSubmissionStatusesFromAmazon(feedSubmissionIds, _merchantId);
+
+			if (feedSubmissionResults != null)
 			{
-				var feedSubmissionIds = _feedSubmissionProcessor.GetIdsForSubmittedFeedsFromQueue(feedSubmissionService).ToList();
-
-				if (!feedSubmissionIds.Any())
-					return;
-
-				var feedSubmissionResults = _feedSubmissionProcessor.RequestFeedSubmissionStatusesFromAmazon(feedSubmissionIds, _merchantId);
-
 				_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(feedSubmissionService, feedSubmissionResults);
-			}
-			catch (Exception e)
-			{
-				_logger.Error(e.Message, e);
 			}
 		}
 

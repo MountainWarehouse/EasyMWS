@@ -127,27 +127,46 @@ namespace MountainWarehouse.EasyMWS.Processors
 						&& rrcs.IsProcessingComplete == false
 				).Select(f => f.FeedSubmissionId);
 
-		public List<(string FeedSubmissionId, string FeedProcessingStatus)> RequestFeedSubmissionStatusesFromAmazon(IEnumerable<string> feedSubmissionIdList, string merchant)
+		public List<(string FeedSubmissionId, string FeedProcessingStatus)> RequestFeedSubmissionStatusesFromAmazon(
+			IEnumerable<string> feedSubmissionIdList, string merchant)
 		{
 			_logger.Info($"Attempting to request feed submission statuses for all feeds in queue.");
 
 			var request = new GetFeedSubmissionListRequest() {FeedSubmissionIdList = new IdList(), Merchant = merchant};
 			request.FeedSubmissionIdList.Id.AddRange(feedSubmissionIdList);
-			var response = _marketplaceWebServiceClient.GetFeedSubmissionList(request);
 
-			var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
-			var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
-			_logger.Info($"Request to MWS.GetFeedSubmissionList was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']", new RequestInfo(timestamp, requestId));
-
-			var responseInfo = new List<(string FeedSubmissionId, string IsProcessingComplete)>();
-
-			foreach (var feedSubmissionInfo in response.GetFeedSubmissionListResult.FeedSubmissionInfo)
+			try
 			{
-				responseInfo.Add((feedSubmissionInfo.FeedSubmissionId, feedSubmissionInfo.FeedProcessingStatus));
-			}
+				var response = _marketplaceWebServiceClient.GetFeedSubmissionList(request);
 
-			_logger.Info($"AmazonMWS request for feed submission statuses succeeded.");
-			return responseInfo;
+				var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
+				var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
+				_logger.Info(
+					$"Request to MWS.GetFeedSubmissionList was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']",
+					new RequestInfo(timestamp, requestId));
+
+				var responseInfo = new List<(string FeedSubmissionId, string IsProcessingComplete)>();
+
+				foreach (var feedSubmissionInfo in response.GetFeedSubmissionListResult.FeedSubmissionInfo)
+				{
+					responseInfo.Add((feedSubmissionInfo.FeedSubmissionId, feedSubmissionInfo.FeedProcessingStatus));
+				}
+
+				_logger.Info($"AmazonMWS request for feed submission statuses succeeded.");
+				return responseInfo;
+			}
+			catch (Exception e)
+			{
+				if (e is MarketplaceWebServiceException exception)
+				{
+					_logger.Error($"Request to MWS.GetFeedSubmissionList failed! [Message: '{exception.Message}', HttpStatusCode:'{exception.StatusCode}', ErrorType:'{exception.ErrorType}', ErrorCode:'{exception.ErrorCode}']", e);
+				}
+				else
+				{
+					_logger.Error($"Request to MWS.GetFeedSubmissionList failed! [Message: '{e.Message}']", e);
+				}
+				return null;
+			}
 		}
 
 		public void QueueFeedsAccordingToProcessingStatus(IFeedSubmissionCallbackService feedSubmissionService, List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses)
