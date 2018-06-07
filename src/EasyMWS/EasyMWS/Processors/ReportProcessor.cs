@@ -70,17 +70,28 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			foreach (var reportEntry in previouslyDownloadedReports)
 			{
+				var callbackSucceeded = true;
 				try
 				{
 					ExecuteMethodCallback(reportEntry);
-					_requestReportProcessor.RemoveFromQueue(reportRequestService, reportEntry);
 				}
 				catch (Exception e)
 				{
-					_requestReportProcessor.MoveToRetryQueue(reportRequestService, reportEntry);
+					callbackSucceeded = false;
+					reportEntry.RequestRetryCount++;
+					reportRequestService.Update(reportEntry);
 					_logger.Error($"Method callback failed for {reportEntry.RegionAndTypeComputed}. Placing report request entry to retry queue. Current retry count is :{reportEntry.RequestRetryCount}. {e.Message}", e);
 				}
+				finally
+				{
+					if (callbackSucceeded)
+					{
+						reportRequestService.Delete(reportEntry);
+					}
+				}
 			}
+
+			reportRequestService.SaveChanges();
 		}
 
 		public void QueueReport(IReportRequestCallbackService reportRequestService, ReportRequestPropertiesContainer propertiesContainer, Action<Stream, object> callbackMethod, object callbackData)
