@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using MountainWarehouse.EasyMWS.CallbackLogic;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
@@ -149,31 +150,29 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var feedSubmission = _feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit(feedSubmissionService);
 
 			if (feedSubmission == null) return;
-			
-			try
-			{
-				var feedSubmissionId = _feedSubmissionProcessor.SubmitFeedToAmazon(feedSubmission);
+		
+			var feedSubmissionId = _feedSubmissionProcessor.SubmitFeedToAmazon(feedSubmission);
 
-				feedSubmission.LastSubmitted = DateTime.UtcNow;
-				feedSubmissionService.Update(feedSubmission);
-				feedSubmissionService.SaveChanges();
+			feedSubmission.LastSubmitted = DateTime.UtcNow;
+			feedSubmissionService.Update(feedSubmission);
+			feedSubmissionService.SaveChanges();
 
-				if (string.IsNullOrEmpty(feedSubmissionId))
-				{
-					_feedSubmissionProcessor.MoveToRetryQueue(feedSubmissionService, feedSubmission);
-					_logger.Warn($"AmazonMWS feed submission request failed for {feedSubmission.RegionAndTypeComputed}");
-				}
-				else
-				{
-					_feedSubmissionProcessor.MoveToQueueOfSubmittedFeeds(feedSubmissionService, feedSubmission, feedSubmissionId);
-					_logger.Info($"AmazonMWS feed submission request succeeded for {feedSubmission.RegionAndTypeComputed}. FeedSubmissionId:'{feedSubmissionId}'");
-				}
-			}
-			catch (Exception e)
+			if (string.IsNullOrEmpty(feedSubmissionId))
 			{
 				_feedSubmissionProcessor.MoveToRetryQueue(feedSubmissionService, feedSubmission);
-				_logger.Error(e.Message, e);
+				_logger.Warn($"AmazonMWS feed submission request failed for {feedSubmission.RegionAndTypeComputed}");
 			}
+			else if (feedSubmissionId == HttpStatusCode.BadRequest.ToString())
+			{
+				_feedSubmissionProcessor.RemoveFromQueue(feedSubmissionService, feedSubmission);
+				_logger.Warn($"AmazonMWS feed submission failed for {feedSubmission.RegionAndTypeComputed}. The feed submission request was removed from queue.");
+			}
+			else
+			{
+				_feedSubmissionProcessor.MoveToQueueOfSubmittedFeeds(feedSubmissionService, feedSubmission, feedSubmissionId);
+				_logger.Info($"AmazonMWS feed submission request succeeded for {feedSubmission.RegionAndTypeComputed}. FeedSubmissionId:'{feedSubmissionId}'");
+			}
+
 		}
 
 		public void RequestFeedSubmissionStatusesFromAmazon(IFeedSubmissionCallbackService feedSubmissionService)
