@@ -205,6 +205,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			if (reportToDownload == null) return;
 			
 			var stream = _requestReportProcessor.DownloadGeneratedReportFromAmazon(reportToDownload);
+			if(stream == null) return;
 
 			reportToDownload.Details = new ReportRequestDetails { ReportContent = StreamHelper.GetBytesFromStream(stream) };
 			reportRequestService.Update(reportToDownload);
