@@ -59,36 +59,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 				RequestReportStatusesFromAmazon(reportRequestService);
 
-				var reportInfo = DownloadNextReportInQueueFromAmazon(reportRequestService);
-
-				if (reportInfo.stream != null)
-				{
-					PerformCallback(reportRequestService, reportInfo.reportRequestCallback, reportInfo.stream);
-				}
+				DownloadNextReportInQueueFromAmazon(reportRequestService);
 
 				PerformCallbackForPreviouslyDownloadedReports(reportRequestService);
 			}
 			catch (Exception e)
 			{
 				_logger.Error(e.Message, e);
-			}
-		}
-
-		private void PerformCallback(IReportRequestCallbackService reportRequestService, ReportRequestEntry reportRequest, MemoryStream stream)
-		{
-			try
-			{
-				ExecuteMethodCallback(reportRequest, stream);
-				_requestReportProcessor.RemoveFromQueue(reportRequestService, reportRequest);
-			}
-			catch (Exception e)
-			{
-				reportRequest.Details = new ReportRequestDetails{ReportContent = StreamHelper.GetBytesFromStream(stream)};
-				reportRequestService.Update(reportRequest);
-				reportRequestService.SaveChanges();
-
-				_requestReportProcessor.MoveToRetryQueue(reportRequestService, reportRequest);
-				_logger.Error($"Method callback failed for {reportRequest.RegionAndTypeComputed}. Placing report request entry to retry queue. Current retry count is :{reportRequest.RequestRetryCount}. {e.Message}", e);
 			}
 		}
 
@@ -219,21 +196,16 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public (ReportRequestEntry reportRequestCallback, MemoryStream stream) DownloadNextReportInQueueFromAmazon(IReportRequestCallbackService reportRequestService)
+		public void DownloadNextReportInQueueFromAmazon(IReportRequestCallbackService reportRequestService)
 		{
 			var reportToDownload = _requestReportProcessor.GetNextFromQueueOfReportsToDownload(reportRequestService);
-			if (reportToDownload == null) return (null, null);
+			if (reportToDownload == null) return;
+			
+			var stream = _requestReportProcessor.DownloadGeneratedReportFromAmazon(reportToDownload);
 
-			try
-			{
-				var stream = _requestReportProcessor.DownloadGeneratedReportFromAmazon(reportToDownload);
-				return (reportToDownload, stream);
-			}
-			catch (Exception e)
-			{
-				_logger.Error(e.Message, e);
-				return (null, null);
-			}
+			reportToDownload.Details = new ReportRequestDetails { ReportContent = StreamHelper.GetBytesFromStream(stream) };
+			reportRequestService.Update(reportToDownload);
+			reportRequestService.SaveChanges();
 		}
 
 		public void ExecuteMethodCallback(ReportRequestEntry reportRequest, Stream stream)
