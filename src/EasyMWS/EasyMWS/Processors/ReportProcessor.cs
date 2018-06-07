@@ -80,7 +80,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 					callbackSucceeded = false;
 					reportEntry.RequestRetryCount++;
 					reportRequestService.Update(reportEntry);
-					_logger.Error($"Method callback failed for {reportEntry.RegionAndTypeComputed}. Placing report request entry to retry queue. Current retry count is :{reportEntry.RequestRetryCount}. {e.Message}", e);
+					_logger.Error($"Method callback failed for {reportEntry.RegionAndTypeComputed}. Placing report request entry in retry queue. Current retry count is :{reportEntry.RequestRetryCount}. {e.Message}", e);
 				}
 				finally
 				{
@@ -195,22 +195,15 @@ namespace MountainWarehouse.EasyMWS.Processors
 			if (reportToDownload == null) return;
 			
 			var stream = _requestReportProcessor.DownloadGeneratedReportFromAmazon(reportToDownload);
-			if(stream == null) return;
+			if (stream == null)
+			{
+				_logger.Warn($"AmazonMWS report download failed for {reportToDownload.RegionAndTypeComputed}");
+				return;
+			}
 
 			reportToDownload.Details = new ReportRequestDetails { ReportContent = StreamHelper.GetBytesFromStream(stream) };
 			reportRequestService.Update(reportToDownload);
 			reportRequestService.SaveChanges();
-		}
-
-		public void ExecuteMethodCallback(ReportRequestEntry reportRequest, Stream stream)
-		{
-			_logger.Info(
-				$"Attempting to perform method callback for the next downloaded report in queue : {reportRequest.RegionAndTypeComputed}.");
-
-			var callback = new Callback(reportRequest.TypeName, reportRequest.MethodName,
-				reportRequest.Data, reportRequest.DataTypeName);
-
-			_callbackActivator.CallMethod(callback, stream);
 		}
 
 		public void ExecuteMethodCallback(ReportRequestEntry reportRequest)
