@@ -121,12 +121,18 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			var request = new GetReportRequestListRequest() {ReportRequestIdList = new IdList(), Merchant = merchant};
 		    request.ReportRequestIdList.Id.AddRange(requestIdList);
+
+		    try
+		    {
 		    var response = _marketplaceWebServiceClient.GetReportRequestList(request);
 			var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
 		    var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
-			_logger.Info($"Request to MWS.GetReportRequestList was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']", new RequestInfo(timestamp, requestId));
+			    _logger.Info(
+				    $"Request to MWS.GetReportRequestList was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']",
+				    new RequestInfo(timestamp, requestId));
 
-			var responseInformation = new List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)>();
+			    var responseInformation =
+				    new List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)>();
 
 		    if (response != null)
 		    {
@@ -139,6 +145,20 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    }
 
 		    return responseInformation;
+
+		    }
+		    catch (Exception e)
+		    {
+				if (e is MarketplaceWebServiceException exception)
+				{
+					_logger.Error($"Request to MWS.GetReportRequestList failed! [Message: '{exception.Message}', HttpStatusCode:'{exception.StatusCode}', ErrorType:'{exception.ErrorType}', ErrorCode:'{exception.ErrorCode}']", e);
+				}
+				else
+				{
+					_logger.Error($"Request to MWS.GetReportRequestList failed! [Message: '{e.Message}']", e);
+				}
+			    return null;
+			}
 	    }
 
 	    public void CleanupReportRequests(IReportRequestCallbackService reportRequestService)
