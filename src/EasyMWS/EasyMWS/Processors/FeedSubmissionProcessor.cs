@@ -73,26 +73,24 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 					return response?.SubmitFeedResult?.FeedSubmissionInfo?.FeedSubmissionId;
 				}
+				catch (MarketplaceWebServiceException e) when (e.StatusCode == HttpStatusCode.BadRequest)
+				{
+					stream.Dispose();
+					_logger.Error($"Request to MWS.SubmitFeed failed! [HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}', Message: '{e.Message}']", e);
+					return HttpStatusCode.BadRequest.ToString();
+					
+				}
+				catch (MarketplaceWebServiceException e)
+				{
+					stream.Dispose();
+					_logger.Error($"Request to MWS.SubmitFeed failed! [HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}', Message: '{e.Message}']", e);
+					return null;
+				}
 				catch (Exception e)
 				{
 					stream.Dispose();
-					if (e is MarketplaceWebServiceException exception)
-					{
-						_logger.Error($"Request to MWS.SubmitFeed failed! [HttpStatusCode:'{exception.StatusCode}', ErrorType:'{exception.ErrorType}', ErrorCode:'{exception.ErrorCode}', Message: '{exception.Message}']", e);
-						if (exception.StatusCode == HttpStatusCode.BadRequest)
-						{
-							return HttpStatusCode.BadRequest.ToString();
-						}
-						else
-						{
-							return null;
-						}
-					}
-					else
-					{
-						_logger.Error($"Request to MWS.SubmitFeed failed! [Message: '{e.Message}']", e);
-						return null;
-					}
+					_logger.Error($"Request to MWS.SubmitFeed failed! [Message: '{e.Message}']", e);
+					return null;
 				}
 				finally
 				{
@@ -155,16 +153,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 				_logger.Info($"AmazonMWS request for feed submission statuses succeeded.");
 				return responseInfo;
 			}
+			catch (MarketplaceWebServiceException e)
+			{
+				_logger.Error($"Request to MWS.GetFeedSubmissionList failed! [Message: '{e.Message}', HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}']", e);
+				return null;
+			}
 			catch (Exception e)
 			{
-				if (e is MarketplaceWebServiceException exception)
-				{
-					_logger.Error($"Request to MWS.GetFeedSubmissionList failed! [Message: '{exception.Message}', HttpStatusCode:'{exception.StatusCode}', ErrorType:'{exception.ErrorType}', ErrorCode:'{exception.ErrorCode}']", e);
-				}
-				else
-				{
-					_logger.Error($"Request to MWS.GetFeedSubmissionList failed! [Message: '{e.Message}']", e);
-				}
+				_logger.Error($"Request to MWS.GetFeedSubmissionList failed! [Message: '{e.Message}']", e);
 				return null;
 			}
 		}
@@ -243,16 +239,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 				return (reportResultStream, response?.GetFeedSubmissionResultResult?.ContentMD5);
 			}
+			catch (MarketplaceWebServiceException e)
+			{
+				_logger.Error($"Request to MWS.GetFeedSubmissionResult failed! [Message: '{e.Message}', HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}']", e);
+				return (null, null);
+			}
 			catch (Exception e)
 			{
-				if (e is MarketplaceWebServiceException exception)
-				{
-					_logger.Error($"Request to MWS.GetFeedSubmissionResult failed! [Message: '{exception.Message}', HttpStatusCode:'{exception.StatusCode}', ErrorType:'{exception.ErrorType}', ErrorCode:'{exception.ErrorCode}']", e);
-				}
-				else
-				{
-					_logger.Error($"Request to MWS.GetFeedSubmissionResult failed! [Message: '{e.Message}']", e);
-				}
+				_logger.Error($"Request to MWS.GetFeedSubmissionResult failed! [Message: '{e.Message}']", e);
 				return (null, null);
 			}
 		}

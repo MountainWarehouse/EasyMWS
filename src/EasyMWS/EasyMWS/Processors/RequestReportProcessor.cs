@@ -78,32 +78,28 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    {
 			    var reportResponse = _marketplaceWebServiceClient.RequestReport(reportRequest);
 			    var requestId = reportResponse?.ResponseHeaderMetadata?.RequestId ?? "unknown";
-				var timestamp = reportResponse?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
-				_logger.Info($"Request to MWS.RequestReport was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']", new RequestInfo(timestamp, requestId));
+			    var timestamp = reportResponse?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
+			    _logger.Info($"Request to MWS.RequestReport was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']",
+				    new RequestInfo(timestamp, requestId));
 
 			    return reportResponse?.RequestReportResult?.ReportRequestInfo?.ReportRequestId;
 		    }
+		    catch (MarketplaceWebServiceException e) when (e.StatusCode == HttpStatusCode.BadRequest)
+		    {
+			    _logger.Error($"Request to MWS.RequestReport failed! [HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}', Message: '{e.Message}']", e);
+			    return HttpStatusCode.BadRequest.ToString();
+			}
+		    catch (MarketplaceWebServiceException e)
+		    {
+			    _logger.Error($"Request to MWS.RequestReport failed! [HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}', Message: '{e.Message}']", e);
+				return null;
+		    }
 		    catch (Exception e)
 		    {
-			    if (e is MarketplaceWebServiceException exception)
-			    {
-					_logger.Error($"Request to MWS.RequestReport failed! [HttpStatusCode:'{exception.StatusCode}', ErrorType:'{exception.ErrorType}', ErrorCode:'{exception.ErrorCode}', Message: '{exception.Message}']", e);
-				    if (exception.StatusCode == HttpStatusCode.BadRequest)
-				    {
-					    return HttpStatusCode.BadRequest.ToString();
-				    }
-				    else
-				    {
-					    return null;
-					}
-			    }
-			    else
-			    {
-					_logger.Error($"Request to MWS.RequestReport failed! [Message: '{e.Message}']", e);
-				    return null;
-				}
-			}
-		}
+			    _logger.Error($"Request to MWS.RequestReport failed! [Message: '{e.Message}']", e);
+			    return null;
+		    }
+	    }
 
 	    public void MoveToQueueOfReportsToGenerate(IReportRequestCallbackService reportRequestService, ReportRequestEntry reportRequestEntry, string reportRequestId)
 	    {
@@ -156,16 +152,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 			    return responseInformation;
 
 		    }
-		    catch (Exception e)
+		    catch (MarketplaceWebServiceException e)
 		    {
-				if (e is MarketplaceWebServiceException exception)
-				{
-					_logger.Error($"Request to MWS.GetReportRequestList failed! [Message: '{exception.Message}', HttpStatusCode:'{exception.StatusCode}', ErrorType:'{exception.ErrorType}', ErrorCode:'{exception.ErrorCode}']", e);
-				}
-				else
-				{
-					_logger.Error($"Request to MWS.GetReportRequestList failed! [Message: '{e.Message}']", e);
-				}
+				_logger.Error($"Request to MWS.GetReportRequestList failed! [Message: '{e.Message}', HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}']", e);
+			    return null;
+			}
+			catch (Exception e)
+		    {
+				_logger.Error($"Request to MWS.GetReportRequestList failed! [Message: '{e.Message}']", e);
 			    return null;
 			}
 	    }
@@ -308,17 +302,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			    return reportContentStream;
 		    }
+		    catch (MarketplaceWebServiceException e)
+		    {
+				_logger.Error($"Request to MWS.GetReport failed! [Message: '{e.Message}', HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}']", e);
+			    return null;
+			}
 		    catch (Exception e)
 		    {
-			    if (e is MarketplaceWebServiceException exception)
-			    {
-				    _logger.Error(
-					    $"Request to MWS.GetReport failed! [Message: '{exception.Message}', HttpStatusCode:'{exception.StatusCode}', ErrorType:'{exception.ErrorType}', ErrorCode:'{exception.ErrorCode}']",e);
-			    }
-			    else
-			    {
-				    _logger.Error($"Request to MWS.GetReport failed! [Message: '{e.Message}']", e);
-			    }
+				_logger.Error($"Request to MWS.GetReport failed! [Message: '{e.Message}']", e);
 			    return null;
 		    }
 	    }
