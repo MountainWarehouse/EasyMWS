@@ -216,9 +216,10 @@ namespace MountainWarehouse.EasyMWS.Processors
 				&& ffscs.IsProcessingComplete == true
 				&& IsReadyForRequestingSubmissionResult(ffscs));
 
-		public (Stream processingReport, string md5hash) GetFeedSubmissionResultFromAmazon(FeedSubmissionEntry feedSubmissionEntry)
+		public (MemoryStream processingReport, string md5hash) GetFeedSubmissionResultFromAmazon(FeedSubmissionEntry feedSubmissionEntry)
 		{
-			_logger.Info($"Attempting to request the feed submission result for the next feed in queue from Amazon: {feedSubmissionEntry.RegionAndTypeComputed}.");
+			_logger.Info(
+				$"Attempting to request the feed submission result for the next feed in queue from Amazon: {feedSubmissionEntry.RegionAndTypeComputed}.");
 
 			var reportResultStream = new MemoryStream();
 			var request = new GetFeedSubmissionResultRequest
@@ -228,14 +229,32 @@ namespace MountainWarehouse.EasyMWS.Processors
 				FeedSubmissionResult = reportResultStream
 			};
 
+			try
+			{
 			var response = _marketplaceWebServiceClient.GetFeedSubmissionResult(request);
 
 			var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
 			var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
-			_logger.Info($"Request to MWS.GetFeedSubmissionResult was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']", new RequestInfo(timestamp, requestId));
-			_logger.Info($"Feed submission result request from Amazon has succeeded for {feedSubmissionEntry.RegionAndTypeComputed}.");
+				_logger.Info(
+					$"Request to MWS.GetFeedSubmissionResult was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']",
+					new RequestInfo(timestamp, requestId));
+				_logger.Info(
+					$"Feed submission result request from Amazon has succeeded for {feedSubmissionEntry.RegionAndTypeComputed}.");
 
 			return (reportResultStream, response?.GetFeedSubmissionResultResult?.ContentMD5);
+		}
+			catch (Exception e)
+			{
+				if (e is MarketplaceWebServiceException exception)
+				{
+					_logger.Error($"Request to MWS.GetFeedSubmissionResult failed! [Message: '{exception.Message}', HttpStatusCode:'{exception.StatusCode}', ErrorType:'{exception.ErrorType}', ErrorCode:'{exception.ErrorCode}']", e);
+				}
+				else
+				{
+					_logger.Error($"Request to MWS.GetFeedSubmissionResult failed! [Message: '{e.Message}']", e);
+				}
+				return (null, null);
+			}
 		}
 
 		public void RemoveFromQueue(IFeedSubmissionCallbackService feedSubmissionService, FeedSubmissionEntry entry)

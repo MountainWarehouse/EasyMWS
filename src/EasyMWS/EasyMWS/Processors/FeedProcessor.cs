@@ -47,15 +47,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			try
 			{
-				_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(feedSubmissionService);
+			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(feedSubmissionService);
 
-				SubmitNextFeedInQueueToAmazon(feedSubmissionService);
+			SubmitNextFeedInQueueToAmazon(feedSubmissionService);
 
-				RequestFeedSubmissionStatusesFromAmazon(feedSubmissionService);
+			RequestFeedSubmissionStatusesFromAmazon(feedSubmissionService);
 
-				var reportInfo = RequestNextFeedSubmissionInQueueFromAmazon(feedSubmissionService);
+			RequestNextFeedSubmissionInQueueFromAmazon(feedSubmissionService);
 
-				if (reportInfo.reportContent != null) ProcessReportInfo(feedSubmissionService, reportInfo);
 			}
 			catch (Exception e)
 			{
@@ -78,17 +77,17 @@ namespace MountainWarehouse.EasyMWS.Processors
 		}
 
 		private void PerformCallback(IFeedSubmissionCallbackService feedSubmissionService, FeedSubmissionEntry feedSubmission, Stream feedSubmissionReport)
-		{
-			try
 			{
+				try
+				{
 				ExecuteMethodCallback(feedSubmission, feedSubmissionReport);
 				_feedSubmissionProcessor.RemoveFromQueue(feedSubmissionService, feedSubmission);
-			}
-			catch (Exception e)
-			{
+				}
+				catch (Exception e)
+				{
 				_logger.Error(e.Message, e);
-			}
-		}
+					}
+				}
 
 		public void QueueFeed(IFeedSubmissionCallbackService feedSubmissionService, FeedSubmissionPropertiesContainer propertiesContainer, Action<Stream, object> callbackMethod, object callbackData)
 		{
@@ -190,21 +189,25 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public (FeedSubmissionEntry feedSubmissionCallback, Stream reportContent, string contentMd5) RequestNextFeedSubmissionInQueueFromAmazon(IFeedSubmissionCallbackService feedSubmissionService)
+		public void RequestNextFeedSubmissionInQueueFromAmazon(IFeedSubmissionCallbackService feedSubmissionService)
 		{
 			var nextFeedWithProcessingComplete = _feedSubmissionProcessor.GetNextFromQueueOfProcessingCompleteFeeds(feedSubmissionService);
-			if (nextFeedWithProcessingComplete == null) return (null, null, null);
+			if (nextFeedWithProcessingComplete == null) return;
 
-			try
-			{
 				var processingReportInfo = _feedSubmissionProcessor.GetFeedSubmissionResultFromAmazon(nextFeedWithProcessingComplete);
-
-				return (nextFeedWithProcessingComplete, processingReportInfo.processingReport, processingReportInfo.md5hash);
-			}
-			catch (Exception e)
+			if (processingReportInfo.processingReport == null)
 			{
-				_logger.Error(e.Message, e);
-				return (null, null, null);
+				_logger.Warn($"AmazonMWS feed submission result request failed for {nextFeedWithProcessingComplete.RegionAndTypeComputed}");
+				return;
+			}
+
+			var hasValidHash = IsValidFeedSubmissionReportHash(feedSubmissionService, (nextFeedWithProcessingComplete, processingReportInfo.processingReport, processingReportInfo.md5hash));
+			if (hasValidHash)
+			{
+				nextFeedWithProcessingComplete.Details.FeedContent = null;
+				nextFeedWithProcessingComplete.Details.FeedSubmissionReport = processingReportInfo.processingReport.ToArray();
+				feedSubmissionService.Update(nextFeedWithProcessingComplete);
+				feedSubmissionService.SaveChanges();
 			}
 		}
 
