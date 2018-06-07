@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using MountainWarehouse.EasyMWS.CallbackLogic;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
@@ -162,6 +163,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 				{
 					_feedSubmissionProcessor.MoveToRetryQueue(feedSubmissionService, feedSubmission);
 					_logger.Warn($"AmazonMWS feed submission request failed for {feedSubmission.RegionAndTypeComputed}");
+				}
+				else if (feedSubmissionId == HttpStatusCode.BadRequest.ToString())
+				{
+					_feedSubmissionProcessor.RemoveFromQueue(feedSubmissionService, feedSubmission);
+					_logger.Warn($"AmazonMWS feed submission failed for {feedSubmission.RegionAndTypeComputed}. The feed submission request was removed from queue.");
 				}
 				else
 				{

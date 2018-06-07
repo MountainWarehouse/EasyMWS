@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
@@ -61,14 +62,42 @@ namespace MountainWarehouse.EasyMWS.Processors
 					ContentMD5 = MD5ChecksumHelper.ComputeHashForAmazon(stream)
 				};
 
-				var response = _marketplaceWebServiceClient.SubmitFeed(submitFeedRequest);
-				stream.Close();
+				try
+				{
+					var response = _marketplaceWebServiceClient.SubmitFeed(submitFeedRequest);
 
-				var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
-				var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
-				_logger.Info($"Request to MWS.SubmitFeed was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']", new RequestInfo(timestamp, requestId));
+					var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
+					var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
+					_logger.Info($"Request to MWS.SubmitFeed was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']",
+						new RequestInfo(timestamp, requestId));
 
-				return response?.SubmitFeedResult?.FeedSubmissionInfo?.FeedSubmissionId;
+					return response?.SubmitFeedResult?.FeedSubmissionInfo?.FeedSubmissionId;
+				}
+				catch (Exception e)
+				{
+					stream.Dispose();
+					if (e is MarketplaceWebServiceException exception)
+					{
+						_logger.Error($"Request to MWS.SubmitFeed failed! [HttpStatusCode:'{exception.StatusCode}', ErrorType:'{exception.ErrorType}', ErrorCode:'{exception.ErrorCode}', Message: '{exception.Message}']", e);
+						if (exception.StatusCode == HttpStatusCode.BadRequest)
+						{
+							return HttpStatusCode.BadRequest.ToString();
+						}
+						else
+						{
+							return null;
+						}
+					}
+					else
+					{
+						_logger.Error($"Request to MWS.SubmitFeed failed! [Message: '{e.Message}']", e);
+						return null;
+					}
+				}
+				finally
+				{
+					stream.Close();
+				}
 			}
 		}
 
