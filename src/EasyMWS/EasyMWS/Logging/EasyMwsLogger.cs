@@ -30,11 +30,12 @@ namespace MountainWarehouse.EasyMWS.Logging
 			{
 				var messageObject = new
 				{
+					Source = "EasyMws",
 					RequestInfo = requestInfo,
 					Message = message
 				};
 
-				eventArgs.Message = $"EasyMws: {JsonConvert.SerializeObject(messageObject, Formatting.None)}";
+				eventArgs.Message = $"{JsonConvert.SerializeObject(messageObject, Formatting.None)}";
 				eventArgs.RequestInfo = requestInfo;
 			}
 
@@ -73,11 +74,12 @@ namespace MountainWarehouse.EasyMWS.Logging
 
 				var messageObject = new
 				{
+					Source = "EasyMws",
 					RequestInfo = eventArgs.RequestInfo,
 					Message = message
 				};
 
-				eventArgs.Message = $"EasyMws: {JsonConvert.SerializeObject(messageObject, Formatting.None)}";
+				eventArgs.Message = $"{JsonConvert.SerializeObject(messageObject, Formatting.None)}";
 				
 			}
 
