@@ -231,18 +231,18 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			try
 			{
-			var response = _marketplaceWebServiceClient.GetFeedSubmissionResult(request);
+				var response = _marketplaceWebServiceClient.GetFeedSubmissionResult(request);
 
-			var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
-			var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
+				var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
+				var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
 				_logger.Info(
 					$"Request to MWS.GetFeedSubmissionResult was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']",
 					new RequestInfo(timestamp, requestId));
 				_logger.Info(
 					$"Feed submission result request from Amazon has succeeded for {feedSubmissionEntry.RegionAndTypeComputed}.");
 
-			return (reportResultStream, response?.GetFeedSubmissionResultResult?.ContentMD5);
-		}
+				return (reportResultStream, response?.GetFeedSubmissionResultResult?.ContentMD5);
+			}
 			catch (Exception e)
 			{
 				if (e is MarketplaceWebServiceException exception)
@@ -297,8 +297,20 @@ namespace MountainWarehouse.EasyMWS.Processors
 				_logger.Warn($"Feed submission entry {feedSubmission.RegionAndTypeComputed} deleted from queue. Reason: Expiration period of '{_options.FeedSubmissionRequestEntryExpirationPeriod.Hours} hours' was exceeded.");
 			}
 
+			var entriesWithCallbackInvocationRetryCountExceeded = feedSubmissionService.GetAll()
+				.Where(fse => (fse.AmazonRegion == _region && fse.MerchantId == _merchantId) && fse.Details != null && fse.Details.FeedSubmissionReport != null && IsFeedSubmissionEntryCallbackInvocationRetryCountExceeded(fse));
+
+			foreach (var expiredSubmission in entriesWithCallbackInvocationRetryCountExceeded)
+			{
+				feedSubmissionService.Delete(expiredSubmission);
+				_logger.Warn($"Feed submission entry {expiredSubmission.RegionAndTypeComputed} deleted from queue. Reason: The feed submission report was downloaded successfully but the callback method provided at QueueFeed could not be invoked. Retry count exceeded : {_options.FeedSubmissionRequestEntryExpirationPeriod}");
+			}
+
 			feedSubmissionService.SaveChanges();
 		}
+
+		private bool IsFeedSubmissionEntryCallbackInvocationRetryCountExceeded(FeedSubmissionEntry feedSubmissionEntry) =>
+			(feedSubmissionEntry.SubmissionRetryCount > _options.FeedSubmissionResponseCallbackInvocationMaxRetryCount);
 
 		private bool IsExpirationPeriodExceeded(FeedSubmissionEntry feedSubmissionEntry) =>
 			(DateTime.Compare(feedSubmissionEntry.DateCreated, DateTime.UtcNow.Subtract(_options.FeedSubmissionRequestEntryExpirationPeriod)) < 0);

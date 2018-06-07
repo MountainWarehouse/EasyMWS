@@ -4,7 +4,7 @@ namespace MountainWarehouse.EasyMWS.Helpers
 {
     public static class StreamHelper
     {
-	    public static Stream CreateMemoryStream(string streamContent)
+	    public static MemoryStream CreateMemoryStream(string streamContent)
 	    {
 			MemoryStream stream = new MemoryStream();
 			StreamWriter writer = new StreamWriter(stream);

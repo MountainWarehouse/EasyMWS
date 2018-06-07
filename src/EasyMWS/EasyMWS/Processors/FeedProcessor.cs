@@ -45,8 +45,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void PollFeeds(IFeedSubmissionCallbackService feedSubmissionService)
 		{
-			try
-			{
 			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(feedSubmissionService);
 
 			SubmitNextFeedInQueueToAmazon(feedSubmissionService);
@@ -55,39 +53,54 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			RequestNextFeedSubmissionInQueueFromAmazon(feedSubmissionService);
 
-			}
-			catch (Exception e)
-			{
-				_logger.Error(e.Message, e);
-			}
+			PerformCallbacksForPreviouslySubmittedFeeds(feedSubmissionService);
 		}
 
-		private void ProcessReportInfo(IFeedSubmissionCallbackService feedSubmissionService, (FeedSubmissionEntry feedSubmissionCallback, Stream reportContent, string contentMd5) reportInfo)
+		private bool IsValidFeedSubmissionReportHash(IFeedSubmissionCallbackService feedSubmissionService, (FeedSubmissionEntry feedSubmissionCallback, MemoryStream reportContent, string contentMd5) reportInfo)
 		{
 			if (MD5ChecksumHelper.IsChecksumCorrect(reportInfo.reportContent, reportInfo.contentMd5))
 			{
-				PerformCallback(feedSubmissionService, reportInfo.feedSubmissionCallback, reportInfo.reportContent);
 				_logger.Info($"Checksum verification succeeded for feed submission report for {reportInfo.feedSubmissionCallback.RegionAndTypeComputed}");
+				return true;
 			}
 			else
 			{
 				_logger.Warn($"Checksum verification failed for feed submission report for {reportInfo.feedSubmissionCallback.RegionAndTypeComputed}");
 				_feedSubmissionProcessor.MoveToRetryQueue(feedSubmissionService, reportInfo.feedSubmissionCallback);
+				return false;
 			}
 		}
 
-		private void PerformCallback(IFeedSubmissionCallbackService feedSubmissionService, FeedSubmissionEntry feedSubmission, Stream feedSubmissionReport)
+		private void PerformCallbacksForPreviouslySubmittedFeeds(IFeedSubmissionCallbackService feedSubmissionService)
+		{
+			var previouslySubmittedFeeds = feedSubmissionService.GetAll()
+				.Where(fse => fse.AmazonRegion == _region && fse.MerchantId == _merchantId && fse.Details != null && fse.Details.FeedSubmissionReport != null);
+
+			foreach (var feedSubmissionEntry in previouslySubmittedFeeds)
 			{
+				var callbackSucceeded = true;
 				try
 				{
-				ExecuteMethodCallback(feedSubmission, feedSubmissionReport);
-				_feedSubmissionProcessor.RemoveFromQueue(feedSubmissionService, feedSubmission);
+					ExecuteMethodCallback(feedSubmissionEntry, new MemoryStream(feedSubmissionEntry.Details.FeedSubmissionReport));
 				}
 				catch (Exception e)
 				{
-				_logger.Error(e.Message, e);
+					callbackSucceeded = false;
+					feedSubmissionEntry.SubmissionRetryCount++;
+					feedSubmissionService.Update(feedSubmissionEntry);
+					_logger.Error($"Method callback failed for {feedSubmissionEntry.RegionAndTypeComputed}. Placing feed submission entry in retry queue. Current retry count is :{feedSubmissionEntry.SubmissionRetryCount}. {e.Message}", e);
+				}
+				finally
+				{
+					if (callbackSucceeded)
+					{
+						feedSubmissionService.Delete(feedSubmissionEntry);
 					}
 				}
+			}
+
+			feedSubmissionService.SaveChanges();
+		}
 
 		public void QueueFeed(IFeedSubmissionCallbackService feedSubmissionService, FeedSubmissionPropertiesContainer propertiesContainer, Action<Stream, object> callbackMethod, object callbackData)
 		{
@@ -194,7 +207,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var nextFeedWithProcessingComplete = _feedSubmissionProcessor.GetNextFromQueueOfProcessingCompleteFeeds(feedSubmissionService);
 			if (nextFeedWithProcessingComplete == null) return;
 
-				var processingReportInfo = _feedSubmissionProcessor.GetFeedSubmissionResultFromAmazon(nextFeedWithProcessingComplete);
+			var processingReportInfo = _feedSubmissionProcessor.GetFeedSubmissionResultFromAmazon(nextFeedWithProcessingComplete);
 			if (processingReportInfo.processingReport == null)
 			{
 				_logger.Warn($"AmazonMWS feed submission result request failed for {nextFeedWithProcessingComplete.RegionAndTypeComputed}");

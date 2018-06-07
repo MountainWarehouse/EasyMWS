@@ -17,6 +17,11 @@ namespace MountainWarehouse.EasyMWS.Model
 		/// </summary>
 	    public int ReportReadyCallbackInvocationMaxRetryCount { get; set; }
 
+		/// <summary>
+		/// Default=3. After a feed submission result has been received from amazon, the delegate provided for the ReportFeed method is invoked. If the invocation fails, this option specifies how many times the invocation will be retried.
+		/// </summary>
+	    public int FeedSubmissionResponseCallbackInvocationMaxRetryCount { get; set; }
+
 	    /// <summary>
 		/// Default=GeometricProgression. When requesting a report from amazon fails, specify the time series type for request retries.
 		/// </summary>
@@ -84,6 +89,7 @@ namespace MountainWarehouse.EasyMWS.Model
 		/// <para/>
 		/// ReportRequestMaxRetryCount = 4,<para/>
 		/// ReportReadyCallbackInvocationMaxRetryCount = 3,<para/>
+		/// FeedSubmissionResponseCallbackInvocationMaxRetryCount = 3,<para/>
 		/// ReportRequestRetryType = GeometricProgression,<para/>
 		/// ReportRequestRetryInitialDelay = Minutes(15),<para/>
 		/// ReportRequestRetryInterval = Hours(1),<para/>
@@ -105,6 +111,7 @@ namespace MountainWarehouse.EasyMWS.Model
 		    {
 			    ReportRequestMaxRetryCount = 4,
 			    ReportReadyCallbackInvocationMaxRetryCount = 3,
+			    FeedSubmissionResponseCallbackInvocationMaxRetryCount = 3,
 
 				ReportRequestRetryType = RetryPeriodType.GeometricProgression,
 			    ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(15),

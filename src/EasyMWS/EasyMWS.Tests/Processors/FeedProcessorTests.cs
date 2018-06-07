@@ -306,13 +306,19 @@ namespace EasyMWS.Tests.ReportProcessors
 				.Returns((testStream, matchingMd5Sum));
 			_feedSubmissionProcessorMock.Setup(fspm =>
 					fspm.GetNextFromQueueOfProcessingCompleteFeeds(It.IsAny<IFeedSubmissionCallbackService>()))
-				.Returns(new FeedSubmissionEntry(serializedPropertiesContainer) { MethodName = "testCallbackMethodName" });
+				.Returns(new FeedSubmissionEntry(serializedPropertiesContainer) { MethodName = "testCallbackMethodName", Details = new FeedSubmissionDetails()});
+			var testFeedSubmissions = new List<FeedSubmissionEntry>
+			{
+				new FeedSubmissionEntry{AmazonRegion = _amazonRegion, MerchantId = _merchantId, Details = null},
+				new FeedSubmissionEntry{AmazonRegion = _amazonRegion, MerchantId = _merchantId, Details = new FeedSubmissionDetails{FeedSubmissionReport = null}},
+				new FeedSubmissionEntry{AmazonRegion = _amazonRegion, MerchantId = _merchantId, Details = new FeedSubmissionDetails{FeedSubmissionReport = new byte[10]}},
+			};
+			_feedSubmissionCallbackServiceMock.Setup(fscs => fscs.GetAll()).Returns(testFeedSubmissions.AsQueryable());
 
 			_feedProcessor.PollFeeds(_feedSubmissionCallbackServiceMock.Object);
 
 			_callbackActivatorMock.Verify(cam => cam.CallMethod(It.IsAny<Callback>(), It.IsAny<Stream>()), Times.Once);
-			_feedSubmissionProcessorMock.Verify(fspm => fspm.RemoveFromQueue(It.IsAny<IFeedSubmissionCallbackService>(),It.IsAny<FeedSubmissionEntry>()), Times.Once);
-			_feedSubmissionProcessorMock.Verify(fspm => fspm.MoveToRetryQueue(It.IsAny<IFeedSubmissionCallbackService>(),It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionCallbackServiceMock.Verify(fspm => fspm.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Once);
 		}
 
 		#endregion
