@@ -85,14 +85,23 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    }
 		    catch (Exception e)
 		    {
-			    if (e is MarketplaceWebServiceException exception && exception.StatusCode == HttpStatusCode.BadRequest)
+			    if (e is MarketplaceWebServiceException exception)
 			    {
-				    _logger.Error($"Request to MWS.RequestReport failed! [HttpStatusCode:'{exception.StatusCode}',ErrorType:'{exception.ErrorType}', ErrorCode:'{exception.ErrorCode}']", e);
+					_logger.Error($"Request to MWS.RequestReport failed! [HttpStatusCode:'{exception.StatusCode}', ErrorType:'{exception.ErrorType}', ErrorCode:'{exception.ErrorCode}', Message: '{exception.Message}']", e);
+				    if (exception.StatusCode == HttpStatusCode.BadRequest)
+			    {
 					return HttpStatusCode.BadRequest.ToString();
 			    }
-
-			    _logger.Error($"Request to MWS.RequestReport failed!", e);
+				    else
+				    {
 				return null;
+			}
+		}
+			    else
+			    {
+					_logger.Error($"Request to MWS.RequestReport failed! [Message: '{e.Message}']", e);
+				    return null;
+				}
 			}
 		}
 
