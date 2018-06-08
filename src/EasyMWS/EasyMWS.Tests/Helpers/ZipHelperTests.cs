@@ -100,6 +100,8 @@ namespace EasyMWS.Tests.Helpers
 		    Assert.NotNull(resultingContentStream);
 		    var streamReader = new StreamReader(resultingContentStream);
 
+		    Assert.AreEqual(content, streamReader.ReadToEnd());
+
 			resultingContentStream.Dispose();
 		    streamReader.Close();
 		}
@@ -107,7 +109,7 @@ namespace EasyMWS.Tests.Helpers
 	    private string GetLoremIpsumContent()
 	    {
 		    return
-			    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. In eleifend eget nisi et condimentum. Sed id tristique ex. Donec semper porttitor venenatis. Duis volutpat maximus arcu pharetra fringilla. Curabitur at ipsum non dui rhoncus vulputate et id leo. Ut molestie tortor sit amet finibus rutrum. Donec consequat blandit diam suscipit efficitur. Cras tristique, nisl sed feugiat interdum, mauris augue dapibus eros, vitae porta est est ac justo. Fusce id eros sed lacus bibendum condimentum. Nunc sagittis consequat lorem sit amet scelerisque. In a sapien congue ante pharetra dignissim vitae quis nulla. In tincidunt, ligula efficitur posuere mattis, turpis quam luctus orci, eu dignissim mauris enim quis purus. Donec sed risus ut elit mollis laoreet. Suspendisse quis lacinia felis, a accumsan arcu. Donec pharetra viverra risus id blandit.";
+				"Lorem ipsum dolor sit amet, consectetur adipiscing elit. In eleifend eget nisi et condimentum. Sed id tristique ex. Donec semper porttitor venenatis. Duis volutpat maximus arcu pharetra fringilla. Curabitur at ipsum non dui rhoncus vulputate et id leo. Ut molestie tortor sit amet finibus rutrum. Donec consequat blandit diam suscipit efficitur. Cras tristique, nisl sed feugiat interdum, mauris augue dapibus eros, vitae porta est est ac justo. Fusce id eros sed lacus bibendum condimentum. Nunc sagittis consequat lorem sit amet scelerisque. In a sapien congue ante pharetra dignissim vitae quis nulla. In tincidunt, ligula efficitur posuere mattis. Die Vögel singen schön. Die Straße ist breit.";
 
 	    }
 
