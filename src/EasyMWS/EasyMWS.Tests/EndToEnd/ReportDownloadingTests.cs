@@ -72,12 +72,11 @@ namespace EasyMWS.Tests.EndToEnd
 	    {
 			// arrange
 		    var validReportType = $"{_testEntriesIdentifier}_VALID_REPORT_TYPE_";
-		    var expectedReportRequestId = "test report request Id";
 		    var expectedGeneratedReportId = "test generated report Id";
 		    var expectedReportProcessingStatus = "_DONE_";
 		    var reportRequestContainer = GenerateReportContainer(validReportType);
-			Setup_RequestReport_Returns_ReportRequestWasGenerated(validReportType, expectedReportRequestId);
-		    Setup_GetReportRequestList_Returns_ReportsGeneratedSuccessfully(expectedReportRequestId, expectedGeneratedReportId, expectedReportProcessingStatus);
+			Setup_RequestReport_Returns_ReportRequestWasGenerated(validReportType);
+		    Setup_GetReportRequestList_Returns_ReportsGeneratedSuccessfully(expectedGeneratedReportId, expectedReportProcessingStatus);
 		    Setup_GetReport_Returns_ReportContentStream(expectedGeneratedReportId, "testReportContent");
 		    _actualCallbackObject = new object();
 		    _actualReportContent = null;
@@ -100,17 +99,6 @@ namespace EasyMWS.Tests.EndToEnd
 			_easyMwsClient.Poll();
 
 			// assert - null callback data deserialization step does not crash, and callback was invoked successfully
-		    _loggerMock.Verify(l => l.Info(It.Is<string>(msg => msg.EndsWith("Executing cleanup of report requests queue.")),
-			    It.IsAny<RequestInfo>()));
-		    _loggerMock.Verify(l => l.Info(It.Is<string>(msg => msg.StartsWith("Request to MWS.RequestReport was successful!")),
-			    It.IsAny<RequestInfo>()));
-		    _loggerMock.Verify(l => l.Info(It.Is<string>(msg => msg.StartsWith("Attempting to request report processing statuses")),
-			    It.IsAny<RequestInfo>()));
-		    _loggerMock.Verify(l => l.Info(It.Is<string>(msg => msg.StartsWith("Report download from Amazon has succeeded")),
-			    It.IsAny<RequestInfo>()));
-		    _loggerMock.Verify(l => l.Info(It.Is<string>(msg => msg.StartsWith("Attempting to perform method callback")),
-			    It.IsAny<RequestInfo>()));
-
 			Assert.IsNull(_actualCallbackObject);
 			Assert.NotNull(_actualReportContent);
 		    _mwsClientMock.Verify(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()), Times.Once);
@@ -124,14 +112,14 @@ namespace EasyMWS.Tests.EndToEnd
 		{
 			// arrange
 			var validReportType = $"{_testEntriesIdentifier}_VALID_REPORT_TYPE_";
-			var expectedReportRequestId = "test report request Id";
+			
 			var expectedGeneratedReportId = "test generated report Id";
 			var expectedReportProcessingStatus = "_DONE_";
 			var reportRequestContainer = GenerateReportContainer(validReportType);
 			var expectedCallbackData = ("test", "callback", "data");
 			var expectedReportContent = "testReportContent";
-			Setup_RequestReport_Returns_ReportRequestWasGenerated(validReportType, expectedReportRequestId);
-			Setup_GetReportRequestList_Returns_ReportsGeneratedSuccessfully(expectedReportRequestId, expectedGeneratedReportId, expectedReportProcessingStatus);
+			Setup_RequestReport_Returns_ReportRequestWasGenerated(validReportType);
+			Setup_GetReportRequestList_Returns_ReportsGeneratedSuccessfully(expectedGeneratedReportId, expectedReportProcessingStatus);
 			Setup_GetReport_Returns_ReportContentStream(expectedGeneratedReportId, expectedReportContent);
 			_actualCallbackObject = null;
 			_actualReportContent = null;
@@ -148,22 +136,14 @@ namespace EasyMWS.Tests.EndToEnd
 			_easyMwsClient.Poll();
 
 			// assert - null callback data deserialization step does not crash, and callback was invoked successfully
-			_loggerMock.Verify(l => l.Info(It.Is<string>(msg => msg.EndsWith("Executing cleanup of report requests queue.")),
-				It.IsAny<RequestInfo>()));
-			_loggerMock.Verify(l => l.Info(It.Is<string>(msg => msg.StartsWith("Request to MWS.RequestReport was successful!")),
-				It.IsAny<RequestInfo>()));
-			_loggerMock.Verify(l => l.Info(It.Is<string>(msg => msg.StartsWith("Attempting to request report processing statuses")),
-				It.IsAny<RequestInfo>()));
-			_loggerMock.Verify(l => l.Info(It.Is<string>(msg => msg.StartsWith("Report download from Amazon has succeeded")),
-				It.IsAny<RequestInfo>()));
-			_loggerMock.Verify(l => l.Info(It.Is<string>(msg => msg.StartsWith("Attempting to perform method callback")),
-				It.IsAny<RequestInfo>()));
-
 			Assert.AreEqual(expectedCallbackData, _actualCallbackObject);
 			Assert.AreEqual(expectedReportContent, _actualReportContent == null ? null : new StreamReader(_actualReportContent).ReadToEnd());
 			_mwsClientMock.Verify(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()), Times.Once);
 			_mwsClientMock.Verify(mws => mws.GetReportRequestList(It.IsAny<GetReportRequestListRequest>()), Times.Once);
 			_mwsClientMock.Verify(mws => mws.GetReport(It.IsAny<GetReportRequest>()), Times.Once);
+
+			var dbEntry = _dbContext.ReportRequestEntries.FirstOrDefault(rre => rre.ReportType == validReportType);
+			Assert.IsNull(dbEntry);
 		}
 
 		[Test]
@@ -186,15 +166,9 @@ namespace EasyMWS.Tests.EndToEnd
 		    _easyMwsClient.Poll();
 
 			// assert
-		    _loggerMock.Verify(l => l.Info(It.Is<string>(msg => msg.EndsWith("Executing cleanup of report requests queue.")),
-			    It.IsAny<RequestInfo>()));
-		    _loggerMock.Verify(l => l.Info(It.Is<string>(msg => msg.StartsWith("Attempting to request the next report in queue")),
-			    It.IsAny<RequestInfo>()));
-		    _loggerMock.Verify(l => l.Error(It.Is<string>(msg => msg.StartsWith($"Request to MWS.RequestReport failed! [HttpStatusCode:'{expectedExceptionStatusCode}'")),
-			    It.IsAny<Exception>()));
-			_loggerMock.Verify(l => l.Warn(It.Is<string>(msg => msg.EndsWith("The report request was removed from queue.")),
-			    It.IsAny<RequestInfo>()));
-	    }
+			var dbEntry = _dbContext.ReportRequestEntries.FirstOrDefault(rre => rre.ReportType == invalidReportType);
+		    Assert.IsNull(dbEntry);
+		}
 
 		[Test]
 	    public void GivenRequestingAReportFromAmazon_WhenTheRequestFailsMaxRetryCountTimes_TheReportRequestEntryIsRemovedFromQueue()
@@ -268,8 +242,9 @@ namespace EasyMWS.Tests.EndToEnd
 				.Returns(response);
 		}
 
-		private void Setup_RequestReport_Returns_ReportRequestWasGenerated(string reportType, string expectedReportRequestId)
+		private void Setup_RequestReport_Returns_ReportRequestWasGenerated(string reportType)
 		{
+			var expectedReportRequestId = "test report request Id";
 			var response = new RequestReportResponse
 			{
 				ResponseHeaderMetadata = new ResponseHeaderMetadata("requestId", "responseContext", "timestamp"),
@@ -281,8 +256,9 @@ namespace EasyMWS.Tests.EndToEnd
 				.Returns(response);
 		}
 
-		private void Setup_GetReportRequestList_Returns_ReportsGeneratedSuccessfully(string reportRequestId, string expectedGeneratedReportId, string expectedReportProcessingStatus)
+		private void Setup_GetReportRequestList_Returns_ReportsGeneratedSuccessfully(string expectedGeneratedReportId, string expectedReportProcessingStatus)
 		{
+			var reportRequestId = "test report request Id";
 			var response = new GetReportRequestListResponse
 			{
 				ResponseHeaderMetadata = new ResponseHeaderMetadata("requestId", "responseContext", "timestamp"),
