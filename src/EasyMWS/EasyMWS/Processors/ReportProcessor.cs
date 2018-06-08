@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -70,24 +71,21 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			foreach (var reportEntry in previouslyDownloadedReports)
 			{
-				var callbackSucceeded = true;
 				try
 				{
 					ExecuteMethodCallback(reportEntry);
+					reportRequestService.Delete(reportEntry);
+				}
+				catch (SqlException e)
+				{
+					_logger.Error(e.Message, e);
 				}
 				catch (Exception e)
 				{
-					callbackSucceeded = false;
 					reportEntry.RequestRetryCount++;
 					reportRequestService.Update(reportEntry);
-					_logger.Error($"Method callback failed for {reportEntry.RegionAndTypeComputed}. Placing report request entry in retry queue. Current retry count is :{reportEntry.RequestRetryCount}. {e.Message}", e);
-				}
-				finally
-				{
-					if (callbackSucceeded)
-					{
-						reportRequestService.Delete(reportEntry);
-					}
+					_logger.Error(
+						$"Method callback failed for {reportEntry.RegionAndTypeComputed}. Placing report request entry in retry queue. Current retry count is :{reportEntry.RequestRetryCount}. {e.Message}", e);
 				}
 			}
 

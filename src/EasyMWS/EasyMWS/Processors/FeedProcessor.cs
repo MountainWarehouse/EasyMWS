@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -78,24 +79,20 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			foreach (var feedSubmissionEntry in previouslySubmittedFeeds)
 			{
-				var callbackSucceeded = true;
 				try
 				{
 					ExecuteMethodCallback(feedSubmissionEntry, new MemoryStream(feedSubmissionEntry.Details.FeedSubmissionReport));
+					feedSubmissionService.Delete(feedSubmissionEntry);
+				}
+				catch (SqlException e)
+				{
+					_logger.Error(e.Message, e);
 				}
 				catch (Exception e)
 				{
-					callbackSucceeded = false;
 					feedSubmissionEntry.SubmissionRetryCount++;
 					feedSubmissionService.Update(feedSubmissionEntry);
 					_logger.Error($"Method callback failed for {feedSubmissionEntry.RegionAndTypeComputed}. Placing feed submission entry in retry queue. Current retry count is :{feedSubmissionEntry.SubmissionRetryCount}. {e.Message}", e);
-				}
-				finally
-				{
-					if (callbackSucceeded)
-					{
-						feedSubmissionService.Delete(feedSubmissionEntry);
-					}
 				}
 			}
 
