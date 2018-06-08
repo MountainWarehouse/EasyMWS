@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using MountainWarehouse.EasyMWS.Data;
 
@@ -15,6 +16,11 @@ namespace MountainWarehouse.EasyMWS.Repositories
 			// it might be expected for an entity to be already removed, if dealing with multiple similar clients instances e.g. using hangfire for creating tasks.
 			// if this happens let the exception be thrown, as it will be caught and logged anyway
 			_dbContext.FeedSubmissionEntries.Remove(entry);
+		}
+
+		public void DeleteRange(IEnumerable<FeedSubmissionEntry> entries)
+		{
+			_dbContext.FeedSubmissionEntries.RemoveRange(entries);
 		}
 
 		public IQueryable<FeedSubmissionEntry> GetAll() => _dbContext.FeedSubmissionEntries.AsQueryable();

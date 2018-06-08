@@ -30,6 +30,7 @@ namespace MountainWarehouse.EasyMWS.Logging
 			{
 				var messageObject = new
 				{
+					Source = "EasyMws",
 					RequestInfo = requestInfo,
 					Message = message
 				};
@@ -73,6 +74,7 @@ namespace MountainWarehouse.EasyMWS.Logging
 
 				var messageObject = new
 				{
+					Source = "EasyMws",
 					RequestInfo = eventArgs.RequestInfo,
 					Message = message
 				};

@@ -11,7 +11,7 @@ namespace MountainWarehouse.EasyMWS.Helpers
 		    return Convert.ToBase64String(MD5.Create().ComputeHash(stream));
 	    }
 
-		public static bool IsChecksumCorrect(Stream stream, string expectedHash)
+		public static bool IsChecksumCorrect(MemoryStream stream, string expectedHash)
 		{
 			if (stream == null && expectedHash == null) return false;
 			var actualHash = ComputeHashForAmazon(stream);

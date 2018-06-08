@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using MountainWarehouse.EasyMWS.Data;
@@ -10,7 +11,8 @@ namespace MountainWarehouse.EasyMWS.Services
 	    void Create(FeedSubmissionEntry entry);
 	    void Update(FeedSubmissionEntry entry);
 	    void Delete(FeedSubmissionEntry entry);
-	    void SaveChanges();
+	    void DeleteRange(IEnumerable<FeedSubmissionEntry> entries);
+		void SaveChanges();
 	    IQueryable<FeedSubmissionEntry> GetAll();
 	    IQueryable<FeedSubmissionEntry> Where(Expression<Func<FeedSubmissionEntry, bool>> predicate);
 	    FeedSubmissionEntry First();

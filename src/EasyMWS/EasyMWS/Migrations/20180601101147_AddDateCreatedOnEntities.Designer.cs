@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MountainWarehouse.EasyMWS.Data;
 
 namespace MountainWarehouse.EasyMWS.Migrations
 {
     [DbContext(typeof(EasyMwsContext))]
-    partial class EasyMwsContextModelSnapshot : ModelSnapshot
+    [Migration("20180601101147_AddDateCreatedOnEntities")]
+    partial class AddDateCreatedOnEntities
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -19,13 +21,32 @@ namespace MountainWarehouse.EasyMWS.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+            modelBuilder.Entity("MountainWarehouse.EasyMWS.Data.AmazonReport", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Content");
+
+                    b.Property<DateTime>("DateCreated");
+
+                    b.Property<string>("DownloadRequestId");
+
+                    b.Property<string>("DownloadTimestamp");
+
+                    b.Property<string>("ReportType");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AmazonReports");
+                });
+
             modelBuilder.Entity("MountainWarehouse.EasyMWS.Data.FeedSubmissionDetails", b =>
                 {
                     b.Property<int>("FeedSubmissionEntryId");
 
                     b.Property<string>("FeedContent");
-
-                    b.Property<byte[]>("FeedSubmissionReport");
 
                     b.HasKey("FeedSubmissionEntryId");
 
@@ -75,17 +96,6 @@ namespace MountainWarehouse.EasyMWS.Migrations
                     b.ToTable("FeedSubmissionEntries");
                 });
 
-            modelBuilder.Entity("MountainWarehouse.EasyMWS.Data.ReportRequestDetails", b =>
-                {
-                    b.Property<int>("ReportRequestEntryId");
-
-                    b.Property<byte[]>("ReportContent");
-
-                    b.HasKey("ReportRequestEntryId");
-
-                    b.ToTable("ReportRequestDetails");
-                });
-
             modelBuilder.Entity("MountainWarehouse.EasyMWS.Data.ReportRequestEntry", b =>
                 {
                     b.Property<int>("Id")
@@ -132,14 +142,6 @@ namespace MountainWarehouse.EasyMWS.Migrations
                     b.HasOne("MountainWarehouse.EasyMWS.Data.FeedSubmissionEntry", "FeedSubmissionEntry")
                         .WithOne("Details")
                         .HasForeignKey("MountainWarehouse.EasyMWS.Data.FeedSubmissionDetails", "FeedSubmissionEntryId")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("MountainWarehouse.EasyMWS.Data.ReportRequestDetails", b =>
-                {
-                    b.HasOne("MountainWarehouse.EasyMWS.Data.ReportRequestEntry", "ReportRequestEntry")
-                        .WithOne("Details")
-                        .HasForeignKey("MountainWarehouse.EasyMWS.Data.ReportRequestDetails", "ReportRequestEntryId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using MountainWarehouse.EasyMWS.Data;
@@ -13,7 +14,9 @@ namespace MountainWarehouse.EasyMWS.Repositories
 	    Task CreateAsync(ReportRequestEntry entry);
 	    void Update(ReportRequestEntry entry);
 	    void Delete(ReportRequestEntry entry);
-	    IQueryable<ReportRequestEntry> GetAll();
+	    void DeleteRange(IEnumerable<ReportRequestEntry> entries);
+
+		IQueryable<ReportRequestEntry> GetAll();
 		void SaveChanges();
 	    Task SaveChangesAsync();
 	    void Dispose();

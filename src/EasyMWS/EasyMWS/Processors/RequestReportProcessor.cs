@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
@@ -17,20 +18,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 {
     internal class RequestReportProcessor : IRequestReportProcessor
     {
-	    private readonly IAmazonReportService _amazonReportStorageService;
 	    private readonly IMarketplaceWebServiceClient _marketplaceWebServiceClient;
 	    private readonly IEasyMwsLogger _logger;
 		private readonly EasyMwsOptions _options;
 	    private readonly AmazonRegion _region;
 	    private readonly string _merchantId;
-
-	    internal RequestReportProcessor(AmazonRegion region, string merchantId,
-		    IMarketplaceWebServiceClient marketplaceWebServiceClient,
-		    IAmazonReportService amazonReportStorageService,
-		    IEasyMwsLogger logger, EasyMwsOptions options) : this(region, merchantId, marketplaceWebServiceClient, logger, options)
-	    {
-		    _amazonReportStorageService = amazonReportStorageService;
-	    }
 
 	    internal RequestReportProcessor(AmazonRegion region, string merchantId, IMarketplaceWebServiceClient marketplaceWebServiceClient, IEasyMwsLogger logger, EasyMwsOptions options)
 	    {
@@ -39,7 +31,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    _options = options;
 		    _logger = logger;
 			_marketplaceWebServiceClient = marketplaceWebServiceClient;
-		    _amazonReportStorageService = _amazonReportStorageService ?? new AmazonReportService(_options);
 	    }
 
 	    public ReportRequestEntry GetNextFromQueueOfReportsToRequest(IReportRequestCallbackService reportRequestService)
@@ -87,17 +78,28 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    {
 			    var reportResponse = _marketplaceWebServiceClient.RequestReport(reportRequest);
 			    var requestId = reportResponse?.ResponseHeaderMetadata?.RequestId ?? "unknown";
-				var timestamp = reportResponse?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
-				_logger.Info($"Request to MWS.RequestReport was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']", new RequestInfo(timestamp, requestId));
+			    var timestamp = reportResponse?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
+			    _logger.Info($"Request to MWS.RequestReport was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']",
+				    new RequestInfo(timestamp, requestId));
 
 			    return reportResponse?.RequestReportResult?.ReportRequestInfo?.ReportRequestId;
 		    }
+		    catch (MarketplaceWebServiceException e) when (e.StatusCode == HttpStatusCode.BadRequest)
+		    {
+			    _logger.Error($"Request to MWS.RequestReport failed! [HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}', Message: '{e.Message}']", e);
+			    return HttpStatusCode.BadRequest.ToString();
+			}
+		    catch (MarketplaceWebServiceException e)
+		    {
+			    _logger.Error($"Request to MWS.RequestReport failed! [HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}', Message: '{e.Message}']", e);
+				return null;
+		    }
 		    catch (Exception e)
 		    {
-				_logger.Error($"Request to MWS.RequestReport failed!", e);
+			    _logger.Error($"Request to MWS.RequestReport failed! [Message: '{e.Message}']", e);
 			    return null;
-			}
-		}
+		    }
+	    }
 
 	    public void MoveToQueueOfReportsToGenerate(IReportRequestCallbackService reportRequestService, ReportRequestEntry reportRequestEntry, string reportRequestId)
 	    {
@@ -122,47 +124,88 @@ namespace MountainWarehouse.EasyMWS.Processors
 	    {
 		    _logger.Info($"Attempting to request report processing statuses for all reports in queue.");
 
-			var request = new GetReportRequestListRequest() {ReportRequestIdList = new IdList(), Merchant = merchant};
+		    var request = new GetReportRequestListRequest() {ReportRequestIdList = new IdList(), Merchant = merchant};
 		    request.ReportRequestIdList.Id.AddRange(requestIdList);
-		    var response = _marketplaceWebServiceClient.GetReportRequestList(request);
-			var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
-		    var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
-			_logger.Info($"Request to MWS.GetReportRequestList was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']", new RequestInfo(timestamp, requestId));
 
-			var responseInformation = new List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)>();
-
-		    if (response != null)
+		    try
 		    {
-			    foreach (var reportRequestInfo in response.GetReportRequestListResult.ReportRequestInfo)
-			    {
-				    responseInformation.Add(
-					    (reportRequestInfo.ReportRequestId, reportRequestInfo.GeneratedReportId, reportRequestInfo
-						    .ReportProcessingStatus));
-			    }
-		    }
+			    var response = _marketplaceWebServiceClient.GetReportRequestList(request);
+			    var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
+			    var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
+			    _logger.Info(
+				    $"Request to MWS.GetReportRequestList was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']",
+				    new RequestInfo(timestamp, requestId));
 
-		    return responseInformation;
+			    var responseInformation =
+				    new List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)>();
+
+			    if (response != null)
+			    {
+				    foreach (var reportRequestInfo in response.GetReportRequestListResult.ReportRequestInfo)
+				    {
+					    responseInformation.Add(
+						    (reportRequestInfo.ReportRequestId, reportRequestInfo.GeneratedReportId, reportRequestInfo
+							    .ReportProcessingStatus));
+				    }
+			    }
+
+			    return responseInformation;
+
+		    }
+		    catch (MarketplaceWebServiceException e)
+		    {
+				_logger.Error($"Request to MWS.GetReportRequestList failed! [Message: '{e.Message}', HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}']", e);
+			    return null;
+			}
+			catch (Exception e)
+		    {
+				_logger.Error($"Request to MWS.GetReportRequestList failed! [Message: '{e.Message}']", e);
+			    return null;
+			}
 	    }
 
 	    public void CleanupReportRequests(IReportRequestCallbackService reportRequestService)
 	    {
 			_logger.Info("Executing cleanup of report requests queue.");
 			var expiredReportRequests = reportRequestService.GetAll()
-				.Where(rrc => rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId
-				                && rrc.RequestRetryCount > _options.ReportRequestMaxRetryCount);
+				.Where(rrc => (rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId) && rrc.Details == null && IsRequestRetryCountExceeded(rrc));
 
-			if (expiredReportRequests.Any())
+			foreach (var expiredReport in expiredReportRequests)
 			{
-				_logger.Warn("The following report requests have exceeded their retry limit and will now be deleted :");
-				foreach (var expiredReport in expiredReportRequests)
-				{
-					reportRequestService.Delete(expiredReport);
-					_logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue.");
-				}
+				reportRequestService.Delete(expiredReport);
+				_logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: Failure while trying to request the report from Amazon. Retry count exceeded : {_options.ReportRequestMaxRetryCount}.");
 			}
+
+		    var entriesWithExpirationPeriodExceeded = reportRequestService.GetAll()
+			    .Where(rrc => (rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId) && IsExpirationPeriodExceeded(rrc));
+
+		    foreach (var expiredReport in entriesWithExpirationPeriodExceeded)
+		    {
+			    reportRequestService.Delete(expiredReport);
+			    _logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: Expiration period of '{_options.ReportDownloadRequestEntryExpirationPeriod.Hours} hours' was exceeded.");
+		    }
+
+			var entriesWithCallbackInvocationRetryCountExceeded = reportRequestService.GetAll()
+				.Where(rrc => (rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId) && rrc.Details != null && IsReportRequestEntryCallbackInvocationRetryCountExceeded(rrc));
+
+		    foreach (var expiredReport in entriesWithCallbackInvocationRetryCountExceeded)
+		    {
+			    reportRequestService.Delete(expiredReport);
+			    _logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: The report was downloaded successfully but the callback method provided at QueueReport could not be invoked. Retry count exceeded : {_options.ReportReadyCallbackInvocationMaxRetryCount}");
+		    }
 
 			reportRequestService.SaveChanges();
 	    }
+
+	    private bool IsRequestRetryCountExceeded(ReportRequestEntry reportRequestEntry) => 
+			(reportRequestEntry.RequestRetryCount > _options.ReportRequestMaxRetryCount);
+
+		private bool IsReportRequestEntryCallbackInvocationRetryCountExceeded(ReportRequestEntry reportRequestEntry) =>
+		    (reportRequestEntry.RequestRetryCount > _options.ReportReadyCallbackInvocationMaxRetryCount); 
+
+
+		private bool IsExpirationPeriodExceeded(ReportRequestEntry reportRequestEntry) =>
+			(DateTime.Compare(reportRequestEntry.DateCreated, DateTime.UtcNow.Subtract(_options.ReportDownloadRequestEntryExpirationPeriod)) < 0);
 
 		public void QueueReportsAccordingToProcessingStatus(IReportRequestCallbackService reportRequestService,
 			List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> reportGenerationStatuses)
@@ -227,14 +270,15 @@ namespace MountainWarehouse.EasyMWS.Processors
 				: reportRequestService.FirstOrDefault(
 					rrc => rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId
 					        && rrc.RequestReportId != null
-					        && rrc.GeneratedReportId != null);
+					        && rrc.GeneratedReportId != null
+							&& rrc.Details == null);
 	    }
 
-	    public Stream DownloadGeneratedReportFromAmazon(ReportRequestEntry reportRequestEntry)
+	    public MemoryStream DownloadGeneratedReportFromAmazon(ReportRequestEntry reportRequestEntry)
 	    {
 		    _logger.Info($"Attempting to download the next report in queue from Amazon: {reportRequestEntry.RegionAndTypeComputed}.");
 
-			var reportResultStream = new MemoryStream();
+		    var reportResultStream = new MemoryStream();
 		    var getReportRequest = new GetReportRequest
 		    {
 			    ReportId = reportRequestEntry.GeneratedReportId,
@@ -242,25 +286,32 @@ namespace MountainWarehouse.EasyMWS.Processors
 			    Merchant = reportRequestEntry.MerchantId
 		    };
 
-		    var response = _marketplaceWebServiceClient.GetReport(getReportRequest);
-
-		    var reportContentStream = getReportRequest.Report;
-			var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
-		    var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
-			_logger.Info($"Request to MWS.GetReport was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']", new RequestInfo(timestamp, requestId));
-			_logger.Info($"Report download from Amazon has succeeded for {reportRequestEntry.RegionAndTypeComputed}.");
-
-			if (_options.KeepAmazonReportsInLocalDbAfterCallbackIsPerformed)
+		    try
 		    {
-			    _logger.Info($"Backup report storage in local easyMws database is enabled. To disable it, update the KeepAmazonReportsInLocalDbAfterCallbackIsPerformed option.");
+			    var response = _marketplaceWebServiceClient.GetReport(getReportRequest);
 
-			    var reportType = reportRequestEntry?.ReportType ?? "unknown";
+			    var reportContentStream = new MemoryStream();
+			    getReportRequest.Report.CopyTo(reportContentStream);
+			    reportContentStream.Position = 0;
 
-			    _logger.Info($"Proceeding to save backup report content in EasyMws internal database for {reportRequestEntry.RegionAndTypeComputed}");
-				StoreAmazonReportToInternalStorage(reportContentStream, reportType, requestId, timestamp);
+			    var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
+			    var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
+			    _logger.Info($"Request to MWS.GetReport was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']",
+				    new RequestInfo(timestamp, requestId));
+			    _logger.Info($"Report download from Amazon has succeeded for {reportRequestEntry.RegionAndTypeComputed}.");
+
+			    return reportContentStream;
 		    }
-
-			return reportContentStream;
+		    catch (MarketplaceWebServiceException e)
+		    {
+				_logger.Error($"Request to MWS.GetReport failed! [Message: '{e.Message}', HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}']", e);
+			    return null;
+			}
+		    catch (Exception e)
+		    {
+				_logger.Error($"Request to MWS.GetReport failed! [Message: '{e.Message}']", e);
+			    return null;
+		    }
 	    }
 
 	    public void RemoveFromQueue(IReportRequestCallbackService reportRequestService, ReportRequestEntry reportRequestEntry)
@@ -279,24 +330,5 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_logger.Warn(
 				$"Moving {reportRequestEntry.RegionAndTypeComputed} to retry queue. Retry count is now '{reportRequestEntry.RequestRetryCount}'.");
 	    }
-
-	    private void StoreAmazonReportToInternalStorage(Stream reportContent, string reportType, string requestId, string timestamp)
-	    {
-			var sb = new StringBuilder();
-			var sr = new StreamReader(reportContent);
-		    reportContent.Position = 0;
-		    sb.Append(sr.ReadToEnd());
-		    reportContent.Position = 0;
-
-		    _amazonReportStorageService.Create(new AmazonReport
-		    {
-			    Content = sb.ToString(),
-				DateCreated = DateTime.UtcNow,
-				ReportType = reportType,
-				DownloadRequestId = requestId,
-				DownloadTimestamp = timestamp
-			});
-			_amazonReportStorageService.SaveChanges();
-		}
     }
 }
