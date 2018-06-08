@@ -126,7 +126,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 					FeedType = propertiesContainer.FeedType,
 					Details = new FeedSubmissionDetails
 					{
-						FeedContent = propertiesContainer.FeedContent
+						FeedContent = ZipHelper.CreateArchiveFromContent(propertiesContainer.FeedContent)
 					}
 				};
 				
