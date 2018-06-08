@@ -8,7 +8,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 	/// <summary>
 	/// These pending order reports are only available in Japan and China. These reports can be both scheduled and requested where noted.
 	/// </summary>
-	public interface IPendingOrderReports
+	public interface IPendingOrderReportsFactory
     {
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FLAT_FILE_PENDING_ORDERS_DATA_ <para />

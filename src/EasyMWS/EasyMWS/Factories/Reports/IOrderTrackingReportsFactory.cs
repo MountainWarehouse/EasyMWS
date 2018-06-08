@@ -8,7 +8,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 	/// These reports are intended for order tracking, not to drive your fulfillment process, as the reports do not include customer-identifying information and scheduling is not supported.<para/> 
 	/// Also note that for self-fulfilled orders, item price is not shown for orders in a "pending" state.<para/>
 	/// </summary>
-	public interface IOrderTrackingReports
+	public interface IOrderTrackingReportsFactory
     {
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FLAT_FILE_ALL_ORDERS_DATA_BY_LAST_UPDATE_ <para />
