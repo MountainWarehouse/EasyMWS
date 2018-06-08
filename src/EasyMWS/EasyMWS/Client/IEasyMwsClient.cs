@@ -9,7 +9,7 @@ namespace MountainWarehouse.EasyMWS.Client
 	/// EasyMws client for downloading reports from Amazon / submitting feeds to Amazon.<para/>
 	/// This client type expects callback method references when queuing reports or feeds, and invokes those callback methods when the respective actions have happened.
 	/// </summary>
-    public interface IEasyMwsClientWithCallback
+    public interface IEasyMwsClient
     {
 		/// <summary>
 		/// The amazon region used to initialize the client
@@ -56,5 +56,16 @@ namespace MountainWarehouse.EasyMWS.Client
 	    /// <param name="callbackMethod">A delegate for a method that is going to be called once a feed has been submitted to amazon.</param>
 	    /// <param name="callbackData">An object that contains any argument(s) needed to invoke the delegate 'callbackMethod'</param>
 		void QueueFeed(FeedSubmissionPropertiesContainer feedSubmissionContainer, Action<Stream, object> callbackMethod, object callbackData);
+
+		/// <summary>
+		/// Purges the queue of report request entries for the current client instance corresponding to a pair of AmazonRegion and MerchantId
+		/// </summary>
+	    void PurgeReportRequestEntriesQueue();
+
+		/// <summary>
+		/// Purges the queue of feed submission entries for the current client instance corresponding to a pair of AmazonRegion and MerchantId
+		/// </summary>
+		void PurgeFeedSubmissionEntriesQueue();
+
     }
 }

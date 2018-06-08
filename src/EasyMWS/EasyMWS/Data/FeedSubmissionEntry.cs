@@ -23,6 +23,7 @@ namespace MountainWarehouse.EasyMWS.Data
 	    public int Id { get; set; }
 	    public int SubmissionRetryCount { get; set; }
 	    public DateTime LastSubmitted { get; set; }
+	    public DateTime DateCreated { get; set; }
 
 		#region Serialized callback data necessary to invoke a method with it's argument values.
 		public string TypeName { get; set; }

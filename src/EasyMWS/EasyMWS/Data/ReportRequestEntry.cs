@@ -23,6 +23,7 @@ namespace MountainWarehouse.EasyMWS.Data
 
 		public int RequestRetryCount { get; set; }
 		public DateTime LastRequested { get; set; }
+		public DateTime DateCreated { get; set; }
 
 		#region Serialized callback data necessary to invoke a method with it's argument values.
 
@@ -40,6 +41,9 @@ namespace MountainWarehouse.EasyMWS.Data
 		public string MerchantId { get; set; }
 		public ContentUpdateFrequency ContentUpdateFrequency { get; set; }
 		public string ReportRequestData { get; set; }
+
+
+		public virtual ReportRequestDetails Details { get; set; }
 
 		#endregion
 

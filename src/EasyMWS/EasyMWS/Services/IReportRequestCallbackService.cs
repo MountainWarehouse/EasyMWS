@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -12,6 +13,7 @@ namespace MountainWarehouse.EasyMWS.Services
 		Task CreateAsync(ReportRequestEntry entry);
 		void Update(ReportRequestEntry entry);
 		void Delete(ReportRequestEntry entry);
+		void DeleteRange(IEnumerable<ReportRequestEntry> entries);
 		void SaveChanges();
 		Task SaveChangesAsync();
 		IQueryable<ReportRequestEntry> GetAll();

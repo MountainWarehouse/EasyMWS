@@ -13,6 +13,16 @@ namespace MountainWarehouse.EasyMWS.Model
 	    public int ReportRequestMaxRetryCount { get; set; }
 
 		/// <summary>
+		/// Default=3. After a report has been downloaded from amazon, the delegate provided for the ReportQueue method is invoked. If the invocation fails, this option specifies how many times the invocation will be retried.
+		/// </summary>
+	    public int ReportReadyCallbackInvocationMaxRetryCount { get; set; }
+
+		/// <summary>
+		/// Default=3. After a feed submission result has been received from amazon, the delegate provided for the ReportFeed method is invoked. If the invocation fails, this option specifies how many times the invocation will be retried.
+		/// </summary>
+	    public int FeedSubmissionResponseCallbackInvocationMaxRetryCount { get; set; }
+
+	    /// <summary>
 		/// Default=GeometricProgression. When requesting a report from amazon fails, specify the time series type for request retries.
 		/// </summary>
 		public RetryPeriodType ReportRequestRetryType { get; set; }
@@ -58,29 +68,28 @@ namespace MountainWarehouse.EasyMWS.Model
 		public int FeedResultFailedChecksumMaxRetryCount { get; set; }
 
 		/// <summary>
-		/// Default=false. Normally reports downloaded from amazon are not stored in the local EasyMws database.<para/>
-		/// If this is set to 'True', all reports downloaded from Amazon will be stored in the local EasyMws database, so they will be available after the QueueReport callback method is called.<para/>
-		/// Any stored reports will automatically be deleted after a period of time specified with the 'KeepAmazonReportsLocallyForTimePeriod' option.<para/>
-		/// The purpose of this option is to provide access to any downloaded reports in case something goes wrong with the QueueReport callback, without the need to queue the same report again.
-		/// </summary>
-		public bool KeepAmazonReportsInLocalDbAfterCallbackIsPerformed { get; set; }
-
-		/// <summary>
-		/// Default=1day. If the 'KeepAmazonReportsLocallyAfterCallbackIsPerformed' option is enabled (it is disabled by default),<para/>
-		/// this option specify for how long any reports downloaded from Amazon will be kept in the local database before they are automatically deleted.
-		/// </summary>
-		public TimeSpan KeepAmazonReportsLocallyForTimePeriod { get; set; }
-
-		/// <summary>
 		/// Default=null. If a connection string is specified using this option, the EasyMws local db will run against this connection string, ignoring any connection string contained in a configuration file.<para/>
 		/// ConnectionString default location : .Net Framework / .Net Core projects referencing EasyMws need to provide an app.config file containing a connection string with the "EasyMwsContext" key in the calling executable project.																																																																																																																																								
 		/// </summary>
 		public string LocalDbConnectionStringOverride { get; set; }
 
+		/// <summary>
+		/// Default=1day. Sets the expiration period of report download request entries. If a request entry is not completed before the expiration period, then it is automatically removed from queue.
+		/// </summary>
+	    public TimeSpan ReportDownloadRequestEntryExpirationPeriod { get; set; }
+
 	    /// <summary>
+	    /// Default=2days. Sets the expiration period of feed submission request entries. If a request entry is not completed before the expiration period, then it is automatically removed from queue.
+	    /// </summary>
+	    public TimeSpan FeedSubmissionRequestEntryExpirationPeriod { get; set; }
+
+
+		/// <summary>
 		/// The set of default settings that will be used if no custom settings are specified.<para/>
 		/// <para/>
 		/// ReportRequestMaxRetryCount = 4,<para/>
+		/// ReportReadyCallbackInvocationMaxRetryCount = 3,<para/>
+		/// FeedSubmissionResponseCallbackInvocationMaxRetryCount = 3,<para/>
 		/// ReportRequestRetryType = GeometricProgression,<para/>
 		/// ReportRequestRetryInitialDelay = Minutes(15),<para/>
 		/// ReportRequestRetryInterval = Hours(1),<para/>
@@ -93,15 +102,18 @@ namespace MountainWarehouse.EasyMWS.Model
 		/// FeedResultFailedChecksumRetryInterval = Minutes(2),<para/>
 		/// FeedResultFailedChecksumMaxRetryCount = 3,<para/>
 		/// <para/>
-		/// KeepAmazonReportsInLocalDbAfterCallbackIsPerformed = false,<para/>
-		/// KeepAmazonReportsLocallyForTimePeriod = Days(1)<para/>
+		/// ReportDownloadRequestEntryExpirationPeriod = Days(1),<para/>
+		/// FeedSubmissionRequestEntryExpirationPeriod = Days(2),<para/>
 		/// </summary>
-	    public static EasyMwsOptions Defaults()
+		public static EasyMwsOptions Defaults()
 	    {
 		    return new EasyMwsOptions
 		    {
 			    ReportRequestMaxRetryCount = 4,
-			    ReportRequestRetryType = RetryPeriodType.GeometricProgression,
+			    ReportReadyCallbackInvocationMaxRetryCount = 3,
+			    FeedSubmissionResponseCallbackInvocationMaxRetryCount = 3,
+
+				ReportRequestRetryType = RetryPeriodType.GeometricProgression,
 			    ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(15),
 			    ReportRequestRetryInterval = TimeSpan.FromHours(1),
 
@@ -113,9 +125,9 @@ namespace MountainWarehouse.EasyMWS.Model
 			    FeedResultFailedChecksumRetryInterval = TimeSpan.FromMinutes(2),
 			    FeedResultFailedChecksumMaxRetryCount = 3,
 
-			    KeepAmazonReportsInLocalDbAfterCallbackIsPerformed = false,
-			    KeepAmazonReportsLocallyForTimePeriod = TimeSpan.FromDays(1)
-		    };
+			    ReportDownloadRequestEntryExpirationPeriod = TimeSpan.FromDays(1),
+				FeedSubmissionRequestEntryExpirationPeriod = TimeSpan.FromDays(2)
+			};
 		}
 	}
 

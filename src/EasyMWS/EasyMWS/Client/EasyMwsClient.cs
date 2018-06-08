@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Logging;
@@ -10,7 +11,7 @@ using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
 
 namespace MountainWarehouse.EasyMWS.Client
 {
-	public class EasyMwsClient : IEasyMwsClientWithCallback
+	public class EasyMwsClient : IEasyMwsClient
 	{
 		private readonly EasyMwsOptions _options;
 		private readonly AmazonRegion _amazonRegion;
@@ -90,6 +91,22 @@ namespace MountainWarehouse.EasyMWS.Client
 			using (var feedSubmissionService = new FeedSubmissionCallbackService(_options, _easyMwsLogger))
 			{
 				_feedProcessor.QueueFeed(feedSubmissionService, feedSubmissionContainer, callbackMethod, callbackData);
+			}
+		}
+
+		public void PurgeReportRequestEntriesQueue()
+		{
+			using (var reportRequestService = new ReportRequestCallbackService(_options, _easyMwsLogger))
+			{
+				_reportProcessor.PurgeQueue(reportRequestService);
+			}
+		}
+
+		public void PurgeFeedSubmissionEntriesQueue()
+		{
+			using (var feedSubmissionService = new FeedSubmissionCallbackService(_options, _easyMwsLogger))
+			{
+				_feedProcessor.PurgeQueue(feedSubmissionService);
 			}
 		}
 
