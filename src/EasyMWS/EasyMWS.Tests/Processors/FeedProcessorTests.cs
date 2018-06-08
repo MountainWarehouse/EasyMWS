@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using Moq;
 using MountainWarehouse.EasyMWS;
@@ -311,7 +312,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			{
 				new FeedSubmissionEntry{AmazonRegion = _amazonRegion, MerchantId = _merchantId, Details = null},
 				new FeedSubmissionEntry{AmazonRegion = _amazonRegion, MerchantId = _merchantId, Details = new FeedSubmissionDetails{FeedSubmissionReport = null}},
-				new FeedSubmissionEntry{AmazonRegion = _amazonRegion, MerchantId = _merchantId, Details = new FeedSubmissionDetails{FeedSubmissionReport = new byte[10]}},
+				new FeedSubmissionEntry{AmazonRegion = _amazonRegion, MerchantId = _merchantId, Details = new FeedSubmissionDetails{FeedSubmissionReport = GenerateValidArchive("test content").ToArray()}},
 			};
 			_feedSubmissionCallbackServiceMock.Setup(fscs => fscs.GetAll()).Returns(testFeedSubmissions.AsQueryable());
 
@@ -323,5 +324,24 @@ namespace EasyMWS.Tests.ReportProcessors
 
 		#endregion
 
+
+		private MemoryStream GenerateValidArchive(string content)
+		{
+			using (var zipFileStream = new MemoryStream())
+			{
+				using (var archive = new ZipArchive(zipFileStream, ZipArchiveMode.Create, true))
+				{
+					var fileToArchive = archive.CreateEntry("testFilename.txt", CompressionLevel.Fastest);
+					using (var fileStream = fileToArchive.Open())
+					using (var streamWriter = new StreamWriter(fileStream))
+					{
+						streamWriter.Write(content);
+					}
+				}
+
+				zipFileStream.Position = 0;
+				return zipFileStream;
+			}
+		}
 	}
 }

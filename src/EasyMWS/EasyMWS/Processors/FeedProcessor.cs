@@ -81,8 +81,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				try
 				{
-					ExecuteMethodCallback(feedSubmissionEntry, new MemoryStream(feedSubmissionEntry.Details.FeedSubmissionReport));
-					feedSubmissionService.Delete(feedSubmissionEntry);
+					using (var feedSubmissionReport = ZipHelper.ExtractArchivedSingleFileToStream(feedSubmissionEntry.Details.FeedSubmissionReport))
+					{
+						ExecuteMethodCallback(feedSubmissionEntry, feedSubmissionReport);
+						feedSubmissionService.Delete(feedSubmissionEntry);
+					}
 				}
 				catch (SqlException e)
 				{
@@ -126,7 +129,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 					FeedType = propertiesContainer.FeedType,
 					Details = new FeedSubmissionDetails
 					{
-						FeedContent = propertiesContainer.FeedContent
+						FeedContent = ZipHelper.CreateArchiveFromContent(propertiesContainer.FeedContent)
 					}
 				};
 				
@@ -215,7 +218,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 			if (hasValidHash)
 			{
 				nextFeedWithProcessingComplete.Details.FeedContent = null;
-				nextFeedWithProcessingComplete.Details.FeedSubmissionReport = processingReportInfo.processingReport.ToArray();
+
+				using (var streamReader = new StreamReader(processingReportInfo.processingReport))
+				{
+					var reportContent = streamReader.ReadToEnd();
+					var zippedProcessingReport = ZipHelper.CreateArchiveFromContent(reportContent);
+					nextFeedWithProcessingComplete.Details.FeedSubmissionReport = zippedProcessingReport;
+				}
+
 				feedSubmissionService.Update(nextFeedWithProcessingComplete);
 				feedSubmissionService.SaveChanges();
 			}

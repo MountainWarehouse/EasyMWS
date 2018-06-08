@@ -13,7 +13,7 @@ namespace MountainWarehouse.EasyMWS.Helpers
 
 		public static bool IsChecksumCorrect(MemoryStream stream, string expectedHash)
 		{
-			if (stream == null && expectedHash == null) return false;
+			if (stream == null || expectedHash == null) return false;
 			var actualHash = ComputeHashForAmazon(stream);
 			return actualHash == expectedHash;
 	    }

@@ -199,7 +199,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 				return;
 			}
 
-			reportToDownload.Details = new ReportRequestDetails { ReportContent = StreamHelper.GetBytesFromStream(stream) };
+			using (var streamReader = new StreamReader(stream))
+			{
+				var zippedReport = ZipHelper.CreateArchiveFromContent(streamReader.ReadToEnd());
+				reportToDownload.Details = new ReportRequestDetails { ReportContent = zippedReport };
+			}
+			
 			reportRequestService.Update(reportToDownload);
 			reportRequestService.SaveChanges();
 		}
@@ -212,7 +217,8 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var callback = new Callback(reportRequest.TypeName, reportRequest.MethodName,
 				reportRequest.Data, reportRequest.DataTypeName);
 
-			_callbackActivator.CallMethod(callback, StreamHelper.GetStreamFromBytes(reportRequest.Details?.ReportContent));
+			var unzippedReport = ZipHelper.ExtractArchivedSingleFileToStream(reportRequest.Details?.ReportContent);
+			_callbackActivator.CallMethod(callback, unzippedReport);
 		}
 	}
 }
