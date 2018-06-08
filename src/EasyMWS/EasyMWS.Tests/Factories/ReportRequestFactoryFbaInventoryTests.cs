@@ -10,16 +10,16 @@ namespace EasyMWS.Tests.Factories
 {
     public class ReportRequestFactoryFbaInventoryTests
 	{
-	    private IFbaReportsFactory _fbaReportsFactory;
+	    private IReportRequestFactoryFba _reportRequestFactoryFBA;
 	    private AmazonRegion _region = AmazonRegion.Europe;
 
 	    [Test]
 	    public void
 			FbaAmazonFulfilledInventoryReport_ReturnsTypeReportRequestPropertiesContainer()
 	    {
-		    _fbaReportsFactory = new FbaReportsFactory();
+		    _reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-		    var reportRequest = _fbaReportsFactory.FbaAmazonFulfilledInventoryReport();
+		    var reportRequest = _reportRequestFactoryFBA.FbaAmazonFulfilledInventoryReport();
 
 		    Assert.AreEqual(typeof(ReportRequestPropertiesContainer), reportRequest.GetType());
 	    }
@@ -28,9 +28,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaAmazonFulfilledInventoryReport_WithNoMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaAmazonFulfilledInventoryReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaAmazonFulfilledInventoryReport();
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -40,9 +40,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaAmazonFulfilledInventoryReport_WithNullMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaAmazonFulfilledInventoryReport(null);
+			var reportRequest = _reportRequestFactoryFBA.FbaAmazonFulfilledInventoryReport(null);
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -56,9 +56,9 @@ namespace EasyMWS.Tests.Factories
 				.AddMarketplace(MwsMarketplace.France)
 				.AddMarketplace(MwsMarketplace.Italy)
 				.AddMarketplace(MwsMarketplace.Spain);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaAmazonFulfilledInventoryReport(marketplaceGroup);
+			var reportRequest = _reportRequestFactoryFBA.FbaAmazonFulfilledInventoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -69,9 +69,9 @@ namespace EasyMWS.Tests.Factories
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US)
 				.AddMarketplace(MwsMarketplace.Canada)
 				.AddMarketplace(MwsMarketplace.Mexico);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaAmazonFulfilledInventoryReport(marketplaceGroup);
+			var reportRequest = _reportRequestFactoryFBA.FbaAmazonFulfilledInventoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -80,9 +80,9 @@ namespace EasyMWS.Tests.Factories
 		public void FbaAmazonFulfilledInventoryReport_WithNonUsOrEUMarketplaceProvided_ReturnsRequest()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Japan);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaAmazonFulfilledInventoryReport(marketplaceGroup);
+			var reportRequest = _reportRequestFactoryFBA.FbaAmazonFulfilledInventoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -90,9 +90,9 @@ namespace EasyMWS.Tests.Factories
 		[Test]
 		public void FbaAmazonFulfilledInventoryReport_ReturnsReportRequest_WithCorrectType()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaAmazonFulfilledInventoryReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaAmazonFulfilledInventoryReport();
 
 			Assert.AreEqual("_GET_AFN_INVENTORY_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequest.UpdateFrequency);
@@ -102,9 +102,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaMultiCountryInventoryReport_WithNoMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaMultiCountryInventoryReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaMultiCountryInventoryReport();
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -114,9 +114,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaMultiCountryInventoryReport_WithNullMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaMultiCountryInventoryReport(null);
+			var reportRequest = _reportRequestFactoryFBA.FbaMultiCountryInventoryReport(null);
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -130,9 +130,9 @@ namespace EasyMWS.Tests.Factories
 				.AddMarketplace(MwsMarketplace.France)
 				.AddMarketplace(MwsMarketplace.Italy)
 				.AddMarketplace(MwsMarketplace.Spain);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaMultiCountryInventoryReport(marketplaceGroup);
+			var reportRequest = _reportRequestFactoryFBA.FbaMultiCountryInventoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -142,10 +142,10 @@ namespace EasyMWS.Tests.Factories
 			FbaMultiCountryInventoryReport_WithAmericanMarketplaceProvided_ThrowsArgumentException()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			Assert.Throws<ArgumentException>(() =>
-				_fbaReportsFactory.FbaMultiCountryInventoryReport(marketplaceGroup));
+				_reportRequestFactoryFBA.FbaMultiCountryInventoryReport(marketplaceGroup));
 		}
 
 		[Test]
@@ -153,18 +153,18 @@ namespace EasyMWS.Tests.Factories
 			FbaMultiCountryInventoryReport_WithNonEuMarketplaceProvided_ThrowsArgumentException()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Japan);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			Assert.Throws<ArgumentException>(() =>
-				_fbaReportsFactory.FbaMultiCountryInventoryReport(marketplaceGroup));
+				_reportRequestFactoryFBA.FbaMultiCountryInventoryReport(marketplaceGroup));
 		}
 
 		[Test]
 		public void FbaMultiCountryInventoryReport_ReturnsReportRequest_WithCorrectType()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaMultiCountryInventoryReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaMultiCountryInventoryReport();
 
 			Assert.AreEqual("_GET_AFN_INVENTORY_DATA_BY_COUNTRY_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequest.UpdateFrequency);
@@ -174,9 +174,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaManageExcessInventoryReport_WithNoMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaManageExcessInventoryReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaManageExcessInventoryReport();
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -186,9 +186,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaManageExcessInventoryReport_WithNullMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaManageExcessInventoryReport(null);
+			var reportRequest = _reportRequestFactoryFBA.FbaManageExcessInventoryReport(null);
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -198,9 +198,9 @@ namespace EasyMWS.Tests.Factories
 		public void FbaManageExcessInventoryReport_WithUSMarketplaceProvidedReturnsRequest()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaManageExcessInventoryReport(marketplaceGroup);
+			var reportRequest = _reportRequestFactoryFBA.FbaManageExcessInventoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -209,9 +209,9 @@ namespace EasyMWS.Tests.Factories
 		public void FbaManageExcessInventoryReport_WithIndiaMarketplaceProvidedReturnsRequest()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.India);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaManageExcessInventoryReport(marketplaceGroup);
+			var reportRequest = _reportRequestFactoryFBA.FbaManageExcessInventoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -220,9 +220,9 @@ namespace EasyMWS.Tests.Factories
 		public void FbaManageExcessInventoryReport_WithJapanMarketplaceProvidedReturnsRequest()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Japan);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaManageExcessInventoryReport(marketplaceGroup);
+			var reportRequest = _reportRequestFactoryFBA.FbaManageExcessInventoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -232,10 +232,10 @@ namespace EasyMWS.Tests.Factories
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.UK)
 				.AddMarketplace(MwsMarketplace.France);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			Assert.Throws<ArgumentException>(() =>
-				_fbaReportsFactory.FbaManageExcessInventoryReport(marketplaceGroup));
+				_reportRequestFactoryFBA.FbaManageExcessInventoryReport(marketplaceGroup));
 		}
 
 		[Test]
@@ -244,10 +244,10 @@ namespace EasyMWS.Tests.Factories
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Canada)
 				.AddMarketplace(MwsMarketplace.Mexico);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			Assert.Throws<ArgumentException>(() =>
-				_fbaReportsFactory.FbaManageExcessInventoryReport(marketplaceGroup));
+				_reportRequestFactoryFBA.FbaManageExcessInventoryReport(marketplaceGroup));
 		}
 
 		[Test]
@@ -255,18 +255,18 @@ namespace EasyMWS.Tests.Factories
 			FbaManageExcessInventoryReport_WithInternationalMarketplace_NotIndiaOrJapan_Provided_ThrowsArgumentException()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Australia);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			Assert.Throws<ArgumentException>(() =>
-				_fbaReportsFactory.FbaManageExcessInventoryReport(marketplaceGroup));
+				_reportRequestFactoryFBA.FbaManageExcessInventoryReport(marketplaceGroup));
 		}
 
 		[Test]
 		public void FbaManageExcessInventoryReport_ReturnsReportRequest_WithCorrectType()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaManageExcessInventoryReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaManageExcessInventoryReport();
 
 			Assert.AreEqual("_GET_EXCESS_INVENTORY_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequest.UpdateFrequency);
@@ -276,10 +276,10 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaCrossBorderInventoryMovementReport_WithNoMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaCrossBorderInventoryMovementReport();
+				_reportRequestFactoryFBA.FbaCrossBorderInventoryMovementReport();
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -289,10 +289,10 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaCrossBorderInventoryMovementReport_WithNullMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaCrossBorderInventoryMovementReport(null);
+				_reportRequestFactoryFBA.FbaCrossBorderInventoryMovementReport(null);
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -307,10 +307,10 @@ namespace EasyMWS.Tests.Factories
 				.AddMarketplace(MwsMarketplace.France)
 				.AddMarketplace(MwsMarketplace.Italy)
 				.AddMarketplace(MwsMarketplace.Spain);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaCrossBorderInventoryMovementReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaCrossBorderInventoryMovementReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -322,10 +322,10 @@ namespace EasyMWS.Tests.Factories
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US)
 				.AddMarketplace(MwsMarketplace.Canada)
 				.AddMarketplace(MwsMarketplace.Mexico);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaCrossBorderInventoryMovementReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaCrossBorderInventoryMovementReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -335,10 +335,10 @@ namespace EasyMWS.Tests.Factories
 			FbaCrossBorderInventoryMovementReport_WithNonUsOrEUMarketplaceProvided_ReturnsRequest()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Australia);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaCrossBorderInventoryMovementReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaCrossBorderInventoryMovementReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -347,10 +347,10 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaCrossBorderInventoryMovementReport_ReturnsReportRequest_WithCorrectType()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaCrossBorderInventoryMovementReport();
+				_reportRequestFactoryFBA.FbaCrossBorderInventoryMovementReport();
 
 			Assert.AreEqual("_GET_FBA_FULFILLMENT_CROSS_BORDER_INVENTORY_MOVEMENT_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.Daily, reportRequest.UpdateFrequency);
@@ -360,9 +360,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaDailyInventoryHistoryReport_WithNoMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaDailyInventoryHistoryReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaDailyInventoryHistoryReport();
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -372,9 +372,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaDailyInventoryHistoryReport_WithNullMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaDailyInventoryHistoryReport(null);
+			var reportRequest = _reportRequestFactoryFBA.FbaDailyInventoryHistoryReport(null);
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -389,10 +389,10 @@ namespace EasyMWS.Tests.Factories
 				.AddMarketplace(MwsMarketplace.France)
 				.AddMarketplace(MwsMarketplace.Italy)
 				.AddMarketplace(MwsMarketplace.Spain);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaDailyInventoryHistoryReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaDailyInventoryHistoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -404,10 +404,10 @@ namespace EasyMWS.Tests.Factories
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US)
 				.AddMarketplace(MwsMarketplace.Canada)
 				.AddMarketplace(MwsMarketplace.Mexico);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaDailyInventoryHistoryReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaDailyInventoryHistoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -417,10 +417,10 @@ namespace EasyMWS.Tests.Factories
 			FbaDailyInventoryHistoryReport_WithNonUsOrEUMarketplaceProvided_ReturnsRequest()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Australia);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaDailyInventoryHistoryReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaDailyInventoryHistoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -428,9 +428,9 @@ namespace EasyMWS.Tests.Factories
 		[Test]
 		public void FbaDailyInventoryHistoryReport_ReturnsReportRequest_WithCorrectType()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaDailyInventoryHistoryReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaDailyInventoryHistoryReport();
 
 			Assert.AreEqual("_GET_FBA_FULFILLMENT_CURRENT_INVENTORY_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.Daily, reportRequest.UpdateFrequency);
@@ -440,9 +440,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaInboundPerformanceReport_WithNoMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaInboundPerformanceReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaInboundPerformanceReport();
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -452,9 +452,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaInboundPerformanceReport_WithNullMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaInboundPerformanceReport(null);
+			var reportRequest = _reportRequestFactoryFBA.FbaInboundPerformanceReport(null);
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -469,10 +469,10 @@ namespace EasyMWS.Tests.Factories
 				.AddMarketplace(MwsMarketplace.France)
 				.AddMarketplace(MwsMarketplace.Italy)
 				.AddMarketplace(MwsMarketplace.Spain);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaInboundPerformanceReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaInboundPerformanceReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -484,10 +484,10 @@ namespace EasyMWS.Tests.Factories
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US)
 				.AddMarketplace(MwsMarketplace.Canada)
 				.AddMarketplace(MwsMarketplace.Mexico);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaInboundPerformanceReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaInboundPerformanceReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -497,10 +497,10 @@ namespace EasyMWS.Tests.Factories
 			FbaInboundPerformanceReport_WithNonUsOrEUMarketplaceProvided_ReturnsRequest()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Australia);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaInboundPerformanceReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaInboundPerformanceReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -508,9 +508,9 @@ namespace EasyMWS.Tests.Factories
 		[Test]
 		public void FbaInboundPerformanceReport_ReturnsReportRequest_WithCorrectType()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaInboundPerformanceReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaInboundPerformanceReport();
 
 			Assert.AreEqual("_GET_FBA_FULFILLMENT_INBOUND_NONCOMPLIANCE_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.Daily, reportRequest.UpdateFrequency);
@@ -520,9 +520,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaInventoryAdjustmentsReport_WithNoMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaInventoryAdjustmentsReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaInventoryAdjustmentsReport();
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -532,9 +532,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaInventoryAdjustmentsReport_WithNullMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaInventoryAdjustmentsReport(null);
+			var reportRequest = _reportRequestFactoryFBA.FbaInventoryAdjustmentsReport(null);
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -549,10 +549,10 @@ namespace EasyMWS.Tests.Factories
 				.AddMarketplace(MwsMarketplace.France)
 				.AddMarketplace(MwsMarketplace.Italy)
 				.AddMarketplace(MwsMarketplace.Spain);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaInventoryAdjustmentsReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaInventoryAdjustmentsReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -564,10 +564,10 @@ namespace EasyMWS.Tests.Factories
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US)
 				.AddMarketplace(MwsMarketplace.Canada)
 				.AddMarketplace(MwsMarketplace.Mexico);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaInventoryAdjustmentsReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaInventoryAdjustmentsReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -577,10 +577,10 @@ namespace EasyMWS.Tests.Factories
 			FbaInventoryAdjustmentsReport_WithNonUsOrEUMarketplaceProvided_ReturnsRequest()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Australia);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaInventoryAdjustmentsReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaInventoryAdjustmentsReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -588,9 +588,9 @@ namespace EasyMWS.Tests.Factories
 		[Test]
 		public void FbaInventoryAdjustmentsReport_ReturnsReportRequest_WithCorrectType()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaInventoryAdjustmentsReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaInventoryAdjustmentsReport();
 
 			Assert.AreEqual("_GET_FBA_FULFILLMENT_INVENTORY_ADJUSTMENTS_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.Daily, reportRequest.UpdateFrequency);
@@ -600,9 +600,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaInventoryHealthReport_WithNoMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaInventoryHealthReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaInventoryHealthReport();
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -612,9 +612,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaInventoryHealthReport_WithNullMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaInventoryHealthReport(null);
+			var reportRequest = _reportRequestFactoryFBA.FbaInventoryHealthReport(null);
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -629,10 +629,10 @@ namespace EasyMWS.Tests.Factories
 				.AddMarketplace(MwsMarketplace.France)
 				.AddMarketplace(MwsMarketplace.Italy)
 				.AddMarketplace(MwsMarketplace.Spain);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaInventoryHealthReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaInventoryHealthReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -644,10 +644,10 @@ namespace EasyMWS.Tests.Factories
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US)
 				.AddMarketplace(MwsMarketplace.Canada)
 				.AddMarketplace(MwsMarketplace.Mexico);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaInventoryHealthReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaInventoryHealthReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -657,10 +657,10 @@ namespace EasyMWS.Tests.Factories
 			FbaInventoryHealthReport_WithNonUsOrEUMarketplaceProvided_ReturnsRequest()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Australia);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaInventoryHealthReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaInventoryHealthReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -668,9 +668,9 @@ namespace EasyMWS.Tests.Factories
 		[Test]
 		public void FbaInventoryHealthReport_ReturnsReportRequest_WithCorrectType()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaInventoryHealthReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaInventoryHealthReport();
 
 			Assert.AreEqual("_GET_FBA_FULFILLMENT_INVENTORY_HEALTH_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.Daily, reportRequest.UpdateFrequency);
@@ -680,9 +680,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaReceivedInventoryReport_WithNoMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaReceivedInventoryReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaReceivedInventoryReport();
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -692,9 +692,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaReceivedInventoryReport_WithNullMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaReceivedInventoryReport(null);
+			var reportRequest = _reportRequestFactoryFBA.FbaReceivedInventoryReport(null);
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -709,10 +709,10 @@ namespace EasyMWS.Tests.Factories
 				.AddMarketplace(MwsMarketplace.France)
 				.AddMarketplace(MwsMarketplace.Italy)
 				.AddMarketplace(MwsMarketplace.Spain);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaReceivedInventoryReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaReceivedInventoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -724,10 +724,10 @@ namespace EasyMWS.Tests.Factories
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US)
 				.AddMarketplace(MwsMarketplace.Canada)
 				.AddMarketplace(MwsMarketplace.Mexico);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaReceivedInventoryReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaReceivedInventoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -737,10 +737,10 @@ namespace EasyMWS.Tests.Factories
 			FbaReceivedInventoryReport_WithNonUsOrEUMarketplaceProvided_ReturnsRequest()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Australia);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaReceivedInventoryReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaReceivedInventoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -748,9 +748,9 @@ namespace EasyMWS.Tests.Factories
 		[Test]
 		public void FbaReceivedInventoryReport_ReturnsReportRequest_WithCorrectType()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaReceivedInventoryReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaReceivedInventoryReport();
 
 			Assert.AreEqual("_GET_FBA_FULFILLMENT_INVENTORY_RECEIPTS_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.Daily, reportRequest.UpdateFrequency);
@@ -760,9 +760,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaInventoryEventDetailReport_WithNoMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaInventoryEventDetailReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaInventoryEventDetailReport();
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -772,9 +772,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaInventoryEventDetailReport_WithNullMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaInventoryEventDetailReport(null);
+			var reportRequest = _reportRequestFactoryFBA.FbaInventoryEventDetailReport(null);
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -789,10 +789,10 @@ namespace EasyMWS.Tests.Factories
 				.AddMarketplace(MwsMarketplace.France)
 				.AddMarketplace(MwsMarketplace.Italy)
 				.AddMarketplace(MwsMarketplace.Spain);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaInventoryEventDetailReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaInventoryEventDetailReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -804,10 +804,10 @@ namespace EasyMWS.Tests.Factories
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US)
 				.AddMarketplace(MwsMarketplace.Canada)
 				.AddMarketplace(MwsMarketplace.Mexico);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaInventoryEventDetailReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaInventoryEventDetailReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -817,10 +817,10 @@ namespace EasyMWS.Tests.Factories
 			FbaInventoryEventDetailReport_WithNonUsOrEUMarketplaceProvided_ReturnsRequest()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Australia);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaInventoryEventDetailReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaInventoryEventDetailReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -829,9 +829,9 @@ namespace EasyMWS.Tests.Factories
 		[Test]
 		public void FbaInventoryEventDetailReport_ReturnsReportRequest_WithCorrectType()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaInventoryEventDetailReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaInventoryEventDetailReport();
 
 			Assert.AreEqual("_GET_FBA_FULFILLMENT_INVENTORY_SUMMARY_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.Daily, reportRequest.UpdateFrequency);
@@ -841,9 +841,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaMonthlyInventoryHistoryReport_WithNoMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaMonthlyInventoryHistoryReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaMonthlyInventoryHistoryReport();
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -853,9 +853,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaMonthlyInventoryHistoryReport_WithNullMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaMonthlyInventoryHistoryReport(null);
+			var reportRequest = _reportRequestFactoryFBA.FbaMonthlyInventoryHistoryReport(null);
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -870,10 +870,10 @@ namespace EasyMWS.Tests.Factories
 				.AddMarketplace(MwsMarketplace.France)
 				.AddMarketplace(MwsMarketplace.Italy)
 				.AddMarketplace(MwsMarketplace.Spain);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaMonthlyInventoryHistoryReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaMonthlyInventoryHistoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -885,10 +885,10 @@ namespace EasyMWS.Tests.Factories
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US)
 				.AddMarketplace(MwsMarketplace.Canada)
 				.AddMarketplace(MwsMarketplace.Mexico);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaMonthlyInventoryHistoryReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaMonthlyInventoryHistoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -898,10 +898,10 @@ namespace EasyMWS.Tests.Factories
 			FbaMonthlyInventoryHistoryReport_WithNonUsOrEUMarketplaceProvided_ReturnsRequest()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Australia);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaMonthlyInventoryHistoryReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaMonthlyInventoryHistoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -909,9 +909,9 @@ namespace EasyMWS.Tests.Factories
 		[Test]
 		public void FbaMonthlyInventoryHistoryReport_ReturnsReportRequest_WithCorrectType()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaMonthlyInventoryHistoryReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaMonthlyInventoryHistoryReport();
 
 			Assert.AreEqual("_GET_FBA_FULFILLMENT_MONTHLY_INVENTORY_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.Daily, reportRequest.UpdateFrequency);
@@ -921,9 +921,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaInventoryAgeReport_WithNoMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaInventoryAgeReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaInventoryAgeReport();
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -933,9 +933,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaInventoryAgeReport_WithNullMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaInventoryAgeReport(null);
+			var reportRequest = _reportRequestFactoryFBA.FbaInventoryAgeReport(null);
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -945,9 +945,9 @@ namespace EasyMWS.Tests.Factories
 		public void FbaInventoryAgeReport_WithUSMarketplaceProvided_ReturnsRequest()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaInventoryAgeReport(marketplaceGroup);
+			var reportRequest = _reportRequestFactoryFBA.FbaInventoryAgeReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -956,9 +956,9 @@ namespace EasyMWS.Tests.Factories
 		public void FbaInventoryAgeReport_WithIndiaMarketplaceProvided_ReturnsRequest()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.India);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaInventoryAgeReport(marketplaceGroup);
+			var reportRequest = _reportRequestFactoryFBA.FbaInventoryAgeReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -967,9 +967,9 @@ namespace EasyMWS.Tests.Factories
 		public void FbaInventoryAgeReport_WithJapanMarketplaceProvided_ReturnsRequest()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Japan);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaInventoryAgeReport(marketplaceGroup);
+			var reportRequest = _reportRequestFactoryFBA.FbaInventoryAgeReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -980,10 +980,10 @@ namespace EasyMWS.Tests.Factories
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Canada);
 			marketplaceGroup.TryAddMarketplace(MwsMarketplace.Mexico);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			Assert.Throws<ArgumentException>(() =>
-				_fbaReportsFactory.FbaInventoryAgeReport(marketplaceGroup));
+				_reportRequestFactoryFBA.FbaInventoryAgeReport(marketplaceGroup));
 		}
 
 		[Test]
@@ -994,10 +994,10 @@ namespace EasyMWS.Tests.Factories
 				.AddMarketplace(MwsMarketplace.France)
 				.AddMarketplace(MwsMarketplace.Italy)
 				.AddMarketplace(MwsMarketplace.Spain);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			Assert.Throws<ArgumentException>(() =>
-				_fbaReportsFactory.FbaInventoryAgeReport(marketplaceGroup));
+				_reportRequestFactoryFBA.FbaInventoryAgeReport(marketplaceGroup));
 		}
 
 		[Test]
@@ -1005,18 +1005,18 @@ namespace EasyMWS.Tests.Factories
 			FbaInventoryAgeReport_WithInternationalMarketplacesProvidedNotIndiaOrJapan_ThrowsArgumentException()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Australia);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			Assert.Throws<ArgumentException>(() =>
-				_fbaReportsFactory.FbaInventoryAgeReport(marketplaceGroup));
+				_reportRequestFactoryFBA.FbaInventoryAgeReport(marketplaceGroup));
 		}
 
 		[Test]
 		public void FbaInventoryAgeReport_ReturnsReportRequest_WithCorrectType()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaInventoryAgeReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaInventoryAgeReport();
 
 			Assert.AreEqual("_GET_FBA_INVENTORY_AGED_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.Daily, reportRequest.UpdateFrequency);
@@ -1026,9 +1026,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaManageInventoryArchived_WithNoMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaManageInventoryArchived();
+			var reportRequest = _reportRequestFactoryFBA.FbaManageInventoryArchived();
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -1038,9 +1038,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaManageInventoryArchived_WithNullMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaManageInventoryArchived(null);
+			var reportRequest = _reportRequestFactoryFBA.FbaManageInventoryArchived(null);
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -1054,9 +1054,9 @@ namespace EasyMWS.Tests.Factories
 				.AddMarketplace(MwsMarketplace.France)
 				.AddMarketplace(MwsMarketplace.Italy)
 				.AddMarketplace(MwsMarketplace.Spain);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaManageInventoryArchived(marketplaceGroup);
+			var reportRequest = _reportRequestFactoryFBA.FbaManageInventoryArchived(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -1067,9 +1067,9 @@ namespace EasyMWS.Tests.Factories
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US)
 				.AddMarketplace(MwsMarketplace.Canada)
 				.AddMarketplace(MwsMarketplace.Mexico);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaManageInventoryArchived(marketplaceGroup);
+			var reportRequest = _reportRequestFactoryFBA.FbaManageInventoryArchived(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -1078,9 +1078,9 @@ namespace EasyMWS.Tests.Factories
 		public void FbaManageInventoryArchived_WithNonUsOrEUMarketplaceProvided_ReturnsRequest()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Australia);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaManageInventoryArchived(marketplaceGroup);
+			var reportRequest = _reportRequestFactoryFBA.FbaManageInventoryArchived(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -1088,9 +1088,9 @@ namespace EasyMWS.Tests.Factories
 		[Test]
 		public void FbaManageInventoryArchived_ReturnsReportRequest_WithCorrectType()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaManageInventoryArchived();
+			var reportRequest = _reportRequestFactoryFBA.FbaManageInventoryArchived();
 
 			Assert.AreEqual("_GET_FBA_MYI_ALL_INVENTORY_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequest.UpdateFrequency);
@@ -1100,9 +1100,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaManageInventory_WithNoMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaManageInventory();
+			var reportRequest = _reportRequestFactoryFBA.FbaManageInventory();
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -1112,9 +1112,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaManageInventory_WithNullMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaManageInventory(null);
+			var reportRequest = _reportRequestFactoryFBA.FbaManageInventory(null);
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -1129,10 +1129,10 @@ namespace EasyMWS.Tests.Factories
 				.AddMarketplace(MwsMarketplace.France)
 				.AddMarketplace(MwsMarketplace.Italy)
 				.AddMarketplace(MwsMarketplace.Spain);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaManageInventory(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaManageInventory(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -1144,10 +1144,10 @@ namespace EasyMWS.Tests.Factories
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US)
 				.AddMarketplace(MwsMarketplace.Canada)
 				.AddMarketplace(MwsMarketplace.Mexico);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaManageInventory(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaManageInventory(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -1157,10 +1157,10 @@ namespace EasyMWS.Tests.Factories
 			FbaManageInventory_WithNonUsOrEUMarketplaceProvided_ReturnsRequest()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Australia);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaManageInventory(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaManageInventory(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -1168,9 +1168,9 @@ namespace EasyMWS.Tests.Factories
 		[Test]
 		public void FbaManageInventory_ReturnsReportRequest_WithCorrectType()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaManageInventory();
+			var reportRequest = _reportRequestFactoryFBA.FbaManageInventory();
 
 			Assert.AreEqual("_GET_FBA_MYI_UNSUPPRESSED_INVENTORY_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequest.UpdateFrequency);
@@ -1180,9 +1180,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaReservedInventoryReport_WithNoMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaReservedInventoryReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaReservedInventoryReport();
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -1192,9 +1192,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaReservedInventoryReport_WithNullMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaReservedInventoryReport(null);
+			var reportRequest = _reportRequestFactoryFBA.FbaReservedInventoryReport(null);
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -1208,9 +1208,9 @@ namespace EasyMWS.Tests.Factories
 				.AddMarketplace(MwsMarketplace.France)
 				.AddMarketplace(MwsMarketplace.Italy)
 				.AddMarketplace(MwsMarketplace.Spain);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaReservedInventoryReport(marketplaceGroup);
+			var reportRequest = _reportRequestFactoryFBA.FbaReservedInventoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -1221,9 +1221,9 @@ namespace EasyMWS.Tests.Factories
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US)
 				.AddMarketplace(MwsMarketplace.Canada)
 				.AddMarketplace(MwsMarketplace.Mexico);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaReservedInventoryReport(marketplaceGroup);
+			var reportRequest = _reportRequestFactoryFBA.FbaReservedInventoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -1232,9 +1232,9 @@ namespace EasyMWS.Tests.Factories
 		public void FbaReservedInventoryReport_WithNonUsOrEUMarketplaceProvided_ReturnsRequest()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Australia);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaReservedInventoryReport(marketplaceGroup);
+			var reportRequest = _reportRequestFactoryFBA.FbaReservedInventoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -1242,9 +1242,9 @@ namespace EasyMWS.Tests.Factories
 		[Test]
 		public void FbaReservedInventoryReport_ReturnsReportRequest_WithCorrectType()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaReservedInventoryReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaReservedInventoryReport();
 
 			Assert.AreEqual("_GET_RESERVED_INVENTORY_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequest.UpdateFrequency);
@@ -1254,9 +1254,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			GenerateRequestForReportGetRestockInventoryRecommendationsReport_WithNoMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.RestockInventoryReport();
+			var reportRequest = _reportRequestFactoryFBA.RestockInventoryReport();
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -1266,9 +1266,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			GenerateRequestForReportGetRestockInventoryRecommendationsReport_WithNullMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.RestockInventoryReport(null);
+			var reportRequest = _reportRequestFactoryFBA.RestockInventoryReport(null);
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -1281,10 +1281,10 @@ namespace EasyMWS.Tests.Factories
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US);
 			
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.RestockInventoryReport(marketplaceGroup);
+				_reportRequestFactoryFBA.RestockInventoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -1295,18 +1295,18 @@ namespace EasyMWS.Tests.Factories
 			GenerateSuggestedFbaReplenReport_NotValidMarketPlaceRequested_ShouldThrowArgumentException()
 		{
 			var marketPlaceGroup = new MwsMarketplaceGroup(MwsMarketplace.UK);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			Assert.Throws<ArgumentException>(() => _fbaReportsFactory.RestockInventoryReport(marketPlaceGroup), "Should have thrown exception for unsupported marketplace");
+			Assert.Throws<ArgumentException>(() => _reportRequestFactoryFBA.RestockInventoryReport(marketPlaceGroup), "Should have thrown exception for unsupported marketplace");
 		}
 
 		[Test]
 		public void
 			GenerateSuggestedFbaReplenReport_WithNoMarketplaceProvided_ShouldReturnMarketPlaceIdNotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.RestockInventoryReport();
+			var reportRequest = _reportRequestFactoryFBA.RestockInventoryReport();
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -1315,9 +1315,9 @@ namespace EasyMWS.Tests.Factories
 		[Test]
 		public void GenerateRequestForReportGetRestockInventoryRecommendationsReport_ReturnsReportRequest_WithCorrectType()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.RestockInventoryReport();
+			var reportRequest = _reportRequestFactoryFBA.RestockInventoryReport();
 
 			Assert.AreEqual("_GET_RESTOCK_INVENTORY_RECOMMENDATIONS_REPORT_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequest.UpdateFrequency);
@@ -1327,9 +1327,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaBulkFixStrandedInventoryReport_WithNoMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaBulkFixStrandedInventoryReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaBulkFixStrandedInventoryReport();
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -1339,9 +1339,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaBulkFixStrandedInventoryReport_WithNullMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaBulkFixStrandedInventoryReport(null);
+			var reportRequest = _reportRequestFactoryFBA.FbaBulkFixStrandedInventoryReport(null);
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -1351,10 +1351,10 @@ namespace EasyMWS.Tests.Factories
 		public void FbaBulkFixStrandedInventoryReport_WithUSMarketplaceProvided_ReturnsRequest()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaBulkFixStrandedInventoryReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaBulkFixStrandedInventoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -1363,10 +1363,10 @@ namespace EasyMWS.Tests.Factories
 		public void FbaBulkFixStrandedInventoryReport_WithIndiaMarketplaceProvided_ReturnsRequest()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.India);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaBulkFixStrandedInventoryReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaBulkFixStrandedInventoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -1375,10 +1375,10 @@ namespace EasyMWS.Tests.Factories
 		public void FbaBulkFixStrandedInventoryReport_WithJapanMarketplaceProvided_ReturnsRequest()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Japan);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			var reportRequest =
-				_fbaReportsFactory.FbaBulkFixStrandedInventoryReport(marketplaceGroup);
+				_reportRequestFactoryFBA.FbaBulkFixStrandedInventoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -1389,10 +1389,10 @@ namespace EasyMWS.Tests.Factories
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Canada);
 			marketplaceGroup.TryAddMarketplace(MwsMarketplace.Mexico);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			Assert.Throws<ArgumentException>(() =>
-				_fbaReportsFactory.FbaBulkFixStrandedInventoryReport(marketplaceGroup));
+				_reportRequestFactoryFBA.FbaBulkFixStrandedInventoryReport(marketplaceGroup));
 		}
 
 		[Test]
@@ -1404,10 +1404,10 @@ namespace EasyMWS.Tests.Factories
 				.AddMarketplace(MwsMarketplace.France)
 				.AddMarketplace(MwsMarketplace.Italy)
 				.AddMarketplace(MwsMarketplace.Spain);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			Assert.Throws<ArgumentException>(() =>
-				_fbaReportsFactory.FbaBulkFixStrandedInventoryReport(marketplaceGroup));
+				_reportRequestFactoryFBA.FbaBulkFixStrandedInventoryReport(marketplaceGroup));
 		}
 
 		[Test]
@@ -1415,18 +1415,18 @@ namespace EasyMWS.Tests.Factories
 			FbaBulkFixStrandedInventoryReport_WithInternationalMarketplacesProvidedNotIndiaOrJapan_ThrowsArgumentException()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Australia);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			Assert.Throws<ArgumentException>(() =>
-				_fbaReportsFactory.FbaBulkFixStrandedInventoryReport(marketplaceGroup));
+				_reportRequestFactoryFBA.FbaBulkFixStrandedInventoryReport(marketplaceGroup));
 		}
 
 		[Test]
 		public void FbaBulkFixStrandedInventoryReport_ReturnsReportRequest_WithCorrectType()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaBulkFixStrandedInventoryReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaBulkFixStrandedInventoryReport();
 
 			Assert.AreEqual("_GET_STRANDED_INVENTORY_LOADER_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequest.UpdateFrequency);
@@ -1436,9 +1436,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaStrandedInventoryReport_WithNoMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaStrandedInventoryReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaStrandedInventoryReport();
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -1448,9 +1448,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaStrandedInventoryReport_WithNullMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaStrandedInventoryReport(null);
+			var reportRequest = _reportRequestFactoryFBA.FbaStrandedInventoryReport(null);
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -1460,9 +1460,9 @@ namespace EasyMWS.Tests.Factories
 		public void FbaStrandedInventoryReport_WithUSMarketplaceProvided_ReturnsRequest()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaStrandedInventoryReport(marketplaceGroup);
+			var reportRequest = _reportRequestFactoryFBA.FbaStrandedInventoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -1471,9 +1471,9 @@ namespace EasyMWS.Tests.Factories
 		public void FbaStrandedInventoryReport_WithIndiaMarketplaceProvided_ReturnsRequest()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.India);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaStrandedInventoryReport(marketplaceGroup);
+			var reportRequest = _reportRequestFactoryFBA.FbaStrandedInventoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -1482,9 +1482,9 @@ namespace EasyMWS.Tests.Factories
 		public void FbaStrandedInventoryReport_WithJapanMarketplaceProvided_ReturnsRequest()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Japan);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaStrandedInventoryReport(marketplaceGroup);
+			var reportRequest = _reportRequestFactoryFBA.FbaStrandedInventoryReport(marketplaceGroup);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -1495,10 +1495,10 @@ namespace EasyMWS.Tests.Factories
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Canada);
 			marketplaceGroup.TryAddMarketplace(MwsMarketplace.Mexico);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			Assert.Throws<ArgumentException>(() =>
-				_fbaReportsFactory.FbaStrandedInventoryReport(marketplaceGroup));
+				_reportRequestFactoryFBA.FbaStrandedInventoryReport(marketplaceGroup));
 		}
 
 		[Test]
@@ -1510,10 +1510,10 @@ namespace EasyMWS.Tests.Factories
 				.AddMarketplace(MwsMarketplace.France)
 				.AddMarketplace(MwsMarketplace.Italy)
 				.AddMarketplace(MwsMarketplace.Spain);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			Assert.Throws<ArgumentException>(() =>
-				_fbaReportsFactory.FbaStrandedInventoryReport(marketplaceGroup));
+				_reportRequestFactoryFBA.FbaStrandedInventoryReport(marketplaceGroup));
 		}
 
 		[Test]
@@ -1521,18 +1521,18 @@ namespace EasyMWS.Tests.Factories
 			FbaStrandedInventoryReport_WithInternationalMarketplacesProvidedNotIndiaOrJapan_ThrowsArgumentException()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Australia);
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
 			Assert.Throws<ArgumentException>(() =>
-				_fbaReportsFactory.FbaStrandedInventoryReport(marketplaceGroup));
+				_reportRequestFactoryFBA.FbaStrandedInventoryReport(marketplaceGroup));
 		}
 
 		[Test]
 		public void FbaStrandedInventoryReport_ReturnsReportRequest_WithCorrectType()
 		{
-			_fbaReportsFactory = new FbaReportsFactory();
+			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
 
-			var reportRequest = _fbaReportsFactory.FbaStrandedInventoryReport();
+			var reportRequest = _reportRequestFactoryFBA.FbaStrandedInventoryReport();
 
 			Assert.AreEqual("_GET_STRANDED_INVENTORY_UI_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequest.UpdateFrequency);

@@ -7,7 +7,7 @@ using MountainWarehouse.EasyMWS.Model;
 
 namespace MountainWarehouse.EasyMWS.Factories.Reports
 {
-	public class InventoryReportsFactory : IInventoryReportsFactory
+	public class ReportRequestFactoryInventory : IReportRequestFactoryInventory
 	{
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_MERCHANT_LISTINGS_ALL_DATA_ <para />
