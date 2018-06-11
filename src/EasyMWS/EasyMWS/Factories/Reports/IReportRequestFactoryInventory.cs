@@ -1,4 +1,5 @@
 ﻿using MountainWarehouse.EasyMWS.Model;
+using System;
 
 namespace MountainWarehouse.EasyMWS.Factories.Reports
 {
@@ -19,7 +20,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// <param name="custom">A Boolean value that indicates whether a custom report is returned. For more information, see Custom Inventory Reports. <para/>
 		/// Default: false. This functionality is available only in the Canada, US, UK, and India marketplaces.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer AllListingsReport(
+		ReportRequestPropertiesContainer AllListingsReport(DateTime? startDate = null, DateTime? endDate = null,
 			MwsMarketplaceGroup requestedMarketplacesGroup = null, bool custom = false);
 	}
 }

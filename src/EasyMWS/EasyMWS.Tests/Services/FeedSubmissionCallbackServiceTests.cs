@@ -1,11 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Moq;
-using MountainWarehouse.EasyMWS;
-using MountainWarehouse.EasyMWS.CallbackLogic;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
-using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Repositories;
 using MountainWarehouse.EasyMWS.Services;
@@ -26,10 +23,10 @@ namespace EasyMWS.Tests.Services
 			    new List<string>(MwsMarketplaceGroup.AmazonEurope()));
 		    var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 
-			var feedSubmissionCallbacks = new List<FeedSubmissionCallback>
+			var feedSubmissionCallbacks = new List<FeedSubmissionEntry>
 		    {
-				new FeedSubmissionCallback(serializedPropertiesContainer){ Id = 2 },
-				new FeedSubmissionCallback(serializedPropertiesContainer)
+				new FeedSubmissionEntry(serializedPropertiesContainer){ Id = 2 },
+				new FeedSubmissionEntry(serializedPropertiesContainer)
 				{
 					Id = 1,
 					AmazonRegion = AmazonRegion.Europe,
@@ -37,6 +34,7 @@ namespace EasyMWS.Tests.Services
 					DataTypeName = "testDataTypeName",
 					MethodName = "testMethodName",
 					Data = "testData",
+					FeedType = propertiesContainer.FeedType,
 					FeedSubmissionData = JsonConvert.SerializeObject(propertiesContainer)
 				}
 			};
@@ -49,16 +47,15 @@ namespace EasyMWS.Tests.Services
 	    [Test]
 	    public void FirstOrDefault_TwoInQueue_ReturnsFirstObjectPopulatedWithCorrectData()
 	    {
-			var feedSubmissionCallback = _feedSubmissionCallbackService.FirstOrDefault();
-		    var feedSubmissionData = JsonConvert.DeserializeObject<FeedSubmissionPropertiesContainer>(feedSubmissionCallback.FeedSubmissionData);
+			var feedSubmissionEntry = _feedSubmissionCallbackService.FirstOrDefault();
+		    var feedSubmissionData = JsonConvert.DeserializeObject<FeedSubmissionPropertiesContainer>(feedSubmissionEntry.FeedSubmissionData);
 
-		    Assert.AreEqual(AmazonRegion.Europe, feedSubmissionCallback.AmazonRegion);
-		    Assert.AreEqual("testData", feedSubmissionCallback.Data);
-		    Assert.AreEqual("testMethodName", feedSubmissionCallback.MethodName);
-		    Assert.AreEqual("testTypeName", feedSubmissionCallback.TypeName);
-		    Assert.AreEqual("testDataTypeName", feedSubmissionCallback.DataTypeName);
-		    Assert.AreEqual("testFeedType", feedSubmissionData.FeedType);
-		    Assert.AreEqual("testFeedContent", feedSubmissionData.FeedContent);
+		    Assert.AreEqual(AmazonRegion.Europe, feedSubmissionEntry.AmazonRegion);
+		    Assert.AreEqual("testData", feedSubmissionEntry.Data);
+		    Assert.AreEqual("testMethodName", feedSubmissionEntry.MethodName);
+		    Assert.AreEqual("testTypeName", feedSubmissionEntry.TypeName);
+		    Assert.AreEqual("testDataTypeName", feedSubmissionEntry.DataTypeName);
+		    Assert.AreEqual("testFeedType", feedSubmissionEntry.FeedType);
 			CollectionAssert.AreEquivalent(new List<string>(MwsMarketplaceGroup.AmazonEurope()), feedSubmissionData.MarketplaceIdList);
 		}
 	}

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using MountainWarehouse.EasyMWS.Data;
@@ -9,13 +10,16 @@ namespace MountainWarehouse.EasyMWS.Repositories
 {
     internal interface IReportRequestCallbackRepo
     {
-	    void Create(ReportRequestCallback callback);
-	    Task CreateAsync(ReportRequestCallback callback);
-	    void Update(ReportRequestCallback callback);
-	    void Delete(ReportRequestCallback callback);
-	    IQueryable<ReportRequestCallback> GetAll();
+	    void Create(ReportRequestEntry entry);
+	    Task CreateAsync(ReportRequestEntry entry);
+	    void Update(ReportRequestEntry entry);
+	    void Delete(ReportRequestEntry entry);
+	    void DeleteRange(IEnumerable<ReportRequestEntry> entries);
+
+		IQueryable<ReportRequestEntry> GetAll();
 		void SaveChanges();
 	    Task SaveChangesAsync();
+	    void Dispose();
 
     }
 }

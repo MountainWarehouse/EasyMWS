@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using MountainWarehouse.EasyMWS.Data;
 
@@ -8,10 +9,26 @@ namespace MountainWarehouse.EasyMWS.Repositories
 	{
 		private EasyMwsContext _dbContext;
 		internal FeedSubmissionCallbackRepo(string connectionString = null) => (_dbContext) = (new EasyMwsContext(connectionString));
-		public void Create(FeedSubmissionCallback callback) => _dbContext.FeedSubmissionCallbacks.Add(callback);
-		public void Update(FeedSubmissionCallback callback) => _dbContext.Update(callback);
-		public void Delete(FeedSubmissionCallback callback) => _dbContext.Remove(callback);
-		public IQueryable<FeedSubmissionCallback> GetAll() => _dbContext.FeedSubmissionCallbacks.AsQueryable();
+		public void Create(FeedSubmissionEntry entry) => _dbContext.FeedSubmissionEntries.Add(entry);
+		public void Update(FeedSubmissionEntry entry) => _dbContext.Update(entry);
+		public void Delete(FeedSubmissionEntry entry)
+		{
+			// it might be expected for an entity to be already removed, if dealing with multiple similar clients instances e.g. using hangfire for creating tasks.
+			// if this happens let the exception be thrown, as it will be caught and logged anyway
+			_dbContext.FeedSubmissionEntries.Remove(entry);
+		}
+
+		public void DeleteRange(IEnumerable<FeedSubmissionEntry> entries)
+		{
+			_dbContext.FeedSubmissionEntries.RemoveRange(entries);
+		}
+
+		public IQueryable<FeedSubmissionEntry> GetAll() => _dbContext.FeedSubmissionEntries.AsQueryable();
 		public void SaveChanges() => _dbContext.SaveChanges();
+
+		public void Dispose()
+		{
+			_dbContext.Dispose();
+		}
 	}
 }

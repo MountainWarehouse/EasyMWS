@@ -1,8 +1,5 @@
-﻿using System;
-using System.Configuration;
-using System.Data.SqlClient;
+﻿using System.Configuration;
 using System.IO;
-using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
@@ -50,24 +47,27 @@ namespace MountainWarehouse.EasyMWS.Data
 				.AddXmlFile("App.config")
 				.Build();
 
-			optionsBuilder.UseSqlServer(_connectionString ?? configuration["connectionStrings:add:EasyMwsContext:connectionString"]);
+			optionsBuilder
+				.UseLazyLoadingProxies()
+				.UseSqlServer(_connectionString ?? configuration["connectionStrings:add:EasyMwsContext:connectionString"]);
 		}
 
 		private void ConfigureDbContextForDotNetFramework(DbContextOptionsBuilder optionsBuilder)
 		{
-			optionsBuilder.UseSqlServer(_connectionString ?? ConfigurationManager.ConnectionStrings["EasyMwsContext"].ConnectionString);
+			optionsBuilder
+				.UseLazyLoadingProxies()
+				.UseSqlServer(_connectionString ?? ConfigurationManager.ConnectionStrings["EasyMwsContext"].ConnectionString);
 		}
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
-			modelBuilder.Entity<ReportRequestCallback>()
+			modelBuilder.Entity<ReportRequestEntry>()
 				.HasIndex(e => new {e.RequestReportId, e.GeneratedReportId});
-			modelBuilder.Entity<FeedSubmissionCallback>()
+			modelBuilder.Entity<FeedSubmissionEntry>()
 				.HasIndex(e => new { e.FeedSubmissionId });
 		}
 
-		internal DbSet<ReportRequestCallback> ReportRequestCallbacks { get; set; }
-		internal DbSet<FeedSubmissionCallback> FeedSubmissionCallbacks { get; set; }
-		internal DbSet<AmazonReport> AmazonReports { get; set; }
+		internal DbSet<ReportRequestEntry> ReportRequestEntries { get; set; }
+		internal DbSet<FeedSubmissionEntry> FeedSubmissionEntries { get; set; }
 	}
 }
