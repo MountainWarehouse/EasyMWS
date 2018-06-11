@@ -23,21 +23,17 @@ namespace MountainWarehouse.EasyMWS.Logging
 		{
 			if (!_isEnabled) return;
 
-			var eventArgs =
-				new LogAvailableEventArgs(level, $"{JsonConvert.SerializeObject(new {Message = message}, Formatting.None)}");
-
-			if (requestInfo != null)
+			var messageObject = new
 			{
-				var messageObject = new
-				{
-					Source = "EasyMws",
-					RequestInfo = requestInfo,
-					Message = message
-				};
+				Source = "EasyMws",
+				Content = message,
+				RequestInfo = requestInfo
+			};
 
-				eventArgs.Message = $"{JsonConvert.SerializeObject(messageObject, Formatting.None)}";
-				eventArgs.RequestInfo = requestInfo;
-			}
+			var eventArgs = new LogAvailableEventArgs(level, $"{JsonConvert.SerializeObject(new { Message = messageObject }, Formatting.None)}")
+				{
+					RequestInfo = requestInfo
+				};
 
 			EventHandler<LogAvailableEventArgs> handler = LogAvailable;
 			handler?.Invoke(this, eventArgs);
@@ -61,27 +57,29 @@ namespace MountainWarehouse.EasyMWS.Logging
 		{
 			if (!_isEnabled) return;
 
-			var eventArgs = new LogAvailableEventArgs(LogLevel.Error, $"{JsonConvert.SerializeObject(new { Message = message }, Formatting.None)}", e);
+			RequestInfo requestInfo = null;
 
 			if (e is MarketplaceWebServiceException mwsWebServiceException)
 			{
-				eventArgs.RequestInfo = new RequestInfo(
+				requestInfo = new RequestInfo(
 					mwsWebServiceException.ResponseHeaderMetadata?.Timestamp,
 					mwsWebServiceException.RequestId,
 					mwsWebServiceException.StatusCode,
 					mwsWebServiceException.ErrorType,
 					mwsWebServiceException.ErrorCode);
-
-				var messageObject = new
-				{
-					Source = "EasyMws",
-					RequestInfo = eventArgs.RequestInfo,
-					Message = message
-				};
-
-				eventArgs.Message = $"{JsonConvert.SerializeObject(messageObject, Formatting.None)}";
-				
 			}
+
+			var messageObject = new
+			{
+				Source = "EasyMws",
+				Content = message,
+				RequestInfo = requestInfo
+			};
+
+			var eventArgs = new LogAvailableEventArgs(LogLevel.Error, $"{JsonConvert.SerializeObject(new {Message = messageObject}, Formatting.None)}", e)
+				{
+					RequestInfo = requestInfo
+				};
 
 			EventHandler<LogAvailableEventArgs> handler = LogAvailable;
 			handler?.Invoke(this, eventArgs);
