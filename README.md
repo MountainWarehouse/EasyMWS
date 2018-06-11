@@ -27,6 +27,8 @@ A user can also create requests to submit feeds to amazon (feed content has to b
 
 When queuing a request the user also needs to provide a static method reference. This method will be invoked once the request has been completed, in order to provide access to the feed submission result report content.
 
+All that is left to do is making periodic calls to the Poll() method. This method also handles all the lifecycle of submitting feeds to amazon. A call every 2 to 5 minutes is recommended in order to make sure request throttling won't happen.
+
 Once a feed has been submitted to amazon and a feed processing result report has been downloaded, the callback method will be invoked and will provide access to the feed processing result report.
 
 ## Code usage - (this is only to demonstrate how to use the client.)
