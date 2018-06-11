@@ -9,16 +9,8 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 {
 	public class ReportRequestFactoryInventory : IReportRequestFactoryInventory
 	{
-		/// <summary>
-		/// Generate a request object for a MWS report of type : _GET_MERCHANT_LISTINGS_ALL_DATA_ <para />
-		/// Tab-delimited flat file detailed all listings report. For Marketplace and Seller Central sellers. <para />
-		/// This report accepts the following ReportOptions values: Custom<para/>
-		/// </summary>
-		/// <param name="requestedMarketplacesGroup">Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
-		/// <param name="custom">A Boolean value that indicates whether a custom report is returned. For more information, see Custom Inventory Reports. <para/>
-		/// Default: false. This functionality is available only in the Canada, US, UK, and India marketplaces.</param>
-		/// <returns></returns>
-		public ReportRequestPropertiesContainer AllListingsReport(MwsMarketplaceGroup requestedMarketplacesGroup = null, bool custom = false)
+		public ReportRequestPropertiesContainer AllListingsReport(DateTime? startDate = null, DateTime? endDate = null, 
+			MwsMarketplaceGroup requestedMarketplacesGroup = null, bool custom = false)
 		{
 			if (custom && requestedMarketplacesGroup != null)
 			{
@@ -44,7 +36,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 			return ReportGeneratorHelper.GenerateReportRequest("_GET_MERCHANT_LISTINGS_ALL_DATA_", ContentUpdateFrequency.Unknown,
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(), 
 				requestedMarketplaces: requestedMarketplacesGroup?.GetMarketplacesIdList.ToList(), 
-				reportOptions: reportOptions);
+				reportOptions: reportOptions, startDate: startDate, endDate: endDate);
 		}
 
 
