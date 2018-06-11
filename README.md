@@ -55,8 +55,10 @@ public static void DoSomethingWithDownloadedReport(Stream reportContent, object 
 {
 	var filename = (string) callbackData;
 	var path = @"C:\AmazonReports";
-	var streamReader = new StreamReader(reportContent);
-	File.WriteAllText($"{path}/{filename}", streamReader.ReadToEnd());
+	using (var streamReader = new StreamReader(reportContent))
+	{
+		File.WriteAllText($"{path}/{filename}", streamReader.ReadToEnd());
+	}
 }
 ```
 
