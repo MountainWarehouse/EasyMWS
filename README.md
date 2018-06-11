@@ -10,28 +10,26 @@ Detailed logs describing the state of either lifecycle can be accessed.
 ## Downloading reports from Amazon MWS
 
 EasyMws provides factories that can be used to generate requests for downloading reports from Amazon MWS. One has to specify the report type, any required/optional arguments needed by Amazon to process the report and a set of amazon seller account credentials.
-(Adding support for more reports is ongoing).
+(Adding support for more reports is still ongoing).
 
-A user can create requests to download reports from amazon, and add these requests to an internal queue.
+A user can create requests to download reports from amazon and can add these requests to an internal EasyMws queue.
 
-When queuing a request the user also needs to provide a static method reference that will be invoked once the request has been completed, in order to provide access to the report content.
+When queuing a request the user also needs to provide a static method reference. This method will be invoked once the request has been completed, in order to provide access to the report content.
 
-For reports to be downloaded / feeds to be submitted the user only has to do periodic calls to the Poll() method.
-This method handles all the lifecycle of doing the right calls to amazon endpoints, so that reports are downloaded / feeds submitted.
-(Calling Poll every 2-5 minutes until the report is downloaded, is recommended)
+All that is left to do is making periodic calls to the Poll() method. This method handles all the lifecycle of requesting reports from amazon. A call every 2 to 5 minutes is recommended in order to make sure request throttling won't happen.
 
-Once a report request has been completed and the report downloaded, the callback method will be invoked and will provide access to the report content.
+Once a report has been downloaded, the callback method will be invoked and will provide access to the report content.
 
 
 ## Submitting feeds to Amazon MWS
 
-A user can also create requests to submit feeds to amazon (feed content has to be provided), and add the requests to an internal queue.
+A user can also create requests to submit feeds to amazon (feed content has to be provided separately), and add the requests to an internal queue.
 
-When queuing a request the user also needs to provide a static method reference that will be invoked once the request has been completed, in order to provide access to the feed submission result report content.
+When queuing a request the user also needs to provide a static method reference. This method will be invoked once the request has been completed, in order to provide access to the feed submission result report content.
 
 Once a feed has been submitted to amazon and a feed processing result report has been downloaded, the callback method will be invoked and will provide access to the feed processing result report.
 
-## Code usage - (this is to demonstrate how to use the client.)
+## Code usage - (this is only to demonstrate how to use the client.)
 
 ```
 public void Main(object[] arguments) {
