@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Logging;
@@ -63,19 +64,24 @@ namespace MountainWarehouse.EasyMWS.Client
 
 		public void Poll()
 		{
-			using (var reportRequestService = new ReportRequestCallbackService(_options, _easyMwsLogger))
-			{
-				_reportProcessor.PollReports(reportRequestService);
-				
-			}
-			using (var feedSubmissionService = new FeedSubmissionCallbackService(_options, _easyMwsLogger))
-			{
-				_feedProcessor.PollFeeds(feedSubmissionService);
-
-			}
+			Parallel.Invoke(
+				() =>
+				{
+					using (var reportRequestService = new ReportRequestCallbackService(_options, _easyMwsLogger))
+					{
+						_reportProcessor.PollReports(reportRequestService);
+					}
+				},
+				() =>
+				{
+					using (var feedSubmissionService = new FeedSubmissionCallbackService(_options, _easyMwsLogger))
+					{
+						_feedProcessor.PollFeeds(feedSubmissionService);
+					}
+				});
 		}
 
-		
+
 		public void QueueReport(ReportRequestPropertiesContainer reportRequestContainer,
 			Action<Stream, object> callbackMethod, object callbackData)
 		{
