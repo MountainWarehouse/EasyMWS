@@ -9,7 +9,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 	/// When providing no MarketplaceId value for a reports that is not a Listings Reports, data for all marketplaces the seller is registered in will be shown.<para />
 	/// For more info see : https://docs.developer.amazonservices.com/en_UK/reports/Reports_ReportType.html
 	/// </summary>
-	public interface IReportRequestFactoryInventory
+	public interface IInventoryReportsFactory
     {
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_MERCHANT_LISTINGS_ALL_DATA_ <para />

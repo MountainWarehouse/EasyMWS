@@ -7,7 +7,7 @@ using MountainWarehouse.EasyMWS.Model;
 
 namespace MountainWarehouse.EasyMWS.Factories.Reports
 {
-	public class ReportRequestFactoryInventory : IReportRequestFactoryInventory
+	public class InventoryReportsFactory : IInventoryReportsFactory
 	{
 		public ReportRequestPropertiesContainer AllListingsReport(DateTime? startDate = null, DateTime? endDate = null, 
 			MwsMarketplaceGroup requestedMarketplacesGroup = null, bool custom = false)
