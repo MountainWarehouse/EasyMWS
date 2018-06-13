@@ -192,21 +192,32 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var reportToDownload = _requestReportProcessor.GetNextFromQueueOfReportsToDownload(reportRequestService);
 			if (reportToDownload == null) return;
 			
-			var stream = _requestReportProcessor.DownloadGeneratedReportFromAmazon(reportToDownload);
-			if (stream == null)
+			var reportInfo = _requestReportProcessor.DownloadGeneratedReportFromAmazon(reportToDownload);
+			if (reportInfo.report == null)
 			{
 				_logger.Warn($"AmazonMWS report download failed for {reportToDownload.RegionAndTypeComputed}");
 				return;
 			}
 
-			using (var streamReader = new StreamReader(stream))
+			var hasValidHash = MD5ChecksumHelper.IsChecksumCorrect(reportInfo.report, reportInfo.md5Hash);
+			if (hasValidHash)
 			{
-				var zippedReport = ZipHelper.CreateArchiveFromContent(streamReader.ReadToEnd());
-				reportToDownload.Details = new ReportRequestDetails { ReportContent = zippedReport };
+				_logger.Info($"Checksum verification succeeded for report {reportToDownload.RegionAndTypeComputed}");
+
+				using (var streamReader = new StreamReader(reportInfo.report))
+				{
+					var zippedReport = ZipHelper.CreateArchiveFromContent(streamReader.ReadToEnd());
+					reportToDownload.Details = new ReportRequestDetails { ReportContent = zippedReport };
+				}
+
+				reportRequestService.Update(reportToDownload);
+				reportRequestService.SaveChanges();
 			}
-			
-			reportRequestService.Update(reportToDownload);
-			reportRequestService.SaveChanges();
+			else
+			{
+				_logger.Warn($"Checksum verification failed for report {reportToDownload.RegionAndTypeComputed}");
+				_requestReportProcessor.MoveToRetryQueue(reportRequestService, reportToDownload);
+			}
 		}
 
 		public void ExecuteMethodCallback(ReportRequestEntry reportRequest)
