@@ -15,8 +15,7 @@ namespace EasyMWS.Tests.Logging
 	    private string DeserializeInternalMessage(string serializedMessage)
 	    {
 		    var deserializedMessage = ((JObject)JsonConvert.DeserializeObject(serializedMessage))["Message"];
-		    return ((JValue) deserializedMessage).Value.ToString();
-
+		    return (string)((JContainer)deserializedMessage)["Content"];
 	    }
 
 	    [Test]

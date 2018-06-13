@@ -51,7 +51,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void PollReports(IReportRequestCallbackService reportRequestService)
 		{
-			_logger.Info("EasyMwsClient: Executing polling action for report requests.");
+			_logger.Info("Executing polling action for report requests.");
 
 			_requestReportProcessor.CleanupReportRequests(reportRequestService);
 
