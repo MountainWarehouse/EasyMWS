@@ -57,19 +57,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 			PerformCallbacksForPreviouslySubmittedFeeds(feedSubmissionService);
 		}
 
-		private bool IsValidFeedSubmissionReportHash(IFeedSubmissionCallbackService feedSubmissionService, (FeedSubmissionEntry feedSubmissionCallback, MemoryStream reportContent, string contentMd5) reportInfo)
+		private bool IsValidFeedSubmissionReportHash((FeedSubmissionEntry feedSubmissionCallback, MemoryStream reportContent, string contentMd5) reportInfo)
 		{
-			if (MD5ChecksumHelper.IsChecksumCorrect(reportInfo.reportContent, reportInfo.contentMd5))
-			{
-				_logger.Info($"Checksum verification succeeded for feed submission report for {reportInfo.feedSubmissionCallback.RegionAndTypeComputed}");
-				return true;
-			}
-			else
-			{
-				_logger.Warn($"Checksum verification failed for feed submission report for {reportInfo.feedSubmissionCallback.RegionAndTypeComputed}");
-				_feedSubmissionProcessor.MoveToRetryQueue(feedSubmissionService, reportInfo.feedSubmissionCallback);
-				return false;
-			}
+			return MD5ChecksumHelper.IsChecksumCorrect(reportInfo.reportContent, reportInfo.contentMd5);
 		}
 
 		private void PerformCallbacksForPreviouslySubmittedFeeds(IFeedSubmissionCallbackService feedSubmissionService)
@@ -214,9 +204,10 @@ namespace MountainWarehouse.EasyMWS.Processors
 				return;
 			}
 
-			var hasValidHash = IsValidFeedSubmissionReportHash(feedSubmissionService, (nextFeedWithProcessingComplete, processingReportInfo.processingReport, processingReportInfo.md5hash));
+			var hasValidHash = MD5ChecksumHelper.IsChecksumCorrect(processingReportInfo.processingReport, processingReportInfo.md5hash);
 			if (hasValidHash)
 			{
+				_logger.Info($"Checksum verification succeeded for feed submission report for {nextFeedWithProcessingComplete.RegionAndTypeComputed}");
 				nextFeedWithProcessingComplete.Details.FeedContent = null;
 
 				using (var streamReader = new StreamReader(processingReportInfo.processingReport))
@@ -228,6 +219,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 				feedSubmissionService.Update(nextFeedWithProcessingComplete);
 				feedSubmissionService.SaveChanges();
+			}
+			else
+			{
+				_logger.Warn($"Checksum verification failed for feed submission report for {nextFeedWithProcessingComplete.RegionAndTypeComputed}");
+				_feedSubmissionProcessor.MoveToRetryQueue(feedSubmissionService, nextFeedWithProcessingComplete);
 			}
 		}
 
