@@ -87,8 +87,6 @@ namespace EasyMWS.Tests.EndToEnd
 		    var dbEntry = _dbContext.ReportRequestEntries.Where(rre => rre.ReportType == validReportType);
 
 			// assert - null callback data serialization step does not crash
-		    _loggerMock.Verify(l => l.Info(It.Is<string>(msg => msg.StartsWith("The following report was queued for download")),
-			    It.IsAny<RequestInfo>()));
 			Assert.NotNull(dbEntry);
 			Assert.AreEqual(1, dbEntry.Count());
 		    var reportRequestEntry = dbEntry.Single();
@@ -127,10 +125,6 @@ namespace EasyMWS.Tests.EndToEnd
 
 			// act - queue report
 			_easyMwsClient.QueueReport(reportRequestContainer, ReportDownloadCallback, expectedCallbackData);
-
-			// assert - null callback data serialization step does not crash
-			_loggerMock.Verify(l => l.Info(It.Is<string>(msg => msg.StartsWith("The following report was queued for download")),
-				It.IsAny<RequestInfo>()));
 
 			// act - Poll report request process, in order for the queuedReport delegate to be invoked.
 			_easyMwsClient.Poll();
