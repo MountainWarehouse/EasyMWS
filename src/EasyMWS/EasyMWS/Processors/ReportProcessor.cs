@@ -82,10 +82,10 @@ namespace MountainWarehouse.EasyMWS.Processors
 				}
 				catch (Exception e)
 				{
-					reportEntry.RequestRetryCount++;
+					reportEntry.ReportRequestRetryCount++;
 					reportRequestService.Update(reportEntry);
 					_logger.Error(
-						$"Method callback failed for {reportEntry.RegionAndTypeComputed}. Placing report request entry in retry queue. Current retry count is :{reportEntry.RequestRetryCount}. {e.Message}", e);
+						$"Method callback failed for {reportEntry.RegionAndTypeComputed}. Placing report request entry in retry queue. Current retry count is :{reportEntry.ReportRequestRetryCount}. {e.Message}", e);
 				}
 			}
 
@@ -114,7 +114,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 					ContentUpdateFrequency = propertiesContainer.UpdateFrequency,
 					RequestReportId = null,
 					GeneratedReportId = null,
-					RequestRetryCount = 0,
+					ReportRequestRetryCount = 0,
 					ReportType = propertiesContainer.ReportType
 				};
 
