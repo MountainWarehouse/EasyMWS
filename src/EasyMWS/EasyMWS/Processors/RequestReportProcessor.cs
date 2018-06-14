@@ -274,7 +274,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 							&& rrc.Details == null);
 	    }
 
-	    public MemoryStream DownloadGeneratedReportFromAmazon(ReportRequestEntry reportRequestEntry)
+		public (MemoryStream report, string md5Hash) DownloadGeneratedReportFromAmazon(ReportRequestEntry reportRequestEntry)
 	    {
 		    _logger.Info($"Attempting to download the next report in queue from Amazon: {reportRequestEntry.RegionAndTypeComputed}.");
 
@@ -300,17 +300,17 @@ namespace MountainWarehouse.EasyMWS.Processors
 				    new RequestInfo(timestamp, requestId));
 			    _logger.Info($"Report download from Amazon has succeeded for {reportRequestEntry.RegionAndTypeComputed}.");
 
-			    return reportContentStream;
-		    }
+				return (reportContentStream, response?.GetReportResult?.ContentMD5);
+			}
 		    catch (MarketplaceWebServiceException e)
 		    {
 				_logger.Error($"Request to MWS.GetReport failed! [Message: '{e.Message}', HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}']", e);
-			    return null;
+			    return (null, null);
 			}
 		    catch (Exception e)
 		    {
 				_logger.Error($"Request to MWS.GetReport failed! [Message: '{e.Message}']", e);
-			    return null;
+			    return (null, null);
 		    }
 	    }
 
