@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net;
 using Moq;
 using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.CallbackLogic;
@@ -308,28 +309,240 @@ namespace EasyMWS.Tests.Processors
 		[Test]
 		public void RequestReportFromAmazon_CalledWithNullReportRequestCallback_ThrowsArgumentNullException()
 		{
-			Assert.Throws<ArgumentNullException>(() => _requestReportProcessor.RequestReportFromAmazon(null));
+			Assert.Throws<ArgumentNullException>(() => _requestReportProcessor.RequestReportFromAmazon(It.IsAny<IReportRequestCallbackService>(), null));
 		}
 
 		[Test]
 		public void RequestReportFromAmazon_CalledWithReportRequestCallbackWithNullReportRequestData_ThrowsArgumentNullException()
 		{
-			Assert.Throws<ArgumentNullException>(() => _requestReportProcessor.RequestReportFromAmazon(new ReportRequestEntry()));
+			Assert.Throws<ArgumentNullException>(() => _requestReportProcessor.RequestReportFromAmazon(It.IsAny<IReportRequestCallbackService>(), new ReportRequestEntry()));
 		}
 
 		[Test]
 		public void RequestReportFromAmazon_CalledWithReportRequestDataWithNoReportType_ThrowsArgumentNullException()
 		{
-			Assert.Throws<ArgumentException>(() => _requestReportProcessor.RequestReportFromAmazon(new ReportRequestEntry{ReportRequestData = String.Empty}));
+			Assert.Throws<ArgumentException>(() => _requestReportProcessor.RequestReportFromAmazon(It.IsAny<IReportRequestCallbackService>(), new ReportRequestEntry {ReportRequestData = String.Empty}));
+		}
+
+		[Test]
+		public void RequestReportFromAmazon_WithRequestReportAmazonResponseNotNull_CallsOnce_GetNextFromQueueOfReportsToGenerate()
+		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+
+			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
+				.Returns(new RequestReportResponse{RequestReportResult = new RequestReportResult{ ReportRequestInfo = new ReportRequestInfo{ReportRequestId = "testReportRequestId" } }});
+			var reportRequestEntryBeingUpdated = (ReportRequestEntry) null;
+			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+				{
+					reportRequestEntryBeingUpdated = entry;
+				}));
+
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+				new ReportRequestEntry
+				{
+					LastRequested = DateTime.MinValue,
+					ReportRequestData = serializedReportRequestData,
+					ReportType = "testReportType"
+				});
+
+			Assert.AreEqual("testReportRequestId", reportRequestEntryBeingUpdated.RequestReportId);
+			Assert.AreEqual(0, reportRequestEntryBeingUpdated.RequestRetryCount);
+			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastRequested.Day);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+		}
+
+		[Test]
+		public void RequestReportFromAmazon_WithRequestReportAmazonResponseNull_CallsOnce_AllocateReportRequestForRetry()
+		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+
+			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
+				.Returns(new RequestReportResponse{RequestReportResult = new RequestReportResult{ ReportRequestInfo = new ReportRequestInfo{ReportRequestId =  null} }});
+			var reportRequestEntryBeingUpdated = (ReportRequestEntry) null;
+			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+				{
+					reportRequestEntryBeingUpdated = entry;
+				}));
+
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+				new ReportRequestEntry
+				{
+					LastRequested = DateTime.MinValue,
+					ReportRequestData = serializedReportRequestData,
+					ReportType = "testReportType"
+				});
+
+			Assert.AreEqual(null, reportRequestEntryBeingUpdated.RequestReportId);
+			Assert.AreEqual(1, reportRequestEntryBeingUpdated.RequestRetryCount);
+			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastRequested.Day);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+		}
+
+		[Test]
+		public void RequestReportFromAmazon_WithRequestReportAmazonResponseEmpty_CallsOnce_AllocateReportRequestForRetry()
+		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+
+			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
+				.Returns(new RequestReportResponse { RequestReportResult = new RequestReportResult { ReportRequestInfo = new ReportRequestInfo { ReportRequestId = string.Empty } } });
+			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
+			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			{
+				reportRequestEntryBeingUpdated = entry;
+			}));
+
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+				new ReportRequestEntry
+				{
+					LastRequested = DateTime.MinValue,
+					ReportRequestData = serializedReportRequestData,
+					ReportType = "testReportType"
+				});
+
+			Assert.AreEqual(string.Empty, reportRequestEntryBeingUpdated.RequestReportId);
+			Assert.AreEqual(1, reportRequestEntryBeingUpdated.RequestRetryCount);
+			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastRequested.Day);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+		}
+
+		[Test]
+		public void RequestReportFromAmazon_WithAmazonReturningFatalErrorCodeResponse_DeletesReportRequestEntryFromQueue()
+		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+
+			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
+				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, "InvalidReportType", "errorType", "123", "xml", new ResponseHeaderMetadata()));
+
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+				new ReportRequestEntry
+				{
+					LastRequested = DateTime.MinValue,
+					ReportRequestData = serializedReportRequestData,
+					ReportType = "testReportType"
+				});
+
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+		}
+
+		[Test]
+		public void RequestReportFromAmazon_WithAmazonReturningNonFatalErrorCodeResponse_IncrementsRetryCountCorrectly()
+		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+
+			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
+				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, "ReportNotReady", "errorType", "123", "xml", new ResponseHeaderMetadata()));
+			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
+			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			{
+				reportRequestEntryBeingUpdated = entry;
+			}));
+
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+				new ReportRequestEntry
+				{
+					LastRequested = DateTime.MinValue,
+					ReportRequestData = serializedReportRequestData,
+					ReportType = "testReportType",
+					RequestRetryCount = 1
+				});
+
+			Assert.IsNull(reportRequestEntryBeingUpdated.RequestReportId);
+			Assert.AreEqual(2, reportRequestEntryBeingUpdated.RequestRetryCount);
+			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastRequested.Day);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+		}
+
+		[Test]
+		public void RequestReportFromAmazon_WithAmazonReturningUnknownErrorCodeResponse_IncrementsRetryCountCorrectly()
+		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+
+			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
+				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, "UnknownErrorCode", "errorType", "123", "xml", new ResponseHeaderMetadata()));
+			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
+			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			{
+				reportRequestEntryBeingUpdated = entry;
+			}));
+
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+				new ReportRequestEntry
+				{
+					LastRequested = DateTime.MinValue,
+					ReportRequestData = serializedReportRequestData,
+					ReportType = "testReportType",
+					RequestRetryCount = 1
+				});
+
+			Assert.IsNull(reportRequestEntryBeingUpdated.RequestReportId);
+			Assert.AreEqual(2, reportRequestEntryBeingUpdated.RequestRetryCount);
+			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastRequested.Day);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+		}
+
+		[Test]
+		public void RequestReportFromAmazon_WithAmazonCallThrowingNonMarketplaceWebServiceException_IncrementsRetryCountCorrectly()
+		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+
+			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
+				.Throws(new Exception(""));
+			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
+			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			{
+				reportRequestEntryBeingUpdated = entry;
+			}));
+
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+				new ReportRequestEntry
+				{
+					LastRequested = DateTime.MinValue,
+					ReportRequestData = serializedReportRequestData,
+					ReportType = "testReportType",
+					RequestRetryCount = 1
+				});
+
+			Assert.IsNull(reportRequestEntryBeingUpdated.RequestReportId);
+			Assert.AreEqual(2, reportRequestEntryBeingUpdated.RequestRetryCount);
+			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastRequested.Day);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
 		}
 
 		[Test]
 		public void RequestReportFromAmazon_OneInQueue_SubmitsToAmazon()
 		{
-			var reportId = _requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbacks[0]);
+			var requestBeingSentToAmazon = (RequestReportRequest)null;
+			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
+				.Callback<RequestReportRequest>(
+					(req) =>
+					{
+						requestBeingSentToAmazon = req;
+					});
+
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object, _reportRequestCallbacks[0]);
+			var expectedReportType = _reportRequestCallbacks[0].ReportType;
 
 			_marketplaceWebServiceClientMock.Verify(mwsc => mwsc.RequestReport(It.IsAny<RequestReportRequest>()), Times.Once);
-			Assert.AreEqual("Report001", reportId);
+
+			Assert.AreEqual(expectedReportType, requestBeingSentToAmazon.ReportType);
 		}
 
 		[Test]
@@ -348,7 +561,7 @@ namespace EasyMWS.Tests.Processors
 			_marketplaceWebServiceClientMock.Setup(mwscm => mwscm.RequestReport(It.IsAny<RequestReportRequest>()))
 				.Callback<RequestReportRequest>((rrr) => { requestReportRequest = rrr; });
 
-			_requestReportProcessor.RequestReportFromAmazon(reportRequestEntry);
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object, reportRequestEntry);
 
 			Assert.AreEqual("testMerchant800", requestReportRequest.Merchant);
 			Assert.AreEqual("testReportType800", requestReportRequest.ReportType);
@@ -374,7 +587,7 @@ namespace EasyMWS.Tests.Processors
 			_marketplaceWebServiceClientMock.Setup(mwscm => mwscm.RequestReport(It.IsAny<RequestReportRequest>()))
 				.Callback<RequestReportRequest>((rrr) => { requestReportRequest = rrr; });
 
-			_requestReportProcessor.RequestReportFromAmazon(reportRequestCallback);
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object, reportRequestCallback);
 
 			Assert.AreEqual("testMerchant800", requestReportRequest.Merchant);
 			Assert.AreEqual("testReportType800", requestReportRequest.ReportType);
@@ -382,17 +595,6 @@ namespace EasyMWS.Tests.Processors
 			Assert.AreEqual(DateTime.MinValue, requestReportRequest.EndDate);
 			Assert.IsNull(requestReportRequest.ReportOptions);
 			Assert.IsNull(requestReportRequest.MarketplaceIdList);
-		}
-
-		[Test]
-		public void GetNextFromQueueOfReportsToGenerate_UpdatesRequestReportId_OnTheCallback()
-		{
-			var reportRequestId = "testReportRequestId";
-
-			 _requestReportProcessor.MoveToQueueOfReportsToGenerate(_reportRequestCallbackServiceMock.Object, _reportRequestCallbacks[0], reportRequestId);
-
-			Assert.AreEqual("testReportRequestId", _reportRequestCallbacks[0].RequestReportId);
-			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
 		}
 
 		[Test]
@@ -769,30 +971,6 @@ namespace EasyMWS.Tests.Processors
 			// Assert
 			_marketplaceWebServiceClientMock.Verify(x => x.GetReport(It.IsAny<GetReportRequest>()), Times.Once);
 			Assert.IsNotNull(result);
-		}
-		
-		[Test]
-		public void MoveToRetryQueue_CalledOnce_IncrementsRequestRetryCountCorrectly()
-		{
-			Assert.AreEqual(0, _reportRequestCallbacks.First().RequestRetryCount);
-
-			_requestReportProcessor.MoveToRetryQueue(_reportRequestCallbackServiceMock.Object, _reportRequestCallbacks.First());
-
-			Assert.AreEqual(1, _reportRequestCallbacks.First().RequestRetryCount);
-			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
-		}
-
-		[Test]
-		public void MoveToRetryQueue_CalledMultipleTimes_IncrementsRequestRetryCountCorrectly()
-		{
-			Assert.AreEqual(0, _reportRequestCallbacks.First().RequestRetryCount);
-
-			_requestReportProcessor.MoveToRetryQueue(_reportRequestCallbackServiceMock.Object, _reportRequestCallbacks.First());
-			_requestReportProcessor.MoveToRetryQueue(_reportRequestCallbackServiceMock.Object, _reportRequestCallbacks.First());
-			_requestReportProcessor.MoveToRetryQueue(_reportRequestCallbackServiceMock.Object, _reportRequestCallbacks.First());
-
-			Assert.AreEqual(3, _reportRequestCallbacks.First().RequestRetryCount);
-			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestEntry>()), Times.Exactly(3));
 		}
 
 		[Test]
