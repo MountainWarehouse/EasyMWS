@@ -275,9 +275,11 @@ namespace EasyMWS.Tests.EndToEnd
 		private void Setup_GetReport_Returns_ReportContentStream(string expectedGeneratedReportId, string reportContent)
 		{
 			var stream = StreamHelper.CreateMemoryStream(reportContent);
+			var validMd5Hash = MD5ChecksumHelper.ComputeHashForAmazon(stream);
 			var response = new GetReportResponse
 			{
-				ResponseHeaderMetadata = new ResponseHeaderMetadata("requestId", "responseContext", "timestamp")
+				ResponseHeaderMetadata = new ResponseHeaderMetadata("requestId", "responseContext", "timestamp"),
+				GetReportResult = new GetReportResult { ContentMD5 = validMd5Hash }
 			};
 
 			_mwsClientMock
