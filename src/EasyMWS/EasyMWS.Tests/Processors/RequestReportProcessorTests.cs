@@ -413,14 +413,18 @@ namespace EasyMWS.Tests.Processors
 			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
 		}
 
-		[Test]
-		public void RequestReportFromAmazon_WithAmazonReturningFatalErrorCodeResponse_DeletesReportRequestEntryFromQueue()
+		[TestCase("AccessToReportDenied")]
+		[TestCase("InvalidReportId")]
+		[TestCase("InvalidReportType")]
+		[TestCase("InvalidRequest")]
+		[TestCase("ReportNoLongerAvailable")]
+		public void RequestReportFromAmazon_WithAmazonReturningFatalErrorCodeResponse_DeletesReportRequestEntryFromQueue(string fatalErrorCode)
 		{
 			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
 			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
 
 			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
-				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, "InvalidReportType", "errorType", "123", "xml", new ResponseHeaderMetadata()));
+				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, fatalErrorCode, "errorType", "123", "xml", new ResponseHeaderMetadata()));
 
 			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object,
 				new ReportRequestEntry
@@ -435,14 +439,16 @@ namespace EasyMWS.Tests.Processors
 			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
 		}
 
-		[Test]
-		public void RequestReportFromAmazon_WithAmazonReturningNonFatalErrorCodeResponse_IncrementsRetryCountCorrectly()
+		[TestCase("ReportNotReady")]
+		[TestCase("InvalidScheduleFrequency")]
+		[TestCase("SomeUnhandledNewErrorCode")]
+		public void RequestReportFromAmazon_WithAmazonReturningNonFatalErrorCodeResponse_IncrementsRetryCountCorrectly(string nonFatalErrorCode)
 		{
 			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
 			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
 
 			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
-				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, "ReportNotReady", "errorType", "123", "xml", new ResponseHeaderMetadata()));
+				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, nonFatalErrorCode, "errorType", "123", "xml", new ResponseHeaderMetadata()));
 			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
 			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
 			{
@@ -1046,11 +1052,15 @@ namespace EasyMWS.Tests.Processors
 			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
 		}
 
-		[Test]
-		public void DownloadGeneratedReportFromAmazon_WithAmazonReturningFatalExceptionResponse_EntryIsDeletedFromDb()
+		[TestCase("AccessToReportDenied")]
+		[TestCase("InvalidReportId")]
+		[TestCase("InvalidReportType")]
+		[TestCase("InvalidRequest")]
+		[TestCase("ReportNoLongerAvailable")]
+		public void DownloadGeneratedReportFromAmazon_WithAmazonReturningFatalExceptionResponse_EntryIsDeletedFromDb(string fatalErrorCode)
 		{
 			_marketplaceWebServiceClientMock.Setup(mws => mws.GetReport(It.IsAny<GetReportRequest>()))
-				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, "ReportNoLongerAvailable", "errorType", "123", "xml", new ResponseHeaderMetadata()));
+				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, fatalErrorCode, "errorType", "123", "xml", new ResponseHeaderMetadata()));
 
 			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
 			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
@@ -1071,11 +1081,13 @@ namespace EasyMWS.Tests.Processors
 			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
 		}
 
-		[Test]
-		public void DownloadGeneratedReportFromAmazon_WithAmazonReturningNonFatalExceptionResponse_RetryCountIncremented()
+		[TestCase("ReportNotReady")]
+		[TestCase("InvalidScheduleFrequency")]
+		[TestCase("SomeUnhandledNewErrorCode")]
+		public void DownloadGeneratedReportFromAmazon_WithAmazonReturningNonFatalExceptionResponse_RetryCountIncremented(string nonFatalErrorCode)
 		{
 			_marketplaceWebServiceClientMock.Setup(mws => mws.GetReport(It.IsAny<GetReportRequest>()))
-				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, "ReportNotReady", "errorType", "123", "xml", new ResponseHeaderMetadata()));
+				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, nonFatalErrorCode, "errorType", "123", "xml", new ResponseHeaderMetadata()));
 
 			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
 			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
