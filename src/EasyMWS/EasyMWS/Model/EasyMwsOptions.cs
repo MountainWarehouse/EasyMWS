@@ -8,19 +8,44 @@ namespace MountainWarehouse.EasyMWS.Model
     public class EasyMwsOptions
     {
 		/// <summary>
+		/// Default=5. When attempting to invoke a callback method after a report has been downloaded or after a feed has been submitted, and the callback invocation fails, specify how many times to retry the invocation.
+		/// </summary>
+		public int InvokeCallbackMaxRetryCount { get; set; }
+
+		/// <summary>
+		///  Default=ArithmeticProgression. When attempting to invoke a callback method after a report has been downloaded or after a feed has been submitted, and the callback invocation fails, specify the time series type for invocation retries.
+		/// </summary>
+		public RetryPeriodType InvokeCallbackRetryPeriodType { get; set; }
+
+		/// <summary>
+		/// Default=30minutes. When attempting to invoke a callback method after a report has been downloaded or after a feed has been submitted, and the callback invocation fails, specify the interval between retries. 
+		/// </summary>
+		public TimeSpan InvokeCallbackRetryInterval { get; set; }
+
+	    /// <summary>
+		/// Default=4. When attempting to download a report from amazon but the attempt fails, specify how many times to retry the download.
+		/// </summary>
+		public int ReportDownloadMaxRetryCount { get; set; }
+
+		/// <summary>
+		/// Default=GeometricProgression. When attempting to download a report from amazon but the attempt fails, specify the time series type for download retries.
+		/// </summary>
+		public RetryPeriodType ReportDownloadRetryType { get; set; }
+
+		/// <summary>
+		/// Default=30minutes.When attempting to download a report from amazon but the attempt fails, specify the initial delay awaited before the first download retry is performed.
+		/// </summary>
+		public TimeSpan ReportDownloadRetryInitialDelay { get; set; }
+
+		/// <summary>
+		///  Default=1hour.When attempting to download a report from amazon but the attempt fails, specify the time-step used to calculate how often download retries will be performed. 
+		/// </summary>
+		public TimeSpan ReportDownloadRetryInterval { get; set; }
+
+	    /// <summary>
 		/// Default=4. When requesting a report from amazon fails, specify how many times to retry the same request.
 		/// </summary>
 	    public int ReportRequestMaxRetryCount { get; set; }
-
-		/// <summary>
-		/// Default=3. After a report has been downloaded from amazon, the delegate provided for the ReportQueue method is invoked. If the invocation fails, this option specifies how many times the invocation will be retried.
-		/// </summary>
-	    public int ReportReadyCallbackInvocationMaxRetryCount { get; set; }
-
-		/// <summary>
-		/// Default=3. After a feed submission result has been received from amazon, the delegate provided for the ReportFeed method is invoked. If the invocation fails, this option specifies how many times the invocation will be retried.
-		/// </summary>
-	    public int FeedSubmissionResponseCallbackInvocationMaxRetryCount { get; set; }
 
 	    /// <summary>
 		/// Default=GeometricProgression. When requesting a report from amazon fails, specify the time series type for request retries.
@@ -28,27 +53,27 @@ namespace MountainWarehouse.EasyMWS.Model
 		public RetryPeriodType ReportRequestRetryType { get; set; }
 
 		/// <summary>
-		/// Default=15minutes. When requesting a report from amazon fails, specify the initial delay awaited before the first request retry is performed.
+		/// Default=30minutes. When requesting a report from amazon fails, specify the initial delay awaited before the first request retry is performed.
 		/// </summary>
 		public TimeSpan ReportRequestRetryInitialDelay { get; set; }
 
 		/// <summary>
-		/// Default=15minutes. When requesting a report from amazon fails, specify the time-step used to calculate how often request retries will be performed. 
+		/// Default=1hour. When requesting a report from amazon fails, specify the time-step used to calculate how often request retries will be performed. 
 		/// </summary>
 		public TimeSpan ReportRequestRetryInterval { get; set; }
 
 		/// <summary>
-		/// Default=3. When requesting a FeedSubmission from amazon fails, specify how many times to retry the same request.
+		/// Default=4. When requesting a FeedSubmission from amazon fails, specify how many times to retry the same request.
 		/// </summary>
 		public int FeedSubmissionMaxRetryCount { get; set; }
 
 		/// <summary>
-		/// Default=ArithmeticProgression. When requesting a FeedSubmission from amazon fails, specify the time series type for request retries.
+		/// Default=GeometricProgression. When requesting a FeedSubmission from amazon fails, specify the time series type for request retries.
 		/// </summary>
 		public RetryPeriodType FeedSubmissionRetryType { get; set; }
 
 		/// <summary>
-		/// Default=15minutes. When requesting a FeedSubmission from amazon fails, specify the initial delay awaited before the first request retry is performed.
+		/// Default=30minutes. When requesting a FeedSubmission from amazon fails, specify the initial delay awaited before the first request retry is performed.
 		/// </summary>
 		public TimeSpan FeedSubmissionRetryInitialDelay { get; set; }
 
@@ -56,17 +81,6 @@ namespace MountainWarehouse.EasyMWS.Model
 		/// Default=1hour. When requesting a FeedSubmission from amazon fails, specify the time-step used to calculate how often request retries will be performed. 
 		/// </summary>
 		public TimeSpan FeedSubmissionRetryInterval { get; set; }
-
-		/// <summary>
-		/// Default=15minutes. If the checksum verification fails for a feed submission report received from Amazon, specify the the time-step used to calculate how often the feed submission report request will be retried.<para/>
-		/// Retry interval is constant (arithmetic progression)
-		/// </summary>
-		public TimeSpan FeedResultFailedChecksumRetryInterval { get; set; }
-
-		/// <summary>
-		/// Default=3. If the checksum verification fails for a feed submission report received from Amazon, specify how many times the feed submission report request will be retried. 
-		/// </summary>
-		public int FeedResultFailedChecksumMaxRetryCount { get; set; }
 
 		/// <summary>
 		/// Default=null. If a connection string is specified using this option, the EasyMws local db will run against this connection string, ignoring any connection string contained in a configuration file.<para/>
@@ -87,44 +101,51 @@ namespace MountainWarehouse.EasyMWS.Model
 
 		/// <summary>
 		/// The set of default settings that will be used if no custom settings are specified.<para/>
+		/// InvokeCallbackMaxRetryCount = 5,<para/>
+		/// InvokeCallbackRetryPeriodType = RetryPeriodType.ArithmeticProgression,<para/>
+		/// InvokeCallbackRetryInterval = TimeSpan.FromMinutes(30),<para/>
 		/// <para/>
 		/// ReportRequestMaxRetryCount = 4,<para/>
-		/// ReportReadyCallbackInvocationMaxRetryCount = 3,<para/>
-		/// FeedSubmissionResponseCallbackInvocationMaxRetryCount = 3,<para/>
-		/// ReportRequestRetryType = GeometricProgression,<para/>
-		/// ReportRequestRetryInitialDelay = Minutes(15),<para/>
-		/// ReportRequestRetryInterval = Minutes(15),<para/>
+		/// ReportRequestRetryType = RetryPeriodType.GeometricProgression,<para/>
+		/// ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(30),<para/>
+		/// ReportRequestRetryInterval = TimeSpan.FromHours(1),<para/>
+		/// <para/>
+		/// ReportDownloadMaxRetryCount = 4,<para/>
+		/// ReportDownloadRetryType = RetryPeriodType.GeometricProgression,<para/>
+		/// ReportDownloadRetryInitialDelay = TimeSpan.FromMinutes(30),<para/>
+		/// ReportDownloadRetryInterval = TimeSpan.FromHours(1),<para/>
 		/// <para/>
 		/// FeedSubmissionMaxRetryCount = 3,<para/>
-		/// FeedSubmissionRetryType = ArithmeticProgression,<para/>
-		/// FeedSubmissionRetryInitialDelay = Minutes(15),<para/>
-		/// FeedSubmissionRetryInterval = Hours(1),<para/>
+		/// FeedSubmissionRetryType = RetryPeriodType.GeometricProgression,<para/>
+		/// FeedSubmissionRetryInitialDelay = TimeSpan.FromMinutes(30),<para/>
+		/// FeedSubmissionRetryInterval = TimeSpan.FromHours(1),<para/>
 		/// <para/>
-		/// FeedResultFailedChecksumRetryInterval = Minutes(15),<para/>
-		/// FeedResultFailedChecksumMaxRetryCount = 3,<para/>
+		/// ReportDownloadRequestEntryExpirationPeriod = TimeSpan.FromDays(1),<para/>
+		/// FeedSubmissionRequestEntryExpirationPeriod = TimeSpan.FromDays(2)<para/>
 		/// <para/>
-		/// ReportDownloadRequestEntryExpirationPeriod = Days(1),<para/>
-		/// FeedSubmissionRequestEntryExpirationPeriod = Days(2),<para/>
 		/// </summary>
 		public static EasyMwsOptions Defaults()
 	    {
 		    return new EasyMwsOptions
 		    {
-			    ReportReadyCallbackInvocationMaxRetryCount = 3,
-			    FeedSubmissionResponseCallbackInvocationMaxRetryCount = 3,
+			    InvokeCallbackMaxRetryCount = 5,
+			    InvokeCallbackRetryPeriodType = RetryPeriodType.ArithmeticProgression,
+			    InvokeCallbackRetryInterval = TimeSpan.FromMinutes(30),
 
-			    ReportRequestMaxRetryCount = 4,
+				ReportRequestMaxRetryCount = 4,
 				ReportRequestRetryType = RetryPeriodType.GeometricProgression,
-			    ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(15),
-			    ReportRequestRetryInterval = TimeSpan.FromMinutes(15),
+			    ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(30),
+			    ReportRequestRetryInterval = TimeSpan.FromHours(1),
 
-			    FeedSubmissionMaxRetryCount = 3,
-			    FeedSubmissionRetryType = RetryPeriodType.ArithmeticProgression,
-			    FeedSubmissionRetryInitialDelay = TimeSpan.FromMinutes(15),
+			    ReportDownloadMaxRetryCount = 4,
+			    ReportDownloadRetryType = RetryPeriodType.GeometricProgression,
+			    ReportDownloadRetryInitialDelay = TimeSpan.FromMinutes(30),
+			    ReportDownloadRetryInterval = TimeSpan.FromHours(1),
+
+				FeedSubmissionMaxRetryCount = 4,
+			    FeedSubmissionRetryType = RetryPeriodType.GeometricProgression,
+			    FeedSubmissionRetryInitialDelay = TimeSpan.FromMinutes(30),
 			    FeedSubmissionRetryInterval = TimeSpan.FromHours(1),
-
-			    FeedResultFailedChecksumRetryInterval = TimeSpan.FromMinutes(15),
-			    FeedResultFailedChecksumMaxRetryCount = 3,
 
 			    ReportDownloadRequestEntryExpirationPeriod = TimeSpan.FromDays(1),
 				FeedSubmissionRequestEntryExpirationPeriod = TimeSpan.FromDays(2)

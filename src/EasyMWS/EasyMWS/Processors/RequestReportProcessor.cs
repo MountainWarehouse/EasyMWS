@@ -215,7 +215,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			foreach (var expiredReport in expiredReportRequests)
 			{
 				reportRequestService.Delete(expiredReport);
-				_logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: Failure while trying to request the report from Amazon. Retry count exceeded : {_options.ReportRequestMaxRetryCount}.");
+				_logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: Failure while trying to request the report from Amazon. Retry count exceeded : ReportRequestMaxRetryCount={_options.ReportRequestMaxRetryCount}.");
 			}
 
 		    var entriesWithExpirationPeriodExceeded = reportRequestService.GetAll()
@@ -224,7 +224,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    foreach (var expiredReport in entriesWithExpirationPeriodExceeded)
 		    {
 			    reportRequestService.Delete(expiredReport);
-			    _logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: Expiration period of '{_options.ReportDownloadRequestEntryExpirationPeriod.Hours} hours' was exceeded.");
+			    _logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: Expiration period of ReportDownloadRequestEntryExpirationPeriod='{_options.ReportDownloadRequestEntryExpirationPeriod} days' was exceeded.");
 		    }
 
 			var entriesWithCallbackInvocationRetryCountExceeded = reportRequestService.GetAll()
@@ -233,7 +233,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    foreach (var expiredReport in entriesWithCallbackInvocationRetryCountExceeded)
 		    {
 			    reportRequestService.Delete(expiredReport);
-			    _logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: The report was downloaded successfully but the callback method provided at QueueReport could not be invoked. Retry count exceeded : {_options.ReportReadyCallbackInvocationMaxRetryCount}");
+			    _logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: The report was downloaded successfully but the callback method provided at QueueReport could not be invoked. Retry count exceeded : InvokeCallbackMaxRetryCount={_options.InvokeCallbackMaxRetryCount}");
 		    }
 
 			reportRequestService.SaveChanges();
@@ -243,7 +243,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			(reportRequestEntry.ReportRequestRetryCount > _options.ReportRequestMaxRetryCount);
 
 		private bool IsReportRequestEntryCallbackInvocationRetryCountExceeded(ReportRequestEntry reportRequestEntry) =>
-		    (reportRequestEntry.ReportRequestRetryCount > _options.ReportReadyCallbackInvocationMaxRetryCount); 
+		    (reportRequestEntry.ReportRequestRetryCount > _options.InvokeCallbackMaxRetryCount); 
 
 
 		private bool IsExpirationPeriodExceeded(ReportRequestEntry reportRequestEntry) =>

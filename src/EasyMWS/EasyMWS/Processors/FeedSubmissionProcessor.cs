@@ -213,7 +213,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				ffscs => ffscs.AmazonRegion == _region && ffscs.MerchantId == _merchantId
 				&& ffscs.FeedSubmissionId != null
 				&& ffscs.IsProcessingComplete == true
-				&& IsReadyForRequestingSubmissionResult(ffscs));
+				&& IsReadyForRequestingSubmissionReport(ffscs));
 
 		public (MemoryStream processingReport, string md5hash) GetFeedSubmissionResultFromAmazon(FeedSubmissionEntry feedSubmissionEntry)
 		{
@@ -271,18 +271,18 @@ namespace MountainWarehouse.EasyMWS.Processors
 			foreach (var feedSubmission in expiredFeedSubmissions)
 			{
 				feedSubmissionService.Delete(feedSubmission);
-				_logger.Warn($"Feed submission entry {feedSubmission.RegionAndTypeComputed} deleted from queue. Reason: A feedSubmissionId could not be obtained from amazon for the feed submission request. Retry count exceeded : {_options.FeedSubmissionMaxRetryCount}.");
+				_logger.Warn($"Feed submission entry {feedSubmission.RegionAndTypeComputed} deleted from queue. Reason: A feedSubmissionId could not be obtained from amazon for the feed submission request. Retry count exceeded : FeedSubmissionMaxRetryCount={_options.FeedSubmissionMaxRetryCount}.");
 			}
 
 			var expiredFeedProcessingResultRequestIds = feedSubmissionService.GetAll()
 				.Where(fscs => fscs.AmazonRegion == _region && fscs.MerchantId == _merchantId
 							   && fscs.FeedSubmissionId != null
-				               && fscs.FeedSubmissionRetryCount > _options.FeedResultFailedChecksumMaxRetryCount);
+				               && fscs.FeedSubmissionRetryCount > _options.ReportDownloadMaxRetryCount);
 
 			foreach (var feedSubmission in expiredFeedProcessingResultRequestIds)
 			{
 				feedSubmissionService.Delete(feedSubmission);
-				_logger.Warn($"Feed submission entry {feedSubmission.RegionAndTypeComputed} deleted from queue. Reason: While the feed might have been submitted to amazon, the checksum verification failed for the Feed Submission Report content received from Amazon. Retry count exceeded : {_options.FeedResultFailedChecksumMaxRetryCount}.");
+				_logger.Warn($"Feed submission entry {feedSubmission.RegionAndTypeComputed} deleted from queue. Reason: While the feed might have been submitted to amazon, the checksum verification failed for the Feed Submission Report content received from Amazon. Retry count exceeded : ReportDownloadMaxRetryCount={_options.ReportDownloadMaxRetryCount}.");
 			}
 
 			var entriesWithExpirationPeriodExceeded = feedSubmissionService.GetAll()
@@ -291,7 +291,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			foreach (var feedSubmission in entriesWithExpirationPeriodExceeded)
 			{
 				feedSubmissionService.Delete(feedSubmission);
-				_logger.Warn($"Feed submission entry {feedSubmission.RegionAndTypeComputed} deleted from queue. Reason: Expiration period of '{_options.FeedSubmissionRequestEntryExpirationPeriod.Hours} hours' was exceeded.");
+				_logger.Warn($"Feed submission entry {feedSubmission.RegionAndTypeComputed} deleted from queue. Reason: Expiration period of FeedSubmissionRequestEntryExpirationPeriod='{_options.FeedSubmissionRequestEntryExpirationPeriod.Hours} hours' was exceeded.");
 			}
 
 			var entriesWithCallbackInvocationRetryCountExceeded = feedSubmissionService.GetAll()
@@ -300,14 +300,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 			foreach (var expiredSubmission in entriesWithCallbackInvocationRetryCountExceeded)
 			{
 				feedSubmissionService.Delete(expiredSubmission);
-				_logger.Warn($"Feed submission entry {expiredSubmission.RegionAndTypeComputed} deleted from queue. Reason: The feed submission report was downloaded successfully but the callback method provided at QueueFeed could not be invoked. Retry count exceeded : {_options.FeedSubmissionRequestEntryExpirationPeriod}");
+				_logger.Warn($"Feed submission entry {expiredSubmission.RegionAndTypeComputed} deleted from queue. Reason: The feed submission report was downloaded successfully but the callback method provided at QueueFeed could not be invoked. Retry count exceeded : FeedSubmissionRequestEntryExpirationPeriod={_options.FeedSubmissionRequestEntryExpirationPeriod}");
 			}
 
 			feedSubmissionService.SaveChanges();
 		}
 
 		private bool IsFeedSubmissionEntryCallbackInvocationRetryCountExceeded(FeedSubmissionEntry feedSubmissionEntry) =>
-			(feedSubmissionEntry.FeedSubmissionRetryCount > _options.FeedSubmissionResponseCallbackInvocationMaxRetryCount);
+			(feedSubmissionEntry.FeedSubmissionRetryCount > _options.InvokeCallbackMaxRetryCount);
 
 		private bool IsExpirationPeriodExceeded(FeedSubmissionEntry feedSubmissionEntry) =>
 			(DateTime.Compare(feedSubmissionEntry.DateCreated, DateTime.UtcNow.Subtract(_options.FeedSubmissionRequestEntryExpirationPeriod)) < 0);
@@ -324,12 +324,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 			return isInRetryQueueAndReadyForRetry || isNotInRetryState;
 		}
 
-		private bool IsReadyForRequestingSubmissionResult(FeedSubmissionEntry feedSubmission)
+		private bool IsReadyForRequestingSubmissionReport(FeedSubmissionEntry feedSubmission)
 		{
 			var isInRetryQueueAndReadyForRetry = feedSubmission.FeedSubmissionRetryCount > 0
 			        && RetryIntervalHelper.IsRetryPeriodAwaited(feedSubmission.LastSubmitted,
-				        feedSubmission.FeedSubmissionRetryCount, _options.FeedResultFailedChecksumRetryInterval,
-				        _options.FeedResultFailedChecksumRetryInterval, RetryPeriodType.ArithmeticProgression);
+				        feedSubmission.FeedSubmissionRetryCount, _options.ReportDownloadRetryInitialDelay,
+				        _options.ReportDownloadRetryInterval, _options.ReportDownloadRetryType);
 
 			var isNotInRetryState = feedSubmission.FeedSubmissionRetryCount == 0;
 
