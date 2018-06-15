@@ -33,7 +33,7 @@ namespace MountainWarehouse.EasyMWS.Model
 		public TimeSpan ReportRequestRetryInitialDelay { get; set; }
 
 		/// <summary>
-		/// Default=1hour. When requesting a report from amazon fails, specify the time-step used to calculate how often request retries will be performed. 
+		/// Default=15minutes. When requesting a report from amazon fails, specify the time-step used to calculate how often request retries will be performed. 
 		/// </summary>
 		public TimeSpan ReportRequestRetryInterval { get; set; }
 
@@ -48,17 +48,18 @@ namespace MountainWarehouse.EasyMWS.Model
 		public RetryPeriodType FeedSubmissionRetryType { get; set; }
 
 		/// <summary>
-		/// Default=2minutes. When requesting a FeedSubmission from amazon fails, specify the initial delay awaited before the first request retry is performed.
+		/// Default=15minutes. When requesting a FeedSubmission from amazon fails, specify the initial delay awaited before the first request retry is performed.
 		/// </summary>
 		public TimeSpan FeedSubmissionRetryInitialDelay { get; set; }
 
 		/// <summary>
-		/// Default=5hours. When requesting a FeedSubmission from amazon fails, specify the time-step used to calculate how often request retries will be performed. 
+		/// Default=1hour. When requesting a FeedSubmission from amazon fails, specify the time-step used to calculate how often request retries will be performed. 
 		/// </summary>
 		public TimeSpan FeedSubmissionRetryInterval { get; set; }
 
 		/// <summary>
-		/// Default=2minutes. If the checksum verification fails for a feed submission report received from Amazon, specify the the time-step used to calculate how often the feed submission report request will be retried. 
+		/// Default=15minutes. If the checksum verification fails for a feed submission report received from Amazon, specify the the time-step used to calculate how often the feed submission report request will be retried.<para/>
+		/// Retry interval is constant (arithmetic progression)
 		/// </summary>
 		public TimeSpan FeedResultFailedChecksumRetryInterval { get; set; }
 
@@ -92,14 +93,14 @@ namespace MountainWarehouse.EasyMWS.Model
 		/// FeedSubmissionResponseCallbackInvocationMaxRetryCount = 3,<para/>
 		/// ReportRequestRetryType = GeometricProgression,<para/>
 		/// ReportRequestRetryInitialDelay = Minutes(15),<para/>
-		/// ReportRequestRetryInterval = Hours(1),<para/>
+		/// ReportRequestRetryInterval = Minutes(15),<para/>
 		/// <para/>
 		/// FeedSubmissionMaxRetryCount = 3,<para/>
 		/// FeedSubmissionRetryType = ArithmeticProgression,<para/>
-		/// FeedSubmissionRetryInitialDelay = Minutes(2),<para/>
-		/// FeedSubmissionRetryInterval = Hours(5),<para/>
+		/// FeedSubmissionRetryInitialDelay = Minutes(15),<para/>
+		/// FeedSubmissionRetryInterval = Hours(1),<para/>
 		/// <para/>
-		/// FeedResultFailedChecksumRetryInterval = Minutes(2),<para/>
+		/// FeedResultFailedChecksumRetryInterval = Minutes(15),<para/>
 		/// FeedResultFailedChecksumMaxRetryCount = 3,<para/>
 		/// <para/>
 		/// ReportDownloadRequestEntryExpirationPeriod = Days(1),<para/>
@@ -109,20 +110,20 @@ namespace MountainWarehouse.EasyMWS.Model
 	    {
 		    return new EasyMwsOptions
 		    {
-			    ReportRequestMaxRetryCount = 4,
 			    ReportReadyCallbackInvocationMaxRetryCount = 3,
 			    FeedSubmissionResponseCallbackInvocationMaxRetryCount = 3,
 
+			    ReportRequestMaxRetryCount = 4,
 				ReportRequestRetryType = RetryPeriodType.GeometricProgression,
 			    ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(15),
-			    ReportRequestRetryInterval = TimeSpan.FromHours(1),
+			    ReportRequestRetryInterval = TimeSpan.FromMinutes(15),
 
 			    FeedSubmissionMaxRetryCount = 3,
 			    FeedSubmissionRetryType = RetryPeriodType.ArithmeticProgression,
-			    FeedSubmissionRetryInitialDelay = TimeSpan.FromMinutes(2),
-			    FeedSubmissionRetryInterval = TimeSpan.FromHours(5),
+			    FeedSubmissionRetryInitialDelay = TimeSpan.FromMinutes(15),
+			    FeedSubmissionRetryInterval = TimeSpan.FromHours(1),
 
-			    FeedResultFailedChecksumRetryInterval = TimeSpan.FromMinutes(2),
+			    FeedResultFailedChecksumRetryInterval = TimeSpan.FromMinutes(15),
 			    FeedResultFailedChecksumMaxRetryCount = 3,
 
 			    ReportDownloadRequestEntryExpirationPeriod = TimeSpan.FromDays(1),
