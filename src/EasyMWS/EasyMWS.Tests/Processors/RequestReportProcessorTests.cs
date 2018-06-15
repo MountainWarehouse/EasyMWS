@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
@@ -946,7 +948,7 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
-		public void DownloadGeneratedReportFromAmazon_ShouldDownloadReportFromAmazon_ReturnStream()
+		public void DownloadGeneratedReportFromAmazon_ShouldCallMwsGetReportOnce()
 		{
 			// Arrange
 			var merchantId = "testMerchantId";
@@ -966,15 +968,167 @@ namespace EasyMWS.Tests.Processors
 
 			// Act
 			var testData = _reportRequestCallbacks.Find(x => x.GeneratedReportId == "GeneratedIdTest1");
-			var result = _requestReportProcessor.DownloadGeneratedReportFromAmazon(testData);
+			_requestReportProcessor.DownloadGeneratedReportFromAmazon(_reportRequestCallbackServiceMock.Object, testData);
 
 			// Assert
 			_marketplaceWebServiceClientMock.Verify(x => x.GetReport(It.IsAny<GetReportRequest>()), Times.Once);
-			Assert.IsNotNull(result);
 		}
 
 		[Test]
-		public void Poll_DeletesReportRequests_WithRetryCountAboveMaxRetryCount()
+		public void DownloadGeneratedReportFromAmazon_WithDownloadSuccessfulAndValidHash_ReportContentSavedInDbAsZip()
+		{
+			var expectedReportContent = StreamHelper.CreateMemoryStream("This is some test content. Und die Katze läuft auf der Straße.");
+			var expectedMd5HashValue = MD5ChecksumHelper.ComputeHashForAmazon(expectedReportContent);
+
+			_marketplaceWebServiceClientMock.Setup(mws => mws.GetReport(It.IsAny<GetReportRequest>()))
+				.Callback<GetReportRequest>((req) => { expectedReportContent.CopyTo(req.Report); })
+				.Returns(new GetReportResponse { GetReportResult = new GetReportResult { ContentMD5 = expectedMd5HashValue } });
+
+			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
+			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			{
+				reportRequestEntryBeingUpdated = entry;
+			}));
+
+			_requestReportProcessor.DownloadGeneratedReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+				new ReportRequestEntry
+				{
+					LastRequested = DateTime.MinValue,
+					ReportType = "testReportType",
+					Details = null
+				});
+
+			Assert.NotNull(reportRequestEntryBeingUpdated.Details);
+
+			expectedReportContent.Position = 0;
+			using (var expectedReportReader = new StreamReader(expectedReportContent))
+			using (var actualReportReader = new StreamReader(ExtractArchivedSingleFileToStream(reportRequestEntryBeingUpdated.Details.ReportContent)))
+			{
+				Assert.AreEqual(expectedReportReader.ReadToEnd(), actualReportReader.ReadToEnd());
+			}
+
+			Assert.AreEqual(0, reportRequestEntryBeingUpdated.ReportRequestRetryCount);
+			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastRequested.Day);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+		}
+
+		[Test]
+		public void DownloadGeneratedReportFromAmazon_WithDownloadSuccessfulAndInvalidHash_RetryCountIncremented()
+		{
+			var expectedReportContent = StreamHelper.CreateMemoryStream("This is some test content. Und die Katze läuft auf der Straße.");
+			var nonMatchingMd5HashValue = $"{MD5ChecksumHelper.ComputeHashForAmazon(expectedReportContent)} non_matching_seq" ;
+
+			_marketplaceWebServiceClientMock.Setup(mws => mws.GetReport(It.IsAny<GetReportRequest>()))
+				.Callback<GetReportRequest>((req) => { expectedReportContent.CopyTo(req.Report); })
+				.Returns(new GetReportResponse { GetReportResult = new GetReportResult { ContentMD5 = nonMatchingMd5HashValue } });
+
+			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
+			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			{
+				reportRequestEntryBeingUpdated = entry;
+			}));
+
+			_requestReportProcessor.DownloadGeneratedReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+				new ReportRequestEntry
+				{
+					LastRequested = DateTime.MinValue,
+					ReportType = "testReportType",
+					Details = null
+				});
+
+			Assert.IsNull(reportRequestEntryBeingUpdated.Details);
+			Assert.AreEqual(1, reportRequestEntryBeingUpdated.ReportRequestRetryCount);
+			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastRequested.Day);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+		}
+
+		[Test]
+		public void DownloadGeneratedReportFromAmazon_WithAmazonReturningFatalExceptionResponse_EntryIsDeletedFromDb()
+		{
+			_marketplaceWebServiceClientMock.Setup(mws => mws.GetReport(It.IsAny<GetReportRequest>()))
+				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, "ReportNoLongerAvailable", "errorType", "123", "xml", new ResponseHeaderMetadata()));
+
+			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
+			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			{
+				reportRequestEntryBeingUpdated = entry;
+			}));
+
+			_requestReportProcessor.DownloadGeneratedReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+				new ReportRequestEntry
+				{
+					LastRequested = DateTime.MinValue,
+					ReportType = "testReportType",
+					Details = null
+				});
+
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+		}
+
+		[Test]
+		public void DownloadGeneratedReportFromAmazon_WithAmazonReturningNonFatalExceptionResponse_RetryCountIncremented()
+		{
+			_marketplaceWebServiceClientMock.Setup(mws => mws.GetReport(It.IsAny<GetReportRequest>()))
+				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, "ReportNotReady", "errorType", "123", "xml", new ResponseHeaderMetadata()));
+
+			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
+			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			{
+				reportRequestEntryBeingUpdated = entry;
+			}));
+
+			_requestReportProcessor.DownloadGeneratedReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+				new ReportRequestEntry
+				{
+					LastRequested = DateTime.MinValue,
+					ReportType = "testReportType",
+					Details = null
+				});
+
+			Assert.IsNull(reportRequestEntryBeingUpdated.Details);
+			Assert.AreEqual(1, reportRequestEntryBeingUpdated.ReportRequestRetryCount);
+			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastRequested.Day);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+		}
+
+		[Test]
+		public void DownloadGeneratedReportFromAmazon_WithArbitraryExceptionThrownWhenCallingAmazon_RetryCountIncremented()
+		{
+			_marketplaceWebServiceClientMock.Setup(mws => mws.GetReport(It.IsAny<GetReportRequest>()))
+				.Throws(new Exception("Random exception thrown during download attempt"));
+
+			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
+			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			{
+				reportRequestEntryBeingUpdated = entry;
+			}));
+
+			_requestReportProcessor.DownloadGeneratedReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+				new ReportRequestEntry
+				{
+					LastRequested = DateTime.MinValue,
+					ReportType = "testReportType",
+					Details = null
+				});
+
+			Assert.IsNull(reportRequestEntryBeingUpdated.Details);
+			Assert.AreEqual(1, reportRequestEntryBeingUpdated.ReportRequestRetryCount);
+			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastRequested.Day);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+		}
+
+		[Test]
+		public void CleanupReportRequests_DeletesReportRequests_WithRetryCountAboveMaxRetryCount()
 		{
 			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
 			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
@@ -996,6 +1150,21 @@ namespace EasyMWS.Tests.Processors
 
 			// Id=6 deleted - ReportRequestMaxRetryCount. Id=1,2 deleted ReportDownloadRequestEntryExpirationPeriod=1day exceeded.
 			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Exactly(3));
+		}
+
+		private static MemoryStream ExtractArchivedSingleFileToStream(byte[] zipArchive)
+		{
+			if (zipArchive == null) return null;
+
+			using (var archiveStream = new MemoryStream(zipArchive))
+			using (var zip = new ZipArchive(archiveStream, ZipArchiveMode.Read))
+			{
+				var file = zip.Entries.FirstOrDefault();
+				var resultStream = new MemoryStream();
+				file?.Open()?.CopyTo(resultStream);
+				resultStream.Position = 0;
+				return resultStream;
+			}
 		}
 	}
 }

@@ -171,32 +171,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var reportToDownload = _requestReportProcessor.GetNextFromQueueOfReportsToDownload(reportRequestService);
 			if (reportToDownload == null) return;
 			
-			var reportInfo = _requestReportProcessor.DownloadGeneratedReportFromAmazon(reportToDownload);
-			if (reportInfo.report == null)
-			{
-				_logger.Warn($"AmazonMWS report download failed for {reportToDownload.RegionAndTypeComputed}");
-				return;
-			}
-
-			var hasValidHash = MD5ChecksumHelper.IsChecksumCorrect(reportInfo.report, reportInfo.md5Hash);
-			if (hasValidHash)
-			{
-				_logger.Info($"Checksum verification succeeded for report {reportToDownload.RegionAndTypeComputed}");
-
-				using (var streamReader = new StreamReader(reportInfo.report))
-				{
-					var zippedReport = ZipHelper.CreateArchiveFromContent(streamReader.ReadToEnd());
-					reportToDownload.Details = new ReportRequestDetails { ReportContent = zippedReport };
-				}
-
-				reportRequestService.Update(reportToDownload);
-				reportRequestService.SaveChanges();
-			}
-			else
-			{
-				_logger.Warn($"Checksum verification failed for report {reportToDownload.RegionAndTypeComputed}");
-				_requestReportProcessor.MoveToRetryQueue(reportRequestService, reportToDownload);
-			}
+			_requestReportProcessor.DownloadGeneratedReportFromAmazon(reportRequestService, reportToDownload);
 		}
 
 		public void ExecuteMethodCallback(ReportRequestEntry reportRequest)
