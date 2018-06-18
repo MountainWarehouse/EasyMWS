@@ -190,11 +190,6 @@ namespace EasyMWS.Tests.EndToEnd
 
 		    _easyMwsClient.Poll();
 
-		    _loggerMock.Verify(l => l.Info(It.Is<string>(msg => msg.EndsWith("Executing cleanup of report requests queue.")),
-			    It.IsAny<RequestInfo>()));
-		    _loggerMock.Verify(l => l.Warn(It.Is<string>(msg => msg.Contains("deleted from queue. Reason: Failure while trying to request the report from Amazon. Retry count exceeded")),
-			    It.IsAny<RequestInfo>()));
-
 		    Assert.IsNull(_dbContext.ReportRequestEntries.FirstOrDefault(rre => rre.ReportType == validReportType));
 		}
 

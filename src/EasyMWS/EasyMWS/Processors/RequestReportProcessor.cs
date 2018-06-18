@@ -209,65 +209,52 @@ namespace MountainWarehouse.EasyMWS.Processors
 	    public void CleanupReportRequests(IReportRequestCallbackService reportRequestService)
 	    {
 			_logger.Info("Executing cleanup of report requests queue.");
-			var expiredReportRequests = reportRequestService.GetAll()
-				.Where(rrc => (rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId) && rrc.Details == null && IsRequestRetryCountExceeded(rrc));
+		    var allReportRequestEntries = reportRequestService.GetAll();
+		    var removedEntriesIds = new List<int>();
 
-			foreach (var expiredReport in expiredReportRequests)
-			{
-				reportRequestService.Delete(expiredReport);
-				_logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: Failure while trying to request the report from Amazon. Retry count exceeded : ReportRequestMaxRetryCount={_options.ReportRequestMaxRetryCount}.");
-			}
+		    var expiredReportRequests = allReportRequestEntries.Where(rrc => IsMatchForRegionAndMerchantId(rrc) && IsRequestRetryCountExceeded(rrc));
+			var expiredReportRequestsDeleteReason = $"Failure while trying to request report from Amazon. ReportRequestMaxRetryCount exceeded.";
+		    MarkEntriesAsDeleted(reportRequestService, expiredReportRequests, removedEntriesIds, expiredReportRequestsDeleteReason);
 
-			var entriesWithDownloadRetryCountExceeded = reportRequestService.GetAll()
-				.Where(rrc => (rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId) && IsDownloadRetryCountExceeded(rrc));
+		    var entriesWithDownloadRetryCountExceeded = allReportRequestEntries.Where(rrc => IsMatchForRegionAndMerchantId(rrc) && IsDownloadRetryCountExceeded(rrc));
+		    var entriesWithDownloadRetryCountExceededDeleteReason = $"Failure while trying to download the report from Amazon. ReportDownloadMaxRetryCount exceeded.";
+		    MarkEntriesAsDeleted(reportRequestService, entriesWithDownloadRetryCountExceeded, removedEntriesIds, entriesWithDownloadRetryCountExceededDeleteReason);
 
-		    foreach (var expiredReport in entriesWithDownloadRetryCountExceeded)
-		    {
-			    reportRequestService.Delete(expiredReport);
-			    _logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: Failure while trying to download the report from Amazon. Retry count exceeded : ReportDownloadMaxRetryCount={_options.ReportDownloadMaxRetryCount}.");
-		    }
+		    var entriesWithProcessingRetryCountExceeded = allReportRequestEntries.Where(rrc => IsMatchForRegionAndMerchantId(rrc) && IsProcessingRetryCountExceeded(rrc));
+			var entriesWithProcessingRetryCountExceededDeleteReason = $"Failure while trying to obtain _DONE_ processing status from amazon. ReportProcessingMaxRetryCount exceeded.";
+		    MarkEntriesAsDeleted(reportRequestService, entriesWithProcessingRetryCountExceeded, removedEntriesIds, entriesWithProcessingRetryCountExceededDeleteReason);
 
-			var entriesWithProcessingRetryCountExceeded = reportRequestService.GetAll()
-				.Where(rrc => (rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId) && IsProcessingRetryCountExceeded(rrc));
+		    var entriesWithExpirationPeriodExceeded = allReportRequestEntries.Where(rrc => IsMatchForRegionAndMerchantId(rrc) && IsExpirationPeriodExceeded(rrc));
+		    var entriesWithExpirationPeriodExceededDeleteReason = $"Expiration period ReportDownloadRequestEntryExpirationPeriod was exceeded.";
+		    MarkEntriesAsDeleted(reportRequestService, entriesWithExpirationPeriodExceeded, removedEntriesIds, entriesWithExpirationPeriodExceededDeleteReason);
 
-		    foreach (var expiredReport in entriesWithProcessingRetryCountExceeded)
-		    {
-			    reportRequestService.Delete(expiredReport);
-			    _logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: Failure while trying to obtain a positive processing status from amazon. Retry count exceeded : ReportProcessingMaxRetryCount={_options.ReportProcessingMaxRetryCount}.");
-		    }
-
-			var entriesWithExpirationPeriodExceeded = reportRequestService.GetAll()
-			    .Where(rrc => (rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId) && IsExpirationPeriodExceeded(rrc));
-
-		    foreach (var expiredReport in entriesWithExpirationPeriodExceeded)
-		    {
-			    reportRequestService.Delete(expiredReport);
-			    _logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: Expiration period of ReportDownloadRequestEntryExpirationPeriod='{_options.ReportDownloadRequestEntryExpirationPeriod} days' was exceeded.");
-		    }
-
-			var entriesWithCallbackInvocationRetryCountExceeded = reportRequestService.GetAll()
-				.Where(rrc => (rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId) && rrc.Details != null && IsReportRequestEntryCallbackInvocationRetryCountExceeded(rrc));
-
-		    foreach (var expiredReport in entriesWithCallbackInvocationRetryCountExceeded)
-		    {
-			    reportRequestService.Delete(expiredReport);
-			    _logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: The report was downloaded successfully but the callback method provided at QueueReport could not be invoked. Retry count exceeded : InvokeCallbackMaxRetryCount={_options.InvokeCallbackMaxRetryCount}");
-		    }
+		    var entriesWithCallbackRetryCountExceeded = allReportRequestEntries.Where(rrc => IsMatchForRegionAndMerchantId(rrc) &&  IsCallbackInvocationRetryCountExceeded(rrc));
+		    var entriesWithCallbackRetryCountExceededDeleteReason = $"The report was downloaded successfully but the callback method invocation failed. InvokeCallbackMaxRetryCount exceeded.";
+		    MarkEntriesAsDeleted(reportRequestService, entriesWithCallbackRetryCountExceeded, removedEntriesIds, entriesWithCallbackRetryCountExceededDeleteReason);
 
 			reportRequestService.SaveChanges();
 	    }
 
-	    private bool IsRequestRetryCountExceeded(ReportRequestEntry reportRequestEntry) => 
-			(reportRequestEntry.ReportRequestRetryCount > _options.ReportRequestMaxRetryCount);
+	    private void MarkEntriesAsDeleted(IReportRequestCallbackService reportRequestService, IQueryable<ReportRequestEntry> entriesToMarkAsDeleted, List<int> entriesIdsAlreadyMarkedAsDeleted, string deleteReason)
+	    {
+			foreach (var entry in entriesToMarkAsDeleted)
+			{
+				if (entriesIdsAlreadyMarkedAsDeleted.Exists(e => e == entry.Id)) continue;
+				entriesIdsAlreadyMarkedAsDeleted.Add(entry.Id);
+				reportRequestService.Delete(entry);
+				_logger.Warn($"Report request {entry.RegionAndTypeComputed} deleted from queue. {deleteReason}");
+			}
+		}
 
-	    private bool IsDownloadRetryCountExceeded(ReportRequestEntry reportRequestEntry) =>
-		    (reportRequestEntry.ReportDownloadRetryCount > _options.ReportDownloadMaxRetryCount);
+	    private bool IsMatchForRegionAndMerchantId(ReportRequestEntry e) => e.AmazonRegion == _region && e.MerchantId == _merchantId;
 
-	    private bool IsProcessingRetryCountExceeded(ReportRequestEntry reportRequestEntry) =>
-		    (reportRequestEntry.ReportProcessRetryCount > _options.ReportProcessingMaxRetryCount);
+	    private bool IsRequestRetryCountExceeded(ReportRequestEntry e) => e.ReportRequestRetryCount > _options.ReportRequestMaxRetryCount;
 
-		private bool IsReportRequestEntryCallbackInvocationRetryCountExceeded(ReportRequestEntry reportRequestEntry) =>
-		    (reportRequestEntry.InvokeCallbackRetryCount > _options.InvokeCallbackMaxRetryCount); 
+	    private bool IsDownloadRetryCountExceeded(ReportRequestEntry e) => e.ReportDownloadRetryCount > _options.ReportDownloadMaxRetryCount;
+
+	    private bool IsProcessingRetryCountExceeded(ReportRequestEntry e) => e.ReportProcessRetryCount > _options.ReportProcessingMaxRetryCount;
+
+		private bool IsCallbackInvocationRetryCountExceeded(ReportRequestEntry e) => e.InvokeCallbackRetryCount > _options.InvokeCallbackMaxRetryCount; 
 
 
 		private bool IsExpirationPeriodExceeded(ReportRequestEntry reportRequestEntry) =>

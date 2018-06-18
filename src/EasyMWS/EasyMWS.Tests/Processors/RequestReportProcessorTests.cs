@@ -1164,6 +1164,213 @@ namespace EasyMWS.Tests.Processors
 			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Exactly(3));
 		}
 
+		[TestCase(0, 0, 0, 0, 0)]
+		[TestCase(1, 0, 0, 0, 0)]
+		[TestCase(4, 0, 0, 0, 0)]
+		[TestCase(5, 0, 0, 0, 1)]
+		[TestCase(0, 0, 0, 0, 0)]
+		[TestCase(0, 1, 0, 0, 0)]
+		[TestCase(0, 4, 0, 0, 0)]
+		[TestCase(0, 5, 0, 0, 1)]
+		[TestCase(0, 0, 0, 0, 0)]
+		[TestCase(0, 0, 1, 0, 0)]
+		[TestCase(0, 0, 5, 0, 0)]
+		[TestCase(0, 0, 6, 0, 1)]
+		[TestCase(0, 0, 0, 0, 0)]
+		[TestCase(0, 0, 0, 1, 0)]
+		[TestCase(0, 0, 0, 3, 0)]
+		[TestCase(0, 0, 0, 4, 1)]
+		public void CleanupReportRequests_WithOneGivenEntryToDelete_DeletesOnlyTheCorrectEntry(int requestRetryCount, int downloadRetryCount, int callbackRetryCount, int processRetryCount, int timesToDelete)
+		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var data = JsonConvert.SerializeObject(propertiesContainer);
+			var firstEntryToDelete = new ReportRequestEntry
+			{
+				Id = 1, ReportRequestData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
+				ReportDownloadRetryCount = downloadRetryCount,
+				ReportProcessRetryCount = processRetryCount,
+				InvokeCallbackRetryCount = callbackRetryCount,
+				ReportRequestRetryCount = requestRetryCount
+			};
+			var entryToLeaveIntact = new ReportRequestEntry
+			{
+				Id = 2,
+				ReportRequestData = data,
+				AmazonRegion = _region,
+				MerchantId = _merchantId,
+				ReportDownloadRetryCount = 0,
+				ReportProcessRetryCount = 0,
+				InvokeCallbackRetryCount = 0,
+				ReportRequestRetryCount = 0,
+				DateCreated = DateTime.UtcNow
+			};
+			var entriesList = new List<ReportRequestEntry> { firstEntryToDelete, entryToLeaveIntact };
+			var entriesQueryable = entriesList.AsQueryable();
+			_reportRequestCallbackServiceMock.Setup(x => x.GetAll()).Returns(entriesQueryable);
+			var entryBeingDeleted = (ReportRequestEntry)null;
+			_reportRequestCallbackServiceMock.Setup(x => x.Delete(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(
+				e => { entryBeingDeleted = e; });
+			
+
+			_requestReportProcessor.CleanupReportRequests(_reportRequestCallbackServiceMock.Object);
+
+			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Exactly(timesToDelete));
+			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+			if (timesToDelete > 0)
+			{
+				Assert.NotNull(entryBeingDeleted);
+				Assert.AreEqual(firstEntryToDelete.Id, entryBeingDeleted.Id);
+			}
+		}
+
+		[TestCase(false, false, false, false, false)]
+		[TestCase(true, true, true, true, true)]
+		[TestCase(true, true, false, false, false)]
+		[TestCase(true, false, true, false, false)]
+		[TestCase(true, false, false, true, false)]
+		[TestCase(true, false, false, false, true)]
+		[TestCase(false, true, true, false, false)]
+		[TestCase(false, true, false, true, false)]
+		[TestCase(false, true, false, false, true)]
+		[TestCase(false, false, true, true, false)]
+		[TestCase(false, false, true, false, true)]
+		[TestCase(false, false, false, true, true)]
+		[TestCase(true, true, true, false, false)]
+		[TestCase(true, true, false, true, false)]
+		[TestCase(true, true, false, false, true)]
+		[TestCase(true, false, true, true, false)]
+		[TestCase(true, false, true, false, true)]
+		[TestCase(true, false, false, true, true)]
+		[TestCase(false, true, true, true, false)]
+		[TestCase(false, true, true, false, true)]
+		[TestCase(false, false, true, true, true)]
+		[TestCase(true, true, true, true, false)]
+		[TestCase(true, true, true, false, true)]
+		[TestCase(true, true, false, true, true)]
+		[TestCase(true, false, true, true, true)]
+		[TestCase(false, true, true, true, true)]
+		public void CleanupReportRequests_WithPotentiallyMultiplesEntriesToDelete_DeletesOnlyTheCorrectEntries(
+			bool hasEntryWithRequestRetryCountExceeded,
+			bool hasEntryWithDownloadRetryCountExceeded,
+			bool hasEntryWithCallbackRetryCountExceeded,
+			bool hasEntryWithProcessRetryCountExceeded,
+			bool hasEntryWithExpirationPeriodExceeded)
+		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var data = JsonConvert.SerializeObject(propertiesContainer);
+			var entryToLeaveIntact = new ReportRequestEntry
+			{
+				Id = 1,
+				ReportRequestData = data,
+				AmazonRegion = _region,
+				MerchantId = _merchantId,
+				ReportDownloadRetryCount = 0,
+				ReportProcessRetryCount = 0,
+				InvokeCallbackRetryCount = 0,
+				ReportRequestRetryCount = 0,
+				DateCreated = DateTime.UtcNow
+			};
+			var entryWithRequestRetryCountExceeded = new ReportRequestEntry { Id = 2, ReportRequestData = data, AmazonRegion = _region, MerchantId = _merchantId,
+				DateCreated = DateTime.UtcNow, ReportDownloadRetryCount = 0, ReportProcessRetryCount = 0, InvokeCallbackRetryCount = 0, ReportRequestRetryCount = 10 };
+			var entryWithDownloadRetryCountExceeded = new ReportRequestEntry { Id = 3, ReportRequestData = data, AmazonRegion = _region, MerchantId = _merchantId,
+				DateCreated = DateTime.UtcNow, ReportDownloadRetryCount = 10, ReportProcessRetryCount = 0, InvokeCallbackRetryCount = 0, ReportRequestRetryCount = 0 };
+			var entryWithCallbackRetryCountExceeded = new ReportRequestEntry { Id = 4, ReportRequestData = data, AmazonRegion = _region, MerchantId = _merchantId,
+				DateCreated = DateTime.UtcNow, ReportDownloadRetryCount = 0, ReportProcessRetryCount = 0, InvokeCallbackRetryCount = 10, ReportRequestRetryCount = 0 };
+			var entryWithProcessRetryCountExceeded = new ReportRequestEntry { Id = 5, ReportRequestData = data, AmazonRegion = _region, MerchantId = _merchantId,
+				DateCreated = DateTime.UtcNow, ReportDownloadRetryCount = 0, ReportProcessRetryCount = 10, InvokeCallbackRetryCount = 0, ReportRequestRetryCount = 0 };
+			var entryWithExpirationPeriodExceeded = new ReportRequestEntry { Id = 6, ReportRequestData = data, AmazonRegion = _region, MerchantId = _merchantId,
+				DateCreated = DateTime.UtcNow.AddDays(-10), ReportDownloadRetryCount = 0, ReportProcessRetryCount = 0, InvokeCallbackRetryCount = 0, ReportRequestRetryCount = 0 };
+
+			var expectedNumberOfEntitiesToDelete = 0;
+			var entriesList = new List<ReportRequestEntry> { entryToLeaveIntact };
+			if (hasEntryWithRequestRetryCountExceeded)
+			{
+				entriesList.Add(entryWithRequestRetryCountExceeded);
+				expectedNumberOfEntitiesToDelete++;
+			}
+			if (hasEntryWithDownloadRetryCountExceeded)
+			{
+				entriesList.Add(entryWithDownloadRetryCountExceeded);
+				expectedNumberOfEntitiesToDelete++;
+			}
+			if (hasEntryWithCallbackRetryCountExceeded)
+			{
+				entriesList.Add(entryWithCallbackRetryCountExceeded);
+				expectedNumberOfEntitiesToDelete++;
+			}
+			if (hasEntryWithProcessRetryCountExceeded)
+			{
+				entriesList.Add(entryWithProcessRetryCountExceeded);
+				expectedNumberOfEntitiesToDelete++;
+			}
+			if (hasEntryWithExpirationPeriodExceeded)
+			{
+				entriesList.Add(entryWithExpirationPeriodExceeded);
+				expectedNumberOfEntitiesToDelete++;
+			}
+			var entriesQueryable = entriesList.AsQueryable();
+			_reportRequestCallbackServiceMock.Setup(x => x.GetAll()).Returns(entriesQueryable);
+			var listOfDeletedEntriesIds = new List<int>();
+			_reportRequestCallbackServiceMock.Setup(x => x.Delete(It.IsAny<ReportRequestEntry>()))
+				.Callback<ReportRequestEntry>(entry => { listOfDeletedEntriesIds.Add(entry.Id); });
+
+
+			_requestReportProcessor.CleanupReportRequests(_reportRequestCallbackServiceMock.Object);
+
+			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Exactly(expectedNumberOfEntitiesToDelete));
+			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+			CollectionAssert.DoesNotContain(listOfDeletedEntriesIds, entryToLeaveIntact.Id);
+			if (hasEntryWithRequestRetryCountExceeded) { CollectionAssert.Contains(listOfDeletedEntriesIds, entryWithRequestRetryCountExceeded.Id); }
+			else { CollectionAssert.DoesNotContain(listOfDeletedEntriesIds, entryWithRequestRetryCountExceeded.Id); }
+			if (hasEntryWithDownloadRetryCountExceeded) { CollectionAssert.Contains(listOfDeletedEntriesIds, entryWithDownloadRetryCountExceeded.Id); }
+			else { CollectionAssert.DoesNotContain(listOfDeletedEntriesIds, entryWithDownloadRetryCountExceeded.Id); }
+			if (hasEntryWithCallbackRetryCountExceeded) { CollectionAssert.Contains(listOfDeletedEntriesIds, entryWithCallbackRetryCountExceeded.Id); }
+			else { CollectionAssert.DoesNotContain(listOfDeletedEntriesIds, entryWithCallbackRetryCountExceeded.Id); }
+			if (hasEntryWithProcessRetryCountExceeded) { CollectionAssert.Contains(listOfDeletedEntriesIds, entryWithProcessRetryCountExceeded.Id); }
+			else { CollectionAssert.DoesNotContain(listOfDeletedEntriesIds, entryWithProcessRetryCountExceeded.Id); }
+			if (hasEntryWithExpirationPeriodExceeded) { CollectionAssert.Contains(listOfDeletedEntriesIds, entryWithExpirationPeriodExceeded.Id); }
+			else { CollectionAssert.DoesNotContain(listOfDeletedEntriesIds, entryWithExpirationPeriodExceeded.Id); }
+		}
+
+		[Test]
+		public void CleanupReportRequests_WithMultipleReasonsToDeleteOneEntry_OnlyCallsDeleteOneSingleTime()
+		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var data = JsonConvert.SerializeObject(propertiesContainer);
+			var entryToDelete = new ReportRequestEntry
+			{
+				Id = 1,
+				ReportRequestData = data,
+				AmazonRegion = _region,
+				MerchantId = _merchantId,
+				DateCreated = DateTime.UtcNow.AddDays(-10),
+				ReportDownloadRetryCount = 10,
+				ReportProcessRetryCount = 10,
+				InvokeCallbackRetryCount = 10,
+				ReportRequestRetryCount = 10
+			};
+			var entryToLeaveIntact = new ReportRequestEntry
+			{
+				Id = 2,
+				ReportRequestData = data,
+				AmazonRegion = _region,
+				MerchantId = _merchantId,
+				ReportDownloadRetryCount = 0,
+				ReportProcessRetryCount = 0,
+				InvokeCallbackRetryCount = 0,
+				ReportRequestRetryCount = 0,
+				DateCreated = DateTime.UtcNow
+			};
+			var entriesList = new List<ReportRequestEntry> { entryToDelete, entryToLeaveIntact };
+			var entriesQueryable = entriesList.AsQueryable();
+			_reportRequestCallbackServiceMock.Setup(x => x.GetAll()).Returns(entriesQueryable);
+
+			_requestReportProcessor.CleanupReportRequests(_reportRequestCallbackServiceMock.Object);
+
+			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+		}
+
 		private static MemoryStream ExtractArchivedSingleFileToStream(byte[] zipArchive)
 		{
 			if (zipArchive == null) return null;
