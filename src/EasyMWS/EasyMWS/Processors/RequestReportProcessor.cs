@@ -218,7 +218,16 @@ namespace MountainWarehouse.EasyMWS.Processors
 				_logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: Failure while trying to request the report from Amazon. Retry count exceeded : ReportRequestMaxRetryCount={_options.ReportRequestMaxRetryCount}.");
 			}
 
-		    var entriesWithExpirationPeriodExceeded = reportRequestService.GetAll()
+			var entriesWithDownloadRetryCountExceeded = reportRequestService.GetAll()
+				.Where(rrc => (rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId) && rrc.Details == null && IsDownloadRetryCountExceeded(rrc));
+
+		    foreach (var expiredReport in entriesWithDownloadRetryCountExceeded)
+		    {
+			    reportRequestService.Delete(expiredReport);
+			    _logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: Failure while trying to download the report from Amazon. Retry count exceeded : ReportDownloadMaxRetryCount={_options.ReportDownloadMaxRetryCount}.");
+		    }
+
+			var entriesWithExpirationPeriodExceeded = reportRequestService.GetAll()
 			    .Where(rrc => (rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId) && IsExpirationPeriodExceeded(rrc));
 
 		    foreach (var expiredReport in entriesWithExpirationPeriodExceeded)
@@ -241,6 +250,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 	    private bool IsRequestRetryCountExceeded(ReportRequestEntry reportRequestEntry) => 
 			(reportRequestEntry.ReportRequestRetryCount > _options.ReportRequestMaxRetryCount);
+
+	    private bool IsDownloadRetryCountExceeded(ReportRequestEntry reportRequestEntry) =>
+		    (reportRequestEntry.ReportDownloadRetryCount > _options.ReportDownloadMaxRetryCount);
 
 		private bool IsReportRequestEntryCallbackInvocationRetryCountExceeded(ReportRequestEntry reportRequestEntry) =>
 		    (reportRequestEntry.ReportRequestRetryCount > _options.InvokeCallbackMaxRetryCount); 
@@ -313,7 +325,10 @@ namespace MountainWarehouse.EasyMWS.Processors
 					rrc => rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId
 					        && rrc.RequestReportId != null
 					        && rrc.GeneratedReportId != null
-							&& rrc.Details == null);
+							&& rrc.Details == null
+							&& RetryIntervalHelper.IsRetryPeriodAwaited(rrc.LastRequested, rrc.ReportDownloadRetryCount,
+						       _options.ReportDownloadRetryInitialDelay, _options.ReportDownloadRetryInterval,
+						       _options.ReportDownloadRetryType));
 	    }
 
 		public void DownloadGeneratedReportFromAmazon(IReportRequestCallbackService reportRequestService, ReportRequestEntry reportRequestEntry)
@@ -355,12 +370,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 				    {
 					    var zippedReport = ZipHelper.CreateArchiveFromContent(streamReader.ReadToEnd());
 					    reportRequestEntry.Details = new ReportRequestDetails { ReportContent = zippedReport };
+					    reportRequestEntry.ReportDownloadRetryCount = 0;
 				    }
 			    }
 			    else
 			    {
 				    _logger.Warn($"Checksum verification failed for report {reportRequestEntry.RegionAndTypeComputed}. Placing report download in retry queue. Retry count : {reportRequestEntry.ReportRequestRetryCount}");
-					reportRequestEntry.ReportRequestRetryCount++;
+					reportRequestEntry.ReportDownloadRetryCount++;
 				}
 
 			    reportRequestService.Update(reportRequestEntry);
@@ -372,14 +388,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		    catch (MarketplaceWebServiceException e) when (IsAmazonErrorCodeNonFatal(e.ErrorCode))
 			{
-				reportRequestEntry.ReportRequestRetryCount++;
+				reportRequestEntry.ReportDownloadRetryCount++;
 				reportRequestEntry.LastRequested = DateTime.UtcNow;
 				reportRequestService.Update(reportRequestEntry);
 				_logger.Error($"AmazonMWS report download failed for {reportRequestEntry.RegionAndTypeComputed}! [HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}', Message: '{e.Message}']. Placing report download in retry queue. Retry count : {reportRequestEntry.ReportRequestRetryCount}", e);
 			}
 			catch (Exception e)
 		    {
-			    reportRequestEntry.ReportRequestRetryCount++;
+			    reportRequestEntry.ReportDownloadRetryCount++;
 			    reportRequestEntry.LastRequested = DateTime.UtcNow;
 			    reportRequestService.Update(reportRequestEntry);
 				_logger.Error($"AmazonMWS report download failed for {reportRequestEntry.RegionAndTypeComputed}! [Reason: '{e.Message}']", e);
@@ -389,11 +405,5 @@ namespace MountainWarehouse.EasyMWS.Processors
 			    reportRequestService.SaveChanges();
 		    }
 		}
-
-	    public void MoveToRetryQueue(IReportRequestCallbackService reportRequestService, ReportRequestEntry reportRequestEntry)
-	    {
-			reportRequestEntry.ReportRequestRetryCount++;
-		    reportRequestEntry.LastRequested = DateTime.UtcNow;
-	    }
     }
 }
