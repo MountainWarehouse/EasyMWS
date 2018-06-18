@@ -120,6 +120,8 @@ namespace MountainWarehouse.EasyMWS.Model
 		/// ReportDownloadRetryInitialDelay = TimeSpan.FromMinutes(30),<para/>
 		/// ReportDownloadRetryInterval = TimeSpan.FromHours(1),<para/>
 		/// <para/>
+		/// ReportProcessingMaxRetryCount = 3<para/>
+		/// <para/>
 		/// FeedSubmissionMaxRetryCount = 3,<para/>
 		/// FeedSubmissionRetryType = RetryPeriodType.GeometricProgression,<para/>
 		/// FeedSubmissionRetryInitialDelay = TimeSpan.FromMinutes(30),<para/>

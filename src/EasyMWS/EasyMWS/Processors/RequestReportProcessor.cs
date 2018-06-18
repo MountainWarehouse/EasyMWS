@@ -219,12 +219,21 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 
 			var entriesWithDownloadRetryCountExceeded = reportRequestService.GetAll()
-				.Where(rrc => (rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId) && rrc.Details == null && IsDownloadRetryCountExceeded(rrc));
+				.Where(rrc => (rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId) && IsDownloadRetryCountExceeded(rrc));
 
 		    foreach (var expiredReport in entriesWithDownloadRetryCountExceeded)
 		    {
 			    reportRequestService.Delete(expiredReport);
 			    _logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: Failure while trying to download the report from Amazon. Retry count exceeded : ReportDownloadMaxRetryCount={_options.ReportDownloadMaxRetryCount}.");
+		    }
+
+			var entriesWithProcessingRetryCountExceeded = reportRequestService.GetAll()
+				.Where(rrc => (rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId) && IsProcessingRetryCountExceeded(rrc));
+
+		    foreach (var expiredReport in entriesWithProcessingRetryCountExceeded)
+		    {
+			    reportRequestService.Delete(expiredReport);
+			    _logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: Failure while trying to obtain a positive processing status from amazon. Retry count exceeded : ReportProcessingMaxRetryCount={_options.ReportProcessingMaxRetryCount}.");
 		    }
 
 			var entriesWithExpirationPeriodExceeded = reportRequestService.GetAll()
@@ -253,6 +262,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 	    private bool IsDownloadRetryCountExceeded(ReportRequestEntry reportRequestEntry) =>
 		    (reportRequestEntry.ReportDownloadRetryCount > _options.ReportDownloadMaxRetryCount);
+
+	    private bool IsProcessingRetryCountExceeded(ReportRequestEntry reportRequestEntry) =>
+		    (reportRequestEntry.ReportProcessRetryCount > _options.ReportProcessingMaxRetryCount);
 
 		private bool IsReportRequestEntryCallbackInvocationRetryCountExceeded(ReportRequestEntry reportRequestEntry) =>
 		    (reportRequestEntry.ReportRequestRetryCount > _options.InvokeCallbackMaxRetryCount); 
