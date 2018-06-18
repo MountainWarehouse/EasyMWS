@@ -35,7 +35,7 @@ namespace EasyMWS.Tests.Services
 					ReportRequestData = JsonConvert.SerializeObject(reportRequestPropertiesContainer),
 					MethodName = "testMethodName",
 					TypeName = "testTypeName",
-					LastRequested = DateTime.MinValue,
+					LastAmazonRequestDate = DateTime.MinValue,
 					DataTypeName = "testDataTypeName",
 					ContentUpdateFrequency = 0,
 					Id = 1,

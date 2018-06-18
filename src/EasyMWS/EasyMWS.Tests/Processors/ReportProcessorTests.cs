@@ -89,7 +89,7 @@ namespace EasyMWS.Tests.ReportProcessors
 				createReportRequestEntryObject.ReportRequestData);
 			Assert.AreEqual(AmazonRegion.Europe, createReportRequestEntryObject.AmazonRegion);
 			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, createReportRequestEntryObject.ContentUpdateFrequency);
-			Assert.AreEqual(DateTime.MinValue, createReportRequestEntryObject.LastRequested);
+			Assert.AreEqual(DateTime.MinValue, createReportRequestEntryObject.LastAmazonRequestDate);
 			Assert.NotNull(createReportRequestEntryObject.TypeName);
 			Assert.NotNull(createReportRequestEntryObject.Data);
 			Assert.NotNull(createReportRequestEntryObject.DataTypeName);

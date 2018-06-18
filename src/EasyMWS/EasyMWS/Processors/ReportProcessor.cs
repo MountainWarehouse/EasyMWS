@@ -66,26 +66,20 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		private void PerformCallbackForPreviouslyDownloadedReports(IReportRequestCallbackService reportRequestService)
 		{
-			var previouslyDownloadedReports = reportRequestService.GetAll()
-				.Where(rre => rre.AmazonRegion == _region && rre.MerchantId == _merchantId && rre.Details != null);
+			var reportsReadyForCallback = _requestReportProcessor.GetAllFromQueueOfReportsReadyForCallback(reportRequestService);
 
-			foreach (var reportEntry in previouslyDownloadedReports)
+			foreach (var reportEntry in reportsReadyForCallback)
 			{
 				try
 				{
 					ExecuteMethodCallback(reportEntry);
 					reportRequestService.Delete(reportEntry);
 				}
-				catch (SqlException e)
-				{
-					_logger.Error(e.Message, e);
-				}
 				catch (Exception e)
 				{
-					reportEntry.ReportRequestRetryCount++;
+					reportEntry.InvokeCallbackRetryCount++;
 					reportRequestService.Update(reportEntry);
-					_logger.Error(
-						$"Method callback failed for {reportEntry.RegionAndTypeComputed}. Placing report request entry in retry queue. Current retry count is :{reportEntry.ReportRequestRetryCount}. {e.Message}", e);
+					_logger.Error(e.Message, e);
 				}
 			}
 
@@ -109,12 +103,15 @@ namespace MountainWarehouse.EasyMWS.Processors
 				{
 					AmazonRegion = _region,
 					MerchantId = _merchantId,
-					LastRequested = DateTime.MinValue,
+					LastAmazonRequestDate = DateTime.MinValue,
 					DateCreated = DateTime.UtcNow,
 					ContentUpdateFrequency = propertiesContainer.UpdateFrequency,
 					RequestReportId = null,
 					GeneratedReportId = null,
 					ReportRequestRetryCount = 0,
+					ReportDownloadRetryCount = 0,
+					ReportProcessRetryCount = 0,
+					InvokeCallbackRetryCount = 0,
 					ReportType = propertiesContainer.ReportType
 				};
 
