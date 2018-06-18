@@ -1045,7 +1045,7 @@ namespace EasyMWS.Tests.Processors
 				});
 
 			Assert.IsNull(reportRequestEntryBeingUpdated.Details);
-			Assert.AreEqual(1, reportRequestEntryBeingUpdated.ReportRequestRetryCount);
+			Assert.AreEqual(1, reportRequestEntryBeingUpdated.ReportDownloadRetryCount);
 			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastRequested.Day);
 			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
 			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
@@ -1104,7 +1104,7 @@ namespace EasyMWS.Tests.Processors
 				});
 
 			Assert.IsNull(reportRequestEntryBeingUpdated.Details);
-			Assert.AreEqual(1, reportRequestEntryBeingUpdated.ReportRequestRetryCount);
+			Assert.AreEqual(1, reportRequestEntryBeingUpdated.ReportDownloadRetryCount);
 			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastRequested.Day);
 			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
 			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
@@ -1132,7 +1132,7 @@ namespace EasyMWS.Tests.Processors
 				});
 
 			Assert.IsNull(reportRequestEntryBeingUpdated.Details);
-			Assert.AreEqual(1, reportRequestEntryBeingUpdated.ReportRequestRetryCount);
+			Assert.AreEqual(1, reportRequestEntryBeingUpdated.ReportDownloadRetryCount);
 			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastRequested.Day);
 			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
 			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
