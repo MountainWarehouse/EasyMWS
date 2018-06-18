@@ -8,6 +8,11 @@ namespace MountainWarehouse.EasyMWS.Model
     public class EasyMwsOptions
     {
 		/// <summary>
+		/// Default=3. When receiving a _CANCELLED_ or unhandled processing status from amazon for a report queued for request, specify how many times to retry requesting the report from amazon. 
+		/// </summary>
+		public int ReportProcessingMaxRetryCount { get; set; }
+
+	    /// <summary>
 		/// Default=5. When attempting to invoke a callback method after a report has been downloaded or after a feed has been submitted, and the callback invocation fails, specify how many times to retry the invocation.
 		/// </summary>
 		public int InvokeCallbackMaxRetryCount { get; set; }
@@ -141,6 +146,8 @@ namespace MountainWarehouse.EasyMWS.Model
 			    ReportDownloadRetryType = RetryPeriodType.GeometricProgression,
 			    ReportDownloadRetryInitialDelay = TimeSpan.FromMinutes(30),
 			    ReportDownloadRetryInterval = TimeSpan.FromHours(1),
+
+				ReportProcessingMaxRetryCount = 3,
 
 				FeedSubmissionMaxRetryCount = 4,
 			    FeedSubmissionRetryType = RetryPeriodType.GeometricProgression,

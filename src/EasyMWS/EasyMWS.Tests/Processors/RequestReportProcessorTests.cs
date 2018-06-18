@@ -49,7 +49,7 @@ namespace EasyMWS.Tests.Processors
 				new ReportRequestEntry
 				{
 					AmazonRegion = AmazonRegion.China,
-					Id = 1,
+					Id = 0,
 					RequestReportId = null,
 					GeneratedReportId = null,
 					ReportRequestData = "{\"UpdateFrequency\":0,\"Merchant\":null,\"MwsAuthToken\":null,\"Region\":20,\"MarketplaceIdList\":null}",
@@ -752,7 +752,7 @@ namespace EasyMWS.Tests.Processors
 				new ReportRequestEntry
 				{
 					AmazonRegion = AmazonRegion.Europe,
-					Id = 2,
+					Id = 1,
 					RequestReportId = "Report1",
 					GeneratedReportId = null,
 					ReportRequestData = serializedReportRequestData
@@ -760,7 +760,7 @@ namespace EasyMWS.Tests.Processors
 				new ReportRequestEntry
 				{
 					AmazonRegion = AmazonRegion.Europe,
-					Id = 3,
+					Id = 2,
 					RequestReportId = "Report2",
 					GeneratedReportId = null,
 					ReportRequestData = serializedReportRequestData
@@ -768,7 +768,7 @@ namespace EasyMWS.Tests.Processors
 				new ReportRequestEntry
 				{
 					AmazonRegion = AmazonRegion.Europe,
-					Id = 4,
+					Id = 3,
 					RequestReportId = "Report3",
 					GeneratedReportId = null,
 					ReportRequestData = serializedReportRequestData
@@ -776,7 +776,7 @@ namespace EasyMWS.Tests.Processors
 				new ReportRequestEntry
 				{
 					AmazonRegion = AmazonRegion.NorthAmerica,
-					Id = 5,
+					Id = 4,
 					RequestReportId = "Report4",
 					GeneratedReportId = null,
 					ReportRequestData = serializedReportRequestData
@@ -785,7 +785,7 @@ namespace EasyMWS.Tests.Processors
 				new ReportRequestEntry
 				{
 					AmazonRegion = AmazonRegion.NorthAmerica,
-					Id = 6,
+					Id = 5,
 					RequestReportId = "Report5",
 					GeneratedReportId = null,
 					ReportRequestData = serializedReportRequestData
@@ -794,7 +794,7 @@ namespace EasyMWS.Tests.Processors
 				new ReportRequestEntry
 				{
 					AmazonRegion = AmazonRegion.NorthAmerica,
-					Id = 7,
+					Id = 6,
 					RequestReportId = "Report6",
 					GeneratedReportId = null,
 					ReportRequestData = serializedReportRequestData
@@ -816,19 +816,19 @@ namespace EasyMWS.Tests.Processors
 			_requestReportProcessor.QueueReportsAccordingToProcessingStatus(_reportRequestCallbackServiceMock.Object, dataResult);
 
 			Assert.AreEqual("GeneratedId1", _reportRequestCallbacks.First(x => x.RequestReportId == "Report1").GeneratedReportId);
-			Assert.AreEqual(0, _reportRequestCallbacks.First(x => x.RequestReportId == "Report1").ReportRequestRetryCount);
+			Assert.AreEqual(0, _reportRequestCallbacks.First(x => x.RequestReportId == "Report1").ReportProcessRetryCount);
 			Assert.IsNull(_reportRequestCallbacks.First(x => x.RequestReportId == "Report2").GeneratedReportId);
 			Assert.IsNull(_reportRequestCallbacks.First(x => x.RequestReportId == "Report3").GeneratedReportId);
-			Assert.AreEqual(0, _reportRequestCallbacks.First(x => x.RequestReportId == "Report3").ReportRequestRetryCount);
+			Assert.AreEqual(0, _reportRequestCallbacks.First(x => x.RequestReportId == "Report3").ReportProcessRetryCount);
 			Assert.IsNull(_reportRequestCallbacks.First(x => x.RequestReportId == "Report4").GeneratedReportId);
-			Assert.AreEqual(0, _reportRequestCallbacks.First(x => x.RequestReportId == "Report4").ReportRequestRetryCount);
+			Assert.AreEqual(0, _reportRequestCallbacks.First(x => x.RequestReportId == "Report4").ReportProcessRetryCount);
+			Assert.IsNull(_reportRequestCallbacks.First(x => x.Id == 5).GeneratedReportId);
+			Assert.IsNull(_reportRequestCallbacks.First(x => x.Id == 5).RequestReportId);
+			Assert.AreEqual(1, _reportRequestCallbacks.First(x => x.Id == 5).ReportProcessRetryCount);
 			Assert.IsNull(_reportRequestCallbacks.First(x => x.Id == 6).GeneratedReportId);
 			Assert.IsNull(_reportRequestCallbacks.First(x => x.Id == 6).RequestReportId);
-			Assert.AreEqual(1, _reportRequestCallbacks.First(x => x.Id == 6).ReportRequestRetryCount);
-			Assert.IsNull(_reportRequestCallbacks.First(x => x.Id == 7).GeneratedReportId);
-			Assert.IsNull(_reportRequestCallbacks.First(x => x.Id == 7).RequestReportId);
-			Assert.AreEqual(1, _reportRequestCallbacks.First(x => x.Id == 7).ReportRequestRetryCount);
-			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestEntry>()), Times.Exactly(5));
+			Assert.AreEqual(1, _reportRequestCallbacks.First(x => x.Id == 6).ReportProcessRetryCount);
+			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestEntry>()), Times.Exactly(3));
 			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
 		}
 
@@ -848,7 +848,7 @@ namespace EasyMWS.Tests.Processors
 			_requestReportProcessor.QueueReportsAccordingToProcessingStatus(_reportRequestCallbackServiceMock.Object, data);
 
 			Assert.IsNull(_reportRequestCallbacks.First().RequestReportId);
-			Assert.IsTrue(_reportRequestCallbacks.First().ReportRequestRetryCount > 0);
+			Assert.IsTrue(_reportRequestCallbacks.First().ReportProcessRetryCount > 0);
 			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
 		}
 
