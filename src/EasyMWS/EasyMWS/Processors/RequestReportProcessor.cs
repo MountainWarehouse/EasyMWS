@@ -313,7 +313,10 @@ namespace MountainWarehouse.EasyMWS.Processors
 					rrc => rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId
 					        && rrc.RequestReportId != null
 					        && rrc.GeneratedReportId != null
-							&& rrc.Details == null);
+							&& rrc.Details == null
+							&& RetryIntervalHelper.IsRetryPeriodAwaited(rrc.LastRequested, rrc.ReportDownloadRetryCount,
+						       _options.ReportDownloadRetryInitialDelay, _options.ReportDownloadRetryInterval,
+						       _options.ReportDownloadRetryType));
 	    }
 
 		public void DownloadGeneratedReportFromAmazon(IReportRequestCallbackService reportRequestService, ReportRequestEntry reportRequestEntry)
