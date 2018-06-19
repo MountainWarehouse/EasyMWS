@@ -83,9 +83,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 				}
 				catch (Exception e)
 				{
-					feedSubmissionEntry.SubmissionRetryCount++;
+					feedSubmissionEntry.FeedSubmissionRetryCount++;
 					feedSubmissionService.Update(feedSubmissionEntry);
-					_logger.Error($"Method callback failed for {feedSubmissionEntry.RegionAndTypeComputed}. Placing feed submission entry in retry queue. Current retry count is :{feedSubmissionEntry.SubmissionRetryCount}. {e.Message}", e);
+					_logger.Error($"Method callback failed for {feedSubmissionEntry.RegionAndTypeComputed}. Placing feed submission entry in retry queue. Current retry count is :{feedSubmissionEntry.FeedSubmissionRetryCount}. {e.Message}", e);
 				}
 			}
 
@@ -114,7 +114,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 					IsProcessingComplete = false,
 					HasErrors = false,
 					SubmissionErrorData = null,
-					SubmissionRetryCount = 0,
+					FeedSubmissionRetryCount = 0,
 					FeedSubmissionId = null,
 					FeedType = propertiesContainer.FeedType,
 					Details = new FeedSubmissionDetails

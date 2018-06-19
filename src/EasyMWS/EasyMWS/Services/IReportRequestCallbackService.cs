@@ -4,6 +4,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using MountainWarehouse.EasyMWS.Data;
+using MountainWarehouse.EasyMWS.Enums;
+using MountainWarehouse.EasyMWS.Model;
 
 namespace MountainWarehouse.EasyMWS.Services
 {
@@ -24,5 +26,10 @@ namespace MountainWarehouse.EasyMWS.Services
 		ReportRequestEntry Last();
 		ReportRequestEntry LastOrDefault();
 		ReportRequestEntry LastOrDefault(Expression<Func<ReportRequestEntry, bool>> predicate);
+
+		ReportRequestEntry GetNextFromQueueOfReportsToRequest(EasyMwsOptions options, string merchantId, AmazonRegion region);
+		ReportRequestEntry GetNextFromQueueOfReportsToDownload(EasyMwsOptions options, string merchantId, AmazonRegion region);
+		IEnumerable<string> GetAllPendingReportFromQueue(string merchantId, AmazonRegion region);
+		IEnumerable<ReportRequestEntry> GetAllFromQueueOfReportsReadyForCallback(EasyMwsOptions options, string merchantId, AmazonRegion region);
 	}
 }

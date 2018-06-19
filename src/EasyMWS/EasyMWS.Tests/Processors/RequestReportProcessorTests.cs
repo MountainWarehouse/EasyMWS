@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net;
 using Moq;
 using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.CallbackLogic;
@@ -46,7 +49,7 @@ namespace EasyMWS.Tests.Processors
 				new ReportRequestEntry
 				{
 					AmazonRegion = AmazonRegion.China,
-					Id = 1,
+					Id = 0,
 					RequestReportId = null,
 					GeneratedReportId = null,
 					ReportRequestData = "{\"UpdateFrequency\":0,\"Merchant\":null,\"MwsAuthToken\":null,\"Region\":20,\"MarketplaceIdList\":null}",
@@ -115,221 +118,248 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
-		public void GetNextFromQueueOfReportsToRequest_CalledWithNullMerchantId_ReturnsNull()
-		{
-			var testMerchantId2 = "testMerchantId2";
-			var reportRequestWithDifferentMerchant = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = testMerchantId2, Id = 2, RequestReportId = null, RequestRetryCount = 0 };
-			var reportRequestWithCorrectRegion1 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 3, RequestReportId = null, RequestRetryCount = 0 };
-			var reportRequestWithCorrectRegion2 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 4, RequestReportId = null, RequestRetryCount = 0 };
-			var reportRequestWithNullMerchant = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = null, Id = 5, RequestReportId = null, RequestRetryCount = 0 };
-
-
-			_reportRequestCallbacks.Add(reportRequestWithDifferentMerchant);
-			_reportRequestCallbacks.Add(reportRequestWithCorrectRegion1);
-			_reportRequestCallbacks.Add(reportRequestWithCorrectRegion2);
-			_reportRequestCallbacks.Add(reportRequestWithNullMerchant);
-
-			_requestReportProcessor = new RequestReportProcessor(_region, null, _marketplaceWebServiceClientMock.Object, _loggerMock.Object, _easyMwsOptions);
-
-			var reportRequestCallback =
-				_requestReportProcessor.GetNextFromQueueOfReportsToRequest(_reportRequestCallbackServiceMock.Object);
-
-			Assert.IsNull(reportRequestCallback);
-		}
-
-		[Test]
-		public void GetNextFromQueueOfReportsToRequest_ReturnsFirstReportRequestFromQueueForGivenMerchant_AndSkipsReportRequestsForDifferentMerchants()
-		{
-			var testMerchantId2 = "testMerchantId2";
-			var reportRequestWithDifferentMerchant = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = testMerchantId2, Id = 2, RequestReportId = null, RequestRetryCount = 0 };
-			var reportRequestWithCorrectRegion1 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 3, RequestReportId = null, RequestRetryCount = 0 };
-			var reportRequestWithCorrectRegion2 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 4, RequestReportId = null, RequestRetryCount = 0 };
-
-
-			_reportRequestCallbacks.Add(reportRequestWithDifferentMerchant);
-			_reportRequestCallbacks.Add(reportRequestWithCorrectRegion1);
-			_reportRequestCallbacks.Add(reportRequestWithCorrectRegion2);
-
-			var reportRequestCallback =
-				_requestReportProcessor.GetNextFromQueueOfReportsToRequest(_reportRequestCallbackServiceMock.Object);
-
-			Assert.AreEqual(reportRequestWithCorrectRegion1.Id, reportRequestCallback.Id);
-		}
-
-		[Test]
-		public void GetNextFromQueueOfReportsToRequest_ReturnsFirstReportRequestFromQueueForGivenRegion_AndSkipsReportRequestsForDifferentRegions()
-		{
-			var reportRequestWithDifferentRegion = new ReportRequestEntry { AmazonRegion = AmazonRegion.Australia, MerchantId = _merchantId, Id = 2, RequestReportId = null, RequestRetryCount = 0};
-			var reportRequestWithCorrectRegion1 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 3, RequestReportId = null, RequestRetryCount = 0 };
-			var reportRequestWithCorrectRegion2 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 4, RequestReportId = null, RequestRetryCount = 0 };
-
-
-			_reportRequestCallbacks.Add(reportRequestWithDifferentRegion);
-			_reportRequestCallbacks.Add(reportRequestWithCorrectRegion1);
-			_reportRequestCallbacks.Add(reportRequestWithCorrectRegion2);
-
-			var reportRequestCallback =
-				_requestReportProcessor.GetNextFromQueueOfReportsToRequest(_reportRequestCallbackServiceMock.Object);
-
-			Assert.AreEqual(reportRequestWithCorrectRegion1.Id, reportRequestCallback.Id);
-		}
-
-		[Test]
-		public void GetNextFromQueueOfReportsToRequest_ReturnsFirstReportRequestFromQueueWithNullRequestReportId_AndSkipsReportRequestsWithNonNullRequestReportId()
-		{
-			var reportRequestWithDifferentRegion = new ReportRequestEntry { AmazonRegion = AmazonRegion.Australia, MerchantId = _merchantId, Id = 2, RequestReportId = null, RequestRetryCount = 0 };
-			var reportRequestWithNonNullRequestReportId = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 3, RequestReportId = "testRequestReportId", RequestRetryCount = 0 };
-			var reportRequestWithNullRequestReportId1 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 4, RequestReportId = null, RequestRetryCount = 0 };
-			var reportRequestWithNullRequestReportId2 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 5, RequestReportId = null, RequestRetryCount = 0 };
-
-
-			_reportRequestCallbacks.Add(reportRequestWithDifferentRegion);
-			_reportRequestCallbacks.Add(reportRequestWithNonNullRequestReportId);
-			_reportRequestCallbacks.Add(reportRequestWithNullRequestReportId1);
-			_reportRequestCallbacks.Add(reportRequestWithNullRequestReportId2);
-
-			var reportRequestCallback =
-				_requestReportProcessor.GetNextFromQueueOfReportsToRequest(_reportRequestCallbackServiceMock.Object);
-
-			Assert.AreEqual(reportRequestWithNullRequestReportId1.Id, reportRequestCallback.Id);
-		}
-
-		[Test]
-		public void GetNextFromQueueOfReportsToRequest_ReturnsFirstReportRequestFromQueueWithNoRequestRetryCount_AndSkipsReportRequestsWithRequestRetryPeriodIncomplete()
-		{
-			var reportRequestWithRequestRetryPeriodIncomplete = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 2, RequestReportId = null, RequestRetryCount = 1, LastRequested = DateTime.UtcNow.AddHours(-1)};
-			_easyMwsOptions.ReportRequestRetryInitialDelay = TimeSpan.FromHours(2);
-			_easyMwsOptions.ReportRequestRetryInterval = TimeSpan.FromHours(2);
-			_requestReportProcessor = new RequestReportProcessor(_region, _merchantId, _marketplaceWebServiceClientMock.Object, _loggerMock.Object, _easyMwsOptions);
-			var reportRequestWithNoRequestRetryCount1 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 3, RequestReportId = null, RequestRetryCount = 0, LastRequested = DateTime.MinValue };
-			var reportRequestWithNoRequestRetryCount2 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 4, RequestReportId = null, RequestRetryCount = 0, LastRequested = DateTime.MinValue };
-
-			_reportRequestCallbacks.Add(reportRequestWithRequestRetryPeriodIncomplete);
-			_reportRequestCallbacks.Add(reportRequestWithNoRequestRetryCount1);
-			_reportRequestCallbacks.Add(reportRequestWithNoRequestRetryCount2);
-
-			var reportRequestCallback =
-				_requestReportProcessor.GetNextFromQueueOfReportsToRequest(_reportRequestCallbackServiceMock.Object);
-
-			Assert.AreEqual(reportRequestWithNoRequestRetryCount1.Id, reportRequestCallback.Id);
-		}
-
-		[Test]
-		public void GetNextFromQueueOfReportsToRequest_ReturnsFirstReportRequestFromQueueWithCompleteRetryPeriod_AndSkipsReportRequestsWithRequestRetryPeriodIncomplete()
-		{
-			var reportRequestWithRequestRetryPeriodIncomplete = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 2, RequestReportId = null, RequestRetryCount = 1, LastRequested = DateTime.UtcNow.AddMinutes(-30) };
-			_easyMwsOptions.ReportRequestRetryInitialDelay = TimeSpan.FromHours(1);
-			_easyMwsOptions.ReportRequestRetryInterval = TimeSpan.FromHours(1);
-			_requestReportProcessor = new RequestReportProcessor(_region, _merchantId, _marketplaceWebServiceClientMock.Object,  _loggerMock.Object, _easyMwsOptions);
-			var reportRequestWithNoRetryPeriodComplete1 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 3, RequestReportId = null, RequestRetryCount = 0, LastRequested = DateTime.UtcNow.AddMinutes(-61) };
-			var reportRequestWithNoRetryPeriodComplete2 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 4, RequestReportId = null, RequestRetryCount = 0, LastRequested = DateTime.UtcNow.AddMinutes(-61) };
-
-			_reportRequestCallbacks.Add(reportRequestWithRequestRetryPeriodIncomplete);
-			_reportRequestCallbacks.Add(reportRequestWithNoRetryPeriodComplete1);
-			_reportRequestCallbacks.Add(reportRequestWithNoRetryPeriodComplete2);
-
-			var reportRequestCallback =
-				_requestReportProcessor.GetNextFromQueueOfReportsToRequest(_reportRequestCallbackServiceMock.Object);
-
-			Assert.AreEqual(reportRequestWithNoRetryPeriodComplete1.Id, reportRequestCallback.Id);
-		}
-
-		[Test]
-		public void GetNextFromQueueOfReportsToRequest_WithConfiguredTimeToWaitBeforeFirstRetry_AndInitialRetryCount_ReturnsReportRequestWithTheExpectedCompleteRetryPeriod()
-		{
-			var reportRequestWithRequestRetryPeriodIncomplete = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 2, RequestReportId = null, RequestRetryCount = 1, LastRequested = DateTime.UtcNow.AddMinutes(-59) };
-			_easyMwsOptions.ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(60);
-			_easyMwsOptions.ReportRequestRetryInterval = TimeSpan.FromMinutes(1);
-			_requestReportProcessor = new RequestReportProcessor(_region, _merchantId, _marketplaceWebServiceClientMock.Object, _loggerMock.Object, _easyMwsOptions);
-			var reportRequestWithNoRetryPeriodComplete1 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 3, RequestReportId = null, RequestRetryCount = 1, LastRequested = DateTime.UtcNow.AddMinutes(-61) };
-			var reportRequestWithNoRetryPeriodComplete2 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 4, RequestReportId = null, RequestRetryCount = 1, LastRequested = DateTime.UtcNow.AddMinutes(-61) };
-
-			_reportRequestCallbacks.Add(reportRequestWithRequestRetryPeriodIncomplete);
-			_reportRequestCallbacks.Add(reportRequestWithNoRetryPeriodComplete1);
-			_reportRequestCallbacks.Add(reportRequestWithNoRetryPeriodComplete2);
-
-			var reportRequestCallback = _requestReportProcessor.GetNextFromQueueOfReportsToRequest(_reportRequestCallbackServiceMock.Object);
-
-			Assert.AreEqual(reportRequestWithNoRetryPeriodComplete1.Id, reportRequestCallback.Id);
-		}
-
-		[Test]
-		public void GetNextFromQueueOfReportsToRequest_WithRetryPeriodTypeConfiguredAsArithmeticProgression_AndNonInitialRetryCount_ReturnsReportRequestWithTheExpectedCompleteRetryPeriod()
-		{
-			var reportRequestWithRequestRetryPeriodIncomplete = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 2, RequestReportId = null, RequestRetryCount = 5, LastRequested = DateTime.UtcNow.AddMinutes(-59) };
-			_easyMwsOptions.ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(1);
-			_easyMwsOptions.ReportRequestRetryInterval = TimeSpan.FromMinutes(60);
-			_easyMwsOptions.ReportRequestRetryType = RetryPeriodType.ArithmeticProgression;
-			_requestReportProcessor = new RequestReportProcessor(_region, _merchantId, _marketplaceWebServiceClientMock.Object, _loggerMock.Object, _easyMwsOptions);
-			var reportRequestWithNoRetryPeriodComplete1 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 3, RequestReportId = null, RequestRetryCount = 5, LastRequested = DateTime.UtcNow.AddMinutes(-61) };
-			var reportRequestWithNoRetryPeriodComplete2 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 4, RequestReportId = null, RequestRetryCount = 5, LastRequested = DateTime.UtcNow.AddMinutes(-61) };
-
-			_reportRequestCallbacks.Add(reportRequestWithRequestRetryPeriodIncomplete);
-			_reportRequestCallbacks.Add(reportRequestWithNoRetryPeriodComplete1);
-			_reportRequestCallbacks.Add(reportRequestWithNoRetryPeriodComplete2);
-
-			var reportRequestCallback = _requestReportProcessor.GetNextFromQueueOfReportsToRequest(_reportRequestCallbackServiceMock.Object);
-
-			Assert.AreEqual(reportRequestWithNoRetryPeriodComplete1.Id, reportRequestCallback.Id);
-		}
-
-		[Test]
-		public void GetNextFromQueueOfReportsToRequest_WithRetryPeriodTypeConfiguredAsGeometricProgression_AndNonInitialRetryCount_ReturnsReportRequestWithTheExpectedCompleteRetryPeriod()
-		{
-			var testRequestRetryCount = 5;
-			var minutesBetweenRetries = 60;
-			var reportRequestWithRequestRetryPeriodIncomplete = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe,
-				MerchantId = _merchantId, Id = 2, RequestReportId = null,
-				RequestRetryCount = testRequestRetryCount, LastRequested = DateTime.UtcNow.AddMinutes(-61) };
-			_easyMwsOptions.ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(1);
-			_easyMwsOptions.ReportRequestRetryInterval = TimeSpan.FromMinutes(minutesBetweenRetries);
-			_easyMwsOptions.ReportRequestRetryType = RetryPeriodType.GeometricProgression;
-			_requestReportProcessor = new RequestReportProcessor(_region, _merchantId, _marketplaceWebServiceClientMock.Object, _loggerMock.Object, _easyMwsOptions);
-			var reportRequestWithNoRetryPeriodComplete1 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe,
-				MerchantId = _merchantId, Id = 3, RequestReportId = null,
-				RequestRetryCount = testRequestRetryCount, LastRequested = DateTime.UtcNow.AddMinutes(-59) };
-			var reportRequestWithNoRetryPeriodComplete2 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe,
-				MerchantId = _merchantId, Id = 4, RequestReportId = null,
-				RequestRetryCount = testRequestRetryCount, LastRequested = DateTime.UtcNow.AddMinutes(-(testRequestRetryCount * minutesBetweenRetries - 1)) };
-			var reportRequestWithNoRetryPeriodComplete3 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe,
-				MerchantId = _merchantId, Id = 5, RequestReportId = null,
-				RequestRetryCount = testRequestRetryCount, LastRequested = DateTime.UtcNow.AddMinutes(-(testRequestRetryCount * minutesBetweenRetries - 1)) };
-
-			_reportRequestCallbacks.Add(reportRequestWithRequestRetryPeriodIncomplete);
-			_reportRequestCallbacks.Add(reportRequestWithNoRetryPeriodComplete1);
-			_reportRequestCallbacks.Add(reportRequestWithNoRetryPeriodComplete2);
-			_reportRequestCallbacks.Add(reportRequestWithNoRetryPeriodComplete3);
-
-			var reportRequestCallback = _requestReportProcessor.GetNextFromQueueOfReportsToRequest(_reportRequestCallbackServiceMock.Object);
-
-			Assert.AreEqual(reportRequestWithNoRetryPeriodComplete2.Id, reportRequestCallback.Id);
-		}
-
-		[Test]
 		public void RequestReportFromAmazon_CalledWithNullReportRequestCallback_ThrowsArgumentNullException()
 		{
-			Assert.Throws<ArgumentNullException>(() => _requestReportProcessor.RequestReportFromAmazon(null));
+			Assert.Throws<ArgumentNullException>(() => _requestReportProcessor.RequestReportFromAmazon(It.IsAny<IReportRequestCallbackService>(), null));
 		}
 
 		[Test]
 		public void RequestReportFromAmazon_CalledWithReportRequestCallbackWithNullReportRequestData_ThrowsArgumentNullException()
 		{
-			Assert.Throws<ArgumentNullException>(() => _requestReportProcessor.RequestReportFromAmazon(new ReportRequestEntry()));
+			Assert.Throws<ArgumentNullException>(() => _requestReportProcessor.RequestReportFromAmazon(It.IsAny<IReportRequestCallbackService>(), new ReportRequestEntry()));
 		}
 
 		[Test]
 		public void RequestReportFromAmazon_CalledWithReportRequestDataWithNoReportType_ThrowsArgumentNullException()
 		{
-			Assert.Throws<ArgumentException>(() => _requestReportProcessor.RequestReportFromAmazon(new ReportRequestEntry{ReportRequestData = String.Empty}));
+			Assert.Throws<ArgumentException>(() => _requestReportProcessor.RequestReportFromAmazon(It.IsAny<IReportRequestCallbackService>(), new ReportRequestEntry {ReportRequestData = String.Empty}));
+		}
+
+		[Test]
+		public void RequestReportFromAmazon_WithRequestReportAmazonResponseNotNull_CallsOnce_GetNextFromQueueOfReportsToGenerate()
+		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+
+			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
+				.Returns(new RequestReportResponse{RequestReportResult = new RequestReportResult{ ReportRequestInfo = new ReportRequestInfo{ReportRequestId = "testReportRequestId" } }});
+			var reportRequestEntryBeingUpdated = (ReportRequestEntry) null;
+			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+				{
+					reportRequestEntryBeingUpdated = entry;
+				}));
+
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+				new ReportRequestEntry
+				{
+					LastAmazonRequestDate = DateTime.MinValue,
+					ReportRequestData = serializedReportRequestData,
+					ReportType = "testReportType"
+				});
+
+			Assert.AreEqual("testReportRequestId", reportRequestEntryBeingUpdated.RequestReportId);
+			Assert.AreEqual(0, reportRequestEntryBeingUpdated.ReportRequestRetryCount);
+			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastAmazonRequestDate.Day);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+		}
+
+		[Test]
+		public void RequestReportFromAmazon_WithRequestReportAmazonResponseNull_CallsOnce_AllocateReportRequestForRetry()
+		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+
+			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
+				.Returns(new RequestReportResponse{RequestReportResult = new RequestReportResult{ ReportRequestInfo = new ReportRequestInfo{ReportRequestId =  null} }});
+			var reportRequestEntryBeingUpdated = (ReportRequestEntry) null;
+			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+				{
+					reportRequestEntryBeingUpdated = entry;
+				}));
+
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+				new ReportRequestEntry
+				{
+					LastAmazonRequestDate = DateTime.MinValue,
+					ReportRequestData = serializedReportRequestData,
+					ReportType = "testReportType"
+				});
+
+			Assert.AreEqual(null, reportRequestEntryBeingUpdated.RequestReportId);
+			Assert.AreEqual(1, reportRequestEntryBeingUpdated.ReportRequestRetryCount);
+			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastAmazonRequestDate.Day);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+		}
+
+		[Test]
+		public void RequestReportFromAmazon_WithRequestReportAmazonResponseEmpty_CallsOnce_AllocateReportRequestForRetry()
+		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+
+			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
+				.Returns(new RequestReportResponse { RequestReportResult = new RequestReportResult { ReportRequestInfo = new ReportRequestInfo { ReportRequestId = string.Empty } } });
+			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
+			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			{
+				reportRequestEntryBeingUpdated = entry;
+			}));
+
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+				new ReportRequestEntry
+				{
+					LastAmazonRequestDate = DateTime.MinValue,
+					ReportRequestData = serializedReportRequestData,
+					ReportType = "testReportType"
+				});
+
+			Assert.AreEqual(string.Empty, reportRequestEntryBeingUpdated.RequestReportId);
+			Assert.AreEqual(1, reportRequestEntryBeingUpdated.ReportRequestRetryCount);
+			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastAmazonRequestDate.Day);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+		}
+
+		[TestCase("AccessToReportDenied")]
+		[TestCase("InvalidReportId")]
+		[TestCase("InvalidReportType")]
+		[TestCase("InvalidRequest")]
+		[TestCase("ReportNoLongerAvailable")]
+		public void RequestReportFromAmazon_WithAmazonReturningFatalErrorCodeResponse_DeletesReportRequestEntryFromQueue(string fatalErrorCode)
+		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+
+			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
+				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, fatalErrorCode, "errorType", "123", "xml", new ResponseHeaderMetadata()));
+
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+				new ReportRequestEntry
+				{
+					LastAmazonRequestDate = DateTime.MinValue,
+					ReportRequestData = serializedReportRequestData,
+					ReportType = "testReportType"
+				});
+
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+		}
+
+		[TestCase("ReportNotReady")]
+		[TestCase("InvalidScheduleFrequency")]
+		[TestCase("SomeUnhandledNewErrorCode")]
+		public void RequestReportFromAmazon_WithAmazonReturningNonFatalErrorCodeResponse_IncrementsRetryCountCorrectly(string nonFatalErrorCode)
+		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+
+			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
+				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, nonFatalErrorCode, "errorType", "123", "xml", new ResponseHeaderMetadata()));
+			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
+			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			{
+				reportRequestEntryBeingUpdated = entry;
+			}));
+
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+				new ReportRequestEntry
+				{
+					LastAmazonRequestDate = DateTime.MinValue,
+					ReportRequestData = serializedReportRequestData,
+					ReportType = "testReportType",
+					ReportRequestRetryCount = 1
+				});
+
+			Assert.IsNull(reportRequestEntryBeingUpdated.RequestReportId);
+			Assert.AreEqual(2, reportRequestEntryBeingUpdated.ReportRequestRetryCount);
+			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastAmazonRequestDate.Day);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+		}
+
+		[Test]
+		public void RequestReportFromAmazon_WithAmazonReturningUnknownErrorCodeResponse_IncrementsRetryCountCorrectly()
+		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+
+			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
+				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, "UnknownErrorCode", "errorType", "123", "xml", new ResponseHeaderMetadata()));
+			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
+			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			{
+				reportRequestEntryBeingUpdated = entry;
+			}));
+
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+				new ReportRequestEntry
+				{
+					LastAmazonRequestDate = DateTime.MinValue,
+					ReportRequestData = serializedReportRequestData,
+					ReportType = "testReportType",
+					ReportRequestRetryCount = 1
+				});
+
+			Assert.IsNull(reportRequestEntryBeingUpdated.RequestReportId);
+			Assert.AreEqual(2, reportRequestEntryBeingUpdated.ReportRequestRetryCount);
+			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastAmazonRequestDate.Day);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+		}
+
+		[Test]
+		public void RequestReportFromAmazon_WithAmazonCallThrowingNonMarketplaceWebServiceException_IncrementsRetryCountCorrectly()
+		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+
+			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
+				.Throws(new Exception(""));
+			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
+			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			{
+				reportRequestEntryBeingUpdated = entry;
+			}));
+
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+				new ReportRequestEntry
+				{
+					LastAmazonRequestDate = DateTime.MinValue,
+					ReportRequestData = serializedReportRequestData,
+					ReportType = "testReportType",
+					ReportRequestRetryCount = 1
+				});
+
+			Assert.IsNull(reportRequestEntryBeingUpdated.RequestReportId);
+			Assert.AreEqual(2, reportRequestEntryBeingUpdated.ReportRequestRetryCount);
+			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastAmazonRequestDate.Day);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
 		}
 
 		[Test]
 		public void RequestReportFromAmazon_OneInQueue_SubmitsToAmazon()
 		{
-			var reportId = _requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbacks[0]);
+			var requestBeingSentToAmazon = (RequestReportRequest)null;
+			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
+				.Callback<RequestReportRequest>(
+					(req) =>
+					{
+						requestBeingSentToAmazon = req;
+					});
+
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object, _reportRequestCallbacks[0]);
+			var expectedReportType = _reportRequestCallbacks[0].ReportType;
 
 			_marketplaceWebServiceClientMock.Verify(mwsc => mwsc.RequestReport(It.IsAny<RequestReportRequest>()), Times.Once);
-			Assert.AreEqual("Report001", reportId);
+
+			Assert.AreEqual(expectedReportType, requestBeingSentToAmazon.ReportType);
 		}
 
 		[Test]
@@ -348,7 +378,7 @@ namespace EasyMWS.Tests.Processors
 			_marketplaceWebServiceClientMock.Setup(mwscm => mwscm.RequestReport(It.IsAny<RequestReportRequest>()))
 				.Callback<RequestReportRequest>((rrr) => { requestReportRequest = rrr; });
 
-			_requestReportProcessor.RequestReportFromAmazon(reportRequestEntry);
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object, reportRequestEntry);
 
 			Assert.AreEqual("testMerchant800", requestReportRequest.Merchant);
 			Assert.AreEqual("testReportType800", requestReportRequest.ReportType);
@@ -374,7 +404,7 @@ namespace EasyMWS.Tests.Processors
 			_marketplaceWebServiceClientMock.Setup(mwscm => mwscm.RequestReport(It.IsAny<RequestReportRequest>()))
 				.Callback<RequestReportRequest>((rrr) => { requestReportRequest = rrr; });
 
-			_requestReportProcessor.RequestReportFromAmazon(reportRequestCallback);
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object, reportRequestCallback);
 
 			Assert.AreEqual("testMerchant800", requestReportRequest.Merchant);
 			Assert.AreEqual("testReportType800", requestReportRequest.ReportType);
@@ -384,139 +414,7 @@ namespace EasyMWS.Tests.Processors
 			Assert.IsNull(requestReportRequest.MarketplaceIdList);
 		}
 
-		[Test]
-		public void GetNextFromQueueOfReportsToGenerate_UpdatesRequestReportId_OnTheCallback()
-		{
-			var reportRequestId = "testReportRequestId";
-
-			 _requestReportProcessor.MoveToQueueOfReportsToGenerate(_reportRequestCallbackServiceMock.Object, _reportRequestCallbacks[0], reportRequestId);
-
-			Assert.AreEqual("testReportRequestId", _reportRequestCallbacks[0].RequestReportId);
-			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
-		}
-
-		[Test]
-		public void GetAllPendingReportFromQueue_ReturnListReportRequestId_ForGivenMerchant()
-		{
-			// Arrange
-			var testMerchantId2 = "test merchant id 2";
-			var data = new List<ReportRequestEntry>
-			{
-				new ReportRequestEntry
-				{
-					AmazonRegion = AmazonRegion.Europe, MerchantId = testMerchantId2,
-					Id = 2,
-					RequestReportId = "Report1",
-					GeneratedReportId = null
-				},
-				new ReportRequestEntry
-				{
-					AmazonRegion = AmazonRegion.Europe, MerchantId = testMerchantId2,
-					Id = 3,
-					RequestReportId = "Report2",
-					GeneratedReportId = null
-				},
-				new ReportRequestEntry
-				{
-					AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId,
-					Id = 4,
-					RequestReportId = "Report1",
-					GeneratedReportId = null
-				},
-				new ReportRequestEntry
-				{
-					AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId,
-					Id = 5,
-					RequestReportId = "Report2",
-					GeneratedReportId = null
-				},
-				new ReportRequestEntry
-				{
-					AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId,
-					Id = 6,
-					RequestReportId = "Report3",
-					GeneratedReportId = "GeneratedIdTest1"
-				},
-				new ReportRequestEntry
-				{
-					AmazonRegion = AmazonRegion.NorthAmerica, MerchantId = _merchantId,
-					Id = 7,
-					RequestReportId = "Report4",
-					GeneratedReportId = null
-				}
-			};
-			
-			_reportRequestCallbacks.AddRange(data);
-
-			// Act
-			var listPendingReports = _requestReportProcessor.GetAllPendingReportFromQueue(_reportRequestCallbackServiceMock.Object).ToList();
-			
-			// Assert
-			Assert.AreEqual(2, listPendingReports.Count());
-			Assert.IsTrue(listPendingReports.Count(sf => sf == "Report1" || sf == "Report2") == 2);
-		}
-
-		[Test]
-		public void GetAllPendingReportFromQueue_CalledWithNullMerchantId_ReturnsNull()
-		{
-			var data = new List<ReportRequestEntry>
-			{
-				new ReportRequestEntry
-				{
-					AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId,
-					Id = 2,
-					RequestReportId = "Report1",
-					GeneratedReportId = null
-				},
-				new ReportRequestEntry
-				{
-					AmazonRegion = AmazonRegion.Europe, MerchantId = null,
-					Id = 3,
-					RequestReportId = "Report2",
-					GeneratedReportId = null
-				},
-				new ReportRequestEntry
-				{
-					AmazonRegion = AmazonRegion.Europe, MerchantId = null,
-					Id = 2,
-					RequestReportId = "Report1",
-					GeneratedReportId = null
-				},
-				new ReportRequestEntry
-				{
-					AmazonRegion = AmazonRegion.Europe, MerchantId = null,
-					Id = 3,
-					RequestReportId = "Report2",
-					GeneratedReportId = null
-				},
-				new ReportRequestEntry
-				{
-					AmazonRegion = AmazonRegion.Europe, MerchantId = null,
-					Id = 4,
-					RequestReportId = "Report3",
-					GeneratedReportId = "GeneratedIdTest1"
-				},
-				new ReportRequestEntry
-				{
-					AmazonRegion = AmazonRegion.NorthAmerica, MerchantId = null,
-					Id = 5,
-					RequestReportId = "Report4",
-					GeneratedReportId = null
-				}
-			};
-
-			_reportRequestCallbacks.AddRange(data);
-
-			_requestReportProcessor = new RequestReportProcessor(_region, null, _marketplaceWebServiceClientMock.Object, _loggerMock.Object, _easyMwsOptions);
-
-
-			// Act
-			var listPendingReports = _requestReportProcessor.GetAllPendingReportFromQueue(_reportRequestCallbackServiceMock.Object);
-
-			// Assert
-			Assert.IsEmpty(listPendingReports);
-
-		}
+		
 
 		[Test]
 		public void GetReportProcessingStatusesFromAmazon_WithMultiplePendingReports_SubmitsAmazonRequest()
@@ -542,7 +440,7 @@ namespace EasyMWS.Tests.Processors
 				new ReportRequestEntry
 				{
 					AmazonRegion = AmazonRegion.Europe,
-					Id = 2,
+					Id = 1,
 					RequestReportId = "Report1",
 					GeneratedReportId = null,
 					ReportRequestData = serializedReportRequestData
@@ -550,7 +448,7 @@ namespace EasyMWS.Tests.Processors
 				new ReportRequestEntry
 				{
 					AmazonRegion = AmazonRegion.Europe,
-					Id = 3,
+					Id = 2,
 					RequestReportId = "Report2",
 					GeneratedReportId = null,
 					ReportRequestData = serializedReportRequestData
@@ -558,7 +456,7 @@ namespace EasyMWS.Tests.Processors
 				new ReportRequestEntry
 				{
 					AmazonRegion = AmazonRegion.Europe,
-					Id = 4,
+					Id = 3,
 					RequestReportId = "Report3",
 					GeneratedReportId = null,
 					ReportRequestData = serializedReportRequestData
@@ -566,7 +464,7 @@ namespace EasyMWS.Tests.Processors
 				new ReportRequestEntry
 				{
 					AmazonRegion = AmazonRegion.NorthAmerica,
-					Id = 5,
+					Id = 4,
 					RequestReportId = "Report4",
 					GeneratedReportId = null,
 					ReportRequestData = serializedReportRequestData
@@ -575,7 +473,7 @@ namespace EasyMWS.Tests.Processors
 				new ReportRequestEntry
 				{
 					AmazonRegion = AmazonRegion.NorthAmerica,
-					Id = 6,
+					Id = 5,
 					RequestReportId = "Report5",
 					GeneratedReportId = null,
 					ReportRequestData = serializedReportRequestData
@@ -584,7 +482,7 @@ namespace EasyMWS.Tests.Processors
 				new ReportRequestEntry
 				{
 					AmazonRegion = AmazonRegion.NorthAmerica,
-					Id = 7,
+					Id = 6,
 					RequestReportId = "Report6",
 					GeneratedReportId = null,
 					ReportRequestData = serializedReportRequestData
@@ -606,19 +504,19 @@ namespace EasyMWS.Tests.Processors
 			_requestReportProcessor.QueueReportsAccordingToProcessingStatus(_reportRequestCallbackServiceMock.Object, dataResult);
 
 			Assert.AreEqual("GeneratedId1", _reportRequestCallbacks.First(x => x.RequestReportId == "Report1").GeneratedReportId);
-			Assert.AreEqual(0, _reportRequestCallbacks.First(x => x.RequestReportId == "Report1").RequestRetryCount);
+			Assert.AreEqual(0, _reportRequestCallbacks.First(x => x.RequestReportId == "Report1").ReportProcessRetryCount);
 			Assert.IsNull(_reportRequestCallbacks.First(x => x.RequestReportId == "Report2").GeneratedReportId);
 			Assert.IsNull(_reportRequestCallbacks.First(x => x.RequestReportId == "Report3").GeneratedReportId);
-			Assert.AreEqual(0, _reportRequestCallbacks.First(x => x.RequestReportId == "Report3").RequestRetryCount);
+			Assert.AreEqual(0, _reportRequestCallbacks.First(x => x.RequestReportId == "Report3").ReportProcessRetryCount);
 			Assert.IsNull(_reportRequestCallbacks.First(x => x.RequestReportId == "Report4").GeneratedReportId);
-			Assert.AreEqual(0, _reportRequestCallbacks.First(x => x.RequestReportId == "Report4").RequestRetryCount);
+			Assert.AreEqual(0, _reportRequestCallbacks.First(x => x.RequestReportId == "Report4").ReportProcessRetryCount);
+			Assert.IsNull(_reportRequestCallbacks.First(x => x.Id == 5).GeneratedReportId);
+			Assert.IsNull(_reportRequestCallbacks.First(x => x.Id == 5).RequestReportId);
+			Assert.AreEqual(1, _reportRequestCallbacks.First(x => x.Id == 5).ReportProcessRetryCount);
 			Assert.IsNull(_reportRequestCallbacks.First(x => x.Id == 6).GeneratedReportId);
 			Assert.IsNull(_reportRequestCallbacks.First(x => x.Id == 6).RequestReportId);
-			Assert.AreEqual(1, _reportRequestCallbacks.First(x => x.Id == 6).RequestRetryCount);
-			Assert.IsNull(_reportRequestCallbacks.First(x => x.Id == 7).GeneratedReportId);
-			Assert.IsNull(_reportRequestCallbacks.First(x => x.Id == 7).RequestReportId);
-			Assert.AreEqual(1, _reportRequestCallbacks.First(x => x.Id == 7).RequestRetryCount);
-			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestEntry>()), Times.Exactly(5));
+			Assert.AreEqual(1, _reportRequestCallbacks.First(x => x.Id == 6).ReportProcessRetryCount);
+			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestEntry>()), Times.Exactly(3));
 			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
 		}
 
@@ -638,113 +536,12 @@ namespace EasyMWS.Tests.Processors
 			_requestReportProcessor.QueueReportsAccordingToProcessingStatus(_reportRequestCallbackServiceMock.Object, data);
 
 			Assert.IsNull(_reportRequestCallbacks.First().RequestReportId);
-			Assert.IsTrue(_reportRequestCallbacks.First().RequestRetryCount > 0);
+			Assert.IsTrue(_reportRequestCallbacks.First().ReportProcessRetryCount > 0);
 			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
 		}
 
 		[Test]
-		public void GetNextFromQueueOfReportsToDownload_ReturnListOfReports_GeneratedIdNotNull_ForGivenRegionAndMerchantId()
-		{
-			// Arrange
-			var merchantId2 = "test merchant id 2";
-			var data = new List<ReportRequestEntry>
-			{
-				new ReportRequestEntry
-				{
-					AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId,
-					Id = 2,
-					RequestReportId = "Report1",
-					GeneratedReportId = null
-				},
-				new ReportRequestEntry
-				{
-					AmazonRegion = AmazonRegion.Europe, MerchantId = merchantId2,
-					Id = 3,
-					RequestReportId = "Report2",
-					GeneratedReportId = "GeneratedIdTest2"
-				},
-				new ReportRequestEntry
-				{
-					AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId,
-					Id = 4,
-					RequestReportId = "Report2",
-					GeneratedReportId = "GeneratedIdTest2"
-				},
-				new ReportRequestEntry
-				{
-					AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId,
-					Id = 5,
-					RequestReportId = "Report3",
-					GeneratedReportId = "GeneratedIdTest3"
-				},
-				new ReportRequestEntry
-				{
-					AmazonRegion = AmazonRegion.NorthAmerica, MerchantId = _merchantId,
-					Id = 6,
-					RequestReportId = "Report4",
-					GeneratedReportId = null
-				}
-			};
-			_reportRequestCallbacks.AddRange(data);
-
-			var result = _requestReportProcessor.GetNextFromQueueOfReportsToDownload(_reportRequestCallbackServiceMock.Object);
-
-			Assert.AreEqual(4, result.Id);
-		}
-
-		[Test]
-		public void GetNextFromQueueOfReportsToDownload_CalledWithNullMerchantId_ReturnsNull()
-		{
-			// Arrange
-			var data = new List<ReportRequestEntry>
-			{
-				new ReportRequestEntry
-				{
-					AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId,
-					Id = 2,
-					RequestReportId = "Report1",
-					GeneratedReportId = null
-				},
-				new ReportRequestEntry
-				{
-					AmazonRegion = AmazonRegion.Europe, MerchantId = null,
-					Id = 3,
-					RequestReportId = "Report2",
-					GeneratedReportId = "GeneratedIdTest2"
-				},
-				new ReportRequestEntry
-				{
-					AmazonRegion = AmazonRegion.Europe, MerchantId = null,
-					Id = 4,
-					RequestReportId = "Report2",
-					GeneratedReportId = "GeneratedIdTest2"
-				},
-				new ReportRequestEntry
-				{
-					AmazonRegion = AmazonRegion.Europe, MerchantId = null,
-					Id = 5,
-					RequestReportId = "Report3",
-					GeneratedReportId = "GeneratedIdTest3"
-				},
-				new ReportRequestEntry
-				{
-					AmazonRegion = AmazonRegion.NorthAmerica, MerchantId = null,
-					Id = 6,
-					RequestReportId = "Report4",
-					GeneratedReportId = null
-				}
-			};
-			_reportRequestCallbacks.AddRange(data);
-
-			_requestReportProcessor = new RequestReportProcessor(_region, null, _marketplaceWebServiceClientMock.Object, _loggerMock.Object, _easyMwsOptions);
-
-			var result = _requestReportProcessor.GetNextFromQueueOfReportsToDownload(_reportRequestCallbackServiceMock.Object);
-
-			Assert.IsNull(result);
-		}
-
-		[Test]
-		public void DownloadGeneratedReportFromAmazon_ShouldDownloadReportFromAmazon_ReturnStream()
+		public void DownloadGeneratedReportFromAmazon_ShouldCallMwsGetReportOnce()
 		{
 			// Arrange
 			var merchantId = "testMerchantId";
@@ -764,53 +561,187 @@ namespace EasyMWS.Tests.Processors
 
 			// Act
 			var testData = _reportRequestCallbacks.Find(x => x.GeneratedReportId == "GeneratedIdTest1");
-			var result = _requestReportProcessor.DownloadGeneratedReportFromAmazon(testData);
+			_requestReportProcessor.DownloadGeneratedReportFromAmazon(_reportRequestCallbackServiceMock.Object, testData);
 
 			// Assert
 			_marketplaceWebServiceClientMock.Verify(x => x.GetReport(It.IsAny<GetReportRequest>()), Times.Once);
-			Assert.IsNotNull(result);
 		}
-		
+
 		[Test]
-		public void MoveToRetryQueue_CalledOnce_IncrementsRequestRetryCountCorrectly()
+		public void DownloadGeneratedReportFromAmazon_WithDownloadSuccessfulAndValidHash_ReportContentSavedInDbAsZip()
 		{
-			Assert.AreEqual(0, _reportRequestCallbacks.First().RequestRetryCount);
+			var expectedReportContent = StreamHelper.CreateMemoryStream("This is some test content. Und die Katze läuft auf der Straße.");
+			var expectedMd5HashValue = MD5ChecksumHelper.ComputeHashForAmazon(expectedReportContent);
 
-			_requestReportProcessor.MoveToRetryQueue(_reportRequestCallbackServiceMock.Object, _reportRequestCallbacks.First());
+			_marketplaceWebServiceClientMock.Setup(mws => mws.GetReport(It.IsAny<GetReportRequest>()))
+				.Callback<GetReportRequest>((req) => { expectedReportContent.CopyTo(req.Report); })
+				.Returns(new GetReportResponse { GetReportResult = new GetReportResult { ContentMD5 = expectedMd5HashValue } });
 
-			Assert.AreEqual(1, _reportRequestCallbacks.First().RequestRetryCount);
-			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
+			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			{
+				reportRequestEntryBeingUpdated = entry;
+			}));
+
+			_requestReportProcessor.DownloadGeneratedReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+				new ReportRequestEntry
+				{
+					LastAmazonRequestDate = DateTime.MinValue,
+					ReportType = "testReportType",
+					Details = null
+				});
+
+			Assert.NotNull(reportRequestEntryBeingUpdated.Details);
+
+			expectedReportContent.Position = 0;
+			using (var expectedReportReader = new StreamReader(expectedReportContent))
+			using (var actualReportReader = new StreamReader(ExtractArchivedSingleFileToStream(reportRequestEntryBeingUpdated.Details.ReportContent)))
+			{
+				Assert.AreEqual(expectedReportReader.ReadToEnd(), actualReportReader.ReadToEnd());
+			}
+
+			Assert.AreEqual(0, reportRequestEntryBeingUpdated.ReportRequestRetryCount);
+			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastAmazonRequestDate.Day);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
 		}
 
 		[Test]
-		public void MoveToRetryQueue_CalledMultipleTimes_IncrementsRequestRetryCountCorrectly()
+		public void DownloadGeneratedReportFromAmazon_WithDownloadSuccessfulAndInvalidHash_RetryCountIncremented()
 		{
-			Assert.AreEqual(0, _reportRequestCallbacks.First().RequestRetryCount);
+			var expectedReportContent = StreamHelper.CreateMemoryStream("This is some test content. Und die Katze läuft auf der Straße.");
+			var nonMatchingMd5HashValue = $"{MD5ChecksumHelper.ComputeHashForAmazon(expectedReportContent)} non_matching_seq" ;
 
-			_requestReportProcessor.MoveToRetryQueue(_reportRequestCallbackServiceMock.Object, _reportRequestCallbacks.First());
-			_requestReportProcessor.MoveToRetryQueue(_reportRequestCallbackServiceMock.Object, _reportRequestCallbacks.First());
-			_requestReportProcessor.MoveToRetryQueue(_reportRequestCallbackServiceMock.Object, _reportRequestCallbacks.First());
+			_marketplaceWebServiceClientMock.Setup(mws => mws.GetReport(It.IsAny<GetReportRequest>()))
+				.Callback<GetReportRequest>((req) => { expectedReportContent.CopyTo(req.Report); })
+				.Returns(new GetReportResponse { GetReportResult = new GetReportResult { ContentMD5 = nonMatchingMd5HashValue } });
 
-			Assert.AreEqual(3, _reportRequestCallbacks.First().RequestRetryCount);
-			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestEntry>()), Times.Exactly(3));
+			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
+			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			{
+				reportRequestEntryBeingUpdated = entry;
+			}));
+
+			_requestReportProcessor.DownloadGeneratedReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+				new ReportRequestEntry
+				{
+					LastAmazonRequestDate = DateTime.MinValue,
+					ReportType = "testReportType",
+					Details = null
+				});
+
+			Assert.IsNull(reportRequestEntryBeingUpdated.Details);
+			Assert.AreEqual(1, reportRequestEntryBeingUpdated.ReportDownloadRetryCount);
+			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastAmazonRequestDate.Day);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+		}
+
+		[TestCase("AccessToReportDenied")]
+		[TestCase("InvalidReportId")]
+		[TestCase("InvalidReportType")]
+		[TestCase("InvalidRequest")]
+		[TestCase("ReportNoLongerAvailable")]
+		public void DownloadGeneratedReportFromAmazon_WithAmazonReturningFatalExceptionResponse_EntryIsDeletedFromDb(string fatalErrorCode)
+		{
+			_marketplaceWebServiceClientMock.Setup(mws => mws.GetReport(It.IsAny<GetReportRequest>()))
+				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, fatalErrorCode, "errorType", "123", "xml", new ResponseHeaderMetadata()));
+
+			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
+			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			{
+				reportRequestEntryBeingUpdated = entry;
+			}));
+
+			_requestReportProcessor.DownloadGeneratedReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+				new ReportRequestEntry
+				{
+					LastAmazonRequestDate = DateTime.MinValue,
+					ReportType = "testReportType",
+					Details = null
+				});
+
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+		}
+
+		[TestCase("ReportNotReady")]
+		[TestCase("InvalidScheduleFrequency")]
+		[TestCase("SomeUnhandledNewErrorCode")]
+		public void DownloadGeneratedReportFromAmazon_WithAmazonReturningNonFatalExceptionResponse_RetryCountIncremented(string nonFatalErrorCode)
+		{
+			_marketplaceWebServiceClientMock.Setup(mws => mws.GetReport(It.IsAny<GetReportRequest>()))
+				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, nonFatalErrorCode, "errorType", "123", "xml", new ResponseHeaderMetadata()));
+
+			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
+			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			{
+				reportRequestEntryBeingUpdated = entry;
+			}));
+
+			_requestReportProcessor.DownloadGeneratedReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+				new ReportRequestEntry
+				{
+					LastAmazonRequestDate = DateTime.MinValue,
+					ReportType = "testReportType",
+					Details = null
+				});
+
+			Assert.IsNull(reportRequestEntryBeingUpdated.Details);
+			Assert.AreEqual(1, reportRequestEntryBeingUpdated.ReportDownloadRetryCount);
+			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastAmazonRequestDate.Day);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
 		}
 
 		[Test]
-		public void Poll_DeletesReportRequests_WithRetryCountAboveMaxRetryCount()
+		public void DownloadGeneratedReportFromAmazon_WithArbitraryExceptionThrownWhenCallingAmazon_RetryCountIncremented()
+		{
+			_marketplaceWebServiceClientMock.Setup(mws => mws.GetReport(It.IsAny<GetReportRequest>()))
+				.Throws(new Exception("Random exception thrown during download attempt"));
+
+			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
+			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			{
+				reportRequestEntryBeingUpdated = entry;
+			}));
+
+			_requestReportProcessor.DownloadGeneratedReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+				new ReportRequestEntry
+				{
+					LastAmazonRequestDate = DateTime.MinValue,
+					ReportType = "testReportType",
+					Details = null
+				});
+
+			Assert.IsNull(reportRequestEntryBeingUpdated.Details);
+			Assert.AreEqual(1, reportRequestEntryBeingUpdated.ReportDownloadRetryCount);
+			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastAmazonRequestDate.Day);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+		}
+
+		[Test]
+		public void CleanupReportRequests_DeletesReportRequests_WithRetryCountAboveMaxRetryCount()
 		{
 			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
 			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
 
 			var testReportRequestCallbacks = new List<ReportRequestEntry>
 			{
-				new ReportRequestEntry {Id = 1, RequestRetryCount = 0, ReportRequestData = serializedReportRequestData, DateCreated = DateTime.UtcNow.AddDays(-2), AmazonRegion = _region, MerchantId = _merchantId },
-				new ReportRequestEntry {Id = 2, RequestRetryCount = 1, ReportRequestData = serializedReportRequestData, DateCreated = DateTime.UtcNow.AddDays(-1).AddHours(-1), AmazonRegion = _region, MerchantId = _merchantId },
-				new ReportRequestEntry {Id = 3, RequestRetryCount = 2, ReportRequestData = serializedReportRequestData, DateCreated = DateTime.UtcNow.AddDays(-1).AddHours(1),  AmazonRegion = _region, MerchantId = _merchantId },
-				new ReportRequestEntry {Id = 4, RequestRetryCount = 3, ReportRequestData = serializedReportRequestData, DateCreated = DateTime.UtcNow.AddHours(-6), AmazonRegion = _region, MerchantId = _merchantId },
-				new ReportRequestEntry {Id = 5, RequestRetryCount = 4, ReportRequestData = serializedReportRequestData, DateCreated = DateTime.UtcNow.AddHours(-6), AmazonRegion = _region, MerchantId = _merchantId },
-				new ReportRequestEntry {Id = 6, RequestRetryCount = 5, ReportRequestData = serializedReportRequestData, DateCreated = DateTime.UtcNow.AddHours(-6), AmazonRegion = _region, MerchantId = _merchantId },
-				new ReportRequestEntry {Id = 7, RequestRetryCount = 5, ReportRequestData = serializedReportRequestData, AmazonRegion = AmazonRegion.Brazil, MerchantId = _merchantId },
-				new ReportRequestEntry {Id = 8, RequestRetryCount = 5, ReportRequestData = serializedReportRequestData, AmazonRegion = _region, MerchantId = "someDifferentMerchantId" }
+				new ReportRequestEntry {Id = 1, ReportRequestRetryCount = 0, ReportRequestData = serializedReportRequestData, DateCreated = DateTime.UtcNow.AddDays(-2), AmazonRegion = _region, MerchantId = _merchantId },
+				new ReportRequestEntry {Id = 2, ReportRequestRetryCount = 1, ReportRequestData = serializedReportRequestData, DateCreated = DateTime.UtcNow.AddDays(-1).AddHours(-1), AmazonRegion = _region, MerchantId = _merchantId },
+				new ReportRequestEntry {Id = 3, ReportRequestRetryCount = 2, ReportRequestData = serializedReportRequestData, DateCreated = DateTime.UtcNow.AddDays(-1).AddHours(1),  AmazonRegion = _region, MerchantId = _merchantId },
+				new ReportRequestEntry {Id = 4, ReportRequestRetryCount = 3, ReportRequestData = serializedReportRequestData, DateCreated = DateTime.UtcNow.AddHours(-6), AmazonRegion = _region, MerchantId = _merchantId },
+				new ReportRequestEntry {Id = 5, ReportRequestRetryCount = 4, ReportRequestData = serializedReportRequestData, DateCreated = DateTime.UtcNow.AddHours(-6), AmazonRegion = _region, MerchantId = _merchantId },
+				new ReportRequestEntry {Id = 6, ReportRequestRetryCount = 5, ReportRequestData = serializedReportRequestData, DateCreated = DateTime.UtcNow.AddHours(-6), AmazonRegion = _region, MerchantId = _merchantId },
+				new ReportRequestEntry {Id = 7, ReportRequestRetryCount = 5, ReportRequestData = serializedReportRequestData, AmazonRegion = AmazonRegion.Brazil, MerchantId = _merchantId },
+				new ReportRequestEntry {Id = 8, ReportRequestRetryCount = 5, ReportRequestData = serializedReportRequestData, AmazonRegion = _region, MerchantId = "someDifferentMerchantId" }
 			}.AsQueryable();
 			_reportRequestCallbackServiceMock.Setup(x => x.GetAll()).Returns(testReportRequestCallbacks);
 
@@ -818,6 +749,228 @@ namespace EasyMWS.Tests.Processors
 
 			// Id=6 deleted - ReportRequestMaxRetryCount. Id=1,2 deleted ReportDownloadRequestEntryExpirationPeriod=1day exceeded.
 			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Exactly(3));
+		}
+
+		[TestCase(0, 0, 0, 0, 0)]
+		[TestCase(1, 0, 0, 0, 0)]
+		[TestCase(4, 0, 0, 0, 0)]
+		[TestCase(5, 0, 0, 0, 1)]
+		[TestCase(0, 0, 0, 0, 0)]
+		[TestCase(0, 1, 0, 0, 0)]
+		[TestCase(0, 4, 0, 0, 0)]
+		[TestCase(0, 5, 0, 0, 1)]
+		[TestCase(0, 0, 0, 0, 0)]
+		[TestCase(0, 0, 1, 0, 0)]
+		[TestCase(0, 0, 5, 0, 0)]
+		[TestCase(0, 0, 6, 0, 1)]
+		[TestCase(0, 0, 0, 0, 0)]
+		[TestCase(0, 0, 0, 1, 0)]
+		[TestCase(0, 0, 0, 3, 0)]
+		[TestCase(0, 0, 0, 4, 1)]
+		public void CleanupReportRequests_WithOneGivenEntryToDelete_DeletesOnlyTheCorrectEntry(int requestRetryCount, int downloadRetryCount, int callbackRetryCount, int processRetryCount, int timesToDelete)
+		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var data = JsonConvert.SerializeObject(propertiesContainer);
+			var firstEntryToDelete = new ReportRequestEntry
+			{
+				Id = 1, ReportRequestData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
+				ReportDownloadRetryCount = downloadRetryCount,
+				ReportProcessRetryCount = processRetryCount,
+				InvokeCallbackRetryCount = callbackRetryCount,
+				ReportRequestRetryCount = requestRetryCount
+			};
+			var entryToLeaveIntact = new ReportRequestEntry
+			{
+				Id = 2,
+				ReportRequestData = data,
+				AmazonRegion = _region,
+				MerchantId = _merchantId,
+				ReportDownloadRetryCount = 0,
+				ReportProcessRetryCount = 0,
+				InvokeCallbackRetryCount = 0,
+				ReportRequestRetryCount = 0,
+				DateCreated = DateTime.UtcNow
+			};
+			var entriesList = new List<ReportRequestEntry> { firstEntryToDelete, entryToLeaveIntact };
+			var entriesQueryable = entriesList.AsQueryable();
+			_reportRequestCallbackServiceMock.Setup(x => x.GetAll()).Returns(entriesQueryable);
+			var entryBeingDeleted = (ReportRequestEntry)null;
+			_reportRequestCallbackServiceMock.Setup(x => x.Delete(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(
+				e => { entryBeingDeleted = e; });
+			
+
+			_requestReportProcessor.CleanupReportRequests(_reportRequestCallbackServiceMock.Object);
+
+			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Exactly(timesToDelete));
+			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+			if (timesToDelete > 0)
+			{
+				Assert.NotNull(entryBeingDeleted);
+				Assert.AreEqual(firstEntryToDelete.Id, entryBeingDeleted.Id);
+			}
+		}
+
+		[TestCase(false, false, false, false, false)]
+		[TestCase(true, true, true, true, true)]
+		[TestCase(true, true, false, false, false)]
+		[TestCase(true, false, true, false, false)]
+		[TestCase(true, false, false, true, false)]
+		[TestCase(true, false, false, false, true)]
+		[TestCase(false, true, true, false, false)]
+		[TestCase(false, true, false, true, false)]
+		[TestCase(false, true, false, false, true)]
+		[TestCase(false, false, true, true, false)]
+		[TestCase(false, false, true, false, true)]
+		[TestCase(false, false, false, true, true)]
+		[TestCase(true, true, true, false, false)]
+		[TestCase(true, true, false, true, false)]
+		[TestCase(true, true, false, false, true)]
+		[TestCase(true, false, true, true, false)]
+		[TestCase(true, false, true, false, true)]
+		[TestCase(true, false, false, true, true)]
+		[TestCase(false, true, true, true, false)]
+		[TestCase(false, true, true, false, true)]
+		[TestCase(false, false, true, true, true)]
+		[TestCase(true, true, true, true, false)]
+		[TestCase(true, true, true, false, true)]
+		[TestCase(true, true, false, true, true)]
+		[TestCase(true, false, true, true, true)]
+		[TestCase(false, true, true, true, true)]
+		public void CleanupReportRequests_WithPotentiallyMultiplesEntriesToDelete_DeletesOnlyTheCorrectEntries(
+			bool hasEntryWithRequestRetryCountExceeded,
+			bool hasEntryWithDownloadRetryCountExceeded,
+			bool hasEntryWithCallbackRetryCountExceeded,
+			bool hasEntryWithProcessRetryCountExceeded,
+			bool hasEntryWithExpirationPeriodExceeded)
+		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var data = JsonConvert.SerializeObject(propertiesContainer);
+			var entryToLeaveIntact = new ReportRequestEntry
+			{
+				Id = 1,
+				ReportRequestData = data,
+				AmazonRegion = _region,
+				MerchantId = _merchantId,
+				ReportDownloadRetryCount = 0,
+				ReportProcessRetryCount = 0,
+				InvokeCallbackRetryCount = 0,
+				ReportRequestRetryCount = 0,
+				DateCreated = DateTime.UtcNow
+			};
+			var entryWithRequestRetryCountExceeded = new ReportRequestEntry { Id = 2, ReportRequestData = data, AmazonRegion = _region, MerchantId = _merchantId,
+				DateCreated = DateTime.UtcNow, ReportDownloadRetryCount = 0, ReportProcessRetryCount = 0, InvokeCallbackRetryCount = 0, ReportRequestRetryCount = 10 };
+			var entryWithDownloadRetryCountExceeded = new ReportRequestEntry { Id = 3, ReportRequestData = data, AmazonRegion = _region, MerchantId = _merchantId,
+				DateCreated = DateTime.UtcNow, ReportDownloadRetryCount = 10, ReportProcessRetryCount = 0, InvokeCallbackRetryCount = 0, ReportRequestRetryCount = 0 };
+			var entryWithCallbackRetryCountExceeded = new ReportRequestEntry { Id = 4, ReportRequestData = data, AmazonRegion = _region, MerchantId = _merchantId,
+				DateCreated = DateTime.UtcNow, ReportDownloadRetryCount = 0, ReportProcessRetryCount = 0, InvokeCallbackRetryCount = 10, ReportRequestRetryCount = 0 };
+			var entryWithProcessRetryCountExceeded = new ReportRequestEntry { Id = 5, ReportRequestData = data, AmazonRegion = _region, MerchantId = _merchantId,
+				DateCreated = DateTime.UtcNow, ReportDownloadRetryCount = 0, ReportProcessRetryCount = 10, InvokeCallbackRetryCount = 0, ReportRequestRetryCount = 0 };
+			var entryWithExpirationPeriodExceeded = new ReportRequestEntry { Id = 6, ReportRequestData = data, AmazonRegion = _region, MerchantId = _merchantId,
+				DateCreated = DateTime.UtcNow.AddDays(-10), ReportDownloadRetryCount = 0, ReportProcessRetryCount = 0, InvokeCallbackRetryCount = 0, ReportRequestRetryCount = 0 };
+
+			var expectedNumberOfEntitiesToDelete = 0;
+			var entriesList = new List<ReportRequestEntry> { entryToLeaveIntact };
+			if (hasEntryWithRequestRetryCountExceeded)
+			{
+				entriesList.Add(entryWithRequestRetryCountExceeded);
+				expectedNumberOfEntitiesToDelete++;
+			}
+			if (hasEntryWithDownloadRetryCountExceeded)
+			{
+				entriesList.Add(entryWithDownloadRetryCountExceeded);
+				expectedNumberOfEntitiesToDelete++;
+			}
+			if (hasEntryWithCallbackRetryCountExceeded)
+			{
+				entriesList.Add(entryWithCallbackRetryCountExceeded);
+				expectedNumberOfEntitiesToDelete++;
+			}
+			if (hasEntryWithProcessRetryCountExceeded)
+			{
+				entriesList.Add(entryWithProcessRetryCountExceeded);
+				expectedNumberOfEntitiesToDelete++;
+			}
+			if (hasEntryWithExpirationPeriodExceeded)
+			{
+				entriesList.Add(entryWithExpirationPeriodExceeded);
+				expectedNumberOfEntitiesToDelete++;
+			}
+			var entriesQueryable = entriesList.AsQueryable();
+			_reportRequestCallbackServiceMock.Setup(x => x.GetAll()).Returns(entriesQueryable);
+			var listOfDeletedEntriesIds = new List<int>();
+			_reportRequestCallbackServiceMock.Setup(x => x.Delete(It.IsAny<ReportRequestEntry>()))
+				.Callback<ReportRequestEntry>(entry => { listOfDeletedEntriesIds.Add(entry.Id); });
+
+
+			_requestReportProcessor.CleanupReportRequests(_reportRequestCallbackServiceMock.Object);
+
+			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Exactly(expectedNumberOfEntitiesToDelete));
+			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+			CollectionAssert.DoesNotContain(listOfDeletedEntriesIds, entryToLeaveIntact.Id);
+			if (hasEntryWithRequestRetryCountExceeded) { CollectionAssert.Contains(listOfDeletedEntriesIds, entryWithRequestRetryCountExceeded.Id); }
+			else { CollectionAssert.DoesNotContain(listOfDeletedEntriesIds, entryWithRequestRetryCountExceeded.Id); }
+			if (hasEntryWithDownloadRetryCountExceeded) { CollectionAssert.Contains(listOfDeletedEntriesIds, entryWithDownloadRetryCountExceeded.Id); }
+			else { CollectionAssert.DoesNotContain(listOfDeletedEntriesIds, entryWithDownloadRetryCountExceeded.Id); }
+			if (hasEntryWithCallbackRetryCountExceeded) { CollectionAssert.Contains(listOfDeletedEntriesIds, entryWithCallbackRetryCountExceeded.Id); }
+			else { CollectionAssert.DoesNotContain(listOfDeletedEntriesIds, entryWithCallbackRetryCountExceeded.Id); }
+			if (hasEntryWithProcessRetryCountExceeded) { CollectionAssert.Contains(listOfDeletedEntriesIds, entryWithProcessRetryCountExceeded.Id); }
+			else { CollectionAssert.DoesNotContain(listOfDeletedEntriesIds, entryWithProcessRetryCountExceeded.Id); }
+			if (hasEntryWithExpirationPeriodExceeded) { CollectionAssert.Contains(listOfDeletedEntriesIds, entryWithExpirationPeriodExceeded.Id); }
+			else { CollectionAssert.DoesNotContain(listOfDeletedEntriesIds, entryWithExpirationPeriodExceeded.Id); }
+		}
+
+		[Test]
+		public void CleanupReportRequests_WithMultipleReasonsToDeleteOneEntry_OnlyCallsDeleteOneSingleTime()
+		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var data = JsonConvert.SerializeObject(propertiesContainer);
+			var entryToDelete = new ReportRequestEntry
+			{
+				Id = 1,
+				ReportRequestData = data,
+				AmazonRegion = _region,
+				MerchantId = _merchantId,
+				DateCreated = DateTime.UtcNow.AddDays(-10),
+				ReportDownloadRetryCount = 10,
+				ReportProcessRetryCount = 10,
+				InvokeCallbackRetryCount = 10,
+				ReportRequestRetryCount = 10
+			};
+			var entryToLeaveIntact = new ReportRequestEntry
+			{
+				Id = 2,
+				ReportRequestData = data,
+				AmazonRegion = _region,
+				MerchantId = _merchantId,
+				ReportDownloadRetryCount = 0,
+				ReportProcessRetryCount = 0,
+				InvokeCallbackRetryCount = 0,
+				ReportRequestRetryCount = 0,
+				DateCreated = DateTime.UtcNow
+			};
+			var entriesList = new List<ReportRequestEntry> { entryToDelete, entryToLeaveIntact };
+			var entriesQueryable = entriesList.AsQueryable();
+			_reportRequestCallbackServiceMock.Setup(x => x.GetAll()).Returns(entriesQueryable);
+
+			_requestReportProcessor.CleanupReportRequests(_reportRequestCallbackServiceMock.Object);
+
+			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+		}
+
+		private static MemoryStream ExtractArchivedSingleFileToStream(byte[] zipArchive)
+		{
+			if (zipArchive == null) return null;
+
+			using (var archiveStream = new MemoryStream(zipArchive))
+			using (var zip = new ZipArchive(archiveStream, ZipArchiveMode.Read))
+			{
+				var file = zip.Entries.FirstOrDefault();
+				var resultStream = new MemoryStream();
+				file?.Open()?.CopyTo(resultStream);
+				resultStream.Position = 0;
+				return resultStream;
+			}
 		}
 	}
 }
