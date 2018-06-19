@@ -62,7 +62,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void DownloadNextReportInQueueFromAmazon(IReportRequestCallbackService reportRequestService)
 		{
-			var reportToDownload = GetNextFromQueueOfReportsToDownload(reportRequestService);
+			var reportToDownload = reportRequestService.GetNextFromQueueOfReportsToDownload(_options, _merchantId, _region);
 			if (reportToDownload == null) return;
 
 			_requestReportProcessor.DownloadGeneratedReportFromAmazon(reportRequestService, reportToDownload);
@@ -70,25 +70,23 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		private void PerformCallbackForPreviouslyDownloadedReports(IReportRequestCallbackService reportRequestService)
 		{
-			var reportsReadyForCallback = GetAllFromQueueOfReportsReadyForCallback(reportRequestService);
+			var reportsReadyForCallback = reportRequestService.GetAllFromQueueOfReportsReadyForCallback(_options, _merchantId, _region);
 
 			foreach (var reportEntry in reportsReadyForCallback)
 			{
 				try
 				{
 					_logger.Info($"Attempting to perform method callback for the next downloaded report in queue : {reportEntry.RegionAndTypeComputed}.");
-
 					var callback = new Callback(reportEntry.TypeName, reportEntry.MethodName, reportEntry.Data, reportEntry.DataTypeName);
 					var unzippedReport = ZipHelper.ExtractArchivedSingleFileToStream(reportEntry.Details?.ReportContent);
-
 					_callbackActivator.CallMethod(callback, unzippedReport);
 					reportRequestService.Delete(reportEntry);
 				}
 				catch (Exception e)
 				{
+					_logger.Error($"Method callback failed for {reportEntry.RegionAndTypeComputed}. Current retry count is :{reportEntry.InvokeCallbackRetryCount}. {e.Message}", e);
 					reportEntry.InvokeCallbackRetryCount++;
 					reportRequestService.Update(reportEntry);
-					_logger.Error(e.Message, e);
 				}
 			}
 
@@ -150,7 +148,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void RequestNextReportInQueueFromAmazon(IReportRequestCallbackService reportRequestService)
 		{
-			var reportRequest = GetNextFromQueueOfReportsToRequest(reportRequestService);
+			var reportRequest = reportRequestService.GetNextFromQueueOfReportsToRequest(_options, _merchantId, _region);
 
 			if (reportRequest == null) return;
 
@@ -159,7 +157,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void RequestReportStatusesFromAmazon(IReportRequestCallbackService reportRequestService)
 		{
-			var pendingReportsRequestIds = GetAllPendingReportFromQueue(reportRequestService).ToList();
+			var pendingReportsRequestIds = reportRequestService.GetAllPendingReportFromQueue(_merchantId, _region).ToList();
 
 			if (!pendingReportsRequestIds.Any()) return;
 
@@ -171,20 +169,5 @@ namespace MountainWarehouse.EasyMWS.Processors
 				_requestReportProcessor.QueueReportsAccordingToProcessingStatus(reportRequestService, reportRequestStatuses);
 			}
 		}
-
-		
-
-
-		private ReportRequestEntry GetNextFromQueueOfReportsToRequest(IReportRequestCallbackService reportRequestService)
-			=> string.IsNullOrEmpty(_merchantId) ? null : reportRequestService.GetNextFromQueueOfReportsToRequest(_options, _merchantId, _region);
-
-		private ReportRequestEntry GetNextFromQueueOfReportsToDownload(IReportRequestCallbackService reportRequestService)
-			=> string.IsNullOrEmpty(_merchantId) ? null : reportRequestService.GetNextFromQueueOfReportsToDownload(_options, _merchantId, _region);
-
-		private IEnumerable<string> GetAllPendingReportFromQueue(IReportRequestCallbackService reportRequestService)
-			=> string.IsNullOrEmpty(_merchantId) ? new List<string>().AsEnumerable() : reportRequestService.GetAllPendingReportFromQueue(_merchantId, _region);
-
-		private IEnumerable<ReportRequestEntry> GetAllFromQueueOfReportsReadyForCallback(IReportRequestCallbackService reportRequestService)
-			=> string.IsNullOrEmpty(_merchantId) ? null : reportRequestService.GetAllFromQueueOfReportsReadyForCallback(_options, _merchantId, _region);
 	}
 }

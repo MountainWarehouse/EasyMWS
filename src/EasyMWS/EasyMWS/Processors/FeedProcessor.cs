@@ -57,11 +57,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 			PerformCallbacksForPreviouslySubmittedFeeds(feedSubmissionService);
 		}
 
-		private bool IsValidFeedSubmissionReportHash((FeedSubmissionEntry feedSubmissionCallback, MemoryStream reportContent, string contentMd5) reportInfo)
-		{
-			return MD5ChecksumHelper.IsChecksumCorrect(reportInfo.reportContent, reportInfo.contentMd5);
-		}
-
 		private void PerformCallbacksForPreviouslySubmittedFeeds(IFeedSubmissionCallbackService feedSubmissionService)
 		{
 			var previouslySubmittedFeeds = feedSubmissionService.GetAll()
@@ -71,21 +66,17 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				try
 				{
-					using (var feedSubmissionReport = ZipHelper.ExtractArchivedSingleFileToStream(feedSubmissionEntry.Details.FeedSubmissionReport))
-					{
-						ExecuteMethodCallback(feedSubmissionEntry, feedSubmissionReport);
-						feedSubmissionService.Delete(feedSubmissionEntry);
-					}
-				}
-				catch (SqlException e)
-				{
-					_logger.Error(e.Message, e);
+					_logger.Info($"Attempting to perform method callback for the next submitted feed in queue : {feedSubmissionEntry.RegionAndTypeComputed}.");
+					var callback = new Callback(feedSubmissionEntry.TypeName, feedSubmissionEntry.MethodName, feedSubmissionEntry.Data, feedSubmissionEntry.DataTypeName);
+					var unzippedFeedSubmissionReport = ZipHelper.ExtractArchivedSingleFileToStream(feedSubmissionEntry.Details.FeedSubmissionReport);
+					_callbackActivator.CallMethod(callback, unzippedFeedSubmissionReport);
+					feedSubmissionService.Delete(feedSubmissionEntry);
 				}
 				catch (Exception e)
 				{
+					_logger.Error($"Method callback failed for {feedSubmissionEntry.RegionAndTypeComputed}. Current retry count is :{feedSubmissionEntry.FeedSubmissionRetryCount}. {e.Message}", e);
 					feedSubmissionEntry.FeedSubmissionRetryCount++;
 					feedSubmissionService.Update(feedSubmissionEntry);
-					_logger.Error($"Method callback failed for {feedSubmissionEntry.RegionAndTypeComputed}. Placing feed submission entry in retry queue. Current retry count is :{feedSubmissionEntry.FeedSubmissionRetryCount}. {e.Message}", e);
 				}
 			}
 
@@ -225,17 +216,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 				_logger.Warn($"Checksum verification failed for feed submission report for {nextFeedWithProcessingComplete.RegionAndTypeComputed}");
 				_feedSubmissionProcessor.MoveToRetryQueue(feedSubmissionService, nextFeedWithProcessingComplete);
 			}
-		}
-
-		public void ExecuteMethodCallback(FeedSubmissionEntry feedSubmission, Stream stream)
-		{
-			_logger.Info(
-				$"Attempting to perform method callback for the next submitted feed in queue : {feedSubmission.RegionAndTypeComputed}.");
-
-			var callback = new Callback(feedSubmission.TypeName, feedSubmission.MethodName,
-				feedSubmission.Data, feedSubmission.DataTypeName);
-
-			_callbackActivator.CallMethod(callback, stream);
 		}
 	}
 }
