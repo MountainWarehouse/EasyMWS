@@ -140,7 +140,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void SubmitNextFeedInQueueToAmazon(IFeedSubmissionCallbackService feedSubmissionService)
 		{
-			var feedSubmission = _feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit(feedSubmissionService);
+			var feedSubmission = feedSubmissionService.GetNextFromQueueOfFeedsToSubmit(_options, _merchantId, _region);
 
 			if (feedSubmission == null) return;
 		
@@ -170,7 +170,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void RequestFeedSubmissionStatusesFromAmazon(IFeedSubmissionCallbackService feedSubmissionService)
 		{
-			var feedSubmissionIds = _feedSubmissionProcessor.GetIdsForSubmittedFeedsFromQueue(feedSubmissionService).ToList();
+			var feedSubmissionIds = feedSubmissionService.GetIdsForSubmittedFeedsFromQueue(_options, _merchantId, _region).ToList();
 
 			if (!feedSubmissionIds.Any())
 				return;
@@ -185,7 +185,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void RequestNextFeedSubmissionInQueueFromAmazon(IFeedSubmissionCallbackService feedSubmissionService)
 		{
-			var nextFeedWithProcessingComplete = _feedSubmissionProcessor.GetNextFromQueueOfProcessingCompleteFeeds(feedSubmissionService);
+			var nextFeedWithProcessingComplete = feedSubmissionService.GetNextFromQueueOfProcessingCompleteFeeds(_options, _merchantId, _region);
 			if (nextFeedWithProcessingComplete == null) return;
 
 			var processingReportInfo = _feedSubmissionProcessor.GetFeedSubmissionResultFromAmazon(nextFeedWithProcessingComplete);

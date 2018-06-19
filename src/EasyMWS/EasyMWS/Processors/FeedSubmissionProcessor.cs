@@ -32,11 +32,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_marketplaceWebServiceClient = marketplaceWebServiceClient;
 		}
 
-		public FeedSubmissionEntry GetNextFromQueueOfFeedsToSubmit(IFeedSubmissionCallbackService feedSubmissionService) =>
-			string.IsNullOrEmpty(_merchantId) ? null : feedSubmissionService.GetAll()
-				.FirstOrDefault(fscs => fscs.AmazonRegion == _region && fscs.MerchantId == _merchantId
-				&& IsFeedInASubmitFeedQueue(fscs)
-				&& IsFeedReadyForSubmission(fscs));
+		
 
 		public string SubmitFeedToAmazon(FeedSubmissionEntry feedSubmission)
 		{
@@ -121,13 +117,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_logger.Warn($"Moving {feedSubmission.RegionAndTypeComputed} to retry queue. Retry count is now '{feedSubmission.FeedSubmissionRetryCount}'.");
 		}
 
-		public IEnumerable<string> GetIdsForSubmittedFeedsFromQueue(IFeedSubmissionCallbackService feedSubmissionService) =>
-			string.IsNullOrEmpty(_merchantId) ? new List<string>().AsEnumerable() : feedSubmissionService.Where(
-				rrcs => rrcs.AmazonRegion == _region && rrcs.MerchantId == _merchantId
-				        && rrcs.FeedSubmissionId != null
-						&& rrcs.IsProcessingComplete == false
-				).Select(f => f.FeedSubmissionId);
-
 		public List<(string FeedSubmissionId, string FeedProcessingStatus)> RequestFeedSubmissionStatusesFromAmazon(
 			IEnumerable<string> feedSubmissionIdList, string merchant)
 		{
@@ -207,13 +196,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			feedSubmissionService.SaveChanges();
 		}
-
-		public FeedSubmissionEntry GetNextFromQueueOfProcessingCompleteFeeds(IFeedSubmissionCallbackService feedSubmissionService)
-			=> string.IsNullOrEmpty(_merchantId) ? null : feedSubmissionService.FirstOrDefault(
-				ffscs => ffscs.AmazonRegion == _region && ffscs.MerchantId == _merchantId
-				&& ffscs.FeedSubmissionId != null
-				&& ffscs.IsProcessingComplete == true
-				&& IsReadyForRequestingSubmissionReport(ffscs));
 
 		public (MemoryStream processingReport, string md5hash) GetFeedSubmissionResultFromAmazon(FeedSubmissionEntry feedSubmissionEntry)
 		{
@@ -312,33 +294,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 		private bool IsExpirationPeriodExceeded(FeedSubmissionEntry feedSubmissionEntry) =>
 			(DateTime.Compare(feedSubmissionEntry.DateCreated, DateTime.UtcNow.Subtract(_options.FeedSubmissionRequestEntryExpirationPeriod)) < 0);
 
-		private bool IsFeedReadyForSubmission(FeedSubmissionEntry feedSubmission)
-		{
-			var isInRetryQueueAndReadyForRetry = feedSubmission.FeedSubmissionRetryCount > 0
-			        && RetryIntervalHelper.IsRetryPeriodAwaited(feedSubmission.LastSubmitted, 
-					feedSubmission.FeedSubmissionRetryCount, _options.FeedSubmissionRetryInitialDelay, 
-					_options.FeedSubmissionRetryInterval, _options.FeedSubmissionRetryType);
-
-			var isNotInRetryState = feedSubmission.FeedSubmissionRetryCount == 0;
-
-			return isInRetryQueueAndReadyForRetry || isNotInRetryState;
-		}
-
-		private bool IsReadyForRequestingSubmissionReport(FeedSubmissionEntry feedSubmission)
-		{
-			var isInRetryQueueAndReadyForRetry = feedSubmission.FeedSubmissionRetryCount > 0
-			        && RetryIntervalHelper.IsRetryPeriodAwaited(feedSubmission.LastSubmitted,
-				        feedSubmission.FeedSubmissionRetryCount, _options.ReportDownloadRetryInitialDelay,
-				        _options.ReportDownloadRetryInterval, _options.ReportDownloadRetryType);
-
-			var isNotInRetryState = feedSubmission.FeedSubmissionRetryCount == 0;
-
-			return isInRetryQueueAndReadyForRetry || isNotInRetryState;
-		}
-
-		private bool IsFeedInASubmitFeedQueue(FeedSubmissionEntry feedSubmission)
-		{
-			return feedSubmission.FeedSubmissionId == null;
-		}
+		
 	}
 }

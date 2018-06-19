@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using MountainWarehouse.EasyMWS.Data;
+using MountainWarehouse.EasyMWS.Enums;
+using MountainWarehouse.EasyMWS.Model;
 
 namespace MountainWarehouse.EasyMWS.Services
 {
@@ -21,5 +23,14 @@ namespace MountainWarehouse.EasyMWS.Services
 	    FeedSubmissionEntry Last();
 	    FeedSubmissionEntry LastOrDefault();
 	    FeedSubmissionEntry LastOrDefault(Expression<Func<FeedSubmissionEntry, bool>> predicate);
-	}
+
+	    FeedSubmissionEntry GetNextFromQueueOfFeedsToSubmit(EasyMwsOptions options, string merchantId, AmazonRegion region);
+
+	    IEnumerable<string> GetIdsForSubmittedFeedsFromQueue(EasyMwsOptions options, string merchantId, AmazonRegion region);
+
+	    FeedSubmissionEntry GetNextFromQueueOfProcessingCompleteFeeds(EasyMwsOptions options, string merchantId, AmazonRegion region);
+
+
+
+    }
 }
