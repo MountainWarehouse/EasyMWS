@@ -149,92 +149,16 @@ namespace EasyMWS.Tests.ReportProcessors
 		}
 
 		[Test]
-		public void Poll_WithGetNextFeedFromProcessingCompleteQueueReturningNull_NeverCalls_ExecuteCallbackOrMoveToRetryQueue()
+		public void Poll_WithGetNextFeedFromProcessingCompleteQueueReturningNull_NeverCalls_DownloadFeedSubmissionResultFromAmazon()
 		{
 			var testStreamContent = "testStreamContent";
-			var testStream = StreamHelper.CreateMemoryStream(testStreamContent);
 			var notMatchingMd5Sum = "AAAAAAAAAAAAAAAA";
-			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
-			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 
-			_feedSubmissionCallbackServiceMock
-				.Setup(fspm => fspm.GetNextFromQueueOfFeedsToSubmit(It.IsAny<EasyMwsOptions>(), It.IsAny<string>(), It.IsAny<AmazonRegion>()))
-				.Returns(new FeedSubmissionEntry(serializedPropertiesContainer) { LastSubmitted = DateTime.MinValue });
-			_feedSubmissionProcessorMock.Setup(fspm =>
-					fspm.DownloadFeedSubmissionResultFromAmazon(It.IsAny<IFeedSubmissionEntryService>(), It.IsAny<FeedSubmissionEntry>()))
-				.Returns((testStream, notMatchingMd5Sum));
-			_feedSubmissionCallbackServiceMock.Setup(fspm =>
-					fspm.GetNextFromQueueOfProcessingCompleteFeeds(It.IsAny<EasyMwsOptions>(), It.IsAny<string>(), It.IsAny<AmazonRegion>()))
-				.Returns((FeedSubmissionEntry)null);
 
 			_feedProcessor.PollFeeds(_feedSubmissionCallbackServiceMock.Object);
 
 			_callbackActivatorMock.Verify(cam => cam.CallMethod(It.IsAny<Callback>(), It.IsAny<Stream>()), Times.Never);
 			_feedSubmissionProcessorMock.Verify(fspm => fspm.RemoveFromQueue(It.IsAny<IFeedSubmissionEntryService>(), It.IsAny<FeedSubmissionEntry>()), Times.Never);
-			//_feedSubmissionProcessorMock.Verify(fspm => fspm.MoveToRetryQueue(It.IsAny<IFeedSubmissionEntryService>(), It.IsAny<FeedSubmissionEntry>()), Times.Never);
-		}
-
-		[Test]
-		public void SubmitFeedToAmazon_WithSubmitSingleQueuedFeedToAmazonResponseNotMatchingMd5_NeverCalls_ExecuteCallback()
-		{
-			var testStreamContent = "testStreamContent";
-			var testStream = StreamHelper.CreateMemoryStream(testStreamContent);
-			var notMatchingMd5Sum = "AAAAAAAAAAAAAAAA";
-			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
-			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
-
-			_feedSubmissionCallbackServiceMock
-				.Setup(fspm => fspm.GetNextFromQueueOfFeedsToSubmit(It.IsAny<EasyMwsOptions>(), It.IsAny<string>(), It.IsAny<AmazonRegion>()))
-				.Returns(new FeedSubmissionEntry(serializedPropertiesContainer) { LastSubmitted = DateTime.MinValue });
-			_feedSubmissionProcessorMock.Setup(fspm =>
-					fspm.DownloadFeedSubmissionResultFromAmazon(It.IsAny<IFeedSubmissionEntryService>(), It.IsAny<FeedSubmissionEntry>()))
-				.Returns((testStream, notMatchingMd5Sum));
-			_feedSubmissionCallbackServiceMock.Setup(fspm =>
-					fspm.GetNextFromQueueOfProcessingCompleteFeeds(It.IsAny<EasyMwsOptions>(), It.IsAny<string>(), It.IsAny<AmazonRegion>()))
-				.Returns(new FeedSubmissionEntry(serializedPropertiesContainer));
-
-			_feedProcessor.PollFeeds(_feedSubmissionCallbackServiceMock.Object);
-
-			_callbackActivatorMock.Verify(cam => cam.CallMethod(It.IsAny<Callback>(), It.IsAny<Stream>()), Times.Never);
-			_feedSubmissionProcessorMock.Verify(fspm => fspm.RemoveFromQueue(It.IsAny<IFeedSubmissionEntryService>(), It.IsAny<FeedSubmissionEntry>()), Times.Never);
-			//_feedSubmissionProcessorMock.Verify(fspm => fspm.MoveToRetryQueue(It.IsAny<IFeedSubmissionEntryService>(), It.IsAny<FeedSubmissionEntry>()), Times.Once);
-		}
-
-		[Test]
-		public void SubmitFeedToAmazon_WithSubmitSingleQueuedFeedToAmazonResponseMatchingMd5_WithCallbackMethodProvided_CallsOnce_ExecuteCallback()
-		{
-			var testStreamContent = "testStreamContent";    // This is the content for which an MD5 value is computed and used in the test. Do not modify this without the MD5 value.
-			var testStream = StreamHelper.CreateMemoryStream(testStreamContent);
-			var matchingMd5Sum = "rD4TzLgdje+H2K2NattkqQ==";    // This is the MD5 value for testStreamContent="testStreamContent". Do not modify this without the stream content.
-			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
-			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
-
-			_feedSubmissionCallbackServiceMock
-				.Setup(fspm => fspm.GetNextFromQueueOfFeedsToSubmit(It.IsAny<EasyMwsOptions>(), It.IsAny<string>(), It.IsAny<AmazonRegion>()))
-				.Returns(new FeedSubmissionEntry(serializedPropertiesContainer) { LastSubmitted = DateTime.MinValue });
-			_feedSubmissionProcessorMock.Setup(fspm =>
-					fspm.DownloadFeedSubmissionResultFromAmazon(It.IsAny<IFeedSubmissionEntryService>(), It.IsAny<FeedSubmissionEntry>()))
-				.Returns((testStream, matchingMd5Sum));
-			_feedSubmissionCallbackServiceMock.Setup(fspm =>
-					fspm.GetNextFromQueueOfProcessingCompleteFeeds(It.IsAny<EasyMwsOptions>(), It.IsAny<string>(), It.IsAny<AmazonRegion>()))
-				.Returns(new FeedSubmissionEntry(serializedPropertiesContainer) { MethodName = "testCallbackMethodName", Details = new FeedSubmissionDetails() });
-			var submissionEntries = new List<FeedSubmissionEntry> { new FeedSubmissionEntry(serializedPropertiesContainer) { MethodName = "testCallbackMethodName", Details = new FeedSubmissionDetails() } }.AsQueryable();
-			_feedSubmissionCallbackServiceMock.Setup(fspm =>
-					fspm.GetAllFromQueueOfFeedsReadyForCallback(It.IsAny<EasyMwsOptions>(), It.IsAny<string>(), It.IsAny<AmazonRegion>()))
-				.Returns(submissionEntries);
-
-			var testFeedSubmissions = new List<FeedSubmissionEntry>
-			{
-				new FeedSubmissionEntry{AmazonRegion = _amazonRegion, MerchantId = _merchantId, Details = null},
-				new FeedSubmissionEntry{AmazonRegion = _amazonRegion, MerchantId = _merchantId, Details = new FeedSubmissionDetails{FeedSubmissionReport = null}},
-				new FeedSubmissionEntry{AmazonRegion = _amazonRegion, MerchantId = _merchantId, Details = new FeedSubmissionDetails{FeedSubmissionReport = GenerateValidArchive("test content").ToArray()}},
-			};
-			_feedSubmissionCallbackServiceMock.Setup(fscs => fscs.GetAll()).Returns(testFeedSubmissions.AsQueryable());
-
-			_feedProcessor.PollFeeds(_feedSubmissionCallbackServiceMock.Object);
-
-			_callbackActivatorMock.Verify(cam => cam.CallMethod(It.IsAny<Callback>(), It.IsAny<Stream>()), Times.Once);
-			_feedSubmissionCallbackServiceMock.Verify(fspm => fspm.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Once);
 		}
 
 		private MemoryStream GenerateValidArchive(string content)

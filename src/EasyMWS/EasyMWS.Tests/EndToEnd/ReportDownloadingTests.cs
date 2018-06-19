@@ -273,7 +273,7 @@ namespace EasyMWS.Tests.EndToEnd
 
 			_mwsClientMock
 				.Setup(mws => mws.GetReport(It.Is<GetReportRequest>(grr => grr.ReportId == expectedGeneratedReportId && grr.Merchant == _merchantId)))
-				.Callback<GetReportRequest>(request => { request.Report = stream; })
+				.Callback<GetReportRequest>(request => { stream.CopyTo(request.Report); })
 				.Returns(response);
 		}
 

@@ -13,7 +13,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			IEnumerable<string> feedSubmissionIdList, string merchant);
 		void QueueFeedsAccordingToProcessingStatus(IFeedSubmissionEntryService feedSubmissionService,
 			List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses);
-		(MemoryStream processingReport, string md5hash) DownloadFeedSubmissionResultFromAmazon(IFeedSubmissionEntryService feedSubmissionService, FeedSubmissionEntry feedSubmissionEntry);
+		void DownloadFeedSubmissionResultFromAmazon(IFeedSubmissionEntryService feedSubmissionService, FeedSubmissionEntry feedSubmissionEntry);
 		void RemoveFromQueue(IFeedSubmissionEntryService feedSubmissionService, FeedSubmissionEntry entry);
 		void CleanUpFeedSubmissionQueue(IFeedSubmissionEntryService feedSubmissionService);
 	}

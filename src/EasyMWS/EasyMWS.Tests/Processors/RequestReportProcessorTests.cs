@@ -51,9 +51,10 @@ namespace EasyMWS.Tests.Processors
 					AmazonRegion = AmazonRegion.China,
 					Id = 0,
 					RequestReportId = null,
-					GeneratedReportId = null,
+					GeneratedReportId = "generatedReportId",
 					ReportRequestData = "{\"UpdateFrequency\":0,\"Merchant\":null,\"MwsAuthToken\":null,\"Region\":20,\"MarketplaceIdList\":null}",
-					ReportType = "_GET_AFN_INVENTORY_DATA_"
+					ReportType = "_GET_AFN_INVENTORY_DATA_",
+					MerchantId = _merchantId
 				}
 			};
 
@@ -154,7 +155,8 @@ namespace EasyMWS.Tests.Processors
 				{
 					LastAmazonRequestDate = DateTime.MinValue,
 					ReportRequestData = serializedReportRequestData,
-					ReportType = "testReportType"
+					ReportType = "testReportType",
+					MerchantId = _merchantId
 				});
 
 			Assert.AreEqual("testReportRequestId", reportRequestEntryBeingUpdated.RequestReportId);
@@ -183,7 +185,8 @@ namespace EasyMWS.Tests.Processors
 				{
 					LastAmazonRequestDate = DateTime.MinValue,
 					ReportRequestData = serializedReportRequestData,
-					ReportType = "testReportType"
+					ReportType = "testReportType",
+					MerchantId = _merchantId
 				});
 
 			Assert.AreEqual(null, reportRequestEntryBeingUpdated.RequestReportId);
@@ -212,7 +215,8 @@ namespace EasyMWS.Tests.Processors
 				{
 					LastAmazonRequestDate = DateTime.MinValue,
 					ReportRequestData = serializedReportRequestData,
-					ReportType = "testReportType"
+					ReportType = "testReportType",
+					MerchantId = _merchantId
 				});
 
 			Assert.AreEqual(string.Empty, reportRequestEntryBeingUpdated.RequestReportId);
@@ -240,7 +244,8 @@ namespace EasyMWS.Tests.Processors
 				{
 					LastAmazonRequestDate = DateTime.MinValue,
 					ReportRequestData = serializedReportRequestData,
-					ReportType = "testReportType"
+					ReportType = "testReportType",
+					MerchantId = _merchantId
 				});
 
 			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Never);
@@ -270,7 +275,8 @@ namespace EasyMWS.Tests.Processors
 					LastAmazonRequestDate = DateTime.MinValue,
 					ReportRequestData = serializedReportRequestData,
 					ReportType = "testReportType",
-					ReportRequestRetryCount = 1
+					ReportRequestRetryCount = 1,
+					MerchantId = _merchantId
 				});
 
 			Assert.IsNull(reportRequestEntryBeingUpdated.RequestReportId);
@@ -301,7 +307,8 @@ namespace EasyMWS.Tests.Processors
 					LastAmazonRequestDate = DateTime.MinValue,
 					ReportRequestData = serializedReportRequestData,
 					ReportType = "testReportType",
-					ReportRequestRetryCount = 1
+					ReportRequestRetryCount = 1,
+					MerchantId = _merchantId
 				});
 
 			Assert.IsNull(reportRequestEntryBeingUpdated.RequestReportId);
@@ -332,7 +339,8 @@ namespace EasyMWS.Tests.Processors
 					LastAmazonRequestDate = DateTime.MinValue,
 					ReportRequestData = serializedReportRequestData,
 					ReportType = "testReportType",
-					ReportRequestRetryCount = 1
+					ReportRequestRetryCount = 1,
+					MerchantId = _merchantId
 				});
 
 			Assert.IsNull(reportRequestEntryBeingUpdated.RequestReportId);
@@ -524,6 +532,7 @@ namespace EasyMWS.Tests.Processors
 		public void QueueReportsAccordingToProcessingStatus_UpdateReportRequestId()
 		{
 			_reportRequestCallbacks.First().RequestReportId = "Report3";
+			_reportRequestCallbacks.First().GeneratedReportId = null;
 
 			var data = new List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)>
 			{
@@ -554,7 +563,8 @@ namespace EasyMWS.Tests.Processors
 				AmazonRegion = AmazonRegion.Europe,
 				Id = 4,
 				RequestReportId = "Report3",
-				GeneratedReportId = "GeneratedIdTest1"
+				GeneratedReportId = "GeneratedIdTest1",
+				MerchantId = merchantId
 			};
 
 			_reportRequestCallbacks.Add(reportRequestCallback);
@@ -588,7 +598,9 @@ namespace EasyMWS.Tests.Processors
 				{
 					LastAmazonRequestDate = DateTime.MinValue,
 					ReportType = "testReportType",
-					Details = null
+					Details = null,
+					GeneratedReportId = "generatedReportId",
+					MerchantId = _merchantId
 				});
 
 			Assert.NotNull(reportRequestEntryBeingUpdated.Details);
@@ -628,7 +640,9 @@ namespace EasyMWS.Tests.Processors
 				{
 					LastAmazonRequestDate = DateTime.MinValue,
 					ReportType = "testReportType",
-					Details = null
+					Details = null,
+					GeneratedReportId = "generatedReportId",
+					MerchantId = _merchantId
 				});
 
 			Assert.IsNull(reportRequestEntryBeingUpdated.Details);
@@ -660,7 +674,9 @@ namespace EasyMWS.Tests.Processors
 				{
 					LastAmazonRequestDate = DateTime.MinValue,
 					ReportType = "testReportType",
-					Details = null
+					Details = null,
+					GeneratedReportId = "generatedReportId",
+					MerchantId = _merchantId
 				});
 
 			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Never);
@@ -687,7 +703,9 @@ namespace EasyMWS.Tests.Processors
 				{
 					LastAmazonRequestDate = DateTime.MinValue,
 					ReportType = "testReportType",
-					Details = null
+					Details = null,
+					GeneratedReportId = "generatedReportId",
+					MerchantId = _merchantId
 				});
 
 			Assert.IsNull(reportRequestEntryBeingUpdated.Details);
@@ -715,7 +733,9 @@ namespace EasyMWS.Tests.Processors
 				{
 					LastAmazonRequestDate = DateTime.MinValue,
 					ReportType = "testReportType",
-					Details = null
+					Details = null,
+					GeneratedReportId = "genReportId",
+					MerchantId = _merchantId
 				});
 
 			Assert.IsNull(reportRequestEntryBeingUpdated.Details);

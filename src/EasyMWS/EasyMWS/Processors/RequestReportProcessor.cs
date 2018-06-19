@@ -33,10 +33,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void RequestReportFromAmazon(IReportRequestEntryService reportRequestService, ReportRequestEntry reportRequestEntry)
 	    {
-		    var missingInformationExceptionMessage = "Cannot request report from amazon due to missing report request information";
+		    var missingInformationExceptionMessage = "Cannot request report from amazon due to missing report request information.";
 
-			if (reportRequestEntry?.ReportRequestData == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Report request data is null.");
-		    if (string.IsNullOrEmpty(reportRequestEntry.ReportType)) throw new ArgumentException($"{missingInformationExceptionMessage}: Report Type is missing.");
+			if (reportRequestEntry?.ReportRequestData == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Report request data is missing.");
+		    if (string.IsNullOrEmpty(reportRequestEntry?.ReportType)) throw new ArgumentException($"{missingInformationExceptionMessage}: Report Type is missing.");
+			if(string.IsNullOrEmpty(reportRequestEntry.MerchantId)) throw new ArgumentException($"{missingInformationExceptionMessage}: MerchantId is missing.");
 
 			var reportRequestData = reportRequestEntry.GetPropertiesContainer();
 
@@ -240,9 +241,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void DownloadGeneratedReportFromAmazon(IReportRequestEntryService reportRequestService, ReportRequestEntry reportRequestEntry)
 	    {
-		    _logger.Info($"Attempting to download the next report in queue from Amazon: {reportRequestEntry.RegionAndTypeComputed}.");
+		    var missingInformationExceptionMessage = "Cannot request report from amazon due to missing report request information.";
+			_logger.Info($"Attempting to download the next report in queue from Amazon: {reportRequestEntry.RegionAndTypeComputed}.");
 
-		    var reportResultStream = new MemoryStream();
+		    if (string.IsNullOrEmpty(reportRequestEntry?.GeneratedReportId)) throw new ArgumentException($"{missingInformationExceptionMessage}: GeneratedReportId is missing.");
+			if (string.IsNullOrEmpty(reportRequestEntry.MerchantId)) throw new ArgumentException($"{missingInformationExceptionMessage}: MerchantId is missing.");
+
+			var reportResultStream = new MemoryStream();
 		    var getReportRequest = new GetReportRequest
 		    {
 			    ReportId = reportRequestEntry.GeneratedReportId,
@@ -255,29 +260,25 @@ namespace MountainWarehouse.EasyMWS.Processors
 			    var response = _marketplaceWebServiceClient.GetReport(getReportRequest);
 			    reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
 
-				var reportContentStream = new MemoryStream();
-			    getReportRequest.Report.Position = 0;
-				getReportRequest.Report.CopyTo(reportContentStream);
-			    reportContentStream.Position = 0;
-			    
+				
 				var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
 			    var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
 			    _logger.Info(
 				    $"Report download from Amazon has succeeded for {reportRequestEntry.RegionAndTypeComputed}.[RequestId:'{requestId}',Timestamp:'{timestamp}']",
 				    new RequestInfo(timestamp, requestId));
+			    reportResultStream.Position = 0;
 
-			    
-			    var md5Hash = response?.GetReportResult?.ContentMD5;
-				var hasValidHash = MD5ChecksumHelper.IsChecksumCorrect(reportContentStream, md5Hash);
+				var md5Hash = response?.GetReportResult?.ContentMD5;
+				var hasValidHash = MD5ChecksumHelper.IsChecksumCorrect(reportResultStream, md5Hash);
 			    if (hasValidHash)
 			    {
 				    _logger.Info($"Checksum verification succeeded for report {reportRequestEntry.RegionAndTypeComputed}");
+				    reportRequestEntry.ReportDownloadRetryCount = 0;
 
-				    using (var streamReader = new StreamReader(reportContentStream))
+					using (var streamReader = new StreamReader(reportResultStream))
 				    {
 					    var zippedReport = ZipHelper.CreateArchiveFromContent(streamReader.ReadToEnd());
 					    reportRequestEntry.Details = new ReportRequestDetails { ReportContent = zippedReport };
-					    reportRequestEntry.ReportDownloadRetryCount = 0;
 				    }
 			    }
 			    else

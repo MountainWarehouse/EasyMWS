@@ -166,34 +166,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var nextFeedWithProcessingComplete = feedSubmissionService.GetNextFromQueueOfProcessingCompleteFeeds(_options, _merchantId, _region);
 			if (nextFeedWithProcessingComplete == null) return;
 
-			var processingReportInfo = _feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(feedSubmissionService, nextFeedWithProcessingComplete);
-			if (processingReportInfo.processingReport == null)
-			{
-				_logger.Warn($"AmazonMWS feed submission result request failed for {nextFeedWithProcessingComplete.RegionAndTypeComputed}");
-				return;
-			}
-
-			var hasValidHash = MD5ChecksumHelper.IsChecksumCorrect(processingReportInfo.processingReport, processingReportInfo.md5hash);
-			if (hasValidHash)
-			{
-				_logger.Info($"Checksum verification succeeded for feed submission report for {nextFeedWithProcessingComplete.RegionAndTypeComputed}");
-				nextFeedWithProcessingComplete.Details.FeedContent = null;
-
-				using (var streamReader = new StreamReader(processingReportInfo.processingReport))
-				{
-					var reportContent = streamReader.ReadToEnd();
-					var zippedProcessingReport = ZipHelper.CreateArchiveFromContent(reportContent);
-					nextFeedWithProcessingComplete.Details.FeedSubmissionReport = zippedProcessingReport;
-				}
-
-				feedSubmissionService.Update(nextFeedWithProcessingComplete);
-				feedSubmissionService.SaveChanges();
-			}
-			else
-			{
-				_logger.Warn($"Checksum verification failed for feed submission report for {nextFeedWithProcessingComplete.RegionAndTypeComputed}");
-				//_feedSubmissionProcessor.MoveToRetryQueue(feedSubmissionService, nextFeedWithProcessingComplete);
-			}
+			_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(feedSubmissionService, nextFeedWithProcessingComplete);
 		}
 	}
 }

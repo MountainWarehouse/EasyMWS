@@ -197,9 +197,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 			feedSubmissionService.SaveChanges();
 		}
 
-		public (MemoryStream processingReport, string md5hash) DownloadFeedSubmissionResultFromAmazon(IFeedSubmissionEntryService feedSubmissionService, FeedSubmissionEntry feedSubmissionEntry)
+		public void DownloadFeedSubmissionResultFromAmazon(IFeedSubmissionEntryService feedSubmissionService, FeedSubmissionEntry feedSubmissionEntry)
 		{
+			var missingInformationExceptionMessage = "Cannot download report from amazon due to missing report request information.";
 			_logger.Info($"Attempting to request the feed submission result for the next feed in queue from Amazon: {feedSubmissionEntry.RegionAndTypeComputed}.");
+
+			if (string.IsNullOrEmpty(feedSubmissionEntry?.MerchantId)) throw new ArgumentException($"{missingInformationExceptionMessage}: MerchantId is missing.");
+			if (string.IsNullOrEmpty(feedSubmissionEntry.FeedSubmissionId)) throw new ArgumentException($"{missingInformationExceptionMessage}: FeedSubmissionId is missing.");
 
 			var reportResultStream = new MemoryStream();
 			var request = new GetFeedSubmissionResultRequest
@@ -212,26 +216,59 @@ namespace MountainWarehouse.EasyMWS.Processors
 			try
 			{
 				var response = _marketplaceWebServiceClient.GetFeedSubmissionResult(request);
+				feedSubmissionEntry.LastSubmitted = DateTime.UtcNow;
 
 				var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
 				var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
 				_logger.Info(
-					$"Request to MWS.GetFeedSubmissionResult was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']",
+					$"Feed submission report download from Amazon has succeeded for {feedSubmissionEntry.RegionAndTypeComputed}.[RequestId:'{requestId}',Timestamp:'{timestamp}']",
 					new RequestInfo(timestamp, requestId));
-				_logger.Info(
-					$"Feed submission result request from Amazon has succeeded for {feedSubmissionEntry.RegionAndTypeComputed}.");
+				reportResultStream.Position = 0;
 
-				return (reportResultStream, response?.GetFeedSubmissionResultResult?.ContentMD5);
+				var md5Hash = response?.GetFeedSubmissionResultResult?.ContentMD5;
+				var hasValidHash = MD5ChecksumHelper.IsChecksumCorrect(reportResultStream, md5Hash);
+				if (hasValidHash)
+				{
+					_logger.Info($"Checksum verification succeeded for feed submission report for {feedSubmissionEntry.RegionAndTypeComputed}");
+					feedSubmissionEntry.Details.FeedContent = null;
+					feedSubmissionEntry.ReportDownloadRetryCount = 0;
+
+					using (var streamReader = new StreamReader(reportResultStream))
+					{
+						var zippedProcessingReport = ZipHelper.CreateArchiveFromContent(streamReader.ReadToEnd());
+						feedSubmissionEntry.Details.FeedSubmissionReport = zippedProcessingReport;
+					}
+				}
+				else
+				{
+					feedSubmissionEntry.ReportDownloadRetryCount++;
+					_logger.Warn($"Checksum verification failed for feed submission report for {feedSubmissionEntry.RegionAndTypeComputed}");
+				}
+
+				feedSubmissionService.Update(feedSubmissionEntry);
 			}
-			catch (MarketplaceWebServiceException e)
+			catch (MarketplaceWebServiceException e) when (e.StatusCode == HttpStatusCode.BadRequest && IsAmazonErrorCodeFatal(e.ErrorCode))
 			{
-				_logger.Error($"Request to MWS.GetFeedSubmissionResult failed! [Message: '{e.Message}', HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}']", e);
-				return (null, null);
+				feedSubmissionService.Delete(feedSubmissionEntry);
+				_logger.Error($"AmazonMWS report download failed for {feedSubmissionEntry.RegionAndTypeComputed}! [HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}', Message: '{e.Message}']. The report request was removed from queue.", e);
+			}
+			catch (MarketplaceWebServiceException e) when (IsAmazonErrorCodeNonFatal(e.ErrorCode))
+			{
+				feedSubmissionEntry.ReportDownloadRetryCount++;
+				feedSubmissionEntry.LastSubmitted = DateTime.UtcNow;
+				feedSubmissionService.Update(feedSubmissionEntry);
+				_logger.Error($"AmazonMWS report download failed for {feedSubmissionEntry.RegionAndTypeComputed}! [HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}', Message: '{e.Message}']. Placing report download in retry queue. Retry count : {feedSubmissionEntry.ReportDownloadRetryCount}", e);
 			}
 			catch (Exception e)
 			{
-				_logger.Error($"Request to MWS.GetFeedSubmissionResult failed! [Message: '{e.Message}']", e);
-				return (null, null);
+				feedSubmissionEntry.ReportDownloadRetryCount++;
+				feedSubmissionEntry.LastSubmitted = DateTime.UtcNow;
+				feedSubmissionService.Update(feedSubmissionEntry);
+				_logger.Error($"AmazonMWS report download failed for {feedSubmissionEntry.RegionAndTypeComputed}! [Reason: '{e.Message}']", e);
+			}
+			finally
+			{
+				feedSubmissionService.SaveChanges();
 			}
 		}
 
