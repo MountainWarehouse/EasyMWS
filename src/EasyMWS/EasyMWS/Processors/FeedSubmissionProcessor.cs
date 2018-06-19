@@ -72,14 +72,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 					return response?.SubmitFeedResult?.FeedSubmissionInfo?.FeedSubmissionId;
 				}
-				catch (MarketplaceWebServiceException e) when (e.StatusCode == HttpStatusCode.BadRequest)
+				catch (MarketplaceWebServiceException e) when (e.StatusCode == HttpStatusCode.BadRequest && IsAmazonErrorCodeFatal(e.ErrorCode))
 				{
 					stream.Dispose();
 					_logger.Error($"Request to MWS.SubmitFeed failed! [HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}', Message: '{e.Message}']", e);
 					return HttpStatusCode.BadRequest.ToString();
 					
 				}
-				catch (MarketplaceWebServiceException e)
+				catch (MarketplaceWebServiceException e) when (IsAmazonErrorCodeNonFatal(e.ErrorCode))
 				{
 					stream.Dispose();
 					_logger.Error($"Request to MWS.SubmitFeed failed! [HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}', Message: '{e.Message}']", e);
@@ -294,6 +294,34 @@ namespace MountainWarehouse.EasyMWS.Processors
 		private bool IsExpirationPeriodExceeded(FeedSubmissionEntry feedSubmissionEntry) =>
 			(DateTime.Compare(feedSubmissionEntry.DateCreated, DateTime.UtcNow.Subtract(_options.FeedSubmissionRequestEntryExpirationPeriod)) < 0);
 
-		
+
+		private bool IsAmazonErrorCodeFatal(string errorCode)
+		{
+			var fatalErrorCodes = new List<string>
+			{
+				"AccessToFeedProcessingResultDenied",
+				"FeedCanceled",
+				"FeedProcessingResultNoLongerAvailable",
+				"InputDataError",
+				"InvalidFeedType",
+				"InvalidRequest"
+			};
+
+			return fatalErrorCodes.Contains(errorCode);
+		}
+
+		private bool IsAmazonErrorCodeNonFatal(string errorCode)
+		{
+			var nonFatalErrorCodes = new List<string>
+			{
+				"ContentMD5Missing",
+				"ContentMD5DoesNotMatch",
+				"FeedProcessingResultNotReady",
+				"InvalidFeedSubmissionId"
+			};
+
+			return nonFatalErrorCodes.Contains(errorCode) || !IsAmazonErrorCodeFatal(errorCode);
+		}
+
 	}
 }
