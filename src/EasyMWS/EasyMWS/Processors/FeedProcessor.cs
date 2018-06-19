@@ -166,7 +166,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var nextFeedWithProcessingComplete = feedSubmissionService.GetNextFromQueueOfProcessingCompleteFeeds(_options, _merchantId, _region);
 			if (nextFeedWithProcessingComplete == null) return;
 
-			var processingReportInfo = _feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(nextFeedWithProcessingComplete);
+			var processingReportInfo = _feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(feedSubmissionService, nextFeedWithProcessingComplete);
 			if (processingReportInfo.processingReport == null)
 			{
 				_logger.Warn($"AmazonMWS feed submission result request failed for {nextFeedWithProcessingComplete.RegionAndTypeComputed}");

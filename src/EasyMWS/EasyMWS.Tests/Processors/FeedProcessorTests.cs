@@ -161,7 +161,7 @@ namespace EasyMWS.Tests.ReportProcessors
 				.Setup(fspm => fspm.GetNextFromQueueOfFeedsToSubmit(It.IsAny<EasyMwsOptions>(), It.IsAny<string>(), It.IsAny<AmazonRegion>()))
 				.Returns(new FeedSubmissionEntry(serializedPropertiesContainer) { LastSubmitted = DateTime.MinValue });
 			_feedSubmissionProcessorMock.Setup(fspm =>
-					fspm.DownloadFeedSubmissionResultFromAmazon(It.IsAny<FeedSubmissionEntry>()))
+					fspm.DownloadFeedSubmissionResultFromAmazon(It.IsAny<IFeedSubmissionEntryService>(), It.IsAny<FeedSubmissionEntry>()))
 				.Returns((testStream, notMatchingMd5Sum));
 			_feedSubmissionCallbackServiceMock.Setup(fspm =>
 					fspm.GetNextFromQueueOfProcessingCompleteFeeds(It.IsAny<EasyMwsOptions>(), It.IsAny<string>(), It.IsAny<AmazonRegion>()))
@@ -187,7 +187,7 @@ namespace EasyMWS.Tests.ReportProcessors
 				.Setup(fspm => fspm.GetNextFromQueueOfFeedsToSubmit(It.IsAny<EasyMwsOptions>(), It.IsAny<string>(), It.IsAny<AmazonRegion>()))
 				.Returns(new FeedSubmissionEntry(serializedPropertiesContainer) { LastSubmitted = DateTime.MinValue });
 			_feedSubmissionProcessorMock.Setup(fspm =>
-					fspm.DownloadFeedSubmissionResultFromAmazon(It.IsAny<FeedSubmissionEntry>()))
+					fspm.DownloadFeedSubmissionResultFromAmazon(It.IsAny<IFeedSubmissionEntryService>(), It.IsAny<FeedSubmissionEntry>()))
 				.Returns((testStream, notMatchingMd5Sum));
 			_feedSubmissionCallbackServiceMock.Setup(fspm =>
 					fspm.GetNextFromQueueOfProcessingCompleteFeeds(It.IsAny<EasyMwsOptions>(), It.IsAny<string>(), It.IsAny<AmazonRegion>()))
@@ -213,7 +213,7 @@ namespace EasyMWS.Tests.ReportProcessors
 				.Setup(fspm => fspm.GetNextFromQueueOfFeedsToSubmit(It.IsAny<EasyMwsOptions>(), It.IsAny<string>(), It.IsAny<AmazonRegion>()))
 				.Returns(new FeedSubmissionEntry(serializedPropertiesContainer) { LastSubmitted = DateTime.MinValue });
 			_feedSubmissionProcessorMock.Setup(fspm =>
-					fspm.DownloadFeedSubmissionResultFromAmazon(It.IsAny<FeedSubmissionEntry>()))
+					fspm.DownloadFeedSubmissionResultFromAmazon(It.IsAny<IFeedSubmissionEntryService>(), It.IsAny<FeedSubmissionEntry>()))
 				.Returns((testStream, matchingMd5Sum));
 			_feedSubmissionCallbackServiceMock.Setup(fspm =>
 					fspm.GetNextFromQueueOfProcessingCompleteFeeds(It.IsAny<EasyMwsOptions>(), It.IsAny<string>(), It.IsAny<AmazonRegion>()))
