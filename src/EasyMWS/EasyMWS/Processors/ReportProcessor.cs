@@ -45,7 +45,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_requestReportProcessor = _requestReportProcessor ?? new RequestReportProcessor(_region, _merchantId, mwsClient, _logger, _options);
 		}
 
-		public void PollReports(IReportRequestCallbackService reportRequestService)
+		public void PollReports(IReportRequestEntryService reportRequestService)
 		{
 			_logger.Info("Executing polling action for report requests.");
 
@@ -60,7 +60,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			PerformCallbackForPreviouslyDownloadedReports(reportRequestService);
 		}
 
-		public void DownloadNextReportInQueueFromAmazon(IReportRequestCallbackService reportRequestService)
+		public void DownloadNextReportInQueueFromAmazon(IReportRequestEntryService reportRequestService)
 		{
 			var reportToDownload = reportRequestService.GetNextFromQueueOfReportsToDownload(_options, _merchantId, _region);
 			if (reportToDownload == null) return;
@@ -68,7 +68,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_requestReportProcessor.DownloadGeneratedReportFromAmazon(reportRequestService, reportToDownload);
 		}
 
-		private void PerformCallbackForPreviouslyDownloadedReports(IReportRequestCallbackService reportRequestService)
+		private void PerformCallbackForPreviouslyDownloadedReports(IReportRequestEntryService reportRequestService)
 		{
 			var reportsReadyForCallback = reportRequestService.GetAllFromQueueOfReportsReadyForCallback(_options, _merchantId, _region);
 
@@ -93,7 +93,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			reportRequestService.SaveChanges();
 		}
 
-		public void QueueReport(IReportRequestCallbackService reportRequestService, ReportRequestPropertiesContainer propertiesContainer, Action<Stream, object> callbackMethod, object callbackData)
+		public void QueueReport(IReportRequestEntryService reportRequestService, ReportRequestPropertiesContainer propertiesContainer, Action<Stream, object> callbackMethod, object callbackData)
 		{
 			try
 			{
@@ -139,14 +139,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public void PurgeQueue(IReportRequestCallbackService reportRequestService)
+		public void PurgeQueue(IReportRequestEntryService reportRequestService)
 		{
 			var entriesToDelete = reportRequestService.GetAll().Where(rre => rre.AmazonRegion == _region && rre.MerchantId == _merchantId);
 			reportRequestService.DeleteRange(entriesToDelete);
 			reportRequestService.SaveChanges();
 		}
 
-		public void RequestNextReportInQueueFromAmazon(IReportRequestCallbackService reportRequestService)
+		public void RequestNextReportInQueueFromAmazon(IReportRequestEntryService reportRequestService)
 		{
 			var reportRequest = reportRequestService.GetNextFromQueueOfReportsToRequest(_options, _merchantId, _region);
 
@@ -155,7 +155,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_requestReportProcessor.RequestReportFromAmazon(reportRequestService, reportRequest);
 		}
 
-		public void RequestReportStatusesFromAmazon(IReportRequestCallbackService reportRequestService)
+		public void RequestReportStatusesFromAmazon(IReportRequestEntryService reportRequestService)
 		{
 			var pendingReportsRequestIds = reportRequestService.GetAllPendingReportFromQueue(_merchantId, _region).ToList();
 

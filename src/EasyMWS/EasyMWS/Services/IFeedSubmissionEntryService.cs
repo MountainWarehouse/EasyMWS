@@ -8,7 +8,7 @@ using MountainWarehouse.EasyMWS.Model;
 
 namespace MountainWarehouse.EasyMWS.Services
 {
-    internal interface IFeedSubmissionCallbackService
+    internal interface IFeedSubmissionEntryService
     {
 	    void Create(FeedSubmissionEntry entry);
 	    void Update(FeedSubmissionEntry entry);

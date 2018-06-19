@@ -9,7 +9,7 @@ using MountainWarehouse.EasyMWS.Model;
 
 namespace MountainWarehouse.EasyMWS.Services
 {
-	internal interface IReportRequestCallbackService
+	internal interface IReportRequestEntryService
 	{
 		void Create(ReportRequestEntry entry);
 		Task CreateAsync(ReportRequestEntry entry);

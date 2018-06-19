@@ -44,7 +44,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_feedSubmissionProcessor = _feedSubmissionProcessor ?? new FeedSubmissionProcessor(_region, _merchantId, mwsClient, _logger, _options);
 		}
 
-		public void PollFeeds(IFeedSubmissionCallbackService feedSubmissionService)
+		public void PollFeeds(IFeedSubmissionEntryService feedSubmissionService)
 		{
 			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(feedSubmissionService);
 
@@ -57,7 +57,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			PerformCallbacksForPreviouslySubmittedFeeds(feedSubmissionService);
 		}
 
-		private void PerformCallbacksForPreviouslySubmittedFeeds(IFeedSubmissionCallbackService feedSubmissionService)
+		private void PerformCallbacksForPreviouslySubmittedFeeds(IFeedSubmissionEntryService feedSubmissionService)
 		{
 			var previouslySubmittedFeeds = feedSubmissionService.GetAll()
 				.Where(fse => fse.AmazonRegion == _region && fse.MerchantId == _merchantId && fse.Details != null && fse.Details.FeedSubmissionReport != null);
@@ -83,7 +83,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			feedSubmissionService.SaveChanges();
 		}
 
-		public void QueueFeed(IFeedSubmissionCallbackService feedSubmissionService, FeedSubmissionPropertiesContainer propertiesContainer, Action<Stream, object> callbackMethod, object callbackData)
+		public void QueueFeed(IFeedSubmissionEntryService feedSubmissionService, FeedSubmissionPropertiesContainer propertiesContainer, Action<Stream, object> callbackMethod, object callbackData)
 		{
 			try
 			{
@@ -131,14 +131,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public void PurgeQueue(IFeedSubmissionCallbackService feedSubmissionService)
+		public void PurgeQueue(IFeedSubmissionEntryService feedSubmissionService)
 		{
 			var entriesToDelete = feedSubmissionService.GetAll().Where(rre => rre.AmazonRegion == _region && rre.MerchantId == _merchantId);
 			feedSubmissionService.DeleteRange(entriesToDelete);
 			feedSubmissionService.SaveChanges();
 		}
 
-		public void SubmitNextFeedInQueueToAmazon(IFeedSubmissionCallbackService feedSubmissionService)
+		public void SubmitNextFeedInQueueToAmazon(IFeedSubmissionEntryService feedSubmissionService)
 		{
 			var feedSubmission = feedSubmissionService.GetNextFromQueueOfFeedsToSubmit(_options, _merchantId, _region);
 
@@ -168,7 +168,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		}
 
-		public void RequestFeedSubmissionStatusesFromAmazon(IFeedSubmissionCallbackService feedSubmissionService)
+		public void RequestFeedSubmissionStatusesFromAmazon(IFeedSubmissionEntryService feedSubmissionService)
 		{
 			var feedSubmissionIds = feedSubmissionService.GetIdsForSubmittedFeedsFromQueue(_options, _merchantId, _region).ToList();
 
@@ -183,7 +183,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public void RequestNextFeedSubmissionInQueueFromAmazon(IFeedSubmissionCallbackService feedSubmissionService)
+		public void RequestNextFeedSubmissionInQueueFromAmazon(IFeedSubmissionEntryService feedSubmissionService)
 		{
 			var nextFeedWithProcessingComplete = feedSubmissionService.GetNextFromQueueOfProcessingCompleteFeeds(_options, _merchantId, _region);
 			if (nextFeedWithProcessingComplete == null) return;

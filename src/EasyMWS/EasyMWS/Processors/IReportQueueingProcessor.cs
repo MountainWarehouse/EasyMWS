@@ -7,8 +7,8 @@ namespace MountainWarehouse.EasyMWS.Processors
 {
 	internal interface IReportQueueingProcessor
     {
-	    void PollReports(IReportRequestCallbackService reportRequestService);
-	    void QueueReport(IReportRequestCallbackService reportRequestService, ReportRequestPropertiesContainer propertiesContainer, Action<Stream, object> callbackMethod, object callbackData);
-	    void PurgeQueue(IReportRequestCallbackService reportRequestService);
+	    void PollReports(IReportRequestEntryService reportRequestService);
+	    void QueueReport(IReportRequestEntryService reportRequestService, ReportRequestPropertiesContainer propertiesContainer, Action<Stream, object> callbackMethod, object callbackData);
+	    void PurgeQueue(IReportRequestEntryService reportRequestService);
     }
 }

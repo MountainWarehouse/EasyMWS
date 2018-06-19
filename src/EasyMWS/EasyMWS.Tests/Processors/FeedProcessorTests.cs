@@ -22,7 +22,7 @@ namespace EasyMWS.Tests.ReportProcessors
 	public class FeedProcessorTests
 	{
 		private FeedProcessor _feedProcessor;
-		private Mock<IFeedSubmissionCallbackService> _feedSubmissionCallbackServiceMock;
+		private Mock<IFeedSubmissionEntryService> _feedSubmissionCallbackServiceMock;
 		private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
 		private Mock<IFeedSubmissionProcessor> _feedSubmissionProcessorMock;
 		private Mock<ICallbackActivator> _callbackActivatorMock;
@@ -35,7 +35,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		public void SetUp()
 		{
 			var options = EasyMwsOptions.Defaults();
-			_feedSubmissionCallbackServiceMock = new Mock<IFeedSubmissionCallbackService>();
+			_feedSubmissionCallbackServiceMock = new Mock<IFeedSubmissionEntryService>();
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_feedSubmissionProcessorMock = new Mock<IFeedSubmissionProcessor>();
 			_callbackActivatorMock = new Mock<ICallbackActivator>();
@@ -129,7 +129,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			_feedProcessor.PollFeeds(_feedSubmissionCallbackServiceMock.Object);
 
 			_feedSubmissionProcessorMock.Verify(
-				rrp => rrp.MoveToQueueOfSubmittedFeeds(It.IsAny<IFeedSubmissionCallbackService>(),It.IsAny<FeedSubmissionEntry>(), It.IsAny<string>()), Times.Never);
+				rrp => rrp.MoveToQueueOfSubmittedFeeds(It.IsAny<IFeedSubmissionEntryService>(),It.IsAny<FeedSubmissionEntry>(), It.IsAny<string>()), Times.Never);
 		}
 
 		[Test]
@@ -188,7 +188,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			_feedProcessor.PollFeeds(_feedSubmissionCallbackServiceMock.Object);
 
 			_feedSubmissionProcessorMock.Verify(
-				rrp => rrp.MoveToQueueOfSubmittedFeeds(It.IsAny<IFeedSubmissionCallbackService>(),It.IsAny<FeedSubmissionEntry>(), It.IsAny<string>()), Times.Once);
+				rrp => rrp.MoveToQueueOfSubmittedFeeds(It.IsAny<IFeedSubmissionEntryService>(),It.IsAny<FeedSubmissionEntry>(), It.IsAny<string>()), Times.Once);
 		}
 
 		[Test]
@@ -206,7 +206,7 @@ namespace EasyMWS.Tests.ReportProcessors
 
 			_feedProcessor.PollFeeds(_feedSubmissionCallbackServiceMock.Object);
 
-			_feedSubmissionProcessorMock.Verify(rrp => rrp.MoveToRetryQueue(It.IsAny<IFeedSubmissionCallbackService>(),It.IsAny<FeedSubmissionEntry>()),
+			_feedSubmissionProcessorMock.Verify(rrp => rrp.MoveToRetryQueue(It.IsAny<IFeedSubmissionEntryService>(),It.IsAny<FeedSubmissionEntry>()),
 				Times.Once);
 		}
 
@@ -225,7 +225,7 @@ namespace EasyMWS.Tests.ReportProcessors
 
 			_feedProcessor.PollFeeds(_feedSubmissionCallbackServiceMock.Object);
 
-			_feedSubmissionProcessorMock.Verify(rrp => rrp.MoveToRetryQueue(It.IsAny<IFeedSubmissionCallbackService>(),It.IsAny<FeedSubmissionEntry>()),
+			_feedSubmissionProcessorMock.Verify(rrp => rrp.MoveToRetryQueue(It.IsAny<IFeedSubmissionEntryService>(),It.IsAny<FeedSubmissionEntry>()),
 				Times.Once);
 		}
 
@@ -254,8 +254,8 @@ namespace EasyMWS.Tests.ReportProcessors
 			_feedProcessor.PollFeeds(_feedSubmissionCallbackServiceMock.Object);
 
 			_callbackActivatorMock.Verify(cam => cam.CallMethod(It.IsAny<Callback>(), It.IsAny<Stream>()), Times.Never);
-			_feedSubmissionProcessorMock.Verify(fspm => fspm.RemoveFromQueue(It.IsAny<IFeedSubmissionCallbackService>(),It.IsAny<FeedSubmissionEntry>()), Times.Never);
-			_feedSubmissionProcessorMock.Verify(fspm => fspm.MoveToRetryQueue(It.IsAny<IFeedSubmissionCallbackService>(),It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionProcessorMock.Verify(fspm => fspm.RemoveFromQueue(It.IsAny<IFeedSubmissionEntryService>(),It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionProcessorMock.Verify(fspm => fspm.MoveToRetryQueue(It.IsAny<IFeedSubmissionEntryService>(),It.IsAny<FeedSubmissionEntry>()), Times.Never);
 		}
 
 		[Test]
@@ -283,8 +283,8 @@ namespace EasyMWS.Tests.ReportProcessors
 			_feedProcessor.PollFeeds(_feedSubmissionCallbackServiceMock.Object);
 
 			_callbackActivatorMock.Verify(cam => cam.CallMethod(It.IsAny<Callback>(), It.IsAny<Stream>()), Times.Never);
-			_feedSubmissionProcessorMock.Verify(fspm => fspm.RemoveFromQueue(It.IsAny<IFeedSubmissionCallbackService>(),It.IsAny<FeedSubmissionEntry>()), Times.Never);
-			_feedSubmissionProcessorMock.Verify(fspm => fspm.MoveToRetryQueue(It.IsAny<IFeedSubmissionCallbackService>(),It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionProcessorMock.Verify(fspm => fspm.RemoveFromQueue(It.IsAny<IFeedSubmissionEntryService>(),It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionProcessorMock.Verify(fspm => fspm.MoveToRetryQueue(It.IsAny<IFeedSubmissionEntryService>(),It.IsAny<FeedSubmissionEntry>()), Times.Once);
 		}
 
 		[Test]

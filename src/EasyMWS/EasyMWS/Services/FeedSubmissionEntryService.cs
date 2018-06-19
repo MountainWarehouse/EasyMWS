@@ -11,17 +11,17 @@ using MountainWarehouse.EasyMWS.Repositories;
 
 namespace MountainWarehouse.EasyMWS.Services
 {
-    internal class FeedSubmissionCallbackService : IFeedSubmissionCallbackService, IDisposable
+    internal class FeedSubmissionEntryService : IFeedSubmissionEntryService, IDisposable
 	{
-	    private readonly IFeedSubmissionCallbackRepo _feedRepo;
+	    private readonly IFeedSubmissionEntryRepository _feedRepo;
 	    private readonly IEasyMwsLogger _logger;
 
-		internal FeedSubmissionCallbackService(IFeedSubmissionCallbackRepo feedSubmissionRepo, EasyMwsOptions options = null,
+		internal FeedSubmissionEntryService(IFeedSubmissionEntryRepository feedSubmissionRepo, EasyMwsOptions options = null,
 			IEasyMwsLogger logger = null) : this(options, logger)
 			=> (_feedRepo) = (feedSubmissionRepo);
 
-		public FeedSubmissionCallbackService(EasyMwsOptions options = null, IEasyMwsLogger logger = null) =>
-		    (_feedRepo, _logger) = (_feedRepo ?? new FeedSubmissionCallbackRepo(options?.LocalDbConnectionStringOverride), logger);
+		public FeedSubmissionEntryService(EasyMwsOptions options = null, IEasyMwsLogger logger = null) =>
+		    (_feedRepo, _logger) = (_feedRepo ?? new FeedSubmissionEntryRepository(options?.LocalDbConnectionStringOverride), logger);
 
 	    public void Create(FeedSubmissionEntry entry) => _feedRepo.Create(entry);
 	    public void Update(FeedSubmissionEntry entry) => _feedRepo.Update(entry);

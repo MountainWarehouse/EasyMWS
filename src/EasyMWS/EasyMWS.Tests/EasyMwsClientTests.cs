@@ -87,7 +87,7 @@ namespace EasyMWS.Tests
 		{
 			_easyMwsClient.Poll();
 
-			_reportProcessorMock.Verify(rpm => rpm.PollReports(It.IsAny<IReportRequestCallbackService>()), Times.Once);
+			_reportProcessorMock.Verify(rpm => rpm.PollReports(It.IsAny<IReportRequestEntryService>()), Times.Once);
 		}
 
 		[Test]
@@ -95,7 +95,7 @@ namespace EasyMWS.Tests
 		{
 			_easyMwsClient.Poll();
 
-			_feedProcessorMock.Verify(fpm => fpm.PollFeeds(It.IsAny<IFeedSubmissionCallbackService>()), Times.Once);
+			_feedProcessorMock.Verify(fpm => fpm.PollFeeds(It.IsAny<IFeedSubmissionEntryService>()), Times.Once);
 		}
 
 		[Test]
@@ -105,7 +105,7 @@ namespace EasyMWS.Tests
 				new Action<Stream, object>((
 					(stream, o) => { })), new { });
 
-			_reportProcessorMock.Verify(rpm => rpm.QueueReport(It.IsAny<IReportRequestCallbackService>(),It.IsAny<ReportRequestPropertiesContainer>(), It.IsAny<Action<Stream, object>>(), It.IsAny<object>()), Times.Once);
+			_reportProcessorMock.Verify(rpm => rpm.QueueReport(It.IsAny<IReportRequestEntryService>(),It.IsAny<ReportRequestPropertiesContainer>(), It.IsAny<Action<Stream, object>>(), It.IsAny<object>()), Times.Once);
 		}
 
 		[Test]
@@ -115,7 +115,7 @@ namespace EasyMWS.Tests
 				new Action<Stream, object>((
 					(stream, o) => { })), new { });
 
-			_feedProcessorMock.Verify(rpm => rpm.QueueFeed(It.IsAny<IFeedSubmissionCallbackService>(), It.IsAny<FeedSubmissionPropertiesContainer>(), It.IsAny<Action<Stream, object>>(), It.IsAny<object>()), Times.Once);
+			_feedProcessorMock.Verify(rpm => rpm.QueueFeed(It.IsAny<IFeedSubmissionEntryService>(), It.IsAny<FeedSubmissionPropertiesContainer>(), It.IsAny<Action<Stream, object>>(), It.IsAny<object>()), Times.Once);
 		}
 	}
 }

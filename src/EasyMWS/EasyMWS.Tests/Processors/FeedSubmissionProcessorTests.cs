@@ -24,7 +24,7 @@ namespace EasyMWS.Tests.Processors
 		private IFeedSubmissionProcessor _feedSubmissionProcessor;
 		private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
 		private EasyMwsOptions _easyMwsOptions;
-		private Mock<IFeedSubmissionCallbackService> _feedSubmissionCallbackServiceMock;
+		private Mock<IFeedSubmissionEntryService> _feedSubmissionCallbackServiceMock;
 		private List<FeedSubmissionEntry> _feedSubmissionCallbacks;
 		private string _merchantId = "TestMerchantId";
 		private Mock<IEasyMwsLogger> _loggerMock;
@@ -35,7 +35,7 @@ namespace EasyMWS.Tests.Processors
 		{
 			_easyMwsOptions = EasyMwsOptions.Defaults();
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
-			_feedSubmissionCallbackServiceMock = new Mock<IFeedSubmissionCallbackService>();
+			_feedSubmissionCallbackServiceMock = new Mock<IFeedSubmissionEntryService>();
 			_loggerMock = new Mock<IEasyMwsLogger>();
 			_feedSubmissionProcessor = new FeedSubmissionProcessor(_region, _merchantId,_marketplaceWebServiceClientMock.Object, _loggerMock.Object, _easyMwsOptions);
 

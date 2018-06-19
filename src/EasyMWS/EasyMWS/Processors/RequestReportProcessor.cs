@@ -31,7 +31,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_marketplaceWebServiceClient = marketplaceWebServiceClient;
 	    }
 
-		public void RequestReportFromAmazon(IReportRequestCallbackService reportRequestService, ReportRequestEntry reportRequestEntry)
+		public void RequestReportFromAmazon(IReportRequestEntryService reportRequestService, ReportRequestEntry reportRequestEntry)
 	    {
 		    var missingInformationExceptionMessage = "Cannot request report from amazon due to missing report request information";
 
@@ -153,7 +153,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 	    }
 
-	    public void CleanupReportRequests(IReportRequestCallbackService reportRequestService)
+	    public void CleanupReportRequests(IReportRequestEntryService reportRequestService)
 	    {
 			_logger.Info("Executing cleanup of report requests queue.");
 		    var allReportRequestEntries = reportRequestService.GetAll();
@@ -182,7 +182,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			reportRequestService.SaveChanges();
 	    }
 
-		public void QueueReportsAccordingToProcessingStatus(IReportRequestCallbackService reportRequestService,
+		public void QueueReportsAccordingToProcessingStatus(IReportRequestEntryService reportRequestService,
 			List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> reportGenerationStatuses)
 	    {
 			foreach (var reportGenerationInfo in reportGenerationStatuses)
@@ -234,7 +234,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			reportRequestService.SaveChanges();
 	    }
 
-		public void DownloadGeneratedReportFromAmazon(IReportRequestCallbackService reportRequestService, ReportRequestEntry reportRequestEntry)
+		public void DownloadGeneratedReportFromAmazon(IReportRequestEntryService reportRequestService, ReportRequestEntry reportRequestEntry)
 	    {
 		    _logger.Info($"Attempting to download the next report in queue from Amazon: {reportRequestEntry.RegionAndTypeComputed}.");
 
@@ -335,7 +335,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    return nonFatalErrorCodes.Contains(errorCode) || !IsAmazonErrorCodeFatal(errorCode);
 	    }
 
-	    private void MarkEntriesAsDeleted(IReportRequestCallbackService reportRequestService, IQueryable<ReportRequestEntry> entriesToMarkAsDeleted, List<int> entriesIdsAlreadyMarkedAsDeleted, string deleteReason)
+	    private void MarkEntriesAsDeleted(IReportRequestEntryService reportRequestService, IQueryable<ReportRequestEntry> entriesToMarkAsDeleted, List<int> entriesIdsAlreadyMarkedAsDeleted, string deleteReason)
 	    {
 		    foreach (var entry in entriesToMarkAsDeleted)
 		    {

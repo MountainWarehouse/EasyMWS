@@ -98,7 +98,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public void MoveToQueueOfSubmittedFeeds(IFeedSubmissionCallbackService feedSubmissionService, FeedSubmissionEntry feedSubmission, string feedSubmissionId)
+		public void MoveToQueueOfSubmittedFeeds(IFeedSubmissionEntryService feedSubmissionService, FeedSubmissionEntry feedSubmission, string feedSubmissionId)
 		{
 			feedSubmission.FeedSubmissionId = feedSubmissionId;
 			feedSubmission.FeedSubmissionRetryCount = 0;
@@ -108,7 +108,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_logger.Info($"Moving {feedSubmission.RegionAndTypeComputed} to queue of feed submissions that await processing results.");
 		}
 
-		public void MoveToRetryQueue(IFeedSubmissionCallbackService feedSubmissionService, FeedSubmissionEntry feedSubmission)
+		public void MoveToRetryQueue(IFeedSubmissionEntryService feedSubmissionService, FeedSubmissionEntry feedSubmission)
 		{
 			feedSubmission.FeedSubmissionRetryCount++;
 			feedSubmissionService.Update(feedSubmission);
@@ -157,7 +157,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public void QueueFeedsAccordingToProcessingStatus(IFeedSubmissionCallbackService feedSubmissionService, List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses)
+		public void QueueFeedsAccordingToProcessingStatus(IFeedSubmissionEntryService feedSubmissionService, List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses)
 		{
 			foreach (var feedSubmissionInfo in feedProcessingStatuses)
 			{
@@ -236,13 +236,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public void RemoveFromQueue(IFeedSubmissionCallbackService feedSubmissionService, FeedSubmissionEntry entry)
+		public void RemoveFromQueue(IFeedSubmissionEntryService feedSubmissionService, FeedSubmissionEntry entry)
 		{
 			feedSubmissionService.Delete(entry);
 			feedSubmissionService.SaveChanges();
 		}
 
-		public void CleanUpFeedSubmissionQueue(IFeedSubmissionCallbackService feedSubmissionService)
+		public void CleanUpFeedSubmissionQueue(IFeedSubmissionEntryService feedSubmissionService)
 		{
 			_logger.Info("Executing cleanup of feed submission requests queue.");
 			var expiredFeedSubmissions = feedSubmissionService.GetAll()

@@ -5,10 +5,10 @@ using MountainWarehouse.EasyMWS.Data;
 
 namespace MountainWarehouse.EasyMWS.Repositories
 {
-    internal class FeedSubmissionCallbackRepo : IFeedSubmissionCallbackRepo
+    internal class FeedSubmissionEntryRepository : IFeedSubmissionEntryRepository
 	{
 		private EasyMwsContext _dbContext;
-		internal FeedSubmissionCallbackRepo(string connectionString = null) => (_dbContext) = (new EasyMwsContext(connectionString));
+		internal FeedSubmissionEntryRepository(string connectionString = null) => (_dbContext) = (new EasyMwsContext(connectionString));
 		public void Create(FeedSubmissionEntry entry) => _dbContext.FeedSubmissionEntries.Add(entry);
 		public void Update(FeedSubmissionEntry entry) => _dbContext.Update(entry);
 		public void Delete(FeedSubmissionEntry entry)

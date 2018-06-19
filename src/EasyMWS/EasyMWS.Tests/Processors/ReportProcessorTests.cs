@@ -22,7 +22,7 @@ namespace EasyMWS.Tests.ReportProcessors
 	public class ReportProcessorTests
 	{
 		private ReportProcessor _reportProcessor;
-		private Mock<IReportRequestCallbackService> _reportRequestCallbackServiceMock;
+		private Mock<IReportRequestEntryService> _reportRequestCallbackServiceMock;
 		private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
 		private Mock<IRequestReportProcessor> _requestReportProcessor;
 		private Mock<ICallbackActivator> _callbackActivatorMock;
@@ -33,7 +33,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		public void SetUp()
 		{
 			var options = EasyMwsOptions.Defaults();
-			_reportRequestCallbackServiceMock = new Mock<IReportRequestCallbackService>();
+			_reportRequestCallbackServiceMock = new Mock<IReportRequestEntryService>();
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_requestReportProcessor = new Mock<IRequestReportProcessor>();
 			_callbackActivatorMock = new Mock<ICallbackActivator>();
@@ -151,7 +151,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			_reportProcessor.PollReports(_reportRequestCallbackServiceMock.Object);
 
 			_requestReportProcessor.Verify(
-				rrp => rrp.RequestReportFromAmazon(It.IsAny<IReportRequestCallbackService>(), It.IsAny<ReportRequestEntry>()), Times.Never);
+				rrp => rrp.RequestReportFromAmazon(It.IsAny<IReportRequestEntryService>(), It.IsAny<ReportRequestEntry>()), Times.Never);
 		}
 
 		[Test]
@@ -167,7 +167,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			_reportProcessor.PollReports(_reportRequestCallbackServiceMock.Object);
 
 			_requestReportProcessor.Verify(
-				rrp => rrp.RequestReportFromAmazon(It.IsAny<IReportRequestCallbackService>(), It.IsAny<ReportRequestEntry>()), Times.Once);
+				rrp => rrp.RequestReportFromAmazon(It.IsAny<IReportRequestEntryService>(), It.IsAny<ReportRequestEntry>()), Times.Once);
 		}
 		#endregion
 	}

@@ -7,8 +7,8 @@ namespace MountainWarehouse.EasyMWS.Processors
 {
     interface IFeedQueueingProcessor
 	{
-		void PollFeeds(IFeedSubmissionCallbackService feedSubmissionService);
-		void QueueFeed(IFeedSubmissionCallbackService feedSubmissionService, FeedSubmissionPropertiesContainer propertiesContainer, Action<Stream, object> callbackMethod, object callbackData);
-		void PurgeQueue(IFeedSubmissionCallbackService feedSubmissionService);
+		void PollFeeds(IFeedSubmissionEntryService feedSubmissionService);
+		void QueueFeed(IFeedSubmissionEntryService feedSubmissionService, FeedSubmissionPropertiesContainer propertiesContainer, Action<Stream, object> callbackMethod, object callbackData);
+		void PurgeQueue(IFeedSubmissionEntryService feedSubmissionService);
 	}
 }

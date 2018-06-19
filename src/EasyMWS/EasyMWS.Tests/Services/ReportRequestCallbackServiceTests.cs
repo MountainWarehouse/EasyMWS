@@ -19,8 +19,8 @@ namespace EasyMWS.Tests.Services
 	[TestFixture]
     public class ReportRequestCallbackServiceTests
     {
-	    private Mock<IReportRequestCallbackRepo> _reportRequestCallbackReportMock;
-	    private ReportRequestCallbackService _reportRequestCallbackService;
+	    private Mock<IReportRequestEntryRepository> _reportRequestCallbackReportMock;
+	    private ReportRequestEntryService _reportRequestEntryService;
 	    private readonly string _merchantId = "TestMerchantId";
 	    private readonly AmazonRegion _amazonRegion = AmazonRegion.Europe;
 	    private List<ReportRequestEntry> _reportRequestEntries;
@@ -49,16 +49,16 @@ namespace EasyMWS.Tests.Services
 				new ReportRequestEntry{Id = 2}
 		    };
 
-			_reportRequestCallbackReportMock = new Mock<IReportRequestCallbackRepo>();
+			_reportRequestCallbackReportMock = new Mock<IReportRequestEntryRepository>();
 		    _reportRequestCallbackReportMock.Setup(x => x.GetAll()).Returns(_reportRequestEntries.AsQueryable());
-			_reportRequestCallbackService = new ReportRequestCallbackService(_reportRequestCallbackReportMock.Object);
+			_reportRequestEntryService = new ReportRequestEntryService(_reportRequestCallbackReportMock.Object);
 	    }
 
 
 		[Test]
 		public void FirstOrDefault_TwoInQueue_ReturnsFirstObjectContainingCorrectData()
 		{
-			var reportRequestCallback = _reportRequestCallbackService.FirstOrDefault();
+			var reportRequestCallback = _reportRequestEntryService.FirstOrDefault();
 			var reportRequestData = JsonConvert.DeserializeObject<ReportRequestPropertiesContainer>(reportRequestCallback.ReportRequestData);
 
 			Assert.AreEqual(AmazonRegion.Europe, reportRequestCallback.AmazonRegion);
@@ -116,7 +116,7 @@ namespace EasyMWS.Tests.Services
 		    };
 		    _reportRequestEntries.AddRange(data);
 
-		    var result = _reportRequestCallbackService.GetNextFromQueueOfReportsToDownload(_options, _merchantId, _amazonRegion);
+		    var result = _reportRequestEntryService.GetNextFromQueueOfReportsToDownload(_options, _merchantId, _amazonRegion);
 
 		    Assert.AreEqual(4, result?.Id);
 	    }
@@ -135,7 +135,7 @@ namespace EasyMWS.Tests.Services
 		    _reportRequestEntries.Add(reportRequestWithCorrectRegion2);
 
 		    var reportRequestCallback =
-			    _reportRequestCallbackService.GetNextFromQueueOfReportsToRequest(_options, _merchantId, _amazonRegion);
+			    _reportRequestEntryService.GetNextFromQueueOfReportsToRequest(_options, _merchantId, _amazonRegion);
 
 		    Assert.AreEqual(reportRequestWithCorrectRegion1.Id, reportRequestCallback.Id);
 	    }
@@ -153,7 +153,7 @@ namespace EasyMWS.Tests.Services
 			_reportRequestEntries.Add(reportRequestWithCorrectRegion2);
 
 			var reportRequestCallback =
-				_reportRequestCallbackService.GetNextFromQueueOfReportsToRequest(_options, _merchantId, _amazonRegion);
+				_reportRequestEntryService.GetNextFromQueueOfReportsToRequest(_options, _merchantId, _amazonRegion);
 
 			Assert.AreEqual(reportRequestWithCorrectRegion1.Id, reportRequestCallback.Id);
 		}
@@ -173,7 +173,7 @@ namespace EasyMWS.Tests.Services
 			_reportRequestEntries.Add(reportRequestWithNullRequestReportId2);
 
 			var reportRequestCallback =
-				_reportRequestCallbackService.GetNextFromQueueOfReportsToRequest(_options, _merchantId, _amazonRegion);
+				_reportRequestEntryService.GetNextFromQueueOfReportsToRequest(_options, _merchantId, _amazonRegion);
 
 			Assert.AreEqual(reportRequestWithNullRequestReportId1.Id, reportRequestCallback.Id);
 		}
@@ -193,7 +193,7 @@ namespace EasyMWS.Tests.Services
 			_reportRequestEntries.Add(reportRequestWithNoRequestRetryCount2);
 
 			var reportRequestCallback =
-				_reportRequestCallbackService.GetNextFromQueueOfReportsToRequest(customOptions, _merchantId, _amazonRegion);
+				_reportRequestEntryService.GetNextFromQueueOfReportsToRequest(customOptions, _merchantId, _amazonRegion);
 
 			Assert.AreEqual(reportRequestWithNoRequestRetryCount1.Id, reportRequestCallback.Id);
 		}
@@ -213,7 +213,7 @@ namespace EasyMWS.Tests.Services
 			_reportRequestEntries.Add(reportRequestWithNoRetryPeriodComplete2);
 
 			var reportRequestCallback =
-				_reportRequestCallbackService.GetNextFromQueueOfReportsToRequest(customOptions, _merchantId, _amazonRegion);
+				_reportRequestEntryService.GetNextFromQueueOfReportsToRequest(customOptions, _merchantId, _amazonRegion);
 
 			Assert.AreEqual(reportRequestWithNoRetryPeriodComplete1.Id, reportRequestCallback.Id);
 		}
@@ -232,7 +232,7 @@ namespace EasyMWS.Tests.Services
 			_reportRequestEntries.Add(reportRequestWithNoRetryPeriodComplete1);
 			_reportRequestEntries.Add(reportRequestWithNoRetryPeriodComplete2);
 
-			var reportRequestCallback = _reportRequestCallbackService.GetNextFromQueueOfReportsToRequest(customOptions, _merchantId, _amazonRegion);
+			var reportRequestCallback = _reportRequestEntryService.GetNextFromQueueOfReportsToRequest(customOptions, _merchantId, _amazonRegion);
 
 			Assert.AreEqual(reportRequestWithNoRetryPeriodComplete1.Id, reportRequestCallback.Id);
 		}
@@ -252,7 +252,7 @@ namespace EasyMWS.Tests.Services
 			_reportRequestEntries.Add(reportRequestWithNoRetryPeriodComplete1);
 			_reportRequestEntries.Add(reportRequestWithNoRetryPeriodComplete2);
 
-			var reportRequestCallback = _reportRequestCallbackService.GetNextFromQueueOfReportsToRequest(customOptions, _merchantId, _amazonRegion);
+			var reportRequestCallback = _reportRequestEntryService.GetNextFromQueueOfReportsToRequest(customOptions, _merchantId, _amazonRegion);
 
 			Assert.AreEqual(reportRequestWithNoRetryPeriodComplete1.Id, reportRequestCallback.Id);
 		}
@@ -308,7 +308,7 @@ namespace EasyMWS.Tests.Services
 			_reportRequestEntries.Add(reportRequestWithNoRetryPeriodComplete2);
 			_reportRequestEntries.Add(reportRequestWithNoRetryPeriodComplete3);
 
-			var reportRequestCallback = _reportRequestCallbackService.GetNextFromQueueOfReportsToRequest(customOptions, _merchantId, _amazonRegion);
+			var reportRequestCallback = _reportRequestEntryService.GetNextFromQueueOfReportsToRequest(customOptions, _merchantId, _amazonRegion);
 
 			Assert.AreEqual(reportRequestWithNoRetryPeriodComplete2.Id, reportRequestCallback.Id);
 		}
@@ -329,7 +329,7 @@ namespace EasyMWS.Tests.Services
 		    _reportRequestEntries.Add(reportRequestWithNullMerchant);
 
 		    var reportRequestCallback =
-			    _reportRequestCallbackService.GetNextFromQueueOfReportsToRequest(_options, null, _amazonRegion);
+			    _reportRequestEntryService.GetNextFromQueueOfReportsToRequest(_options, null, _amazonRegion);
 
 		    Assert.IsNull(reportRequestCallback);
 	    }
@@ -388,7 +388,7 @@ namespace EasyMWS.Tests.Services
 		    _reportRequestEntries.AddRange(data);
 
 		    // Act
-		    var listPendingReports = _reportRequestCallbackService.GetAllPendingReportFromQueue(testMerchantId2, _amazonRegion).ToList();
+		    var listPendingReports = _reportRequestEntryService.GetAllPendingReportFromQueue(testMerchantId2, _amazonRegion).ToList();
 
 		    // Assert
 		    Assert.AreEqual(2, listPendingReports.Count());
@@ -447,7 +447,7 @@ namespace EasyMWS.Tests.Services
 		    _reportRequestEntries.AddRange(data);
 
 		    // Act
-		    var listPendingReports = _reportRequestCallbackService.GetAllPendingReportFromQueue(null, _amazonRegion);
+		    var listPendingReports = _reportRequestEntryService.GetAllPendingReportFromQueue(null, _amazonRegion);
 
 		    // Assert
 		    Assert.IsEmpty(listPendingReports);
@@ -498,7 +498,7 @@ namespace EasyMWS.Tests.Services
 		    };
 		    _reportRequestEntries.AddRange(data);
 
-		    var result = _reportRequestCallbackService.GetNextFromQueueOfReportsToDownload(_options, null, _amazonRegion);
+		    var result = _reportRequestEntryService.GetNextFromQueueOfReportsToDownload(_options, null, _amazonRegion);
 
 		    Assert.IsNull(result);
 	    }

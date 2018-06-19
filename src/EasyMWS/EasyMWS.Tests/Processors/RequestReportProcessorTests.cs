@@ -28,7 +28,7 @@ namespace EasyMWS.Tests.Processors
 		private AmazonRegion _region = AmazonRegion.Europe;
 		private string _merchantId = "TestMerchantId";
 		private IRequestReportProcessor _requestReportProcessor;
-		private Mock<IReportRequestCallbackService> _reportRequestCallbackServiceMock;
+		private Mock<IReportRequestEntryService> _reportRequestCallbackServiceMock;
 		private List<ReportRequestEntry> _reportRequestCallbacks;
 		private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
 		private Mock<IEasyMwsLogger> _loggerMock;
@@ -40,7 +40,7 @@ namespace EasyMWS.Tests.Processors
 			_easyMwsOptions = EasyMwsOptions.Defaults();
 
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
-			_reportRequestCallbackServiceMock = new Mock<IReportRequestCallbackService>();
+			_reportRequestCallbackServiceMock = new Mock<IReportRequestEntryService>();
 			_loggerMock = new Mock<IEasyMwsLogger>();
 			_requestReportProcessor = new RequestReportProcessor(_region, _merchantId, _marketplaceWebServiceClientMock.Object, _loggerMock.Object, _easyMwsOptions);
 			
@@ -120,19 +120,19 @@ namespace EasyMWS.Tests.Processors
 		[Test]
 		public void RequestReportFromAmazon_CalledWithNullReportRequestCallback_ThrowsArgumentNullException()
 		{
-			Assert.Throws<ArgumentNullException>(() => _requestReportProcessor.RequestReportFromAmazon(It.IsAny<IReportRequestCallbackService>(), null));
+			Assert.Throws<ArgumentNullException>(() => _requestReportProcessor.RequestReportFromAmazon(It.IsAny<IReportRequestEntryService>(), null));
 		}
 
 		[Test]
 		public void RequestReportFromAmazon_CalledWithReportRequestCallbackWithNullReportRequestData_ThrowsArgumentNullException()
 		{
-			Assert.Throws<ArgumentNullException>(() => _requestReportProcessor.RequestReportFromAmazon(It.IsAny<IReportRequestCallbackService>(), new ReportRequestEntry()));
+			Assert.Throws<ArgumentNullException>(() => _requestReportProcessor.RequestReportFromAmazon(It.IsAny<IReportRequestEntryService>(), new ReportRequestEntry()));
 		}
 
 		[Test]
 		public void RequestReportFromAmazon_CalledWithReportRequestDataWithNoReportType_ThrowsArgumentNullException()
 		{
-			Assert.Throws<ArgumentException>(() => _requestReportProcessor.RequestReportFromAmazon(It.IsAny<IReportRequestCallbackService>(), new ReportRequestEntry {ReportRequestData = String.Empty}));
+			Assert.Throws<ArgumentException>(() => _requestReportProcessor.RequestReportFromAmazon(It.IsAny<IReportRequestEntryService>(), new ReportRequestEntry {ReportRequestData = String.Empty}));
 		}
 
 		[Test]
