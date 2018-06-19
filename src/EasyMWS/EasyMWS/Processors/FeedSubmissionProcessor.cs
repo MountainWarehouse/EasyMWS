@@ -197,7 +197,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			feedSubmissionService.SaveChanges();
 		}
 
-		public (MemoryStream processingReport, string md5hash) GetFeedSubmissionResultFromAmazon(FeedSubmissionEntry feedSubmissionEntry)
+		public (MemoryStream processingReport, string md5hash) DownloadFeedSubmissionResultFromAmazon(FeedSubmissionEntry feedSubmissionEntry)
 		{
 			_logger.Info(
 				$"Attempting to request the feed submission result for the next feed in queue from Amazon: {feedSubmissionEntry.RegionAndTypeComputed}.");

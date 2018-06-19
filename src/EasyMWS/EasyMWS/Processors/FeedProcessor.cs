@@ -52,7 +52,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			RequestFeedSubmissionStatusesFromAmazon(feedSubmissionService);
 
-			RequestNextFeedSubmissionInQueueFromAmazon(feedSubmissionService);
+			DownloadNextFeedSubmissionResultFromAmazon(feedSubmissionService);
 
 			PerformCallbacksForPreviouslySubmittedFeeds(feedSubmissionService);
 		}
@@ -161,12 +161,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public void RequestNextFeedSubmissionInQueueFromAmazon(IFeedSubmissionEntryService feedSubmissionService)
+		public void DownloadNextFeedSubmissionResultFromAmazon(IFeedSubmissionEntryService feedSubmissionService)
 		{
 			var nextFeedWithProcessingComplete = feedSubmissionService.GetNextFromQueueOfProcessingCompleteFeeds(_options, _merchantId, _region);
 			if (nextFeedWithProcessingComplete == null) return;
 
-			var processingReportInfo = _feedSubmissionProcessor.GetFeedSubmissionResultFromAmazon(nextFeedWithProcessingComplete);
+			var processingReportInfo = _feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(nextFeedWithProcessingComplete);
 			if (processingReportInfo.processingReport == null)
 			{
 				_logger.Warn($"AmazonMWS feed submission result request failed for {nextFeedWithProcessingComplete.RegionAndTypeComputed}");
