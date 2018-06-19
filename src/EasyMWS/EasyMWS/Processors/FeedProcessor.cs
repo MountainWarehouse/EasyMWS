@@ -143,28 +143,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			if (feedSubmission == null) return;
 		
-			var feedSubmissionId = _feedSubmissionProcessor.SubmitFeedToAmazon(feedSubmissionService, feedSubmission);
-
-			feedSubmission.LastSubmitted = DateTime.UtcNow;
-			feedSubmissionService.Update(feedSubmission);
-			feedSubmissionService.SaveChanges();
-
-			if (string.IsNullOrEmpty(feedSubmissionId))
-			{
-				_feedSubmissionProcessor.MoveToRetryQueue(feedSubmissionService, feedSubmission);
-				_logger.Warn($"AmazonMWS feed submission request failed for {feedSubmission.RegionAndTypeComputed}");
-			}
-			else if (feedSubmissionId == HttpStatusCode.BadRequest.ToString())
-			{
-				_feedSubmissionProcessor.RemoveFromQueue(feedSubmissionService, feedSubmission);
-				_logger.Warn($"AmazonMWS feed submission failed for {feedSubmission.RegionAndTypeComputed}. The feed submission request was removed from queue.");
-			}
-			else
-			{
-				_feedSubmissionProcessor.MoveToQueueOfSubmittedFeeds(feedSubmissionService, feedSubmission, feedSubmissionId);
-				_logger.Info($"AmazonMWS feed submission request succeeded for {feedSubmission.RegionAndTypeComputed}. FeedSubmissionId:'{feedSubmissionId}'");
-			}
-
+			_feedSubmissionProcessor.SubmitFeedToAmazon(feedSubmissionService, feedSubmission);
 		}
 
 		public void RequestFeedSubmissionStatusesFromAmazon(IFeedSubmissionEntryService feedSubmissionService)
@@ -213,7 +192,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			else
 			{
 				_logger.Warn($"Checksum verification failed for feed submission report for {nextFeedWithProcessingComplete.RegionAndTypeComputed}");
-				_feedSubmissionProcessor.MoveToRetryQueue(feedSubmissionService, nextFeedWithProcessingComplete);
+				//_feedSubmissionProcessor.MoveToRetryQueue(feedSubmissionService, nextFeedWithProcessingComplete);
 			}
 		}
 	}
