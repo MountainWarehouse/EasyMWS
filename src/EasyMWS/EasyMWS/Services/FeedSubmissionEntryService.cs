@@ -81,6 +81,13 @@ namespace MountainWarehouse.EasyMWS.Services
 				         && ffscs.IsProcessingComplete == true
 				         && IsReadyForRequestingSubmissionReport(options, ffscs));
 
+		public IEnumerable<FeedSubmissionEntry> GetAllFromQueueOfFeedsReadyForCallback(EasyMwsOptions options,
+			string merchantId, AmazonRegion region)
+			=> string.IsNullOrEmpty(merchantId)
+				? new List<FeedSubmissionEntry>().AsEnumerable()
+				: Where(fse => fse.AmazonRegion == region && fse.MerchantId == merchantId && fse.Details != null &&
+				               fse.Details.FeedSubmissionReport != null);
+
 		private bool IsFeedReadyForSubmission(EasyMwsOptions options, FeedSubmissionEntry feedSubmission)
 		{
 			var isInRetryQueueAndReadyForRetry = feedSubmission.FeedSubmissionRetryCount > 0

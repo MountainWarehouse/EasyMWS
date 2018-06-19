@@ -59,8 +59,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		private void PerformCallbacksForPreviouslySubmittedFeeds(IFeedSubmissionEntryService feedSubmissionService)
 		{
-			var previouslySubmittedFeeds = feedSubmissionService.GetAll()
-				.Where(fse => fse.AmazonRegion == _region && fse.MerchantId == _merchantId && fse.Details != null && fse.Details.FeedSubmissionReport != null);
+			var previouslySubmittedFeeds = feedSubmissionService.GetAllFromQueueOfFeedsReadyForCallback(_options, _merchantId, _region);
 
 			foreach (var feedSubmissionEntry in previouslySubmittedFeeds)
 			{

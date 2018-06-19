@@ -308,6 +308,11 @@ namespace EasyMWS.Tests.ReportProcessors
 			_feedSubmissionCallbackServiceMock.Setup(fspm =>
 					fspm.GetNextFromQueueOfProcessingCompleteFeeds(It.IsAny<EasyMwsOptions>(), It.IsAny<string>(), It.IsAny<AmazonRegion>()))
 				.Returns(new FeedSubmissionEntry(serializedPropertiesContainer) { MethodName = "testCallbackMethodName", Details = new FeedSubmissionDetails()});
+			var submissionEntries = new List<FeedSubmissionEntry>{ new FeedSubmissionEntry(serializedPropertiesContainer) { MethodName = "testCallbackMethodName", Details = new FeedSubmissionDetails() } }.AsQueryable();
+			_feedSubmissionCallbackServiceMock.Setup(fspm =>
+					fspm.GetAllFromQueueOfFeedsReadyForCallback(It.IsAny<EasyMwsOptions>(), It.IsAny<string>(), It.IsAny<AmazonRegion>()))
+				.Returns(submissionEntries);
+
 			var testFeedSubmissions = new List<FeedSubmissionEntry>
 			{
 				new FeedSubmissionEntry{AmazonRegion = _amazonRegion, MerchantId = _merchantId, Details = null},

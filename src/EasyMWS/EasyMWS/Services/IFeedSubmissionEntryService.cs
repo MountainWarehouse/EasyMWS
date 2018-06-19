@@ -29,8 +29,6 @@ namespace MountainWarehouse.EasyMWS.Services
 	    IEnumerable<string> GetIdsForSubmittedFeedsFromQueue(EasyMwsOptions options, string merchantId, AmazonRegion region);
 
 	    FeedSubmissionEntry GetNextFromQueueOfProcessingCompleteFeeds(EasyMwsOptions options, string merchantId, AmazonRegion region);
-
-
-
-    }
+	    IEnumerable<FeedSubmissionEntry> GetAllFromQueueOfFeedsReadyForCallback(EasyMwsOptions options, string merchantId, AmazonRegion region);
+	}
 }
