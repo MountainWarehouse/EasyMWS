@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
@@ -12,7 +11,6 @@ using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Services;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService.Model;
-using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS.Processors
 {
@@ -111,34 +109,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 	    }
 
-	    private bool IsAmazonErrorCodeFatal(string errorCode)
-	    {
-		    var fatalErrorCodes = new List<string>
-		    {
-			    "AccessToReportDenied",
-			    "InvalidReportId",
-			    "InvalidReportType",
-			    "InvalidRequest",
-			    "ReportNoLongerAvailable"
-		    };
-
-		    return fatalErrorCodes.Contains(errorCode);
-	    }
-
-	    private bool IsAmazonErrorCodeNonFatal(string errorCode)
-	    {
-			var nonFatalErrorCodes = new List<string>
-		    {
-				"ReportNotReady",
-				"InvalidScheduleFrequency"
-		    };
-
-		    return nonFatalErrorCodes.Contains(errorCode) || !IsAmazonErrorCodeFatal(errorCode);
-		}
-
-	    
-	    
-
 	    public List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> GetReportProcessingStatusesFromAmazon(IEnumerable<string> requestIdList, string merchant)
 	    {
 		    _logger.Info($"Attempting to request report processing statuses for all reports in queue.");
@@ -212,31 +182,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 			reportRequestService.SaveChanges();
 	    }
 
-	    private void MarkEntriesAsDeleted(IReportRequestCallbackService reportRequestService, IQueryable<ReportRequestEntry> entriesToMarkAsDeleted, List<int> entriesIdsAlreadyMarkedAsDeleted, string deleteReason)
-	    {
-			foreach (var entry in entriesToMarkAsDeleted)
-			{
-				if (entriesIdsAlreadyMarkedAsDeleted.Exists(e => e == entry.Id)) continue;
-				entriesIdsAlreadyMarkedAsDeleted.Add(entry.Id);
-				reportRequestService.Delete(entry);
-				_logger.Warn($"Report request {entry.RegionAndTypeComputed} deleted from queue. {deleteReason}");
-			}
-		}
-
-	    private bool IsMatchForRegionAndMerchantId(ReportRequestEntry e) => e.AmazonRegion == _region && e.MerchantId == _merchantId;
-
-	    private bool IsRequestRetryCountExceeded(ReportRequestEntry e) => e.ReportRequestRetryCount > _options.ReportRequestMaxRetryCount;
-
-	    private bool IsDownloadRetryCountExceeded(ReportRequestEntry e) => e.ReportDownloadRetryCount > _options.ReportDownloadMaxRetryCount;
-
-	    private bool IsProcessingRetryCountExceeded(ReportRequestEntry e) => e.ReportProcessRetryCount > _options.ReportProcessingMaxRetryCount;
-
-		private bool IsCallbackInvocationRetryCountExceeded(ReportRequestEntry e) => e.InvokeCallbackRetryCount > _options.InvokeCallbackMaxRetryCount; 
-
-
-		private bool IsExpirationPeriodExceeded(ReportRequestEntry reportRequestEntry) =>
-			(DateTime.Compare(reportRequestEntry.DateCreated, DateTime.UtcNow.Subtract(_options.ReportDownloadRequestEntryExpirationPeriod)) < 0);
-
 		public void QueueReportsAccordingToProcessingStatus(IReportRequestCallbackService reportRequestService,
 			List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> reportGenerationStatuses)
 	    {
@@ -288,10 +233,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 			reportRequestService.SaveChanges();
 	    }
-
-
-
-	    
 
 		public void DownloadGeneratedReportFromAmazon(IReportRequestCallbackService reportRequestService, ReportRequestEntry reportRequestEntry)
 	    {
@@ -367,5 +308,56 @@ namespace MountainWarehouse.EasyMWS.Processors
 			    reportRequestService.SaveChanges();
 		    }
 		}
-    }
+
+
+	    private bool IsAmazonErrorCodeFatal(string errorCode)
+	    {
+		    var fatalErrorCodes = new List<string>
+		    {
+			    "AccessToReportDenied",
+			    "InvalidReportId",
+			    "InvalidReportType",
+			    "InvalidRequest",
+			    "ReportNoLongerAvailable"
+		    };
+
+		    return fatalErrorCodes.Contains(errorCode);
+	    }
+
+	    private bool IsAmazonErrorCodeNonFatal(string errorCode)
+	    {
+		    var nonFatalErrorCodes = new List<string>
+		    {
+			    "ReportNotReady",
+			    "InvalidScheduleFrequency"
+		    };
+
+		    return nonFatalErrorCodes.Contains(errorCode) || !IsAmazonErrorCodeFatal(errorCode);
+	    }
+
+	    private void MarkEntriesAsDeleted(IReportRequestCallbackService reportRequestService, IQueryable<ReportRequestEntry> entriesToMarkAsDeleted, List<int> entriesIdsAlreadyMarkedAsDeleted, string deleteReason)
+	    {
+		    foreach (var entry in entriesToMarkAsDeleted)
+		    {
+			    if (entriesIdsAlreadyMarkedAsDeleted.Exists(e => e == entry.Id)) continue;
+			    entriesIdsAlreadyMarkedAsDeleted.Add(entry.Id);
+			    reportRequestService.Delete(entry);
+			    _logger.Warn($"Report request {entry.RegionAndTypeComputed} deleted from queue. {deleteReason}");
+		    }
+	    }
+
+	    private bool IsMatchForRegionAndMerchantId(ReportRequestEntry e) => e.AmazonRegion == _region && e.MerchantId == _merchantId;
+
+	    private bool IsRequestRetryCountExceeded(ReportRequestEntry e) => e.ReportRequestRetryCount > _options.ReportRequestMaxRetryCount;
+
+	    private bool IsDownloadRetryCountExceeded(ReportRequestEntry e) => e.ReportDownloadRetryCount > _options.ReportDownloadMaxRetryCount;
+
+	    private bool IsProcessingRetryCountExceeded(ReportRequestEntry e) => e.ReportProcessRetryCount > _options.ReportProcessingMaxRetryCount;
+
+	    private bool IsCallbackInvocationRetryCountExceeded(ReportRequestEntry e) => e.InvokeCallbackRetryCount > _options.InvokeCallbackMaxRetryCount;
+
+	    private bool IsExpirationPeriodExceeded(ReportRequestEntry reportRequestEntry) =>
+		    (DateTime.Compare(reportRequestEntry.DateCreated, DateTime.UtcNow.Subtract(_options.ReportDownloadRequestEntryExpirationPeriod)) < 0);
+
+	}
 }
