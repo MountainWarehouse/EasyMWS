@@ -143,7 +143,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			if (feedSubmission == null) return;
 		
-			var feedSubmissionId = _feedSubmissionProcessor.SubmitFeedToAmazon(feedSubmission);
+			var feedSubmissionId = _feedSubmissionProcessor.SubmitFeedToAmazon(feedSubmissionService, feedSubmission);
 
 			feedSubmission.LastSubmitted = DateTime.UtcNow;
 			feedSubmissionService.Update(feedSubmission);

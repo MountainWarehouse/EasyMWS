@@ -34,7 +34,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		
 
-		public string SubmitFeedToAmazon(FeedSubmissionEntry feedSubmission)
+		public string SubmitFeedToAmazon(IFeedSubmissionEntryService feedSubmissionService, FeedSubmissionEntry feedSubmission)
 		{
 			var missingInformationExceptionMessage = "Cannot submit queued feed to amazon due to missing feed submission information";
 

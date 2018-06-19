@@ -8,7 +8,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 {
 	internal interface IFeedSubmissionProcessor
 	{
-		string SubmitFeedToAmazon(FeedSubmissionEntry feedSubmission);
+		string SubmitFeedToAmazon(IFeedSubmissionEntryService feedSubmissionService, FeedSubmissionEntry feedSubmission);
 		void MoveToQueueOfSubmittedFeeds(IFeedSubmissionEntryService feedSubmissionService, FeedSubmissionEntry feedSubmission, string feedSubmissionId);
 		List<(string FeedSubmissionId, string FeedProcessingStatus)> RequestFeedSubmissionStatusesFromAmazon(
 			IEnumerable<string> feedSubmissionIdList, string merchant);
