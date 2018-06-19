@@ -8,16 +8,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 {
 	internal interface IRequestReportProcessor
 	{
-		ReportRequestEntry GetNextFromQueueOfReportsToRequest(IReportRequestCallbackService reportRequestService);
-
-		IEnumerable<ReportRequestEntry> GetAllFromQueueOfReportsReadyForCallback(IReportRequestCallbackService reportRequestService);
 		void RequestReportFromAmazon(IReportRequestCallbackService reportRequestService, ReportRequestEntry reportRequestEntry);
-		IEnumerable<string> GetAllPendingReportFromQueue(IReportRequestCallbackService reportRequestService);
 		List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> GetReportProcessingStatusesFromAmazon(IEnumerable<string> requestIdList, string merchant);
-		ReportRequestEntry GetNextFromQueueOfReportsToDownload(IReportRequestCallbackService reportRequestService);
-		void DownloadGeneratedReportFromAmazon(IReportRequestCallbackService reportRequestService, ReportRequestEntry reportRequestEntry);
 		void QueueReportsAccordingToProcessingStatus(IReportRequestCallbackService reportRequestService,
 			List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> reportGenerationStatuses);
+		void DownloadGeneratedReportFromAmazon(IReportRequestCallbackService reportRequestService, ReportRequestEntry reportRequestEntry);
 		void CleanupReportRequests(IReportRequestCallbackService reportRequestService);
 	}
 }

@@ -137,15 +137,15 @@ namespace EasyMWS.Tests.ReportProcessors
 		{
 			_reportProcessor.PollReports(_reportRequestCallbackServiceMock.Object);
 
-			_requestReportProcessor.Verify(
-				rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<IReportRequestCallbackService>()), Times.Once);
+			_reportRequestCallbackServiceMock.Verify(
+				rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<EasyMwsOptions>(), It.IsAny<string>(), It.IsAny<AmazonRegion>()), Times.Once);
 		}
 
 		[Test]
 		public void Poll_WithGetNonRequestedReportFromQueueReturningNull_DoesNotRequestAReportFromAmazon()
 		{
-			_requestReportProcessor
-				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<IReportRequestCallbackService>()))
+			_reportRequestCallbackServiceMock
+				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<EasyMwsOptions>(), It.IsAny<string>(), It.IsAny<AmazonRegion>()))
 				.Returns((ReportRequestEntry) null);
 
 			_reportProcessor.PollReports(_reportRequestCallbackServiceMock.Object);
@@ -160,8 +160,8 @@ namespace EasyMWS.Tests.ReportProcessors
 			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
 			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
 
-			_requestReportProcessor
-				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<IReportRequestCallbackService>()))
+			_reportRequestCallbackServiceMock
+				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<EasyMwsOptions>(), It.IsAny<string>(), It.IsAny<AmazonRegion>()))
 				.Returns(new ReportRequestEntry{ReportRequestData = serializedReportRequestData });
 
 			_reportProcessor.PollReports(_reportRequestCallbackServiceMock.Object);

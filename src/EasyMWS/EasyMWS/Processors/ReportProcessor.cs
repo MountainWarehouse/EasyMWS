@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
@@ -48,6 +49,18 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_requestReportProcessor = _requestReportProcessor ?? new RequestReportProcessor(_region, _merchantId, mwsClient, _logger, _options);
 		}
 
+		private ReportRequestEntry GetNextFromQueueOfReportsToRequest(IReportRequestCallbackService reportRequestService)
+			=> string.IsNullOrEmpty(_merchantId) ? null : reportRequestService.GetNextFromQueueOfReportsToRequest(_options, _merchantId, _region);
+
+		private ReportRequestEntry GetNextFromQueueOfReportsToDownload(IReportRequestCallbackService reportRequestService)
+			=> string.IsNullOrEmpty(_merchantId) ? null : reportRequestService.GetNextFromQueueOfReportsToDownload(_options, _merchantId, _region);
+
+		private IEnumerable<string> GetAllPendingReportFromQueue(IReportRequestCallbackService reportRequestService)
+			=> string.IsNullOrEmpty(_merchantId) ? new List<string>().AsEnumerable() : reportRequestService.GetAllPendingReportFromQueue(_merchantId, _region);
+
+		private IEnumerable<ReportRequestEntry> GetAllFromQueueOfReportsReadyForCallback(IReportRequestCallbackService reportRequestService)
+			=> string.IsNullOrEmpty(_merchantId) ? null : reportRequestService.GetAllFromQueueOfReportsReadyForCallback(_options, _merchantId, _region);
+
 
 		public void PollReports(IReportRequestCallbackService reportRequestService)
 		{
@@ -66,7 +79,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		private void PerformCallbackForPreviouslyDownloadedReports(IReportRequestCallbackService reportRequestService)
 		{
-			var reportsReadyForCallback = _requestReportProcessor.GetAllFromQueueOfReportsReadyForCallback(reportRequestService);
+			var reportsReadyForCallback = GetAllFromQueueOfReportsReadyForCallback(reportRequestService);
 
 			foreach (var reportEntry in reportsReadyForCallback)
 			{
@@ -141,7 +154,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void RequestNextReportInQueueFromAmazon(IReportRequestCallbackService reportRequestService)
 		{
-			var reportRequest = _requestReportProcessor.GetNextFromQueueOfReportsToRequest(reportRequestService);
+			var reportRequest = GetNextFromQueueOfReportsToRequest(reportRequestService);
 
 			if (reportRequest == null) return;
 
@@ -150,7 +163,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void RequestReportStatusesFromAmazon(IReportRequestCallbackService reportRequestService)
 		{
-			var pendingReportsRequestIds = _requestReportProcessor.GetAllPendingReportFromQueue(reportRequestService).ToList();
+			var pendingReportsRequestIds = GetAllPendingReportFromQueue(reportRequestService).ToList();
 
 			if (!pendingReportsRequestIds.Any()) return;
 
@@ -165,7 +178,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void DownloadNextReportInQueueFromAmazon(IReportRequestCallbackService reportRequestService)
 		{
-			var reportToDownload = _requestReportProcessor.GetNextFromQueueOfReportsToDownload(reportRequestService);
+			var reportToDownload = GetNextFromQueueOfReportsToDownload(reportRequestService);
 			if (reportToDownload == null) return;
 			
 			_requestReportProcessor.DownloadGeneratedReportFromAmazon(reportRequestService, reportToDownload);
