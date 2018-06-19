@@ -114,8 +114,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public List<(string FeedSubmissionId, string FeedProcessingStatus)> RequestFeedSubmissionStatusesFromAmazon(
-			IEnumerable<string> feedSubmissionIdList, string merchant)
+		public List<(string FeedSubmissionId, string FeedProcessingStatus)> RequestFeedSubmissionStatusesFromAmazon(IEnumerable<string> feedSubmissionIdList, string merchant)
 		{
 			_logger.Info($"Attempting to request feed submission statuses for all feeds in queue.");
 
@@ -128,18 +127,22 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 				var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
 				var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
-				_logger.Info(
-					$"Request to MWS.GetFeedSubmissionList was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']",
-					new RequestInfo(timestamp, requestId));
+				_logger.Info($"AmazonMWS request for feed submission statuses succeeded.[RequestId:'{requestId}',Timestamp:'{timestamp}']", new RequestInfo(timestamp, requestId));
 
 				var responseInfo = new List<(string FeedSubmissionId, string IsProcessingComplete)>();
 
-				foreach (var feedSubmissionInfo in response.GetFeedSubmissionListResult.FeedSubmissionInfo)
+				if (response?.GetFeedSubmissionListResult?.FeedSubmissionInfo != null)
 				{
-					responseInfo.Add((feedSubmissionInfo.FeedSubmissionId, feedSubmissionInfo.FeedProcessingStatus));
+					foreach (var feedSubmissionInfo in response.GetFeedSubmissionListResult.FeedSubmissionInfo)
+					{
+						responseInfo.Add((feedSubmissionInfo.FeedSubmissionId, feedSubmissionInfo.FeedProcessingStatus));
+					}
 				}
-
-				_logger.Info($"AmazonMWS request for feed submission statuses succeeded.");
+				else
+				{
+					_logger.Warn("AmazonMWS GetFeedSubmissionList response does not contain any results.");
+				}
+				
 				return responseInfo;
 			}
 			catch (MarketplaceWebServiceException e)

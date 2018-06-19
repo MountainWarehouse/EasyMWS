@@ -128,7 +128,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			    var responseInformation =
 				    new List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)>();
 
-			    if (response != null)
+			    if (response?.GetReportRequestListResult?.ReportRequestInfo != null)
 			    {
 				    foreach (var reportRequestInfo in response.GetReportRequestListResult.ReportRequestInfo)
 				    {
@@ -137,6 +137,10 @@ namespace MountainWarehouse.EasyMWS.Processors
 							    .ReportProcessingStatus));
 				    }
 			    }
+			    else
+			    {
+					_logger.Warn("AmazonMWS GetReportRequestList response does not contain any results.");
+				}
 
 			    return responseInformation;
 
