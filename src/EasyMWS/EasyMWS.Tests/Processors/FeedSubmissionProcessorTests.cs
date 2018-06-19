@@ -76,7 +76,7 @@ namespace EasyMWS.Tests.Processors
 				MerchantId = _merchantId,
 				Id = 2,
 				FeedSubmissionId = "testSubmissionId2",
-				SubmissionRetryCount = 0
+				FeedSubmissionRetryCount = 0
 			};
 			var feedSubmissionWithNullFeedSubmissionId1 = new FeedSubmissionEntry(serializedPropertiesContainer)
 			{
@@ -84,7 +84,7 @@ namespace EasyMWS.Tests.Processors
 				MerchantId = _merchantId,
 				Id = 3,
 				FeedSubmissionId = null,
-				SubmissionRetryCount = 0
+				FeedSubmissionRetryCount = 0
 			};
 			var feedSubmissionWithNullFeedSubmissionId2 = new FeedSubmissionEntry(serializedPropertiesContainer)
 			{
@@ -92,7 +92,7 @@ namespace EasyMWS.Tests.Processors
 				MerchantId = _merchantId,
 				Id = 4,
 				FeedSubmissionId = null,
-				SubmissionRetryCount = 0
+				FeedSubmissionRetryCount = 0
 			};
 
 
@@ -119,7 +119,7 @@ namespace EasyMWS.Tests.Processors
 				MerchantId = merchantId1,
 				Id = 2,
 				FeedSubmissionId = null,
-				SubmissionRetryCount = 0
+				FeedSubmissionRetryCount = 0
 			};
 			var feedSubmissionWithSameRegionButDifferentMerchantId = new FeedSubmissionEntry(serializedPropertiesContainer)
 			{
@@ -127,7 +127,7 @@ namespace EasyMWS.Tests.Processors
 				MerchantId = merchantId1,
 				Id = 2,
 				FeedSubmissionId = null,
-				SubmissionRetryCount = 0
+				FeedSubmissionRetryCount = 0
 			};
 			var feedSubmissionWithSameRegionAndMerchantId1 = new FeedSubmissionEntry(serializedPropertiesContainer)
 			{
@@ -135,7 +135,7 @@ namespace EasyMWS.Tests.Processors
 				MerchantId = _merchantId,
 				Id = 3,
 				FeedSubmissionId = null,
-				SubmissionRetryCount = 0
+				FeedSubmissionRetryCount = 0
 			};
 			var feedSubmissionWithSameRegionAndMerchantId2 = new FeedSubmissionEntry(serializedPropertiesContainer)
 			{
@@ -143,7 +143,7 @@ namespace EasyMWS.Tests.Processors
 				MerchantId = _merchantId,
 				Id = 4,
 				FeedSubmissionId = null,
-				SubmissionRetryCount = 0
+				FeedSubmissionRetryCount = 0
 			};
 
 
@@ -173,7 +173,7 @@ namespace EasyMWS.Tests.Processors
 				MerchantId = testMerchantId,
 				Id = 2,
 				FeedSubmissionId = "testSubmissionId2",
-				SubmissionRetryCount = 0
+				FeedSubmissionRetryCount = 0
 			};
 			var feedSubmissionWithNullFeedSubmissionId1 = new FeedSubmissionEntry(serializedPropertiesContainer)
 			{
@@ -181,7 +181,7 @@ namespace EasyMWS.Tests.Processors
 				MerchantId = testMerchantId,
 				Id = 3,
 				FeedSubmissionId = null,
-				SubmissionRetryCount = 0
+				FeedSubmissionRetryCount = 0
 			};
 			var feedSubmissionWithNullFeedSubmissionId2 = new FeedSubmissionEntry(serializedPropertiesContainer)
 			{
@@ -189,7 +189,7 @@ namespace EasyMWS.Tests.Processors
 				MerchantId = testMerchantId,
 				Id = 4,
 				FeedSubmissionId = null,
-				SubmissionRetryCount = 0
+				FeedSubmissionRetryCount = 0
 			};
 			var feedSubmissionWithNullMerchant = new FeedSubmissionEntry(serializedPropertiesContainer)
 			{
@@ -197,7 +197,7 @@ namespace EasyMWS.Tests.Processors
 				MerchantId = null,
 				Id = 5,
 				FeedSubmissionId = null,
-				SubmissionRetryCount = 0
+				FeedSubmissionRetryCount = 0
 			};
 
 
@@ -241,24 +241,24 @@ namespace EasyMWS.Tests.Processors
 		[Test]
 		public void MoveToRetryQueue_CalledOnce_IncrementsRequestRetryCountCorrectly()
 		{
-			Assert.AreEqual(0, _feedSubmissionCallbacks.First().SubmissionRetryCount);
+			Assert.AreEqual(0, _feedSubmissionCallbacks.First().FeedSubmissionRetryCount);
 
 			_feedSubmissionProcessor.MoveToRetryQueue(_feedSubmissionCallbackServiceMock.Object, _feedSubmissionCallbacks.First());
 
-			Assert.AreEqual(1, _feedSubmissionCallbacks.First().SubmissionRetryCount);
+			Assert.AreEqual(1, _feedSubmissionCallbacks.First().FeedSubmissionRetryCount);
 			_feedSubmissionCallbackServiceMock.Verify(x => x.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
 		}
 
 		[Test]
 		public void MoveToRetryQueue_CalledMultipleTimes_IncrementsRequestRetryCountCorrectly()
 		{
-			Assert.AreEqual(0, _feedSubmissionCallbacks.First().SubmissionRetryCount);
+			Assert.AreEqual(0, _feedSubmissionCallbacks.First().FeedSubmissionRetryCount);
 
 			_feedSubmissionProcessor.MoveToRetryQueue(_feedSubmissionCallbackServiceMock.Object, _feedSubmissionCallbacks.First());
 			_feedSubmissionProcessor.MoveToRetryQueue(_feedSubmissionCallbackServiceMock.Object, _feedSubmissionCallbacks.First());
 			_feedSubmissionProcessor.MoveToRetryQueue(_feedSubmissionCallbackServiceMock.Object, _feedSubmissionCallbacks.First());
 
-			Assert.AreEqual(3, _feedSubmissionCallbacks.First().SubmissionRetryCount);
+			Assert.AreEqual(3, _feedSubmissionCallbacks.First().FeedSubmissionRetryCount);
 			_feedSubmissionCallbackServiceMock.Verify(x => x.Update(It.IsAny<FeedSubmissionEntry>()), Times.Exactly(3));
 		}
 
@@ -458,7 +458,7 @@ namespace EasyMWS.Tests.Processors
 				{
 					FeedSubmissionId = "testId",
 					IsProcessingComplete = false,
-					SubmissionRetryCount = 0
+					FeedSubmissionRetryCount = 0
 				}
 			};
 
@@ -472,7 +472,7 @@ namespace EasyMWS.Tests.Processors
 			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(_feedSubmissionCallbackServiceMock.Object, resultsInfo);
 
 			Assert.IsTrue(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").IsProcessingComplete);
-			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").SubmissionRetryCount);
+			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").FeedSubmissionRetryCount);
 			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
 			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
 		}
@@ -485,11 +485,11 @@ namespace EasyMWS.Tests.Processors
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 			var data = new List<FeedSubmissionEntry>
 			{
-				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId1", IsProcessingComplete = false, SubmissionRetryCount = 0},
-				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId2", IsProcessingComplete = false, SubmissionRetryCount = 0},
-				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId3", IsProcessingComplete = false, SubmissionRetryCount = 0},
-				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId4", IsProcessingComplete = false, SubmissionRetryCount = 0},
-				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId5", IsProcessingComplete = false, SubmissionRetryCount = 0}
+				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId1", IsProcessingComplete = false, FeedSubmissionRetryCount = 0},
+				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId2", IsProcessingComplete = false, FeedSubmissionRetryCount = 0},
+				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId3", IsProcessingComplete = false, FeedSubmissionRetryCount = 0},
+				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId4", IsProcessingComplete = false, FeedSubmissionRetryCount = 0},
+				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId5", IsProcessingComplete = false, FeedSubmissionRetryCount = 0}
 			};
 			_feedSubmissionCallbacks.AddRange(data);
 
@@ -505,15 +505,15 @@ namespace EasyMWS.Tests.Processors
 			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(_feedSubmissionCallbackServiceMock.Object, resultsInfo);
 
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId1").IsProcessingComplete);
-			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId1").SubmissionRetryCount);
+			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId1").FeedSubmissionRetryCount);
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId2").IsProcessingComplete);
-			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId2").SubmissionRetryCount);
+			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId2").FeedSubmissionRetryCount);
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId3").IsProcessingComplete);
-			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId3").SubmissionRetryCount);
+			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId3").FeedSubmissionRetryCount);
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId4").IsProcessingComplete);
-			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId4").SubmissionRetryCount);
+			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId4").FeedSubmissionRetryCount);
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId5").IsProcessingComplete);
-			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId5").SubmissionRetryCount);
+			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId5").FeedSubmissionRetryCount);
 			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Exactly(5));
 			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
 		}
@@ -525,8 +525,8 @@ namespace EasyMWS.Tests.Processors
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 			var data = new List<FeedSubmissionEntry>
 			{
-				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId", IsProcessingComplete = false, SubmissionRetryCount = 0},
-				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId2", IsProcessingComplete = false, SubmissionRetryCount = 0}
+				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId", IsProcessingComplete = false, FeedSubmissionRetryCount = 0},
+				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId2", IsProcessingComplete = false, FeedSubmissionRetryCount = 0}
 			};
 
 			_feedSubmissionCallbacks.AddRange(data);
@@ -539,7 +539,7 @@ namespace EasyMWS.Tests.Processors
 			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(_feedSubmissionCallbackServiceMock.Object, resultsInfo);
 
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").IsProcessingComplete);
-			Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").SubmissionRetryCount);
+			Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").FeedSubmissionRetryCount);
 			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
 			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
 		}
@@ -551,8 +551,8 @@ namespace EasyMWS.Tests.Processors
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 			var data = new List<FeedSubmissionEntry>
 			{
-				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId", IsProcessingComplete = false, SubmissionRetryCount = 0},
-				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId2", IsProcessingComplete = false, SubmissionRetryCount = 0}
+				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId", IsProcessingComplete = false, FeedSubmissionRetryCount = 0},
+				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId2", IsProcessingComplete = false, FeedSubmissionRetryCount = 0}
 			};
 
 			_feedSubmissionCallbacks.AddRange(data);
@@ -565,7 +565,7 @@ namespace EasyMWS.Tests.Processors
 			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(_feedSubmissionCallbackServiceMock.Object, resultsInfo);
 
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").IsProcessingComplete);
-			Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").SubmissionRetryCount);
+			Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").FeedSubmissionRetryCount);
 			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
 			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
 		}
@@ -577,12 +577,12 @@ namespace EasyMWS.Tests.Processors
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 			var testFeedSubmissionCallbacks = new List<FeedSubmissionEntry>
 			{
-				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 1, SubmissionRetryCount = 0, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-3) },
-				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 2, SubmissionRetryCount = 1, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-2).AddHours(-1) },
-				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 3, SubmissionRetryCount = 2, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-2).AddHours(1) },
-				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 4, SubmissionRetryCount = 3, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-1) },
-				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 5, SubmissionRetryCount = 4, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-1), FeedSubmissionId = null },
-				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 6, SubmissionRetryCount = 5, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-1), FeedSubmissionId = "testFeedSubmissionId" }
+				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 1, FeedSubmissionRetryCount = 0, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-3) },
+				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 2, FeedSubmissionRetryCount = 1, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-2).AddHours(-1) },
+				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 3, FeedSubmissionRetryCount = 2, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-2).AddHours(1) },
+				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 4, FeedSubmissionRetryCount = 3, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-1) },
+				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 5, FeedSubmissionRetryCount = 5, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-1), FeedSubmissionId = null },
+				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 6, FeedSubmissionRetryCount = 5, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-1), FeedSubmissionId = "testFeedSubmissionId" }
 			}.AsQueryable();
 			_feedSubmissionCallbackServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(testFeedSubmissionCallbacks);
 
