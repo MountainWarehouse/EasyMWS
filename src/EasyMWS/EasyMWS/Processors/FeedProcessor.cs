@@ -74,7 +74,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				catch (Exception e)
 				{
 					_logger.Error($"Method callback failed for {feedSubmissionEntry.RegionAndTypeComputed}. Current retry count is :{feedSubmissionEntry.FeedSubmissionRetryCount}. {e.Message}", e);
-					feedSubmissionEntry.FeedSubmissionRetryCount++;
+					feedSubmissionEntry.InvokeCallbackRetryCount++;
 					feedSubmissionService.Update(feedSubmissionEntry);
 				}
 			}

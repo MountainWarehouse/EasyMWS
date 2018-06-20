@@ -344,7 +344,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		}
 
 		private bool IsFeedSubmissionEntryCallbackInvocationRetryCountExceeded(FeedSubmissionEntry feedSubmissionEntry) =>
-			(feedSubmissionEntry.FeedSubmissionRetryCount > _options.InvokeCallbackMaxRetryCount);
+			(feedSubmissionEntry.InvokeCallbackRetryCount > _options.InvokeCallbackMaxRetryCount);
 
 		private bool IsExpirationPeriodExceeded(FeedSubmissionEntry feedSubmissionEntry) =>
 			(DateTime.Compare(feedSubmissionEntry.DateCreated, DateTime.UtcNow.Subtract(_options.FeedSubmissionRequestEntryExpirationPeriod)) < 0);
