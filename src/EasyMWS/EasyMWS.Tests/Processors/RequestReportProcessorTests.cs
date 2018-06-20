@@ -771,23 +771,23 @@ namespace EasyMWS.Tests.Processors
 			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Exactly(3));
 		}
 
-		[TestCase(0, 0, 0, 0, 0)]
-		[TestCase(1, 0, 0, 0, 0)]
-		[TestCase(4, 0, 0, 0, 0)]
-		[TestCase(5, 0, 0, 0, 1)]
-		[TestCase(0, 0, 0, 0, 0)]
-		[TestCase(0, 1, 0, 0, 0)]
-		[TestCase(0, 4, 0, 0, 0)]
-		[TestCase(0, 5, 0, 0, 1)]
-		[TestCase(0, 0, 0, 0, 0)]
-		[TestCase(0, 0, 1, 0, 0)]
-		[TestCase(0, 0, 5, 0, 0)]
-		[TestCase(0, 0, 6, 0, 1)]
-		[TestCase(0, 0, 0, 0, 0)]
-		[TestCase(0, 0, 0, 1, 0)]
-		[TestCase(0, 0, 0, 3, 0)]
-		[TestCase(0, 0, 0, 4, 1)]
-		public void CleanupReportRequests_WithOneGivenEntryToDelete_DeletesOnlyTheCorrectEntry(int requestRetryCount, int downloadRetryCount, int callbackRetryCount, int processRetryCount, int timesToDelete)
+		[TestCase(0, 0, 0, 0, false)]
+		[TestCase(1, 0, 0, 0, false)]
+		[TestCase(4, 0, 0, 0, false)]
+		[TestCase(5, 0, 0, 0, true)]
+		[TestCase(0, 0, 0, 0, false)]
+		[TestCase(0, 1, 0, 0, false)]
+		[TestCase(0, 4, 0, 0, false)]
+		[TestCase(0, 5, 0, 0, true)]
+		[TestCase(0, 0, 0, 0, false)]
+		[TestCase(0, 0, 1, 0, false)]
+		[TestCase(0, 0, 5, 0, false)]
+		[TestCase(0, 0, 6, 0, true)]
+		[TestCase(0, 0, 0, 0, false)]
+		[TestCase(0, 0, 0, 1, false)]
+		[TestCase(0, 0, 0, 3, false)]
+		[TestCase(0, 0, 0, 4, true)]
+		public void CleanupReportRequests_WithOneGivenEntryToDelete_DeletesOnlyTheCorrectEntry(int requestRetryCount, int downloadRetryCount, int callbackRetryCount, int processRetryCount, bool shouldDeleteEntry)
 		{
 			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
 			var data = JsonConvert.SerializeObject(propertiesContainer);
@@ -821,13 +821,15 @@ namespace EasyMWS.Tests.Processors
 
 			_requestReportProcessor.CleanupReportRequests(_reportRequestCallbackServiceMock.Object);
 
-			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Exactly(timesToDelete));
-			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
-			if (timesToDelete > 0)
+			if (shouldDeleteEntry)
 			{
+				_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
 				Assert.NotNull(entryBeingDeleted);
 				Assert.AreEqual(firstEntryToDelete.Id, entryBeingDeleted.Id);
 			}
+			else { _reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Never); }
+
+			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
 		}
 
 		[TestCase(false, false, false, false, false)]

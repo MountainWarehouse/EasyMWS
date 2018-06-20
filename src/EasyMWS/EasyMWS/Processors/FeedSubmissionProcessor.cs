@@ -284,7 +284,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var entriesWithFeedSubmissionRetryCountExceededDeleteReason = $"A feedSubmissionId could not be obtained from amazon for the feed submission request. FeedSubmissionMaxRetryCount exceeded.";
 			MarkEntriesAsDeleted(feedSubmissionService, entriesWithFeedSubmissionRetryCountExceeded, removedEntriesIds, entriesWithFeedSubmissionRetryCountExceededDeleteReason);
 
-			var entriesWithReportDownloadRetryCountExceeded = allFeedSubmissionEntries.Where(fse => IsMatchForRegionAndMerchantId(fse) && fse.IsProcessingComplete && IsReportDownloadRetryCountExceeded(fse));
+			var entriesWithReportDownloadRetryCountExceeded = allFeedSubmissionEntries.Where(fse => IsMatchForRegionAndMerchantId(fse) && IsReportDownloadRetryCountExceeded(fse));
 			var entriesWithReportDownloadRetryCountExceededDeleteReason = $"A valid feed submission results report could not be downloaded. ReportDownloadMaxRetryCount exceeded.";
 			MarkEntriesAsDeleted(feedSubmissionService, entriesWithReportDownloadRetryCountExceeded, removedEntriesIds, entriesWithReportDownloadRetryCountExceededDeleteReason);
 
