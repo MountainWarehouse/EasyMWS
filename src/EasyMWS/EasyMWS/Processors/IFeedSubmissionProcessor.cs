@@ -14,7 +14,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 		void QueueFeedsAccordingToProcessingStatus(IFeedSubmissionEntryService feedSubmissionService,
 			List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses);
 		void DownloadFeedSubmissionResultFromAmazon(IFeedSubmissionEntryService feedSubmissionService, FeedSubmissionEntry feedSubmissionEntry);
-		void RemoveFromQueue(IFeedSubmissionEntryService feedSubmissionService, FeedSubmissionEntry entry);
 		void CleanUpFeedSubmissionQueue(IFeedSubmissionEntryService feedSubmissionService);
 	}
 }

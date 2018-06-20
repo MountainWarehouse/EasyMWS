@@ -148,38 +148,6 @@ namespace EasyMWS.Tests.ReportProcessors
 				rrp => rrp.SubmitFeedToAmazon(It.IsAny<IFeedSubmissionEntryService>(),It.IsAny<FeedSubmissionEntry>()), Times.Once);
 		}
 
-		[Test]
-		public void Poll_WithGetNextFeedFromProcessingCompleteQueueReturningNull_NeverCalls_DownloadFeedSubmissionResultFromAmazon()
-		{
-			var testStreamContent = "testStreamContent";
-			var notMatchingMd5Sum = "AAAAAAAAAAAAAAAA";
-
-
-			_feedProcessor.PollFeeds(_feedSubmissionCallbackServiceMock.Object);
-
-			_callbackActivatorMock.Verify(cam => cam.CallMethod(It.IsAny<Callback>(), It.IsAny<Stream>()), Times.Never);
-			_feedSubmissionProcessorMock.Verify(fspm => fspm.RemoveFromQueue(It.IsAny<IFeedSubmissionEntryService>(), It.IsAny<FeedSubmissionEntry>()), Times.Never);
-		}
-
-		private MemoryStream GenerateValidArchive(string content)
-		{
-			using (var zipFileStream = new MemoryStream())
-			{
-				using (var archive = new ZipArchive(zipFileStream, ZipArchiveMode.Create, true))
-				{
-					var fileToArchive = archive.CreateEntry("testFilename.txt", CompressionLevel.Fastest);
-					using (var fileStream = fileToArchive.Open())
-					using (var streamWriter = new StreamWriter(fileStream))
-					{
-						streamWriter.Write(content);
-					}
-				}
-
-				zipFileStream.Position = 0;
-				return zipFileStream;
-			}
-		}
-
 		#endregion
 	}
 }
