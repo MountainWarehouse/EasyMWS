@@ -8,7 +8,12 @@ namespace MountainWarehouse.EasyMWS.Model
     public class EasyMwsOptions
     {
 		/// <summary>
-		/// Default=3. When receiving a _CANCELLED_ or unhandled processing status from amazon for a report queued for request, specify how many times to retry requesting the report from amazon. 
+		/// Default=3.hen receiving a _CANCELLED_ or unhandled processing status from amazon for a feed submitted for processing, specify how many times to retry submitting the same feed.
+		/// </summary>
+		public int FeedProcessingMaxRetryCount { get; set; }
+
+	    /// <summary>
+		/// Default=3. When receiving a _CANCELLED_ or unhandled processing status from amazon for a report queued for request, specify how many times to retry requesting the same report from amazon. 
 		/// </summary>
 		public int ReportProcessingMaxRetryCount { get; set; }
 
@@ -121,6 +126,7 @@ namespace MountainWarehouse.EasyMWS.Model
 		/// ReportDownloadRetryInterval = TimeSpan.FromHours(1),<para/>
 		/// <para/>
 		/// ReportProcessingMaxRetryCount = 3<para/>
+		/// FeedProcessingMaxRetryCount = 3<para/>
 		/// <para/>
 		/// FeedSubmissionMaxRetryCount = 3,<para/>
 		/// FeedSubmissionRetryType = RetryPeriodType.GeometricProgression,<para/>
@@ -150,6 +156,7 @@ namespace MountainWarehouse.EasyMWS.Model
 			    ReportDownloadRetryInterval = TimeSpan.FromHours(1),
 
 				ReportProcessingMaxRetryCount = 3,
+			    FeedProcessingMaxRetryCount = 3,
 
 				FeedSubmissionMaxRetryCount = 4,
 			    FeedSubmissionRetryType = RetryPeriodType.GeometricProgression,

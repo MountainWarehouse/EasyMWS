@@ -211,14 +211,14 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
-		public void QueueFeedsAccordingToProcessingStatus_RemovesFeedFromDb_IfProcessingStatusIsCancelled()
+		public void QueueFeedsAccordingToProcessingStatus_IfProcessingStatusIsCancelled_IncrementsFeedSubmissionRetryCountAndResetsFeedSubmissionId()
 		{
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 			var data = new List<FeedSubmissionEntry>
 			{
-				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId", IsProcessingComplete = false, FeedSubmissionRetryCount = 0},
-				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId2", IsProcessingComplete = false, FeedSubmissionRetryCount = 0}
+				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 555, FeedSubmissionId = "testId", IsProcessingComplete = false, FeedProcessingRetryCount = 0},
+				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 557, FeedSubmissionId = "testId2", IsProcessingComplete = false, FeedProcessingRetryCount = 0}
 			};
 
 			_feedSubmissionCallbacks.AddRange(data);
@@ -230,21 +230,22 @@ namespace EasyMWS.Tests.Processors
 
 			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(_feedSubmissionCallbackServiceMock.Object, resultsInfo);
 
-			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").IsProcessingComplete);
-			Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").FeedSubmissionRetryCount);
+			Assert.IsNull(_feedSubmissionCallbacks.First(x => x.Id == 555).FeedSubmissionId);
+			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.Id == 555).IsProcessingComplete);
+			Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.Id == 555).FeedProcessingRetryCount);
 			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
 			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
 		}
 
 		[Test]
-		public void QueueFeedsAccordingToProcessingStatus_RemovesFeedFromDb_IfProcessingStatusIsUnknown()
+		public void QueueFeedsAccordingToProcessingStatus_IfProcessingStatusIsUnknown_IncrementsFeedSubmissionRetryCount()
 		{
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 			var data = new List<FeedSubmissionEntry>
 			{
-				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId", IsProcessingComplete = false, FeedSubmissionRetryCount = 0},
-				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId2", IsProcessingComplete = false, FeedSubmissionRetryCount = 0}
+				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 555, FeedSubmissionId = "testId", IsProcessingComplete = false, FeedProcessingRetryCount = 0},
+				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 557, FeedSubmissionId = "testId2", IsProcessingComplete = false, FeedProcessingRetryCount = 0}
 			};
 
 			_feedSubmissionCallbacks.AddRange(data);
@@ -256,8 +257,8 @@ namespace EasyMWS.Tests.Processors
 			 
 			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(_feedSubmissionCallbackServiceMock.Object, resultsInfo);
 
-			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").IsProcessingComplete);
-			Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").FeedSubmissionRetryCount);
+			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.Id == 555).IsProcessingComplete);
+			Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.Id == 555).FeedProcessingRetryCount);
 			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
 			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
 		}
