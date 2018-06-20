@@ -31,6 +31,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_marketplaceWebServiceClient = marketplaceWebServiceClient;
 	    }
 
+
 		public void RequestReportFromAmazon(IReportRequestEntryService reportRequestService, ReportRequestEntry reportRequestEntry)
 	    {
 		    var missingInformationExceptionMessage = "Cannot request report from amazon due to missing report request information.";
@@ -328,7 +329,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		    return fatalErrorCodes.Contains(errorCode);
 	    }
-
 	    private bool IsAmazonErrorCodeNonFatal(string errorCode)
 	    {
 		    var nonFatalErrorCodes = new List<string>
@@ -339,7 +339,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		    return nonFatalErrorCodes.Contains(errorCode) || !IsAmazonErrorCodeFatal(errorCode);
 	    }
-
 	    private void MarkEntriesAsDeleted(IReportRequestEntryService reportRequestService, IQueryable<ReportRequestEntry> entriesToMarkAsDeleted, List<int> entriesIdsAlreadyMarkedAsDeleted, string deleteReason)
 	    {
 		    foreach (var entry in entriesToMarkAsDeleted)
@@ -350,17 +349,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 			    _logger.Warn($"Report request entry {entry.RegionAndTypeComputed} deleted from queue. {deleteReason}");
 		    }
 	    }
-
 	    private bool IsMatchForRegionAndMerchantId(ReportRequestEntry e) => e.AmazonRegion == _region && e.MerchantId == _merchantId;
-
 	    private bool IsRequestRetryCountExceeded(ReportRequestEntry e) => e.ReportRequestRetryCount > _options.ReportRequestMaxRetryCount;
-
 	    private bool IsDownloadRetryCountExceeded(ReportRequestEntry e) => e.ReportDownloadRetryCount > _options.ReportDownloadMaxRetryCount;
-
 	    private bool IsProcessingRetryCountExceeded(ReportRequestEntry e) => e.ReportProcessRetryCount > _options.ReportProcessingMaxRetryCount;
-
 	    private bool IsCallbackInvocationRetryCountExceeded(ReportRequestEntry e) => e.InvokeCallbackRetryCount > _options.InvokeCallbackMaxRetryCount;
-
 	    private bool IsExpirationPeriodExceeded(ReportRequestEntry reportRequestEntry) =>
 		    (DateTime.Compare(reportRequestEntry.DateCreated, DateTime.UtcNow.Subtract(_options.ReportDownloadRequestEntryExpirationPeriod)) < 0);
 

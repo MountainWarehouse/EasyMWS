@@ -11,7 +11,6 @@ using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Services;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService.Model;
-using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS.Processors
 {
@@ -32,7 +31,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_marketplaceWebServiceClient = marketplaceWebServiceClient;
 		}
 
-		
 
 		public void SubmitFeedToAmazon(IFeedSubmissionEntryService feedSubmissionService, FeedSubmissionEntry feedSubmission)
 		{
@@ -276,22 +274,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		private bool IsMatchForRegionAndMerchantId(FeedSubmissionEntry e) => e.AmazonRegion == _region && e.MerchantId == _merchantId;
-		private bool IsFeedSubmissionRetryCountExceeded(FeedSubmissionEntry e) => e.FeedSubmissionRetryCount > _options.FeedSubmissionMaxRetryCount;
-		private bool IsReportDownloadRetryCountExceeded(FeedSubmissionEntry e) => e.ReportDownloadRetryCount > _options.ReportDownloadMaxRetryCount;
-		private bool IsFeedProcessingRetryCountExceeded(FeedSubmissionEntry e) => e.FeedProcessingRetryCount > _options.FeedProcessingMaxRetryCount;
-		private bool IsCallbackInvocationRetryCountExceeded(FeedSubmissionEntry e) =>e.InvokeCallbackRetryCount > _options.InvokeCallbackMaxRetryCount;
-		private void MarkEntriesAsDeleted(IFeedSubmissionEntryService feedSubmissionService, IQueryable<FeedSubmissionEntry> entriesToMarkAsDeleted, List<int> entriesIdsAlreadyMarkedAsDeleted, string deleteReason)
-		{
-			foreach (var entry in entriesToMarkAsDeleted)
-			{
-				if (entriesIdsAlreadyMarkedAsDeleted.Exists(e => e == entry.Id)) continue;
-				entriesIdsAlreadyMarkedAsDeleted.Add(entry.Id);
-				feedSubmissionService.Delete(entry);
-				_logger.Warn($"Feed submission entry {entry.RegionAndTypeComputed} deleted from queue. {deleteReason}");
-			}
-		}
-
 		public void CleanUpFeedSubmissionQueue(IFeedSubmissionEntryService feedSubmissionService)
 		{
 			_logger.Info("Executing cleanup of feed submission requests queue.");
@@ -321,12 +303,24 @@ namespace MountainWarehouse.EasyMWS.Processors
 			feedSubmissionService.SaveChanges();
 		}
 
-		
 
+		private bool IsMatchForRegionAndMerchantId(FeedSubmissionEntry e) => e.AmazonRegion == _region && e.MerchantId == _merchantId;
+		private bool IsFeedSubmissionRetryCountExceeded(FeedSubmissionEntry e) => e.FeedSubmissionRetryCount > _options.FeedSubmissionMaxRetryCount;
+		private bool IsReportDownloadRetryCountExceeded(FeedSubmissionEntry e) => e.ReportDownloadRetryCount > _options.ReportDownloadMaxRetryCount;
+		private bool IsFeedProcessingRetryCountExceeded(FeedSubmissionEntry e) => e.FeedProcessingRetryCount > _options.FeedProcessingMaxRetryCount;
+		private bool IsCallbackInvocationRetryCountExceeded(FeedSubmissionEntry e) =>e.InvokeCallbackRetryCount > _options.InvokeCallbackMaxRetryCount;
+		private void MarkEntriesAsDeleted(IFeedSubmissionEntryService feedSubmissionService, IQueryable<FeedSubmissionEntry> entriesToMarkAsDeleted, List<int> entriesIdsAlreadyMarkedAsDeleted, string deleteReason)
+		{
+			foreach (var entry in entriesToMarkAsDeleted)
+			{
+				if (entriesIdsAlreadyMarkedAsDeleted.Exists(e => e == entry.Id)) continue;
+				entriesIdsAlreadyMarkedAsDeleted.Add(entry.Id);
+				feedSubmissionService.Delete(entry);
+				_logger.Warn($"Feed submission entry {entry.RegionAndTypeComputed} deleted from queue. {deleteReason}");
+			}
+		}
 		private bool IsExpirationPeriodExceeded(FeedSubmissionEntry feedSubmissionEntry) =>
 			(DateTime.Compare(feedSubmissionEntry.DateCreated, DateTime.UtcNow.Subtract(_options.FeedSubmissionRequestEntryExpirationPeriod)) < 0);
-
-
 		private bool IsAmazonErrorCodeFatal(string errorCode)
 		{
 			var fatalErrorCodes = new List<string>
@@ -341,7 +335,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			return fatalErrorCodes.Contains(errorCode);
 		}
-
 		private bool IsAmazonErrorCodeNonFatal(string errorCode)
 		{
 			var nonFatalErrorCodes = new List<string>
