@@ -289,6 +289,17 @@ namespace MountainWarehouse.EasyMWS.Processors
 				_logger.Warn($"Feed submission entry {feedSubmission.RegionAndTypeComputed} deleted from queue. Reason: A feedSubmissionId could not be obtained from amazon for the feed submission request. Retry count exceeded : FeedSubmissionMaxRetryCount={_options.FeedSubmissionMaxRetryCount}.");
 			}
 
+			var entriesWithReportDownloadRetryCountExceeded = feedSubmissionService.GetAll()
+				.Where(fse => fse.AmazonRegion == _region && fse.MerchantId == _merchantId
+				              && fse.Details != null && fse.Details.FeedContent != null && fse.FeedSubmissionId != null
+				              && fse.ReportDownloadRetryCount > _options.ReportDownloadMaxRetryCount);
+
+			foreach (var feedSubmission in entriesWithReportDownloadRetryCountExceeded)
+			{
+				feedSubmissionService.Delete(feedSubmission);
+				_logger.Warn($"Feed submission entry {feedSubmission.RegionAndTypeComputed} deleted from queue. Reason: The feed submission results report could not be downloaded. Retry count exceeded : ReportDownloadMaxRetryCount={_options.ReportDownloadMaxRetryCount}.");
+			}
+
 			var expiredFeedProcessingResultRequestIds = feedSubmissionService.GetAll()
 				.Where(fscs => fscs.AmazonRegion == _region && fscs.MerchantId == _merchantId
 							   && fscs.FeedSubmissionId != null
