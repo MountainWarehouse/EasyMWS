@@ -347,7 +347,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			    if (entriesIdsAlreadyMarkedAsDeleted.Exists(e => e == entry.Id)) continue;
 			    entriesIdsAlreadyMarkedAsDeleted.Add(entry.Id);
 			    reportRequestService.Delete(entry);
-			    _logger.Warn($"Report request {entry.RegionAndTypeComputed} deleted from queue. {deleteReason}");
+			    _logger.Warn($"Report request entry {entry.RegionAndTypeComputed} deleted from queue. {deleteReason}");
 		    }
 	    }
 

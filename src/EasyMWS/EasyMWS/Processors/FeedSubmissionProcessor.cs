@@ -276,66 +276,52 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
+		private bool IsMatchForRegionAndMerchantId(FeedSubmissionEntry e) => e.AmazonRegion == _region && e.MerchantId == _merchantId;
+		private bool IsFeedSubmissionRetryCountExceeded(FeedSubmissionEntry e) => e.FeedSubmissionRetryCount > _options.FeedSubmissionMaxRetryCount;
+		private bool IsReportDownloadRetryCountExceeded(FeedSubmissionEntry e) => e.ReportDownloadRetryCount > _options.ReportDownloadMaxRetryCount;
+		private bool IsFeedProcessingRetryCountExceeded(FeedSubmissionEntry e) => e.FeedProcessingRetryCount > _options.FeedProcessingMaxRetryCount;
+		private bool IsCallbackInvocationRetryCountExceeded(FeedSubmissionEntry e) =>e.InvokeCallbackRetryCount > _options.InvokeCallbackMaxRetryCount;
+		private void MarkEntriesAsDeleted(IFeedSubmissionEntryService feedSubmissionService, IQueryable<FeedSubmissionEntry> entriesToMarkAsDeleted, List<int> entriesIdsAlreadyMarkedAsDeleted, string deleteReason)
+		{
+			foreach (var entry in entriesToMarkAsDeleted)
+			{
+				if (entriesIdsAlreadyMarkedAsDeleted.Exists(e => e == entry.Id)) continue;
+				entriesIdsAlreadyMarkedAsDeleted.Add(entry.Id);
+				feedSubmissionService.Delete(entry);
+				_logger.Warn($"Feed submission entry {entry.RegionAndTypeComputed} deleted from queue. {deleteReason}");
+			}
+		}
+
 		public void CleanUpFeedSubmissionQueue(IFeedSubmissionEntryService feedSubmissionService)
 		{
 			_logger.Info("Executing cleanup of feed submission requests queue.");
-			var expiredFeedSubmissions = feedSubmissionService.GetAll()
-				.Where(fscs => fscs.AmazonRegion == _region && fscs.MerchantId == _merchantId
-							   && fscs.FeedSubmissionId == null
-				               && fscs.FeedSubmissionRetryCount > _options.FeedSubmissionMaxRetryCount);
+			var allFeedSubmissionEntries = feedSubmissionService.GetAll();
+			var removedEntriesIds = new List<int>();
 
-			foreach (var feedSubmission in expiredFeedSubmissions)
-			{
-				feedSubmissionService.Delete(feedSubmission);
-				_logger.Warn($"Feed submission entry {feedSubmission.RegionAndTypeComputed} deleted from queue. Reason: A feedSubmissionId could not be obtained from amazon for the feed submission request. Retry count exceeded : FeedSubmissionMaxRetryCount={_options.FeedSubmissionMaxRetryCount}.");
-			}
+			var entriesWithFeedSubmissionRetryCountExceeded = allFeedSubmissionEntries.Where(fse => IsMatchForRegionAndMerchantId(fse) && IsFeedSubmissionRetryCountExceeded(fse));
+			var entriesWithFeedSubmissionRetryCountExceededDeleteReason = $"A feedSubmissionId could not be obtained from amazon for the feed submission request. FeedSubmissionMaxRetryCount exceeded.";
+			MarkEntriesAsDeleted(feedSubmissionService, entriesWithFeedSubmissionRetryCountExceeded, removedEntriesIds, entriesWithFeedSubmissionRetryCountExceededDeleteReason);
 
-			var entriesWithReportDownloadRetryCountExceeded = feedSubmissionService.GetAll()
-				.Where(fse => fse.AmazonRegion == _region && fse.MerchantId == _merchantId
-							  && fse.IsProcessingComplete && fse.FeedSubmissionId != null
-				              && fse.ReportDownloadRetryCount > _options.ReportDownloadMaxRetryCount);
+			var entriesWithReportDownloadRetryCountExceeded = allFeedSubmissionEntries.Where(fse => IsMatchForRegionAndMerchantId(fse) && fse.IsProcessingComplete && IsReportDownloadRetryCountExceeded(fse));
+			var entriesWithReportDownloadRetryCountExceededDeleteReason = $"A valid feed submission results report could not be downloaded. ReportDownloadMaxRetryCount exceeded.";
+			MarkEntriesAsDeleted(feedSubmissionService, entriesWithReportDownloadRetryCountExceeded, removedEntriesIds, entriesWithReportDownloadRetryCountExceededDeleteReason);
 
-			foreach (var feedSubmission in entriesWithReportDownloadRetryCountExceeded)
-			{
-				feedSubmissionService.Delete(feedSubmission);
-				_logger.Warn($"Feed submission entry {feedSubmission.RegionAndTypeComputed} deleted from queue. Reason: The feed submission results report could not be downloaded. Retry count exceeded : ReportDownloadMaxRetryCount={_options.ReportDownloadMaxRetryCount}.");
-			}
+			var entriesWithExpirationPeriodExceeded = allFeedSubmissionEntries.Where(fse => IsMatchForRegionAndMerchantId(fse) && IsExpirationPeriodExceeded(fse));
+			var entriesWithExpirationPeriodExceededDeleteReason = $"FeedSubmissionRequestEntryExpirationPeriod exceeded.";
+			MarkEntriesAsDeleted(feedSubmissionService, entriesWithExpirationPeriodExceeded, removedEntriesIds, entriesWithExpirationPeriodExceededDeleteReason);
 
-			}
+			var entriesWithFeedProcessingRetryCountExceeded = allFeedSubmissionEntries.Where(fse => IsMatchForRegionAndMerchantId(fse) && IsFeedProcessingRetryCountExceeded(fse));
+			var entriesWithFeedProcessingRetryCountExceededDeleteReason = $"Failed to obtain a _DONE_ processing result from Amazon. FeedProcessingMaxRetryCount exceeded.";
+			MarkEntriesAsDeleted(feedSubmissionService, entriesWithFeedProcessingRetryCountExceeded, removedEntriesIds, entriesWithFeedProcessingRetryCountExceededDeleteReason);
 
-			var entriesWithExpirationPeriodExceeded = feedSubmissionService.GetAll()
-				.Where(fse => fse.AmazonRegion == _region && fse.MerchantId == _merchantId && IsExpirationPeriodExceeded(fse));
-
-			foreach (var feedSubmission in entriesWithExpirationPeriodExceeded)
-			{
-				feedSubmissionService.Delete(feedSubmission);
-				_logger.Warn($"Feed submission entry {feedSubmission.RegionAndTypeComputed} deleted from queue. Reason: Expiration period of FeedSubmissionRequestEntryExpirationPeriod='{_options.FeedSubmissionRequestEntryExpirationPeriod.Hours} hours' was exceeded.");
-			}
-
-			var entriesWithFeedProcessingRetryCountExceeded = feedSubmissionService.GetAll()
-				.Where(fse => fse.AmazonRegion == _region && fse.MerchantId == _merchantId &&
-				              fse.FeedProcessingRetryCount > _options.FeedProcessingMaxRetryCount);
-
-			foreach (var feedSubmission in entriesWithFeedProcessingRetryCountExceeded)
-			{
-				feedSubmissionService.Delete(feedSubmission);
-				_logger.Warn($"Feed submission entry {feedSubmission.RegionAndTypeComputed} deleted from queue. Reason: failed to obtain a _DONE_ processing result from Amazon. FeedProcessingMaxRetryCount='{_options.FeedProcessingMaxRetryCount}' was exceeded.");
-			}
-
-			var entriesWithCallbackInvocationRetryCountExceeded = feedSubmissionService.GetAll()
-				.Where(fse => (fse.AmazonRegion == _region && fse.MerchantId == _merchantId) && fse.Details != null && fse.Details.FeedSubmissionReport != null && IsFeedSubmissionEntryCallbackInvocationRetryCountExceeded(fse));
-
-			foreach (var expiredSubmission in entriesWithCallbackInvocationRetryCountExceeded)
-			{
-				feedSubmissionService.Delete(expiredSubmission);
-				_logger.Warn($"Feed submission entry {expiredSubmission.RegionAndTypeComputed} deleted from queue. Reason: The feed submission report was downloaded successfully but the callback method provided at QueueFeed could not be invoked. Retry count exceeded : FeedSubmissionRequestEntryExpirationPeriod={_options.FeedSubmissionRequestEntryExpirationPeriod}");
-			}
+			var entriesWithCallbackInvocationRetryCountExceeded = allFeedSubmissionEntries.Where(fse => IsMatchForRegionAndMerchantId(fse) && IsCallbackInvocationRetryCountExceeded(fse));
+			var entriesWithCallbackInvocationRetryCountExceededDeleteReason = $"The feed submission report was downloaded successfully but the callback method invocation failed. InvokeCallbackMaxRetryCount exceeded.";
+			MarkEntriesAsDeleted(feedSubmissionService, entriesWithCallbackInvocationRetryCountExceeded, removedEntriesIds, entriesWithCallbackInvocationRetryCountExceededDeleteReason);
 
 			feedSubmissionService.SaveChanges();
 		}
 
-		private bool IsFeedSubmissionEntryCallbackInvocationRetryCountExceeded(FeedSubmissionEntry feedSubmissionEntry) =>
-			(feedSubmissionEntry.InvokeCallbackRetryCount > _options.InvokeCallbackMaxRetryCount);
+		
 
 		private bool IsExpirationPeriodExceeded(FeedSubmissionEntry feedSubmissionEntry) =>
 			(DateTime.Compare(feedSubmissionEntry.DateCreated, DateTime.UtcNow.Subtract(_options.FeedSubmissionRequestEntryExpirationPeriod)) < 0);
