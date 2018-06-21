@@ -15,7 +15,7 @@ namespace MountainWarehouse.EasyMWS.Data
 		public string RegionAndTypeComputed
 		{
 			// this field is populated based on ReportRequestData which, once set in the ctor, should never change again for the same entity.
-			get { return _regionAndType = _regionAndType ?? $"[AmazonRegion:'{AmazonRegion.ToString()}', ReportType:'{ReportType}']"; }
+			get { return _regionAndType = _regionAndType ?? $"(ReportType:{ReportType},Region:{AmazonRegion.ToString()})"; }
 		}
 
 		[Key]
