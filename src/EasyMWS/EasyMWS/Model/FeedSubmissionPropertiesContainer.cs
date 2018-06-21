@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.Serialization;
 
 namespace MountainWarehouse.EasyMWS.Model
@@ -59,5 +60,23 @@ namespace MountainWarehouse.EasyMWS.Model
 		    PurgeAndReplace = purgeAndReplace;
 		    MarketplaceIdList = marketplaceIdList;
 	    }
-    }
+
+	    /// <summary>
+	    /// Creates a new feed submission wrapper object.
+	    /// </summary>
+	    /// <param name="feedContent"></param>
+	    /// <param name="feedType"></param>
+	    /// <param name="purgeAndReplace"></param>
+	    /// <param name="marketplaceIdList"></param>
+		public FeedSubmissionPropertiesContainer(Stream feedContent, string feedType, bool? purgeAndReplace = null, List<string> marketplaceIdList = null)
+	    {
+		    using (var streamReader = new StreamReader(feedContent))
+		    {
+				FeedContent = streamReader.ReadToEnd();
+			}
+		    FeedType = feedType;
+		    PurgeAndReplace = purgeAndReplace;
+		    MarketplaceIdList = marketplaceIdList;
+	    }
+	}
 }
