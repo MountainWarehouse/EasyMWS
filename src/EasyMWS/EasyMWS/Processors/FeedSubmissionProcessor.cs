@@ -34,6 +34,33 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void SubmitFeedToAmazon(IFeedSubmissionEntryService feedSubmissionService, FeedSubmissionEntry feedSubmission)
 		{
+			void HandleSubmitFeedSuccess(SubmitFeedResponse response)
+			{
+				var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
+				var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
+				feedSubmission.FeedSubmissionId = response?.SubmitFeedResult?.FeedSubmissionInfo?.FeedSubmissionId;
+				feedSubmission.FeedSubmissionRetryCount = 0;
+				_logger.Info($"AmazonMWS feed submission has succeeded for {feedSubmission.RegionAndTypeComputed}. FeedSubmissionId:'{feedSubmission.FeedSubmissionId}'.",
+					new RequestInfo(timestamp, requestId));
+			}
+			void HandleMissingFeedSubmissionId()
+			{
+				feedSubmission.FeedSubmissionRetryCount++;
+				_logger.Warn($"SubmitFeed did not generate a FeedSubmissionId for {feedSubmission.RegionAndTypeComputed}. Feed submission will be retried. FeedSubmissionRetryCount is now : {feedSubmission.FeedSubmissionRetryCount}.");
+			}
+			void HandleNonFatalOrGenericException(Exception e)
+			{
+				feedSubmission.FeedSubmissionRetryCount++;
+				feedSubmission.LastSubmitted = DateTime.UtcNow;
+				feedSubmissionService.Update(feedSubmission);
+				_logger.Error($"AmazonMWS SubmitFeed failed for {feedSubmission.RegionAndTypeComputed}. Feed submission will be retried. FeedSubmissionRetryCount is now : {feedSubmission.FeedSubmissionRetryCount}.", e);
+			}
+			void HandleFatalException(Exception e)
+			{
+				feedSubmissionService.Delete(feedSubmission);
+				_logger.Error($"AmazonMWS SubmitFeed failed for {feedSubmission.RegionAndTypeComputed}. The entry will now be removed from queue.", e);
+			}
+
 			var missingInformationExceptionMessage = "Cannot submit queued feed to amazon due to missing feed submission information";
 
 			if (feedSubmission == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Feed submission entry is null.");
@@ -156,10 +183,10 @@ namespace MountainWarehouse.EasyMWS.Processors
 					_logger.Info($"{genericProcessingInfo}. The request has been processed. The feed processing report download is ready to be attempted.");
 				}
 				else if (feedSubmissionInfo.FeedProcessingStatus == "_AWAITING_ASYNCHRONOUS_REPLY_"
-				           || feedSubmissionInfo.FeedProcessingStatus == "_IN_PROGRESS_"
-				           || feedSubmissionInfo.FeedProcessingStatus == "_IN_SAFETY_NET_"
-				           || feedSubmissionInfo.FeedProcessingStatus == "_SUBMITTED_"
-				           || feedSubmissionInfo.FeedProcessingStatus == "_UNCONFIRMED_")
+					  || feedSubmissionInfo.FeedProcessingStatus == "_IN_PROGRESS_"
+					  || feedSubmissionInfo.FeedProcessingStatus == "_IN_SAFETY_NET_"
+					  || feedSubmissionInfo.FeedProcessingStatus == "_SUBMITTED_"
+					  || feedSubmissionInfo.FeedProcessingStatus == "_UNCONFIRMED_")
 				{
 					specificProcessingInfo =
 						feedSubmissionInfo.FeedProcessingStatus == "_AWAITING_ASYNCHRONOUS_REPLY_" ? "The request is being processed, but is waiting for external information before it can complete." :
