@@ -168,11 +168,19 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void QueueFeedsAccordingToProcessingStatus(IFeedSubmissionEntryService feedSubmissionService, List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses)
 		{
-			var specificProcessingInfo = string.Empty;
 			foreach (var feedSubmissionInfo in feedProcessingStatuses)
 			{
 				var feedSubmissionEntry = feedSubmissionService.FirstOrDefault(fsc => fsc.FeedSubmissionId == feedSubmissionInfo.FeedSubmissionId);
 				if(feedSubmissionEntry == null) continue;
+
+				var pendingProcessingStatusesAndInfo = new Dictionary<string, string>()
+				{
+					{"_AWAITING_ASYNCHRONOUS_REPLY_", "The request is being processed, but is waiting for external information before it can complete."},
+					{"_IN_PROGRESS_", "The request is being processed."},
+					{"_IN_SAFETY_NET_", "The request is being processed, but the system has determined that there is a potential error with the feed (for example, the request will remove all inventory from a seller's account.) An Amazon seller support associate will contact the seller to confirm whether the feed should be processed."},
+					{"_SUBMITTED_", "The request has been received, but has not yet started processing."},
+					{"_UNCONFIRMED_", "The request is pending."}
+				};
 
 				var genericProcessingInfo = $"ProcessingStatus returned by Amazon for {feedSubmissionEntry.RegionAndTypeComputed} is '{feedSubmissionInfo.FeedProcessingStatus}'.";
 
@@ -182,18 +190,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 					feedSubmissionEntry.FeedProcessingRetryCount = 0;
 					_logger.Info($"{genericProcessingInfo}. The request has been processed. The feed processing report download is ready to be attempted.");
 				}
-				else if (feedSubmissionInfo.FeedProcessingStatus == "_AWAITING_ASYNCHRONOUS_REPLY_"
-					  || feedSubmissionInfo.FeedProcessingStatus == "_IN_PROGRESS_"
-					  || feedSubmissionInfo.FeedProcessingStatus == "_IN_SAFETY_NET_"
-					  || feedSubmissionInfo.FeedProcessingStatus == "_SUBMITTED_"
-					  || feedSubmissionInfo.FeedProcessingStatus == "_UNCONFIRMED_")
+				else if (pendingProcessingStatusesAndInfo.Keys.Any(pendingStatus => pendingStatus == feedSubmissionInfo.FeedProcessingStatus))
 				{
-					specificProcessingInfo =
-						feedSubmissionInfo.FeedProcessingStatus == "_AWAITING_ASYNCHRONOUS_REPLY_" ? "The request is being processed, but is waiting for external information before it can complete." :
-						feedSubmissionInfo.FeedProcessingStatus == "_IN_PROGRESS_" ? "The request is being processed." :
-						feedSubmissionInfo.FeedProcessingStatus == "_IN_SAFETY_NET_" ? "The request is being processed, but the system has determined that there is a potential error with the feed (for example, the request will remove all inventory from a seller's account.) An Amazon seller support associate will contact the seller to confirm whether the feed should be processed." :
-						feedSubmissionInfo.FeedProcessingStatus == "_SUBMITTED_" ? "The request has been received, but has not yet started processing." :
-						feedSubmissionInfo.FeedProcessingStatus == "_UNCONFIRMED_" ? "The request is pending." : string.Empty;
+					var specificProcessingInfo = pendingProcessingStatusesAndInfo[feedSubmissionInfo.FeedProcessingStatus];
 					feedSubmissionEntry.FeedProcessingRetryCount = 0;
 					_logger.Info($"{genericProcessingInfo} {specificProcessingInfo} The feed processing status will be checked again at the next poll request.");
 				}
