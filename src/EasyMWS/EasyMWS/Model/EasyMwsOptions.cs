@@ -138,30 +138,37 @@ namespace MountainWarehouse.EasyMWS.Model
 		/// <para/>
 		/// </summary>
 		public static EasyMwsOptions Defaults()
-	    {
-		    return new EasyMwsOptions
+		{
+			const int worstCaseScenarioRetryInitialDelay = 10;
+			const int worstCaseScenarioRetryInterval = 1;
+			const RetryPeriodType exponentialRetryPeriodIncrease = RetryPeriodType.GeometricProgression;
+			const RetryPeriodType constantRetryPeriod = RetryPeriodType.ArithmeticProgression;
+			const int amazonServiceRequestRetryCount = 4;
+			const int amazonRequestRequeueLimit = 3;
+
+			return new EasyMwsOptions
 		    {
 			    InvokeCallbackMaxRetryCount = 5,
-			    InvokeCallbackRetryPeriodType = RetryPeriodType.ArithmeticProgression,
+			    InvokeCallbackRetryPeriodType = constantRetryPeriod,
 			    InvokeCallbackRetryInterval = TimeSpan.FromMinutes(30),
 
-				ReportRequestMaxRetryCount = 4,
-				ReportRequestRetryType = RetryPeriodType.GeometricProgression,
-			    ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(30),
-			    ReportRequestRetryInterval = TimeSpan.FromHours(1),
+				ReportRequestMaxRetryCount = amazonServiceRequestRetryCount,
+				ReportRequestRetryType = exponentialRetryPeriodIncrease,
+			    ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(worstCaseScenarioRetryInitialDelay),
+			    ReportRequestRetryInterval = TimeSpan.FromHours(worstCaseScenarioRetryInterval),
 
-			    ReportDownloadMaxRetryCount = 4,
-			    ReportDownloadRetryType = RetryPeriodType.GeometricProgression,
-			    ReportDownloadRetryInitialDelay = TimeSpan.FromMinutes(30),
-			    ReportDownloadRetryInterval = TimeSpan.FromHours(1),
+			    ReportDownloadMaxRetryCount = amazonServiceRequestRetryCount,
+			    ReportDownloadRetryType = exponentialRetryPeriodIncrease,
+			    ReportDownloadRetryInitialDelay = TimeSpan.FromMinutes(worstCaseScenarioRetryInitialDelay),
+			    ReportDownloadRetryInterval = TimeSpan.FromHours(worstCaseScenarioRetryInterval),
 
-				ReportProcessingMaxRetryCount = 3,
-			    FeedProcessingMaxRetryCount = 3,
+				ReportProcessingMaxRetryCount = amazonRequestRequeueLimit,
+			    FeedProcessingMaxRetryCount = amazonRequestRequeueLimit,
 
-				FeedSubmissionMaxRetryCount = 4,
-			    FeedSubmissionRetryType = RetryPeriodType.GeometricProgression,
-			    FeedSubmissionRetryInitialDelay = TimeSpan.FromMinutes(30),
-			    FeedSubmissionRetryInterval = TimeSpan.FromHours(1),
+				FeedSubmissionMaxRetryCount = amazonServiceRequestRetryCount,
+			    FeedSubmissionRetryType = exponentialRetryPeriodIncrease,
+			    FeedSubmissionRetryInitialDelay = TimeSpan.FromMinutes(worstCaseScenarioRetryInitialDelay),
+			    FeedSubmissionRetryInterval = TimeSpan.FromHours(worstCaseScenarioRetryInterval),
 
 			    ReportDownloadRequestEntryExpirationPeriod = TimeSpan.FromDays(1),
 				FeedSubmissionRequestEntryExpirationPeriod = TimeSpan.FromDays(2)
