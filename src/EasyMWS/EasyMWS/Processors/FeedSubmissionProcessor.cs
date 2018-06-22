@@ -241,7 +241,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 				var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
 				_logger.Info($"Feed submission report download from Amazon has succeeded for {feedSubmissionEntry.RegionAndTypeComputed}.",
 					new RequestInfo(timestamp, requestId));
-				reportResultStream.Position = 0;
 
 				var md5Hash = response?.GetFeedSubmissionResultResult?.ContentMD5;
 				var hasValidHash = MD5ChecksumHelper.IsChecksumCorrect(reportResultStream, md5Hash);
