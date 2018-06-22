@@ -27,7 +27,7 @@ namespace EasyMWS.Tests.Processors
 		private IFeedSubmissionProcessor _feedSubmissionProcessor;
 		private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
 		private EasyMwsOptions _easyMwsOptions;
-		private Mock<IFeedSubmissionEntryService> _feedSubmissionCallbackServiceMock;
+		private Mock<IFeedSubmissionEntryService> _feedSubmissionServiceMock;
 		private List<FeedSubmissionEntry> _feedSubmissionCallbacks;
 		private string _merchantId = "TestMerchantId";
 		private Mock<IEasyMwsLogger> _loggerMock;
@@ -38,7 +38,7 @@ namespace EasyMWS.Tests.Processors
 		{
 			_easyMwsOptions = EasyMwsOptions.Defaults();
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
-			_feedSubmissionCallbackServiceMock = new Mock<IFeedSubmissionEntryService>();
+			_feedSubmissionServiceMock = new Mock<IFeedSubmissionEntryService>();
 			_loggerMock = new Mock<IEasyMwsLogger>();
 			_feedSubmissionProcessor = new FeedSubmissionProcessor(_region, _merchantId,_marketplaceWebServiceClientMock.Object, _loggerMock.Object, _easyMwsOptions);
 
@@ -55,12 +55,12 @@ namespace EasyMWS.Tests.Processors
 				}
 			};
 
-			_feedSubmissionCallbackServiceMock.Setup(x => x.GetAll()).Returns(_feedSubmissionCallbacks.AsQueryable());
+			_feedSubmissionServiceMock.Setup(x => x.GetAll()).Returns(_feedSubmissionCallbacks.AsQueryable());
 
-			_feedSubmissionCallbackServiceMock.Setup(x => x.Where(It.IsAny<Expression<Func<FeedSubmissionEntry, bool>>>()))
+			_feedSubmissionServiceMock.Setup(x => x.Where(It.IsAny<Expression<Func<FeedSubmissionEntry, bool>>>()))
 				.Returns((Expression<Func<FeedSubmissionEntry, bool>> e) => _feedSubmissionCallbacks.AsQueryable().Where(e));
 
-			_feedSubmissionCallbackServiceMock
+			_feedSubmissionServiceMock
 				.Setup(x => x.FirstOrDefault(It.IsAny<Expression<Func<FeedSubmissionEntry, bool>>>()))
 				.Returns((Expression<Func<FeedSubmissionEntry, bool>> e) =>
 					_feedSubmissionCallbacks.AsQueryable().FirstOrDefault(e));
@@ -70,34 +70,34 @@ namespace EasyMWS.Tests.Processors
 		public void SubmitFeedToAmazon_CalledWithNullFeedSubmissionCallback_ThrowsArgumentNullException()
 		{
 			Assert.Throws<ArgumentNullException>(() =>
-				_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionCallbackServiceMock.Object, null));
+				_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionServiceMock.Object, null));
 		}
 
 		[Test]
 		public void SubmitFeedToAmazon_CalledWithNullFeedContent_ThrowsArgumentNullException()
 		{
 			Assert.Throws<ArgumentNullException>(() =>
-				_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionCallbackServiceMock.Object, new FeedSubmissionEntry{Details = new FeedSubmissionDetails{FeedContent = null}}));
+				_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry{Details = new FeedSubmissionDetails{FeedContent = null}}));
 		}
 
 		[Test]
 		public void SubmitFeedToAmazon_CalledWithNullFeedSubmissionData_ThrowsArgumentNullException()
 		{
 			Assert.Throws<ArgumentNullException>(() =>
-				_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionCallbackServiceMock.Object, new FeedSubmissionEntry { Details = new FeedSubmissionDetails { FeedContent = new byte[1] }, FeedSubmissionData = null}));
+				_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry { Details = new FeedSubmissionDetails { FeedContent = new byte[1] }, FeedSubmissionData = null}));
 		}
 
 		[Test]
 		public void SubmitFeedToAmazon_CalledWithNullFeedType_ThrowsArgumentNullException()
 		{
 			Assert.Throws<ArgumentException>(() =>
-				_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionCallbackServiceMock.Object, new FeedSubmissionEntry { Details = new FeedSubmissionDetails { FeedContent = new byte[1] }, FeedSubmissionData = "", FeedType = null}));
+				_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry { Details = new FeedSubmissionDetails { FeedContent = new byte[1] }, FeedSubmissionData = "", FeedType = null}));
 		}
 
 		[Test]
 		public void RequestReportFromAmazon_CalledWithReportRequestCallbackWithNullFeedSubmissionData_ThrowsArgumentException()
 		{
-			Assert.Throws<ArgumentException>(() => _feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionCallbackServiceMock.Object, new FeedSubmissionEntry(null)));
+			Assert.Throws<ArgumentException>(() => _feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry(null)));
 		}
 
 		[Test]
@@ -161,12 +161,12 @@ namespace EasyMWS.Tests.Processors
 				("testId", "_DONE_")
 			};
 
-			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(_feedSubmissionCallbackServiceMock.Object, resultsInfo);
+			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(_feedSubmissionServiceMock.Object, resultsInfo);
 
 			Assert.IsTrue(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").IsProcessingComplete);
 			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").FeedSubmissionRetryCount);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
 		}
 
 		[Test]
@@ -194,7 +194,7 @@ namespace EasyMWS.Tests.Processors
 				("testId5", "_UNCONFIRMED_")
 			};
 
-			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(_feedSubmissionCallbackServiceMock.Object, resultsInfo);
+			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(_feedSubmissionServiceMock.Object, resultsInfo);
 
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId1").IsProcessingComplete);
 			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId1").FeedSubmissionRetryCount);
@@ -206,8 +206,8 @@ namespace EasyMWS.Tests.Processors
 			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId4").FeedSubmissionRetryCount);
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId5").IsProcessingComplete);
 			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId5").FeedSubmissionRetryCount);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Exactly(5));
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Exactly(5));
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
 		}
 
 		[Test]
@@ -228,13 +228,13 @@ namespace EasyMWS.Tests.Processors
 				("testId", "_CANCELLED_"),
 			};
 
-			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(_feedSubmissionCallbackServiceMock.Object, resultsInfo);
+			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(_feedSubmissionServiceMock.Object, resultsInfo);
 
 			Assert.IsNull(_feedSubmissionCallbacks.First(x => x.Id == 555).FeedSubmissionId);
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.Id == 555).IsProcessingComplete);
 			Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.Id == 555).FeedProcessingRetryCount);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
 		}
 
 		[Test]
@@ -255,12 +255,12 @@ namespace EasyMWS.Tests.Processors
 				("testId", "_SOME_MADE_UP_STATUS_")
 			};
 			 
-			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(_feedSubmissionCallbackServiceMock.Object, resultsInfo);
+			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(_feedSubmissionServiceMock.Object, resultsInfo);
 
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.Id == 555).IsProcessingComplete);
 			Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.Id == 555).FeedProcessingRetryCount);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
 		}
 
 		[Test]
@@ -277,12 +277,12 @@ namespace EasyMWS.Tests.Processors
 				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 5, FeedSubmissionRetryCount = 5, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-1), FeedSubmissionId = null },
 				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 6, FeedSubmissionRetryCount = 5, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-1), FeedSubmissionId = "testFeedSubmissionId" }
 			}.AsQueryable();
-			_feedSubmissionCallbackServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(testFeedSubmissionCallbacks);
+			_feedSubmissionServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(testFeedSubmissionCallbacks);
 
-			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_feedSubmissionCallbackServiceMock.Object);
+			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_feedSubmissionServiceMock.Object);
 
 			// Id=5 deleted - FeedSubmissionMaxRetryCount. Id=6 deleted - FeedResultFailedChecksumMaxRetryCount. Id=1,2 deleted - FeedSubmissionRequestEntryExpirationPeriod=2days exceeded.
-			_feedSubmissionCallbackServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Exactly(4));
+			_feedSubmissionServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Exactly(4));
 		}
 
 		[TestCase(0, 0, 0, 0, false)]
@@ -324,22 +324,22 @@ namespace EasyMWS.Tests.Processors
 			};
 			var entriesList = new List<FeedSubmissionEntry> { firstEntryToDelete, entryToLeaveIntact };
 			var entriesQueryable = entriesList.AsQueryable();
-			_feedSubmissionCallbackServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(entriesQueryable);
+			_feedSubmissionServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(entriesQueryable);
 			var entryBeingDeleted = (FeedSubmissionEntry)null;
-			_feedSubmissionCallbackServiceMock.Setup(x => x.Delete(It.IsAny<FeedSubmissionEntry>())).Callback<FeedSubmissionEntry>(
+			_feedSubmissionServiceMock.Setup(x => x.Delete(It.IsAny<FeedSubmissionEntry>())).Callback<FeedSubmissionEntry>(
 				e => { entryBeingDeleted = e; });
 
-			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_feedSubmissionCallbackServiceMock.Object);
+			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_feedSubmissionServiceMock.Object);
 
 			if (shouldDeleteEntry)
 			{
-				_feedSubmissionCallbackServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+				_feedSubmissionServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Once);
 				Assert.NotNull(entryBeingDeleted);
 				Assert.AreEqual(firstEntryToDelete.Id, entryBeingDeleted.Id);
 			}
-			else { _feedSubmissionCallbackServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never); }
+			else { _feedSubmissionServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never); }
 
-			_feedSubmissionCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+			_feedSubmissionServiceMock.Verify(x => x.SaveChanges(), Times.Once);
 		}
 
 		[TestCase(false, false, false, false, false)]
@@ -424,16 +424,16 @@ namespace EasyMWS.Tests.Processors
 				expectedNumberOfEntitiesToDelete++;
 			}
 			var entriesQueryable = entriesList.AsQueryable();
-			_feedSubmissionCallbackServiceMock.Setup(x => x.GetAll()).Returns(entriesQueryable);
+			_feedSubmissionServiceMock.Setup(x => x.GetAll()).Returns(entriesQueryable);
 			var listOfDeletedEntriesIds = new List<int>();
-			_feedSubmissionCallbackServiceMock.Setup(x => x.Delete(It.IsAny<FeedSubmissionEntry>()))
+			_feedSubmissionServiceMock.Setup(x => x.Delete(It.IsAny<FeedSubmissionEntry>()))
 				.Callback<FeedSubmissionEntry>(entry => { listOfDeletedEntriesIds.Add(entry.Id); });
 
 
-			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_feedSubmissionCallbackServiceMock.Object);
+			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_feedSubmissionServiceMock.Object);
 
-			_feedSubmissionCallbackServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Exactly(expectedNumberOfEntitiesToDelete));
-			_feedSubmissionCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+			_feedSubmissionServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Exactly(expectedNumberOfEntitiesToDelete));
+			_feedSubmissionServiceMock.Verify(x => x.SaveChanges(), Times.Once);
 			CollectionAssert.DoesNotContain(listOfDeletedEntriesIds, entryToLeaveIntact.Id);
 			if (hasEntryWithSubmissionRetryCountExceeded) { CollectionAssert.Contains(listOfDeletedEntriesIds, entryWithRequestRetryCountExceeded.Id); }
 			else { CollectionAssert.DoesNotContain(listOfDeletedEntriesIds, entryWithRequestRetryCountExceeded.Id); }
@@ -470,12 +470,12 @@ namespace EasyMWS.Tests.Processors
 			};
 			var entriesList = new List<FeedSubmissionEntry> { entryToDelete, entryToLeaveIntact };
 			var entriesQueryable = entriesList.AsQueryable();
-			_feedSubmissionCallbackServiceMock.Setup(x => x.GetAll()).Returns(entriesQueryable);
+			_feedSubmissionServiceMock.Setup(x => x.GetAll()).Returns(entriesQueryable);
 
-			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_feedSubmissionCallbackServiceMock.Object);
+			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_feedSubmissionServiceMock.Object);
 
-			_feedSubmissionCallbackServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-			_feedSubmissionCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+			_feedSubmissionServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(x => x.SaveChanges(), Times.Once);
 		}
 
 		[Test]
@@ -491,20 +491,20 @@ namespace EasyMWS.Tests.Processors
 					rrp.SubmitFeed(It.IsAny<SubmitFeedRequest>()))
 				.Returns(new SubmitFeedResponse{SubmitFeedResult = new SubmitFeedResult{FeedSubmissionInfo = new FeedSubmissionInfo{FeedSubmissionId = expectedFeedSubmissionId } }});
 			var entryBeingUpdated = (FeedSubmissionEntry) null;
-			_feedSubmissionCallbackServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
+			_feedSubmissionServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
 				.Callback<FeedSubmissionEntry>(
 					entry => { entryBeingUpdated = entry; });
 
-			_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionCallbackServiceMock.Object, new FeedSubmissionEntry(serializedPropertiesContainer)
+			_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry(serializedPropertiesContainer)
 			{
 				LastSubmitted = DateTime.MinValue,
 				FeedType = feedType,
 				Details = new FeedSubmissionDetails { FeedContent = GenerateValidArchive(feedContent).ToArray() }
 			});
 
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
 			Assert.NotNull(entryBeingUpdated);
 			Assert.AreEqual(expectedFeedSubmissionId, entryBeingUpdated.FeedSubmissionId);
 			Assert.AreEqual(DateTime.UtcNow.Date, entryBeingUpdated.LastSubmitted.Date);
@@ -523,20 +523,20 @@ namespace EasyMWS.Tests.Processors
 					rrp.SubmitFeed(It.IsAny<SubmitFeedRequest>()))
 				.Returns(new SubmitFeedResponse { SubmitFeedResult = new SubmitFeedResult { FeedSubmissionInfo = new FeedSubmissionInfo { FeedSubmissionId = null } } });
 			var entryBeingUpdated = (FeedSubmissionEntry)null;
-			_feedSubmissionCallbackServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
+			_feedSubmissionServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
 				.Callback<FeedSubmissionEntry>(
 					entry => { entryBeingUpdated = entry; });
 
-			_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionCallbackServiceMock.Object, new FeedSubmissionEntry(serializedPropertiesContainer)
+			_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry(serializedPropertiesContainer)
 			{
 				LastSubmitted = DateTime.MinValue,
 				FeedType = feedType,
 				Details = new FeedSubmissionDetails { FeedContent = GenerateValidArchive(feedContent).ToArray() }
 			});
 
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
 			Assert.NotNull(entryBeingUpdated);
 			Assert.IsNull(entryBeingUpdated.FeedSubmissionId);
 			Assert.AreEqual(DateTime.UtcNow.Date, entryBeingUpdated.LastSubmitted.Date);
@@ -555,11 +555,11 @@ namespace EasyMWS.Tests.Processors
 					rrp.SubmitFeed(It.IsAny<SubmitFeedRequest>()))
 				.Returns(new SubmitFeedResponse { SubmitFeedResult = new SubmitFeedResult { FeedSubmissionInfo = new FeedSubmissionInfo { FeedSubmissionId = string.Empty } } });
 			var entryBeingUpdated = (FeedSubmissionEntry)null;
-			_feedSubmissionCallbackServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
+			_feedSubmissionServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
 				.Callback<FeedSubmissionEntry>(
 					entry => { entryBeingUpdated = entry; });
 
-			_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionCallbackServiceMock.Object,
+			_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionServiceMock.Object,
 				new FeedSubmissionEntry(serializedPropertiesContainer)
 				{
 					LastSubmitted = DateTime.MinValue,
@@ -567,9 +567,9 @@ namespace EasyMWS.Tests.Processors
 					Details = new FeedSubmissionDetails {FeedContent = GenerateValidArchive(feedContent).ToArray()}
 				});
 
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
 			Assert.NotNull(entryBeingUpdated);
 			Assert.IsNull(entryBeingUpdated.FeedSubmissionId);
 			Assert.AreEqual(DateTime.UtcNow.Date, entryBeingUpdated.LastSubmitted.Date);
@@ -593,7 +593,7 @@ namespace EasyMWS.Tests.Processors
 					rrp.SubmitFeed(It.IsAny<SubmitFeedRequest>()))
 				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, fatalErrorCode, "errorType", "123", "xml", new ResponseHeaderMetadata()));
 
-			_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionCallbackServiceMock.Object,
+			_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionServiceMock.Object,
 				new FeedSubmissionEntry(serializedPropertiesContainer)
 				{
 					LastSubmitted = DateTime.MinValue,
@@ -601,9 +601,9 @@ namespace EasyMWS.Tests.Processors
 					Details = new FeedSubmissionDetails { FeedContent = GenerateValidArchive(feedContent).ToArray() }
 				});
 
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Never);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
 		}
 
 		[TestCase("ContentMD5Missing")]
@@ -622,11 +622,11 @@ namespace EasyMWS.Tests.Processors
 					rrp.SubmitFeed(It.IsAny<SubmitFeedRequest>()))
 				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, nonFatalErrorCode, "errorType", "123", "xml", new ResponseHeaderMetadata()));
 			var entryBeingUpdated = (FeedSubmissionEntry)null;
-			_feedSubmissionCallbackServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
+			_feedSubmissionServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
 				.Callback<FeedSubmissionEntry>(
 					entry => { entryBeingUpdated = entry; });
 
-			_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionCallbackServiceMock.Object,
+			_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionServiceMock.Object,
 				new FeedSubmissionEntry(serializedPropertiesContainer)
 				{
 					LastSubmitted = DateTime.MinValue,
@@ -634,9 +634,9 @@ namespace EasyMWS.Tests.Processors
 					Details = new FeedSubmissionDetails { FeedContent = GenerateValidArchive(feedContent).ToArray() }
 				});
 
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
 			Assert.NotNull(entryBeingUpdated);
 			Assert.IsNull(entryBeingUpdated.FeedSubmissionId);
 			Assert.AreEqual(DateTime.UtcNow.Date, entryBeingUpdated.LastSubmitted.Date);
@@ -655,11 +655,11 @@ namespace EasyMWS.Tests.Processors
 					rrp.SubmitFeed(It.IsAny<SubmitFeedRequest>()))
 				.Throws(new Exception(""));
 			var entryBeingUpdated = (FeedSubmissionEntry)null;
-			_feedSubmissionCallbackServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
+			_feedSubmissionServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
 				.Callback<FeedSubmissionEntry>(
 					entry => { entryBeingUpdated = entry; });
 
-			_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionCallbackServiceMock.Object,
+			_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionServiceMock.Object,
 				new FeedSubmissionEntry(serializedPropertiesContainer)
 				{
 					LastSubmitted = DateTime.MinValue,
@@ -667,9 +667,9 @@ namespace EasyMWS.Tests.Processors
 					Details = new FeedSubmissionDetails { FeedContent = GenerateValidArchive(feedContent).ToArray() }
 				});
 
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
 			Assert.NotNull(entryBeingUpdated);
 			Assert.IsNull(entryBeingUpdated.FeedSubmissionId);
 			Assert.AreEqual(DateTime.UtcNow.Date, entryBeingUpdated.LastSubmitted.Date);
@@ -680,35 +680,35 @@ namespace EasyMWS.Tests.Processors
 		public void DownloadFeedSubmissionResultFromAmazon_WithNullFeedSubmissionArgument_ThrowsNullArgumentException()
 		{
 			Assert.Throws<ArgumentNullException>(() =>
-				_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionCallbackServiceMock.Object, null));
+				_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionServiceMock.Object, null));
 		}
 
 		[Test]
 		public void DownloadFeedSubmissionResultFromAmazon_WithNullMerchantId_ThrowsArgumentException()
 		{
 			Assert.Throws<ArgumentException>(() =>
-				_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionCallbackServiceMock.Object, new FeedSubmissionEntry{MerchantId = null}));
+				_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry{MerchantId = null}));
 		}
 
 		[Test]
 		public void DownloadFeedSubmissionResultFromAmazon_WithEmptyMerchantId_ThrowsArgumentException()
 		{
 			Assert.Throws<ArgumentException>(() =>
-				_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionCallbackServiceMock.Object, new FeedSubmissionEntry { MerchantId = string.Empty }));
+				_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry { MerchantId = string.Empty }));
 		}
 
 		[Test]
 		public void DownloadFeedSubmissionResultFromAmazon_WithEmptyFeedSubmissionId_ThrowsArgumentException()
 		{
 			Assert.Throws<ArgumentException>(() =>
-				_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionCallbackServiceMock.Object, new FeedSubmissionEntry { MerchantId = _merchantId, FeedSubmissionId = string.Empty}));
+				_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry { MerchantId = _merchantId, FeedSubmissionId = string.Empty}));
 		}
 
 		[Test]
 		public void DownloadFeedSubmissionResultFromAmazon_WithNullFeedSubmissionId_ThrowsArgumentException()
 		{
 			Assert.Throws<ArgumentException>(() =>
-				_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionCallbackServiceMock.Object, new FeedSubmissionEntry { MerchantId = _merchantId, FeedSubmissionId = null }));
+				_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry { MerchantId = _merchantId, FeedSubmissionId = null }));
 		}
 
 		[Test]
@@ -742,11 +742,11 @@ namespace EasyMWS.Tests.Processors
 					streamBeingSentToAmazon.Position = 0;
 				});
 			var entryBeingUpdated = (FeedSubmissionEntry)null;
-			_feedSubmissionCallbackServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
+			_feedSubmissionServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
 				.Callback<FeedSubmissionEntry>(
 					entry => { entryBeingUpdated = entry; });
 
-			_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionCallbackServiceMock.Object, new FeedSubmissionEntry(serializedPropertiesContainer)
+			_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry(serializedPropertiesContainer)
 			{
 				MerchantId = _merchantId,
 				FeedSubmissionId = expectedFeedSubmissionId,
@@ -755,9 +755,9 @@ namespace EasyMWS.Tests.Processors
 				Details = new FeedSubmissionDetails { FeedContent = expectedZippedContent.ToArray() }
 			});
 
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
 			Assert.NotNull(streamBeingSentToAmazon);
 			Assert.NotNull(entryBeingUpdated);
 			Assert.IsNull(entryBeingUpdated.Details.FeedContent);
@@ -790,11 +790,11 @@ namespace EasyMWS.Tests.Processors
 					GetFeedSubmissionResultResult = new GetFeedSubmissionResultResult {ContentMD5 = $"{expectedMd5Hash}NonMatchingSequence"}
 				});
 			var entryBeingUpdated = (FeedSubmissionEntry)null;
-			_feedSubmissionCallbackServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
+			_feedSubmissionServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
 				.Callback<FeedSubmissionEntry>(
 					entry => { entryBeingUpdated = entry; });
 
-			_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionCallbackServiceMock.Object, new FeedSubmissionEntry(serializedPropertiesContainer)
+			_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry(serializedPropertiesContainer)
 			{
 				MerchantId = _merchantId,
 				FeedSubmissionId = expectedFeedSubmissionId,
@@ -803,9 +803,9 @@ namespace EasyMWS.Tests.Processors
 				Details = new FeedSubmissionDetails { FeedContent = expectedZippedContent.ToArray() }
 			});
 
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
 			Assert.NotNull(entryBeingUpdated);
 			Assert.NotNull(entryBeingUpdated.Details.FeedContent);
 			Assert.IsNull(entryBeingUpdated.Details.FeedSubmissionReport);
@@ -831,11 +831,11 @@ namespace EasyMWS.Tests.Processors
 					rrp.GetFeedSubmissionResult(It.IsAny<GetFeedSubmissionResultRequest>()))
 				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, nonFatalErrorCode, "errorType", "123", "xml", new ResponseHeaderMetadata()));
 			var entryBeingUpdated = (FeedSubmissionEntry)null;
-			_feedSubmissionCallbackServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
+			_feedSubmissionServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
 				.Callback<FeedSubmissionEntry>(
 					entry => { entryBeingUpdated = entry; });
 
-			_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionCallbackServiceMock.Object, new FeedSubmissionEntry(serializedPropertiesContainer)
+			_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry(serializedPropertiesContainer)
 			{
 				MerchantId = _merchantId,
 				FeedSubmissionId = expectedFeedSubmissionId,
@@ -844,9 +844,9 @@ namespace EasyMWS.Tests.Processors
 				Details = new FeedSubmissionDetails { FeedContent = expectedZippedContent.ToArray() }
 			});
 
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
 			Assert.NotNull(entryBeingUpdated);
 			Assert.NotNull(entryBeingUpdated.Details.FeedContent);
 			Assert.IsNull(entryBeingUpdated.Details.FeedSubmissionReport);
@@ -868,11 +868,11 @@ namespace EasyMWS.Tests.Processors
 					rrp.GetFeedSubmissionResult(It.IsAny<GetFeedSubmissionResultRequest>()))
 				.Throws(new Exception("some random exception"));
 			var entryBeingUpdated = (FeedSubmissionEntry)null;
-			_feedSubmissionCallbackServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
+			_feedSubmissionServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
 				.Callback<FeedSubmissionEntry>(
 					entry => { entryBeingUpdated = entry; });
 
-			_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionCallbackServiceMock.Object, new FeedSubmissionEntry(serializedPropertiesContainer)
+			_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry(serializedPropertiesContainer)
 			{
 				MerchantId = _merchantId,
 				FeedSubmissionId = expectedFeedSubmissionId,
@@ -881,9 +881,9 @@ namespace EasyMWS.Tests.Processors
 				Details = new FeedSubmissionDetails { FeedContent = expectedZippedContent.ToArray() }
 			});
 
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
 			Assert.NotNull(entryBeingUpdated);
 			Assert.NotNull(entryBeingUpdated.Details.FeedContent);
 			Assert.IsNull(entryBeingUpdated.Details.FeedSubmissionReport);
@@ -910,11 +910,11 @@ namespace EasyMWS.Tests.Processors
 					rrp.GetFeedSubmissionResult(It.IsAny<GetFeedSubmissionResultRequest>()))
 				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, fatalErrorCode, "errorType", "123", "xml", new ResponseHeaderMetadata()));
 			var entryBeingDeleted = (FeedSubmissionEntry)null;
-			_feedSubmissionCallbackServiceMock.Setup(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()))
+			_feedSubmissionServiceMock.Setup(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()))
 				.Callback<FeedSubmissionEntry>(
 					entry => { entryBeingDeleted = entry; });
 
-			_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionCallbackServiceMock.Object, new FeedSubmissionEntry(serializedPropertiesContainer)
+			_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry(serializedPropertiesContainer)
 			{
 				MerchantId = _merchantId,
 				AmazonRegion = AmazonRegion.Australia,
@@ -924,9 +924,9 @@ namespace EasyMWS.Tests.Processors
 				Details = new FeedSubmissionDetails { FeedContent = expectedZippedContent.ToArray() }
 			});
 
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Never);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
 			Assert.NotNull(entryBeingDeleted);
 			Assert.AreEqual((feedType, AmazonRegion.Australia, _merchantId), (entryBeingDeleted.FeedType, entryBeingDeleted.AmazonRegion, entryBeingDeleted.MerchantId));
 		}

@@ -17,7 +17,7 @@ using NUnit.Framework;
 namespace EasyMWS.Tests.Services
 {
 	[TestFixture]
-    public class ReportRequestCallbackServiceTests
+    public class ReportRequestEntryServiceTests
     {
 	    private Mock<IReportRequestEntryRepository> _reportRequestCallbackReportMock;
 	    private ReportRequestEntryService _reportRequestEntryService;

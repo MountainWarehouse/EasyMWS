@@ -12,7 +12,7 @@ using NUnit.Framework;
 
 namespace EasyMWS.Tests.Services
 {
-    public class FeedSubmissionCallbackServiceTests
+    public class FeedSubmissionEntryServiceTests
     {
 	    private Mock<IFeedSubmissionEntryRepository> _feedSubmissionCallbackRepoMock;
 	    private IFeedSubmissionEntryService _feedSubmissionEntryService;

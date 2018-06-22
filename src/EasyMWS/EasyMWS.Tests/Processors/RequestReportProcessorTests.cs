@@ -28,7 +28,7 @@ namespace EasyMWS.Tests.Processors
 		private AmazonRegion _region = AmazonRegion.Europe;
 		private string _merchantId = "TestMerchantId";
 		private IRequestReportProcessor _requestReportProcessor;
-		private Mock<IReportRequestEntryService> _reportRequestCallbackServiceMock;
+		private Mock<IReportRequestEntryService> _reportRequestServiceMock;
 		private List<ReportRequestEntry> _reportRequestCallbacks;
 		private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
 		private Mock<IEasyMwsLogger> _loggerMock;
@@ -40,7 +40,7 @@ namespace EasyMWS.Tests.Processors
 			_easyMwsOptions = EasyMwsOptions.Defaults();
 
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
-			_reportRequestCallbackServiceMock = new Mock<IReportRequestEntryService>();
+			_reportRequestServiceMock = new Mock<IReportRequestEntryService>();
 			_loggerMock = new Mock<IEasyMwsLogger>();
 			_requestReportProcessor = new RequestReportProcessor(_region, _merchantId, _marketplaceWebServiceClientMock.Object, _loggerMock.Object, _easyMwsOptions);
 			
@@ -99,10 +99,10 @@ namespace EasyMWS.Tests.Processors
 
 			var reportRequestCallbacks = _reportRequestCallbacks.AsQueryable();
 
-			_reportRequestCallbackServiceMock.Setup(x => x.Where(It.IsAny<Expression<Func<ReportRequestEntry, bool>>>()))
+			_reportRequestServiceMock.Setup(x => x.Where(It.IsAny<Expression<Func<ReportRequestEntry, bool>>>()))
 				.Returns((Expression<Func<ReportRequestEntry, bool>> e) => reportRequestCallbacks.Where(e));
 
-			_reportRequestCallbackServiceMock.Setup(x => x.GetAll()).Returns(reportRequestCallbacks);
+			_reportRequestServiceMock.Setup(x => x.GetAll()).Returns(reportRequestCallbacks);
 
 			_marketplaceWebServiceClientMock.Setup(x => x.RequestReport(It.IsAny<RequestReportRequest>()))
 				.Returns(requestReportRequest);
@@ -110,7 +110,7 @@ namespace EasyMWS.Tests.Processors
 			_marketplaceWebServiceClientMock.Setup(x => x.GetReportRequestList(It.IsAny<GetReportRequestListRequest>()))
 				.Returns(getReportRequestListResponse);
 
-			_reportRequestCallbackServiceMock
+			_reportRequestServiceMock
 				.Setup(x => x.FirstOrDefault(It.IsAny<Expression<Func<ReportRequestEntry, bool>>>()))
 				.Returns((Expression<Func<ReportRequestEntry, bool>> e) => reportRequestCallbacks.FirstOrDefault(e));
 
@@ -145,12 +145,12 @@ namespace EasyMWS.Tests.Processors
 			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
 				.Returns(new RequestReportResponse{RequestReportResult = new RequestReportResult{ ReportRequestInfo = new ReportRequestInfo{ReportRequestId = "testReportRequestId" } }});
 			var reportRequestEntryBeingUpdated = (ReportRequestEntry) null;
-			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			_reportRequestServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
 				{
 					reportRequestEntryBeingUpdated = entry;
 				}));
 
-			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestServiceMock.Object,
 				new ReportRequestEntry
 				{
 					LastAmazonRequestDate = DateTime.MinValue,
@@ -162,8 +162,8 @@ namespace EasyMWS.Tests.Processors
 			Assert.AreEqual("testReportRequestId", reportRequestEntryBeingUpdated.RequestReportId);
 			Assert.AreEqual(0, reportRequestEntryBeingUpdated.ReportRequestRetryCount);
 			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastAmazonRequestDate.Day);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+			_reportRequestServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
 		}
 
 		[Test]
@@ -175,12 +175,12 @@ namespace EasyMWS.Tests.Processors
 			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
 				.Returns(new RequestReportResponse{RequestReportResult = new RequestReportResult{ ReportRequestInfo = new ReportRequestInfo{ReportRequestId =  null} }});
 			var reportRequestEntryBeingUpdated = (ReportRequestEntry) null;
-			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			_reportRequestServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
 				{
 					reportRequestEntryBeingUpdated = entry;
 				}));
 
-			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestServiceMock.Object,
 				new ReportRequestEntry
 				{
 					LastAmazonRequestDate = DateTime.MinValue,
@@ -192,8 +192,8 @@ namespace EasyMWS.Tests.Processors
 			Assert.AreEqual(null, reportRequestEntryBeingUpdated.RequestReportId);
 			Assert.AreEqual(1, reportRequestEntryBeingUpdated.ReportRequestRetryCount);
 			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastAmazonRequestDate.Day);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+			_reportRequestServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
 		}
 
 		[Test]
@@ -205,12 +205,12 @@ namespace EasyMWS.Tests.Processors
 			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
 				.Returns(new RequestReportResponse { RequestReportResult = new RequestReportResult { ReportRequestInfo = new ReportRequestInfo { ReportRequestId = string.Empty } } });
 			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
-			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			_reportRequestServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
 			{
 				reportRequestEntryBeingUpdated = entry;
 			}));
 
-			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestServiceMock.Object,
 				new ReportRequestEntry
 				{
 					LastAmazonRequestDate = DateTime.MinValue,
@@ -222,8 +222,8 @@ namespace EasyMWS.Tests.Processors
 			Assert.AreEqual(string.Empty, reportRequestEntryBeingUpdated.RequestReportId);
 			Assert.AreEqual(1, reportRequestEntryBeingUpdated.ReportRequestRetryCount);
 			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastAmazonRequestDate.Day);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+			_reportRequestServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
 		}
 
 		[TestCase("AccessToReportDenied")]
@@ -239,7 +239,7 @@ namespace EasyMWS.Tests.Processors
 			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
 				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, fatalErrorCode, "errorType", "123", "xml", new ResponseHeaderMetadata()));
 
-			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestServiceMock.Object,
 				new ReportRequestEntry
 				{
 					LastAmazonRequestDate = DateTime.MinValue,
@@ -248,9 +248,9 @@ namespace EasyMWS.Tests.Processors
 					MerchantId = _merchantId
 				});
 
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Never);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+			_reportRequestServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
 		}
 
 		[TestCase("ReportNotReady")]
@@ -264,12 +264,12 @@ namespace EasyMWS.Tests.Processors
 			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
 				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, nonFatalErrorCode, "errorType", "123", "xml", new ResponseHeaderMetadata()));
 			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
-			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			_reportRequestServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
 			{
 				reportRequestEntryBeingUpdated = entry;
 			}));
 
-			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestServiceMock.Object,
 				new ReportRequestEntry
 				{
 					LastAmazonRequestDate = DateTime.MinValue,
@@ -282,9 +282,9 @@ namespace EasyMWS.Tests.Processors
 			Assert.IsNull(reportRequestEntryBeingUpdated.RequestReportId);
 			Assert.AreEqual(2, reportRequestEntryBeingUpdated.ReportRequestRetryCount);
 			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastAmazonRequestDate.Day);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+			_reportRequestServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
 		}
 
 		[Test]
@@ -296,12 +296,12 @@ namespace EasyMWS.Tests.Processors
 			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
 				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, "UnknownErrorCode", "errorType", "123", "xml", new ResponseHeaderMetadata()));
 			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
-			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			_reportRequestServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
 			{
 				reportRequestEntryBeingUpdated = entry;
 			}));
 
-			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestServiceMock.Object,
 				new ReportRequestEntry
 				{
 					LastAmazonRequestDate = DateTime.MinValue,
@@ -314,9 +314,9 @@ namespace EasyMWS.Tests.Processors
 			Assert.IsNull(reportRequestEntryBeingUpdated.RequestReportId);
 			Assert.AreEqual(2, reportRequestEntryBeingUpdated.ReportRequestRetryCount);
 			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastAmazonRequestDate.Day);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+			_reportRequestServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
 		}
 
 		[Test]
@@ -328,12 +328,12 @@ namespace EasyMWS.Tests.Processors
 			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
 				.Throws(new Exception(""));
 			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
-			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			_reportRequestServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
 			{
 				reportRequestEntryBeingUpdated = entry;
 			}));
 
-			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestServiceMock.Object,
 				new ReportRequestEntry
 				{
 					LastAmazonRequestDate = DateTime.MinValue,
@@ -346,9 +346,9 @@ namespace EasyMWS.Tests.Processors
 			Assert.IsNull(reportRequestEntryBeingUpdated.RequestReportId);
 			Assert.AreEqual(2, reportRequestEntryBeingUpdated.ReportRequestRetryCount);
 			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastAmazonRequestDate.Day);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+			_reportRequestServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
 		}
 
 		[Test]
@@ -362,7 +362,7 @@ namespace EasyMWS.Tests.Processors
 						requestBeingSentToAmazon = req;
 					});
 
-			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object, _reportRequestCallbacks[0]);
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestServiceMock.Object, _reportRequestCallbacks[0]);
 			var expectedReportType = _reportRequestCallbacks[0].ReportType;
 
 			_marketplaceWebServiceClientMock.Verify(mwsc => mwsc.RequestReport(It.IsAny<RequestReportRequest>()), Times.Once);
@@ -386,7 +386,7 @@ namespace EasyMWS.Tests.Processors
 			_marketplaceWebServiceClientMock.Setup(mwscm => mwscm.RequestReport(It.IsAny<RequestReportRequest>()))
 				.Callback<RequestReportRequest>((rrr) => { requestReportRequest = rrr; });
 
-			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object, reportRequestEntry);
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestServiceMock.Object, reportRequestEntry);
 
 			Assert.AreEqual("testMerchant800", requestReportRequest.Merchant);
 			Assert.AreEqual("testReportType800", requestReportRequest.ReportType);
@@ -412,7 +412,7 @@ namespace EasyMWS.Tests.Processors
 			_marketplaceWebServiceClientMock.Setup(mwscm => mwscm.RequestReport(It.IsAny<RequestReportRequest>()))
 				.Callback<RequestReportRequest>((rrr) => { requestReportRequest = rrr; });
 
-			_requestReportProcessor.RequestReportFromAmazon(_reportRequestCallbackServiceMock.Object, reportRequestCallback);
+			_requestReportProcessor.RequestReportFromAmazon(_reportRequestServiceMock.Object, reportRequestCallback);
 
 			Assert.AreEqual("testMerchant800", requestReportRequest.Merchant);
 			Assert.AreEqual("testReportType800", requestReportRequest.ReportType);
@@ -509,7 +509,7 @@ namespace EasyMWS.Tests.Processors
 				("Report6", null, "_OTHER_")
 			};
 
-			_requestReportProcessor.QueueReportsAccordingToProcessingStatus(_reportRequestCallbackServiceMock.Object, dataResult);
+			_requestReportProcessor.QueueReportsAccordingToProcessingStatus(_reportRequestServiceMock.Object, dataResult);
 
 			Assert.AreEqual("GeneratedId1", _reportRequestCallbacks.First(x => x.RequestReportId == "Report1").GeneratedReportId);
 			Assert.AreEqual(0, _reportRequestCallbacks.First(x => x.RequestReportId == "Report1").ReportProcessRetryCount);
@@ -524,8 +524,8 @@ namespace EasyMWS.Tests.Processors
 			Assert.IsNull(_reportRequestCallbacks.First(x => x.Id == 6).GeneratedReportId);
 			Assert.IsNull(_reportRequestCallbacks.First(x => x.Id == 6).RequestReportId);
 			Assert.AreEqual(1, _reportRequestCallbacks.First(x => x.Id == 6).ReportProcessRetryCount);
-			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestEntry>()), Times.Exactly(3));
-			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestEntry>()), Times.Exactly(3));
+			_reportRequestServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
 		}
 
 		[Test]
@@ -542,11 +542,11 @@ namespace EasyMWS.Tests.Processors
 				("Report4", null, "_OTHER_")
 			};
 
-			_requestReportProcessor.QueueReportsAccordingToProcessingStatus(_reportRequestCallbackServiceMock.Object, data);
+			_requestReportProcessor.QueueReportsAccordingToProcessingStatus(_reportRequestServiceMock.Object, data);
 
 			Assert.IsNull(_reportRequestCallbacks.First().RequestReportId);
 			Assert.IsTrue(_reportRequestCallbacks.First().ReportProcessRetryCount > 0);
-			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
 		}
 
 		[Test]
@@ -571,7 +571,7 @@ namespace EasyMWS.Tests.Processors
 
 			// Act
 			var testData = _reportRequestCallbacks.Find(x => x.GeneratedReportId == "GeneratedIdTest1");
-			_requestReportProcessor.DownloadGeneratedReportFromAmazon(_reportRequestCallbackServiceMock.Object, testData);
+			_requestReportProcessor.DownloadGeneratedReportFromAmazon(_reportRequestServiceMock.Object, testData);
 
 			// Assert
 			_marketplaceWebServiceClientMock.Verify(x => x.GetReport(It.IsAny<GetReportRequest>()), Times.Once);
@@ -588,12 +588,12 @@ namespace EasyMWS.Tests.Processors
 				.Returns(new GetReportResponse { GetReportResult = new GetReportResult { ContentMD5 = expectedMd5HashValue } });
 
 			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
-			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			_reportRequestServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
 			{
 				reportRequestEntryBeingUpdated = entry;
 			}));
 
-			_requestReportProcessor.DownloadGeneratedReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+			_requestReportProcessor.DownloadGeneratedReportFromAmazon(_reportRequestServiceMock.Object,
 				new ReportRequestEntry
 				{
 					LastAmazonRequestDate = DateTime.MinValue,
@@ -614,9 +614,9 @@ namespace EasyMWS.Tests.Processors
 
 			Assert.AreEqual(0, reportRequestEntryBeingUpdated.ReportRequestRetryCount);
 			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastAmazonRequestDate.Day);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+			_reportRequestServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
 		}
 
 		[Test]
@@ -630,12 +630,12 @@ namespace EasyMWS.Tests.Processors
 				.Returns(new GetReportResponse { GetReportResult = new GetReportResult { ContentMD5 = nonMatchingMd5HashValue } });
 
 			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
-			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			_reportRequestServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
 			{
 				reportRequestEntryBeingUpdated = entry;
 			}));
 
-			_requestReportProcessor.DownloadGeneratedReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+			_requestReportProcessor.DownloadGeneratedReportFromAmazon(_reportRequestServiceMock.Object,
 				new ReportRequestEntry
 				{
 					LastAmazonRequestDate = DateTime.MinValue,
@@ -648,9 +648,9 @@ namespace EasyMWS.Tests.Processors
 			Assert.IsNull(reportRequestEntryBeingUpdated.Details);
 			Assert.AreEqual(1, reportRequestEntryBeingUpdated.ReportDownloadRetryCount);
 			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastAmazonRequestDate.Day);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+			_reportRequestServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
 		}
 
 		[TestCase("AccessToReportDenied")]
@@ -664,12 +664,12 @@ namespace EasyMWS.Tests.Processors
 				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, fatalErrorCode, "errorType", "123", "xml", new ResponseHeaderMetadata()));
 
 			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
-			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			_reportRequestServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
 			{
 				reportRequestEntryBeingUpdated = entry;
 			}));
 
-			_requestReportProcessor.DownloadGeneratedReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+			_requestReportProcessor.DownloadGeneratedReportFromAmazon(_reportRequestServiceMock.Object,
 				new ReportRequestEntry
 				{
 					LastAmazonRequestDate = DateTime.MinValue,
@@ -679,9 +679,9 @@ namespace EasyMWS.Tests.Processors
 					MerchantId = _merchantId
 				});
 
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Never);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+			_reportRequestServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
 		}
 
 		[TestCase("ReportNotReady")]
@@ -693,12 +693,12 @@ namespace EasyMWS.Tests.Processors
 				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, nonFatalErrorCode, "errorType", "123", "xml", new ResponseHeaderMetadata()));
 
 			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
-			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			_reportRequestServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
 			{
 				reportRequestEntryBeingUpdated = entry;
 			}));
 
-			_requestReportProcessor.DownloadGeneratedReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+			_requestReportProcessor.DownloadGeneratedReportFromAmazon(_reportRequestServiceMock.Object,
 				new ReportRequestEntry
 				{
 					LastAmazonRequestDate = DateTime.MinValue,
@@ -711,9 +711,9 @@ namespace EasyMWS.Tests.Processors
 			Assert.IsNull(reportRequestEntryBeingUpdated.Details);
 			Assert.AreEqual(1, reportRequestEntryBeingUpdated.ReportDownloadRetryCount);
 			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastAmazonRequestDate.Day);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+			_reportRequestServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
 		}
 
 		[Test]
@@ -723,12 +723,12 @@ namespace EasyMWS.Tests.Processors
 				.Throws(new Exception("Random exception thrown during download attempt"));
 
 			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
-			_reportRequestCallbackServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
+			_reportRequestServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
 			{
 				reportRequestEntryBeingUpdated = entry;
 			}));
 
-			_requestReportProcessor.DownloadGeneratedReportFromAmazon(_reportRequestCallbackServiceMock.Object,
+			_requestReportProcessor.DownloadGeneratedReportFromAmazon(_reportRequestServiceMock.Object,
 				new ReportRequestEntry
 				{
 					LastAmazonRequestDate = DateTime.MinValue,
@@ -741,9 +741,9 @@ namespace EasyMWS.Tests.Processors
 			Assert.IsNull(reportRequestEntryBeingUpdated.Details);
 			Assert.AreEqual(1, reportRequestEntryBeingUpdated.ReportDownloadRetryCount);
 			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastAmazonRequestDate.Day);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
-			_reportRequestCallbackServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
+			_reportRequestServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
 		}
 
 		[Test]
@@ -763,12 +763,12 @@ namespace EasyMWS.Tests.Processors
 				new ReportRequestEntry {Id = 7, ReportRequestRetryCount = 5, ReportRequestData = serializedReportRequestData, AmazonRegion = AmazonRegion.Brazil, MerchantId = _merchantId },
 				new ReportRequestEntry {Id = 8, ReportRequestRetryCount = 5, ReportRequestData = serializedReportRequestData, AmazonRegion = _region, MerchantId = "someDifferentMerchantId" }
 			}.AsQueryable();
-			_reportRequestCallbackServiceMock.Setup(x => x.GetAll()).Returns(testReportRequestCallbacks);
+			_reportRequestServiceMock.Setup(x => x.GetAll()).Returns(testReportRequestCallbacks);
 
-			_requestReportProcessor.CleanupReportRequests(_reportRequestCallbackServiceMock.Object);
+			_requestReportProcessor.CleanupReportRequests(_reportRequestServiceMock.Object);
 
 			// Id=6 deleted - ReportRequestMaxRetryCount. Id=1,2 deleted ReportDownloadRequestEntryExpirationPeriod=1day exceeded.
-			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Exactly(3));
+			_reportRequestServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Exactly(3));
 		}
 
 		[TestCase(0, 0, 0, 0, false)]
@@ -813,23 +813,23 @@ namespace EasyMWS.Tests.Processors
 			};
 			var entriesList = new List<ReportRequestEntry> { firstEntryToDelete, entryToLeaveIntact };
 			var entriesQueryable = entriesList.AsQueryable();
-			_reportRequestCallbackServiceMock.Setup(x => x.GetAll()).Returns(entriesQueryable);
+			_reportRequestServiceMock.Setup(x => x.GetAll()).Returns(entriesQueryable);
 			var entryBeingDeleted = (ReportRequestEntry)null;
-			_reportRequestCallbackServiceMock.Setup(x => x.Delete(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(
+			_reportRequestServiceMock.Setup(x => x.Delete(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(
 				e => { entryBeingDeleted = e; });
 			
 
-			_requestReportProcessor.CleanupReportRequests(_reportRequestCallbackServiceMock.Object);
+			_requestReportProcessor.CleanupReportRequests(_reportRequestServiceMock.Object);
 
 			if (shouldDeleteEntry)
 			{
-				_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
+				_reportRequestServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
 				Assert.NotNull(entryBeingDeleted);
 				Assert.AreEqual(firstEntryToDelete.Id, entryBeingDeleted.Id);
 			}
-			else { _reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Never); }
+			else { _reportRequestServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Never); }
 
-			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Once);
 		}
 
 		[TestCase(false, false, false, false, false)]
@@ -918,16 +918,16 @@ namespace EasyMWS.Tests.Processors
 				expectedNumberOfEntitiesToDelete++;
 			}
 			var entriesQueryable = entriesList.AsQueryable();
-			_reportRequestCallbackServiceMock.Setup(x => x.GetAll()).Returns(entriesQueryable);
+			_reportRequestServiceMock.Setup(x => x.GetAll()).Returns(entriesQueryable);
 			var listOfDeletedEntriesIds = new List<int>();
-			_reportRequestCallbackServiceMock.Setup(x => x.Delete(It.IsAny<ReportRequestEntry>()))
+			_reportRequestServiceMock.Setup(x => x.Delete(It.IsAny<ReportRequestEntry>()))
 				.Callback<ReportRequestEntry>(entry => { listOfDeletedEntriesIds.Add(entry.Id); });
 
 
-			_requestReportProcessor.CleanupReportRequests(_reportRequestCallbackServiceMock.Object);
+			_requestReportProcessor.CleanupReportRequests(_reportRequestServiceMock.Object);
 
-			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Exactly(expectedNumberOfEntitiesToDelete));
-			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+			_reportRequestServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Exactly(expectedNumberOfEntitiesToDelete));
+			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Once);
 			CollectionAssert.DoesNotContain(listOfDeletedEntriesIds, entryToLeaveIntact.Id);
 			if (hasEntryWithRequestRetryCountExceeded) { CollectionAssert.Contains(listOfDeletedEntriesIds, entryWithRequestRetryCountExceeded.Id); }
 			else { CollectionAssert.DoesNotContain(listOfDeletedEntriesIds, entryWithRequestRetryCountExceeded.Id); }
@@ -972,12 +972,12 @@ namespace EasyMWS.Tests.Processors
 			};
 			var entriesList = new List<ReportRequestEntry> { entryToDelete, entryToLeaveIntact };
 			var entriesQueryable = entriesList.AsQueryable();
-			_reportRequestCallbackServiceMock.Setup(x => x.GetAll()).Returns(entriesQueryable);
+			_reportRequestServiceMock.Setup(x => x.GetAll()).Returns(entriesQueryable);
 
-			_requestReportProcessor.CleanupReportRequests(_reportRequestCallbackServiceMock.Object);
+			_requestReportProcessor.CleanupReportRequests(_reportRequestServiceMock.Object);
 
-			_reportRequestCallbackServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
-			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+			_reportRequestServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Once);
 		}
 
 		private static MemoryStream ExtractArchivedSingleFileToStream(byte[] zipArchive)

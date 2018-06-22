@@ -22,7 +22,7 @@ namespace EasyMWS.Tests.ReportProcessors
 	public class FeedProcessorTests
 	{
 		private FeedProcessor _feedProcessor;
-		private Mock<IFeedSubmissionEntryService> _feedSubmissionCallbackServiceMock;
+		private Mock<IFeedSubmissionEntryService> _feedSubmissionServiceMock;
 		private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
 		private Mock<IFeedSubmissionProcessor> _feedSubmissionProcessorMock;
 		private Mock<ICallbackActivator> _callbackActivatorMock;
@@ -35,7 +35,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		public void SetUp()
 		{
 			var options = EasyMwsOptions.Defaults();
-			_feedSubmissionCallbackServiceMock = new Mock<IFeedSubmissionEntryService>();
+			_feedSubmissionServiceMock = new Mock<IFeedSubmissionEntryService>();
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_feedSubmissionProcessorMock = new Mock<IFeedSubmissionProcessor>();
 			_callbackActivatorMock = new Mock<ICallbackActivator>();
@@ -56,10 +56,10 @@ namespace EasyMWS.Tests.ReportProcessors
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
 			var callbackMethod = (Action<Stream, object>) null;
 
-			_feedProcessor.QueueFeed(_feedSubmissionCallbackServiceMock.Object, propertiesContainer, callbackMethod, new { Foo = "Bar" });
+			_feedProcessor.QueueFeed(_feedSubmissionServiceMock.Object, propertiesContainer, callbackMethod, new { Foo = "Bar" });
 
-			_feedSubmissionCallbackServiceMock.Verify(rrcs => rrcs.Create(It.IsAny<FeedSubmissionEntry>()), Times.Never);
-			_feedSubmissionCallbackServiceMock.Verify(rrcs => rrcs.SaveChanges(), Times.Never);
+			_feedSubmissionServiceMock.Verify(rrcs => rrcs.Create(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(rrcs => rrcs.SaveChanges(), Times.Never);
 			_loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<ArgumentNullException>()), Times.Once);
 		}
 
@@ -69,23 +69,23 @@ namespace EasyMWS.Tests.ReportProcessors
 			FeedSubmissionPropertiesContainer propertiesContainer = null;
 			var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
 
-			_feedProcessor.QueueFeed(_feedSubmissionCallbackServiceMock.Object, propertiesContainer, callbackMethod, new { Foo = "Bar" });
+			_feedProcessor.QueueFeed(_feedSubmissionServiceMock.Object, propertiesContainer, callbackMethod, new { Foo = "Bar" });
 
 			_loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<Exception>()), Times.Once);
 		}
 
 		[Test]
-		public void QueueFeed_WithNonEmptyArguments_CallsReportRequestCallbackServiceCreateOnceWithCorrectData()
+		public void QueueFeed_WithNonEmptyArguments_CallsFeedSubmissionEntryServiceCreateOnceWithCorrectData()
 		{
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
 			var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
 			FeedSubmissionEntry feedSubmissionEntry = null;
-			_feedSubmissionCallbackServiceMock.Setup(rrcsm => rrcsm.Create(It.IsAny<FeedSubmissionEntry>()))
+			_feedSubmissionServiceMock.Setup(rrcsm => rrcsm.Create(It.IsAny<FeedSubmissionEntry>()))
 				.Callback<FeedSubmissionEntry>((p) => { feedSubmissionEntry = p; });
 
-			_feedProcessor.QueueFeed(_feedSubmissionCallbackServiceMock.Object, propertiesContainer, callbackMethod, new CallbackActivatorTests.CallbackDataTest {Foo = "Bar"});
+			_feedProcessor.QueueFeed(_feedSubmissionServiceMock.Object, propertiesContainer, callbackMethod, new CallbackActivatorTests.CallbackDataTest {Foo = "Bar"});
 
-			_feedSubmissionCallbackServiceMock.Verify(rrcsm => rrcsm.Create(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(rrcsm => rrcsm.Create(It.IsAny<FeedSubmissionEntry>()), Times.Once);
 			Assert.AreEqual(JsonConvert.SerializeObject(propertiesContainer), feedSubmissionEntry.FeedSubmissionData);
 			Assert.AreEqual(AmazonRegion.Europe, feedSubmissionEntry.AmazonRegion);
 			Assert.NotNull(feedSubmissionEntry.TypeName);
@@ -95,14 +95,14 @@ namespace EasyMWS.Tests.ReportProcessors
 		}
 
 		[Test]
-		public void QueueFeed_WithNonEmptyArguments_CallsReportRequestCallbackServiceSaveChangesOnce()
+		public void QueueFeed_WithNonEmptyArguments_CallsFeedSubmissionEntryServiceSaveChangesOnce()
 		{
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
 			var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
 
-			_feedProcessor.QueueFeed(_feedSubmissionCallbackServiceMock.Object, propertiesContainer, callbackMethod, new CallbackActivatorTests.CallbackDataTest {Foo = "Bar"});
+			_feedProcessor.QueueFeed(_feedSubmissionServiceMock.Object, propertiesContainer, callbackMethod, new CallbackActivatorTests.CallbackDataTest {Foo = "Bar"});
 
-			_feedSubmissionCallbackServiceMock.Verify(rrcsm => rrcsm.SaveChanges(), Times.Once);
+			_feedSubmissionServiceMock.Verify(rrcsm => rrcsm.SaveChanges(), Times.Once);
 		}
 
 		#endregion
@@ -113,20 +113,20 @@ namespace EasyMWS.Tests.ReportProcessors
 		[Test]
 		public void Poll_CallsOnce_GetNextFromQueueOfFeedsToSubmit()
 		{
-			_feedProcessor.PollFeeds(_feedSubmissionCallbackServiceMock.Object);
+			_feedProcessor.PollFeeds(_feedSubmissionServiceMock.Object);
 
-			_feedSubmissionCallbackServiceMock.Verify(
+			_feedSubmissionServiceMock.Verify(
 				rrp => rrp.GetNextFromQueueOfFeedsToSubmit(It.IsAny<EasyMwsOptions>(), It.IsAny<string>(), It.IsAny<AmazonRegion>()), Times.Once);
 		}
 
 		[Test]
 		public void Poll_WithGetNextFeedToSubmitFromQueueReturningNull_DoesNotSubmitFeedToAmazon()
 		{
-			_feedSubmissionCallbackServiceMock
+			_feedSubmissionServiceMock
 				.Setup(rrp => rrp.GetNextFromQueueOfFeedsToSubmit(It.IsAny<EasyMwsOptions>(), It.IsAny<string>(), It.IsAny<AmazonRegion>()))
 				.Returns((FeedSubmissionEntry) null);
 
-			_feedProcessor.PollFeeds(_feedSubmissionCallbackServiceMock.Object);
+			_feedProcessor.PollFeeds(_feedSubmissionServiceMock.Object);
 
 			_feedSubmissionProcessorMock.Verify(
 				rrp => rrp.SubmitFeedToAmazon(It.IsAny<IFeedSubmissionEntryService>(),It.IsAny<FeedSubmissionEntry>()), Times.Never);
@@ -138,11 +138,11 @@ namespace EasyMWS.Tests.ReportProcessors
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 
-			_feedSubmissionCallbackServiceMock
+			_feedSubmissionServiceMock
 				.Setup(rrp => rrp.GetNextFromQueueOfFeedsToSubmit(It.IsAny<EasyMwsOptions>(), It.IsAny<string>(), It.IsAny<AmazonRegion>()))
 				.Returns(new FeedSubmissionEntry(serializedPropertiesContainer));
 
-			_feedProcessor.PollFeeds(_feedSubmissionCallbackServiceMock.Object);
+			_feedProcessor.PollFeeds(_feedSubmissionServiceMock.Object);
 
 			_feedSubmissionProcessorMock.Verify(
 				rrp => rrp.SubmitFeedToAmazon(It.IsAny<IFeedSubmissionEntryService>(),It.IsAny<FeedSubmissionEntry>()), Times.Once);
