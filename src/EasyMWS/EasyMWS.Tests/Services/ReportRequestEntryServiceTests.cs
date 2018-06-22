@@ -72,7 +72,7 @@ namespace EasyMWS.Tests.Services
 		}
 
 	    [Test]
-	    public void GetNextFromQueueOfReportsToDownload_ReturnListOfReports_GeneratedIdNotNull_ForGivenRegionAndMerchantId()
+	    public void GetNextFromQueueOfReportsToDownload_ForGivenRegionAndMerchantId_ReturnCorrectListOfReports()
 	    {
 		    // Arrange
 		    var merchantId2 = "test merchant id 2";
@@ -392,7 +392,8 @@ namespace EasyMWS.Tests.Services
 
 		    // Assert
 		    Assert.AreEqual(2, listPendingReports.Count());
-		    Assert.IsTrue(listPendingReports.Count(sf => sf == "Report2" || sf == "Report3") == 2);
+			Assert.IsTrue(listPendingReports.Contains("Report2"));
+		    Assert.IsTrue(listPendingReports.Contains("Report3"));
 	    }
 
 	    [Test]
