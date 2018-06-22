@@ -71,6 +71,10 @@ namespace MountainWarehouse.EasyMWS.Processors
 					_callbackActivator.CallMethod(callback, unzippedFeedSubmissionReport);
 					feedSubmissionService.Delete(feedSubmissionEntry);
 				}
+				catch (SqlException e)
+				{
+					_logger.Error($"Method callback failed for {feedSubmissionEntry.RegionAndTypeComputed} due to an internal error '{e.Message}'. The callback will be retried at the next poll request.", e);
+				}
 				catch (Exception e)
 				{
 					_logger.Error($"Method callback failed for {feedSubmissionEntry.RegionAndTypeComputed}. Current retry count is :{feedSubmissionEntry.FeedSubmissionRetryCount}. {e.Message}", e);
