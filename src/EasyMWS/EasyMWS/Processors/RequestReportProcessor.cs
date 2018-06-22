@@ -38,7 +38,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			if (reportRequestEntry?.ReportRequestData == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Report request data is missing.");
 		    if (string.IsNullOrEmpty(reportRequestEntry?.ReportType)) throw new ArgumentException($"{missingInformationExceptionMessage}: Report Type is missing.");
-			if(string.IsNullOrEmpty(reportRequestEntry.MerchantId)) throw new ArgumentException($"{missingInformationExceptionMessage}: MerchantId is missing.");
 
 			var reportRequestData = reportRequestEntry.GetPropertiesContainer();
 
@@ -230,7 +229,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_logger.Info($"Attempting to download the next report in queue from Amazon: {reportRequestEntry.RegionAndTypeComputed}.");
 
 		    if (string.IsNullOrEmpty(reportRequestEntry?.GeneratedReportId)) throw new ArgumentException($"{missingInformationExceptionMessage}: GeneratedReportId is missing.");
-			if (string.IsNullOrEmpty(reportRequestEntry.MerchantId)) throw new ArgumentException($"{missingInformationExceptionMessage}: MerchantId is missing.");
 
 			var reportResultStream = new MemoryStream();
 		    var getReportRequest = new GetReportRequest

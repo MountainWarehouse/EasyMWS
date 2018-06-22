@@ -219,7 +219,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var missingInformationExceptionMessage = "Cannot download report from amazon due to missing report request information";
 
 			if (feedSubmissionEntry == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Feed submission entry is null.");
-			if (string.IsNullOrEmpty(feedSubmissionEntry?.MerchantId)) throw new ArgumentException($"{missingInformationExceptionMessage}: MerchantId is missing.");
 			if (string.IsNullOrEmpty(feedSubmissionEntry.FeedSubmissionId)) throw new ArgumentException($"{missingInformationExceptionMessage}: FeedSubmissionId is missing.");
 
 			_logger.Info($"Attempting to request the feed submission result for the next feed in queue from Amazon: {feedSubmissionEntry.RegionAndTypeComputed}.");
