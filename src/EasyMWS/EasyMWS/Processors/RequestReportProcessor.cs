@@ -150,26 +150,26 @@ namespace MountainWarehouse.EasyMWS.Processors
 	    public void CleanupReportRequests(IReportRequestEntryService reportRequestService)
 	    {
 			_logger.Info("Executing cleanup of report requests queue.");
-		    var allReportRequestEntries = reportRequestService.GetAll();
+		    var allEntriesForRegionAndMerchant = reportRequestService.GetAll().Where(rrc => IsMatchForRegionAndMerchantId(rrc));
 		    var removedEntriesIds = new List<int>();
 
-		    var expiredReportRequests = allReportRequestEntries.Where(rrc => IsMatchForRegionAndMerchantId(rrc) && IsRequestRetryCountExceeded(rrc));
+		    var expiredReportRequests = allEntriesForRegionAndMerchant.Where(rrc => IsRequestRetryCountExceeded(rrc));
 			var expiredReportRequestsDeleteReason = $"ReportRequestMaxRetryCount exceeded.";
 		    MarkEntriesAsDeleted(reportRequestService, expiredReportRequests, removedEntriesIds, expiredReportRequestsDeleteReason);
 
-		    var entriesWithDownloadRetryCountExceeded = allReportRequestEntries.Where(rrc => IsMatchForRegionAndMerchantId(rrc) && IsDownloadRetryCountExceeded(rrc));
+		    var entriesWithDownloadRetryCountExceeded = allEntriesForRegionAndMerchant.Where(rrc => IsDownloadRetryCountExceeded(rrc));
 		    var entriesWithDownloadRetryCountExceededDeleteReason = $"ReportDownloadMaxRetryCount exceeded.";
 		    MarkEntriesAsDeleted(reportRequestService, entriesWithDownloadRetryCountExceeded, removedEntriesIds, entriesWithDownloadRetryCountExceededDeleteReason);
 
-		    var entriesWithProcessingRetryCountExceeded = allReportRequestEntries.Where(rrc => IsMatchForRegionAndMerchantId(rrc) && IsProcessingRetryCountExceeded(rrc));
+		    var entriesWithProcessingRetryCountExceeded = allEntriesForRegionAndMerchant.Where(rrc => IsProcessingRetryCountExceeded(rrc));
 			var entriesWithProcessingRetryCountExceededDeleteReason = $"ReportProcessingMaxRetryCount exceeded.";
 		    MarkEntriesAsDeleted(reportRequestService, entriesWithProcessingRetryCountExceeded, removedEntriesIds, entriesWithProcessingRetryCountExceededDeleteReason);
 
-		    var entriesWithExpirationPeriodExceeded = allReportRequestEntries.Where(rrc => IsMatchForRegionAndMerchantId(rrc) && IsExpirationPeriodExceeded(rrc));
+		    var entriesWithExpirationPeriodExceeded = allEntriesForRegionAndMerchant.Where(rrc => IsExpirationPeriodExceeded(rrc));
 		    var entriesWithExpirationPeriodExceededDeleteReason = $"ReportDownloadRequestEntryExpirationPeriod was exceeded.";
 		    MarkEntriesAsDeleted(reportRequestService, entriesWithExpirationPeriodExceeded, removedEntriesIds, entriesWithExpirationPeriodExceededDeleteReason);
 
-		    var entriesWithCallbackRetryCountExceeded = allReportRequestEntries.Where(rrc => IsMatchForRegionAndMerchantId(rrc) &&  IsCallbackInvocationRetryCountExceeded(rrc));
+		    var entriesWithCallbackRetryCountExceeded = allEntriesForRegionAndMerchant.Where(rrc => IsCallbackInvocationRetryCountExceeded(rrc));
 		    var entriesWithCallbackRetryCountExceededDeleteReason = $"InvokeCallbackMaxRetryCount exceeded.";
 		    MarkEntriesAsDeleted(reportRequestService, entriesWithCallbackRetryCountExceeded, removedEntriesIds, entriesWithCallbackRetryCountExceededDeleteReason);
 

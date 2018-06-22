@@ -290,26 +290,26 @@ namespace MountainWarehouse.EasyMWS.Processors
 		public void CleanUpFeedSubmissionQueue(IFeedSubmissionEntryService feedSubmissionService)
 		{
 			_logger.Info("Executing cleanup of feed submission requests queue.");
-			var allFeedSubmissionEntries = feedSubmissionService.GetAll();
+			var allEntriesForRegionAndMerchant = feedSubmissionService.GetAll().Where(fse => IsMatchForRegionAndMerchantId(fse));
 			var removedEntriesIds = new List<int>();
 
-			var entriesWithFeedSubmissionRetryCountExceeded = allFeedSubmissionEntries.Where(fse => IsMatchForRegionAndMerchantId(fse) && IsFeedSubmissionRetryCountExceeded(fse));
+			var entriesWithFeedSubmissionRetryCountExceeded = allEntriesForRegionAndMerchant.Where(fse => IsFeedSubmissionRetryCountExceeded(fse));
 			var entriesWithFeedSubmissionRetryCountExceededDeleteReason = $"FeedSubmissionMaxRetryCount exceeded.";
 			MarkEntriesAsDeleted(feedSubmissionService, entriesWithFeedSubmissionRetryCountExceeded, removedEntriesIds, entriesWithFeedSubmissionRetryCountExceededDeleteReason);
 
-			var entriesWithReportDownloadRetryCountExceeded = allFeedSubmissionEntries.Where(fse => IsMatchForRegionAndMerchantId(fse) && IsReportDownloadRetryCountExceeded(fse));
+			var entriesWithReportDownloadRetryCountExceeded = allEntriesForRegionAndMerchant.Where(fse => IsReportDownloadRetryCountExceeded(fse));
 			var entriesWithReportDownloadRetryCountExceededDeleteReason = $"ReportDownloadMaxRetryCount exceeded.";
 			MarkEntriesAsDeleted(feedSubmissionService, entriesWithReportDownloadRetryCountExceeded, removedEntriesIds, entriesWithReportDownloadRetryCountExceededDeleteReason);
 
-			var entriesWithExpirationPeriodExceeded = allFeedSubmissionEntries.Where(fse => IsMatchForRegionAndMerchantId(fse) && IsExpirationPeriodExceeded(fse));
+			var entriesWithExpirationPeriodExceeded = allEntriesForRegionAndMerchant.Where(fse => IsExpirationPeriodExceeded(fse));
 			var entriesWithExpirationPeriodExceededDeleteReason = $"FeedSubmissionRequestEntryExpirationPeriod exceeded.";
 			MarkEntriesAsDeleted(feedSubmissionService, entriesWithExpirationPeriodExceeded, removedEntriesIds, entriesWithExpirationPeriodExceededDeleteReason);
 
-			var entriesWithFeedProcessingRetryCountExceeded = allFeedSubmissionEntries.Where(fse => IsMatchForRegionAndMerchantId(fse) && IsFeedProcessingRetryCountExceeded(fse));
+			var entriesWithFeedProcessingRetryCountExceeded = allEntriesForRegionAndMerchant.Where(fse => IsFeedProcessingRetryCountExceeded(fse));
 			var entriesWithFeedProcessingRetryCountExceededDeleteReason = $"FeedProcessingMaxRetryCount exceeded.";
 			MarkEntriesAsDeleted(feedSubmissionService, entriesWithFeedProcessingRetryCountExceeded, removedEntriesIds, entriesWithFeedProcessingRetryCountExceededDeleteReason);
 
-			var entriesWithCallbackInvocationRetryCountExceeded = allFeedSubmissionEntries.Where(fse => IsMatchForRegionAndMerchantId(fse) && IsCallbackInvocationRetryCountExceeded(fse));
+			var entriesWithCallbackInvocationRetryCountExceeded = allEntriesForRegionAndMerchant.Where(fse => IsCallbackInvocationRetryCountExceeded(fse));
 			var entriesWithCallbackInvocationRetryCountExceededDeleteReason = $"InvokeCallbackMaxRetryCount exceeded.";
 			MarkEntriesAsDeleted(feedSubmissionService, entriesWithCallbackInvocationRetryCountExceeded, removedEntriesIds, entriesWithCallbackInvocationRetryCountExceededDeleteReason);
 
