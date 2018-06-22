@@ -166,14 +166,15 @@ namespace EasyMWS.Tests.Processors
 			_reportRequestServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
 		}
 
-		[Test]
-		public void RequestReportFromAmazon_WithRequestReportAmazonResponseNull_CallsOnce_AllocateReportRequestForRetry()
+		[TestCase(null)]
+		[TestCase("")]
+		public void RequestReportFromAmazon_WithRequestReportAmazonResponseNull_CallsOnce_AllocateReportRequestForRetry(string reportRequestId)
 		{
 			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
 			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
 
 			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
-				.Returns(new RequestReportResponse{RequestReportResult = new RequestReportResult{ ReportRequestInfo = new ReportRequestInfo{ReportRequestId =  null} }});
+				.Returns(new RequestReportResponse{RequestReportResult = new RequestReportResult{ ReportRequestInfo = new ReportRequestInfo{ReportRequestId = reportRequestId } }});
 			var reportRequestEntryBeingUpdated = (ReportRequestEntry) null;
 			_reportRequestServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
 				{
@@ -189,43 +190,13 @@ namespace EasyMWS.Tests.Processors
 					MerchantId = _merchantId
 				});
 
-			Assert.AreEqual(null, reportRequestEntryBeingUpdated.RequestReportId);
+			Assert.AreEqual(reportRequestId, reportRequestEntryBeingUpdated.RequestReportId);
 			Assert.AreEqual(1, reportRequestEntryBeingUpdated.ReportRequestRetryCount);
 			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastAmazonRequestDate.Day);
 			_reportRequestServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
 			_reportRequestServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
 		}
-
-		[Test]
-		public void RequestReportFromAmazon_WithRequestReportAmazonResponseEmpty_CallsOnce_AllocateReportRequestForRetry()
-		{
-			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
-			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
-
-			_marketplaceWebServiceClientMock.Setup(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()))
-				.Returns(new RequestReportResponse { RequestReportResult = new RequestReportResult { ReportRequestInfo = new ReportRequestInfo { ReportRequestId = string.Empty } } });
-			var reportRequestEntryBeingUpdated = (ReportRequestEntry)null;
-			_reportRequestServiceMock.Setup(rrp => rrp.Update(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(((entry) =>
-			{
-				reportRequestEntryBeingUpdated = entry;
-			}));
-
-			_requestReportProcessor.RequestReportFromAmazon(_reportRequestServiceMock.Object,
-				new ReportRequestEntry
-				{
-					LastAmazonRequestDate = DateTime.MinValue,
-					ReportRequestData = serializedReportRequestData,
-					ReportType = "testReportType",
-					MerchantId = _merchantId
-				});
-
-			Assert.AreEqual(string.Empty, reportRequestEntryBeingUpdated.RequestReportId);
-			Assert.AreEqual(1, reportRequestEntryBeingUpdated.ReportRequestRetryCount);
-			Assert.AreEqual(DateTime.UtcNow.Day, reportRequestEntryBeingUpdated.LastAmazonRequestDate.Day);
-			_reportRequestServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
-			_reportRequestServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
-		}
-
+		
 		[TestCase("AccessToReportDenied")]
 		[TestCase("InvalidReportId")]
 		[TestCase("InvalidReportType")]
