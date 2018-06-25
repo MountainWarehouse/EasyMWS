@@ -94,12 +94,12 @@ namespace MountainWarehouse.EasyMWS.Services
 
 		private bool IsReadyForRequestingSubmissionReport(EasyMwsOptions options, FeedSubmissionEntry feedSubmission)
 		{
-			var isInRetryQueueAndReadyForRetry = feedSubmission.FeedSubmissionRetryCount > 0
+			var isInRetryQueueAndReadyForRetry = feedSubmission.ReportDownloadRetryCount > 0
 			                                     && RetryIntervalHelper.IsRetryPeriodAwaited(feedSubmission.LastSubmitted,
-				                                     feedSubmission.FeedSubmissionRetryCount, options.ReportDownloadRetryInitialDelay,
+				                                     feedSubmission.ReportDownloadRetryCount, options.ReportDownloadRetryInitialDelay,
 				                                     options.ReportDownloadRetryInterval, options.ReportDownloadRetryType);
 
-			var isNotInRetryState = feedSubmission.FeedSubmissionRetryCount == 0;
+			var isNotInRetryState = feedSubmission.ReportDownloadRetryCount == 0;
 
 			return isInRetryQueueAndReadyForRetry || isNotInRetryState;
 		}
