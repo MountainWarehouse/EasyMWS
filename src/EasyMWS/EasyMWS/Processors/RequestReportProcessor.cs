@@ -88,14 +88,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 			    reportRequestEntry.ReportRequestRetryCount++;
 			    reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
 			    reportRequestService.Update(reportRequestEntry);
-				_logger.Warn($"AmazonMWS RequestReport failed for {reportRequestEntry.RegionAndTypeComputed}. Report request will be retried. ReportRequestRetryCount is now : {reportRequestEntry.ReportRequestRetryCount}.");
+				_logger.Error($"AmazonMWS RequestReport failed for {reportRequestEntry.RegionAndTypeComputed}. Report request will be retried. ReportRequestRetryCount is now : {reportRequestEntry.ReportRequestRetryCount}.", e);
 		    }
 		    catch (Exception e)
 		    {
 				reportRequestEntry.ReportRequestRetryCount++;
 			    reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
 			    reportRequestService.Update(reportRequestEntry);
-				_logger.Warn($"AmazonMWS RequestReport failed for {reportRequestEntry.RegionAndTypeComputed}. Report request will be retried. ReportRequestRetryCount is now : {reportRequestEntry.ReportRequestRetryCount}.");
+				_logger.Error($"AmazonMWS RequestReport failed for {reportRequestEntry.RegionAndTypeComputed}. Report request will be retried. ReportRequestRetryCount is now : {reportRequestEntry.ReportRequestRetryCount}.", e);
 			}
 		    finally
 			{
