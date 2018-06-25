@@ -60,33 +60,25 @@ namespace MountainWarehouse.EasyMWS.Services
 		public FeedSubmissionEntry LastOrDefault() => _feedRepo.GetAll().OrderByDescending(x => x.Id).FirstOrDefault();
 		public FeedSubmissionEntry LastOrDefault(Expression<Func<FeedSubmissionEntry, bool>> predicate) => _feedRepo.GetAll().OrderByDescending(x => x.Id).FirstOrDefault(predicate);
 
-		public FeedSubmissionEntry GetNextFromQueueOfFeedsToSubmit(EasyMwsOptions options, string merchantId, AmazonRegion region) =>
-			string.IsNullOrEmpty(merchantId) ? null : GetAll()
-				.FirstOrDefault(fscs => fscs.AmazonRegion == region && fscs.MerchantId == merchantId
-										&& IsFeedInASubmitFeedQueue(fscs)
-				                        && IsFeedReadyForSubmission(options, fscs));
+		public FeedSubmissionEntry GetNextFromQueueOfFeedsToSubmit(EasyMwsOptions options, string merchantId, AmazonRegion region) 
+			=> FirstOrDefault(fse => fse.AmazonRegion == region && fse.MerchantId == merchantId
+										&& IsFeedInASubmitFeedQueue(fse)
+				                        && IsFeedReadyForSubmission(options, fse));
 
 
-		public IEnumerable<string> GetIdsForSubmittedFeedsFromQueue(EasyMwsOptions options, string merchantId, AmazonRegion region) =>
-			string.IsNullOrEmpty(merchantId) ? new List<string>().AsEnumerable() : Where(
-				rrcs => rrcs.AmazonRegion == region && rrcs.MerchantId == merchantId
-						&& rrcs.FeedSubmissionId != null
-				        && rrcs.IsProcessingComplete == false
+		public IEnumerable<string> GetIdsForSubmittedFeedsFromQueue(EasyMwsOptions options, string merchantId, AmazonRegion region) 
+			=> Where(fse => fse.AmazonRegion == region && fse.MerchantId == merchantId
+				        && fse.FeedSubmissionId != null && fse.IsProcessingComplete == false
 			).Select(f => f.FeedSubmissionId);
 
 		public FeedSubmissionEntry GetNextFromQueueOfProcessingCompleteFeeds(EasyMwsOptions options, string merchantId, AmazonRegion region)
-			=> string.IsNullOrEmpty(merchantId) ? null : FirstOrDefault(
-				ffscs => ffscs.AmazonRegion == region && ffscs.MerchantId == merchantId
-						 && ffscs.FeedSubmissionId != null
-				         && ffscs.IsProcessingComplete == true
-				         && IsReadyForRequestingSubmissionReport(options, ffscs));
+			=> FirstOrDefault(fse => fse.AmazonRegion == region && fse.MerchantId == merchantId
+						 && fse.FeedSubmissionId != null && fse.IsProcessingComplete == true
+				         && IsReadyForRequestingSubmissionReport(options, fse));
 
-		public IEnumerable<FeedSubmissionEntry> GetAllFromQueueOfFeedsReadyForCallback(EasyMwsOptions options,
-			string merchantId, AmazonRegion region)
-			=> string.IsNullOrEmpty(merchantId)
-				? new List<FeedSubmissionEntry>().AsEnumerable()
-				: Where(fse => fse.AmazonRegion == region && fse.MerchantId == merchantId && fse.Details != null &&
-				               fse.Details.FeedSubmissionReport != null);
+		public IEnumerable<FeedSubmissionEntry> GetAllFromQueueOfFeedsReadyForCallback(EasyMwsOptions options, string merchantId, AmazonRegion region)
+			=> Where(fse => fse.AmazonRegion == region && fse.MerchantId == merchantId 
+						&& fse.Details != null && fse.Details.FeedSubmissionReport != null);
 
 		private bool IsFeedReadyForSubmission(EasyMwsOptions options, FeedSubmissionEntry feedSubmission)
 		{

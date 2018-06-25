@@ -162,57 +162,6 @@ namespace EasyMWS.Tests.Services
 		}
 
 		[Test]
-		public void GetNextFromQueueOfFeedsToSubmit_CalledWithNullMerchantId_ReturnsNull()
-		{
-			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
-			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
-			var testMerchantId = "test merchant id";
-			var feedSubmissionWithNonNullFeedSubmissionId1 = new FeedSubmissionEntry(serializedPropertiesContainer)
-			{
-				AmazonRegion = AmazonRegion.Europe,
-				MerchantId = testMerchantId,
-				Id = 2,
-				FeedSubmissionId = "testSubmissionId2",
-				FeedSubmissionRetryCount = 0
-			};
-			var feedSubmissionWithNullFeedSubmissionId1 = new FeedSubmissionEntry(serializedPropertiesContainer)
-			{
-				AmazonRegion = AmazonRegion.Europe,
-				MerchantId = testMerchantId,
-				Id = 3,
-				FeedSubmissionId = null,
-				FeedSubmissionRetryCount = 0
-			};
-			var feedSubmissionWithNullFeedSubmissionId2 = new FeedSubmissionEntry(serializedPropertiesContainer)
-			{
-				AmazonRegion = AmazonRegion.Europe,
-				MerchantId = testMerchantId,
-				Id = 4,
-				FeedSubmissionId = null,
-				FeedSubmissionRetryCount = 0
-			};
-			var feedSubmissionWithNullMerchant = new FeedSubmissionEntry(serializedPropertiesContainer)
-			{
-				AmazonRegion = AmazonRegion.Europe,
-				MerchantId = null,
-				Id = 5,
-				FeedSubmissionId = null,
-				FeedSubmissionRetryCount = 0
-			};
-
-
-			_feedSubmissionEntries.Add(feedSubmissionWithNonNullFeedSubmissionId1);
-			_feedSubmissionEntries.Add(feedSubmissionWithNullFeedSubmissionId1);
-			_feedSubmissionEntries.Add(feedSubmissionWithNullFeedSubmissionId2);
-			_feedSubmissionEntries.Add(feedSubmissionWithNullMerchant);
-
-			var feedSubmissionCallback =
-				_feedSubmissionEntryService.GetNextFromQueueOfFeedsToSubmit(_options, null, _region);
-
-			Assert.IsNull(feedSubmissionCallback);
-		}
-
-		[Test]
 		public void GetAllSubmittedFeedsFromQueue_ReturnsListOfSubmittedFeeds_ForGivenMerchant()
 		{
 			// Arrange
@@ -287,73 +236,6 @@ namespace EasyMWS.Tests.Services
 			// Assert
 			Assert.AreEqual(2, listSubmittedFeeds.Count());
 			Assert.IsTrue(listSubmittedFeeds.Count(sf => sf == "FeedSubmissionId4" || sf == "FeedSubmissionId5") == 2);
-		}
-
-		[Test]
-		public void GetAllSubmittedFeedsFromQueue_CalledWithNullMerchantId_ReturnsNull()
-		{
-			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
-			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
-			var data = new List<FeedSubmissionEntry>
-			{
-				new FeedSubmissionEntry(serializedPropertiesContainer)
-				{
-					AmazonRegion = AmazonRegion.Europe,
-					MerchantId = _merchantId,
-					Id = 2,
-					FeedSubmissionId = "FeedSubmissionId1",
-					IsProcessingComplete = false
-				},
-				new FeedSubmissionEntry(serializedPropertiesContainer)
-				{
-					AmazonRegion = AmazonRegion.Europe,
-					MerchantId = null,
-					Id = 3,
-					FeedSubmissionId = "FeedSubmissionId2",
-					IsProcessingComplete = false
-				},
-				new FeedSubmissionEntry(serializedPropertiesContainer)
-				{
-					AmazonRegion = AmazonRegion.Europe,
-					MerchantId = null,
-					Id = 2,
-					FeedSubmissionId = "FeedSubmissionId3",
-					IsProcessingComplete = false
-				},
-				new FeedSubmissionEntry(serializedPropertiesContainer)
-				{
-					AmazonRegion = AmazonRegion.Europe,
-					MerchantId = null,
-					Id = 3,
-					FeedSubmissionId = "FeedSubmissionId4",
-					IsProcessingComplete = false
-				},
-				new FeedSubmissionEntry(serializedPropertiesContainer)
-				{
-					AmazonRegion = AmazonRegion.Europe,
-					MerchantId = null,
-					Id = 4,
-					FeedSubmissionId = "FeedSubmissionId5",
-					IsProcessingComplete = true
-				},
-				new FeedSubmissionEntry(serializedPropertiesContainer)
-				{
-					AmazonRegion = AmazonRegion.NorthAmerica,
-					MerchantId = null,
-					Id = 5,
-					FeedSubmissionId = "FeedSubmissionId6",
-					IsProcessingComplete = false
-				}
-			};
-
-			_feedSubmissionEntries.AddRange(data);
-
-			// Act
-			var listOfSubmittedFeeds = _feedSubmissionEntryService.GetIdsForSubmittedFeedsFromQueue(_options, null, _region);
-
-			// Assert
-			Assert.IsEmpty(listOfSubmittedFeeds);
-
 		}
 	}
 }
