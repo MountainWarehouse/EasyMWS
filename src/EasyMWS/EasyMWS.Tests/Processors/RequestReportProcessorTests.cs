@@ -742,33 +742,40 @@ namespace EasyMWS.Tests.Processors
 			_reportRequestServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Exactly(3));
 		}
 
-		[TestCase(0, 0, 0, 0, false)]
-		[TestCase(1, 0, 0, 0, false)]
-		[TestCase(4, 0, 0, 0, false)]
-		[TestCase(5, 0, 0, 0, true)]
-		[TestCase(0, 0, 0, 0, false)]
-		[TestCase(0, 1, 0, 0, false)]
-		[TestCase(0, 4, 0, 0, false)]
-		[TestCase(0, 5, 0, 0, true)]
-		[TestCase(0, 0, 0, 0, false)]
-		[TestCase(0, 0, 1, 0, false)]
-		[TestCase(0, 0, 5, 0, false)]
-		[TestCase(0, 0, 6, 0, true)]
-		[TestCase(0, 0, 0, 0, false)]
-		[TestCase(0, 0, 0, 1, false)]
-		[TestCase(0, 0, 0, 3, false)]
-		[TestCase(0, 0, 0, 4, true)]
-		public void CleanupReportRequests_WithOneGivenEntryToDelete_DeletesOnlyTheCorrectEntry(int requestRetryCount, int downloadRetryCount, int callbackRetryCount, int processRetryCount, bool shouldDeleteEntry)
+		private const int RetryCountIsStrictlyBelowConfiguredRetryCountLimit = -2;
+		private const int RetryCountIsBelowConfiguredRetryCountLimitEdge = -1;
+		private const int RetryCountIsEqualToConfiguredRetryCountLimit = 0;
+		private const int RetryCountIsAboveConfiguredRetryCountLimitEdge = 1;
+		private const int RetryCountIsStrictlyAboveConfiguredRetryCountLimit = 2;
+
+		[TestCase(RetryCountIsStrictlyBelowConfiguredRetryCountLimit, false)]
+		[TestCase(RetryCountIsBelowConfiguredRetryCountLimitEdge, false)]
+		[TestCase(RetryCountIsEqualToConfiguredRetryCountLimit, false)]
+		[TestCase(RetryCountIsAboveConfiguredRetryCountLimitEdge, true)]
+		[TestCase(RetryCountIsStrictlyAboveConfiguredRetryCountLimit, true)]
+		public void CleanupReportRequests_OneEntryWithRequestRetryCountExceeded_DeletesOnlyTheCorrectEntry(int retryCountType, bool shouldEntryBeDeleted)
 		{
 			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
 			var data = JsonConvert.SerializeObject(propertiesContainer);
+
+			var retryCount =
+				retryCountType == -2 ? 0 :
+				retryCountType == -1 ? _easyMwsOptions.ReportRequestMaxRetryCount - 1 :
+				retryCountType == 0 ? _easyMwsOptions.ReportRequestMaxRetryCount :
+				retryCountType == 1 ? _easyMwsOptions.ReportRequestMaxRetryCount + 1 :
+				retryCountType == 2 ? _easyMwsOptions.ReportRequestMaxRetryCount + 3 : 0;
+
 			var firstEntryToDelete = new ReportRequestEntry
 			{
-				Id = 1, ReportRequestData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
-				ReportDownloadRetryCount = downloadRetryCount,
-				ReportProcessRetryCount = processRetryCount,
-				InvokeCallbackRetryCount = callbackRetryCount,
-				ReportRequestRetryCount = requestRetryCount
+				Id = 1,
+				ReportRequestData = data,
+				AmazonRegion = _region,
+				MerchantId = _merchantId,
+				DateCreated = DateTime.UtcNow,
+				ReportDownloadRetryCount = 0,
+				ReportProcessRetryCount = 0,
+				InvokeCallbackRetryCount = 0,
+				ReportRequestRetryCount = retryCount
 			};
 			var entryToLeaveIntact = new ReportRequestEntry
 			{
@@ -788,11 +795,197 @@ namespace EasyMWS.Tests.Processors
 			var entryBeingDeleted = (ReportRequestEntry)null;
 			_reportRequestServiceMock.Setup(x => x.Delete(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(
 				e => { entryBeingDeleted = e; });
-			
+
 
 			_requestReportProcessor.CleanupReportRequests(_reportRequestServiceMock.Object);
 
-			if (shouldDeleteEntry)
+			if (shouldEntryBeDeleted)
+			{
+				_reportRequestServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
+				Assert.NotNull(entryBeingDeleted);
+				Assert.AreEqual(firstEntryToDelete.Id, entryBeingDeleted.Id);
+			}
+			else { _reportRequestServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Never); }
+
+			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+		}
+
+		[TestCase(RetryCountIsStrictlyBelowConfiguredRetryCountLimit, false)]
+		[TestCase(RetryCountIsBelowConfiguredRetryCountLimitEdge, false)]
+		[TestCase(RetryCountIsEqualToConfiguredRetryCountLimit, false)]
+		[TestCase(RetryCountIsAboveConfiguredRetryCountLimitEdge, true)]
+		[TestCase(RetryCountIsStrictlyAboveConfiguredRetryCountLimit, true)]
+		public void CleanupReportRequests_OneEntryWithDownloadRetryCountExceeded_DeletesOnlyTheCorrectEntry(int retryCountType, bool shouldEntryBeDeleted)
+		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var data = JsonConvert.SerializeObject(propertiesContainer);
+
+			var retryCount =
+				retryCountType == -2 ? 0 :
+				retryCountType == -1 ? _easyMwsOptions.ReportDownloadMaxRetryCount - 1 :
+				retryCountType == 0 ? _easyMwsOptions.ReportDownloadMaxRetryCount :
+				retryCountType == 1 ? _easyMwsOptions.ReportDownloadMaxRetryCount + 1 :
+				retryCountType == 2 ? _easyMwsOptions.ReportDownloadMaxRetryCount + 3 : 0;
+
+			var firstEntryToDelete = new ReportRequestEntry
+			{
+				Id = 1,
+				ReportRequestData = data,
+				AmazonRegion = _region,
+				MerchantId = _merchantId,
+				DateCreated = DateTime.UtcNow,
+				ReportDownloadRetryCount = retryCount,
+				ReportProcessRetryCount = 0,
+				InvokeCallbackRetryCount = 0,
+				ReportRequestRetryCount = 0
+			};
+			var entryToLeaveIntact = new ReportRequestEntry
+			{
+				Id = 2,
+				ReportRequestData = data,
+				AmazonRegion = _region,
+				MerchantId = _merchantId,
+				ReportDownloadRetryCount = 0,
+				ReportProcessRetryCount = 0,
+				InvokeCallbackRetryCount = 0,
+				ReportRequestRetryCount = 0,
+				DateCreated = DateTime.UtcNow
+			};
+			var entriesList = new List<ReportRequestEntry> { firstEntryToDelete, entryToLeaveIntact };
+			var entriesQueryable = entriesList.AsQueryable();
+			_reportRequestServiceMock.Setup(x => x.GetAll()).Returns(entriesQueryable);
+			var entryBeingDeleted = (ReportRequestEntry)null;
+			_reportRequestServiceMock.Setup(x => x.Delete(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(
+				e => { entryBeingDeleted = e; });
+
+
+			_requestReportProcessor.CleanupReportRequests(_reportRequestServiceMock.Object);
+
+			if (shouldEntryBeDeleted)
+			{
+				_reportRequestServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
+				Assert.NotNull(entryBeingDeleted);
+				Assert.AreEqual(firstEntryToDelete.Id, entryBeingDeleted.Id);
+			}
+			else { _reportRequestServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Never); }
+
+			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+		}
+
+		[TestCase(RetryCountIsStrictlyBelowConfiguredRetryCountLimit, false)]
+		[TestCase(RetryCountIsBelowConfiguredRetryCountLimitEdge, false)]
+		[TestCase(RetryCountIsEqualToConfiguredRetryCountLimit, false)]
+		[TestCase(RetryCountIsAboveConfiguredRetryCountLimitEdge, true)]
+		[TestCase(RetryCountIsStrictlyAboveConfiguredRetryCountLimit, true)]
+		public void CleanupReportRequests_OneEntryWithProcessRetryCountExceeded_DeletesOnlyTheCorrectEntry(int retryCountType, bool shouldEntryBeDeleted)
+		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var data = JsonConvert.SerializeObject(propertiesContainer);
+
+			var retryCount =
+				retryCountType == -2 ? 0 :
+				retryCountType == -1 ? _easyMwsOptions.ReportProcessingMaxRetryCount - 1 :
+				retryCountType == 0 ? _easyMwsOptions.ReportProcessingMaxRetryCount :
+				retryCountType == 1 ? _easyMwsOptions.ReportProcessingMaxRetryCount + 1 :
+				retryCountType == 2 ? _easyMwsOptions.ReportProcessingMaxRetryCount + 3 : 0;
+
+			var firstEntryToDelete = new ReportRequestEntry
+			{
+				Id = 1,
+				ReportRequestData = data,
+				AmazonRegion = _region,
+				MerchantId = _merchantId,
+				DateCreated = DateTime.UtcNow,
+				ReportDownloadRetryCount = 0,
+				ReportProcessRetryCount = retryCount,
+				InvokeCallbackRetryCount = 0,
+				ReportRequestRetryCount = 0
+			};
+			var entryToLeaveIntact = new ReportRequestEntry
+			{
+				Id = 2,
+				ReportRequestData = data,
+				AmazonRegion = _region,
+				MerchantId = _merchantId,
+				ReportDownloadRetryCount = 0,
+				ReportProcessRetryCount = 0,
+				InvokeCallbackRetryCount = 0,
+				ReportRequestRetryCount = 0,
+				DateCreated = DateTime.UtcNow
+			};
+			var entriesList = new List<ReportRequestEntry> { firstEntryToDelete, entryToLeaveIntact };
+			var entriesQueryable = entriesList.AsQueryable();
+			_reportRequestServiceMock.Setup(x => x.GetAll()).Returns(entriesQueryable);
+			var entryBeingDeleted = (ReportRequestEntry)null;
+			_reportRequestServiceMock.Setup(x => x.Delete(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(
+				e => { entryBeingDeleted = e; });
+
+
+			_requestReportProcessor.CleanupReportRequests(_reportRequestServiceMock.Object);
+
+			if (shouldEntryBeDeleted)
+			{
+				_reportRequestServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
+				Assert.NotNull(entryBeingDeleted);
+				Assert.AreEqual(firstEntryToDelete.Id, entryBeingDeleted.Id);
+			}
+			else { _reportRequestServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Never); }
+
+			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+		}
+
+		[TestCase(RetryCountIsStrictlyBelowConfiguredRetryCountLimit, false)]
+		[TestCase(RetryCountIsBelowConfiguredRetryCountLimitEdge, false)]
+		[TestCase(RetryCountIsEqualToConfiguredRetryCountLimit, false)]
+		[TestCase(RetryCountIsAboveConfiguredRetryCountLimitEdge, true)]
+		[TestCase(RetryCountIsStrictlyAboveConfiguredRetryCountLimit, true)]
+		public void CleanupReportRequests_OneEntryWithInvokeCallbackRetryCountExceeded_DeletesOnlyTheCorrectEntry(int retryCountType, bool shouldEntryBeDeleted)
+		{
+			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+			var data = JsonConvert.SerializeObject(propertiesContainer);
+
+			var retryCount =
+				retryCountType == -2 ? 0 :
+				retryCountType == -1 ? _easyMwsOptions.InvokeCallbackMaxRetryCount - 1 :
+				retryCountType == 0 ? _easyMwsOptions.InvokeCallbackMaxRetryCount :
+				retryCountType == 1 ? _easyMwsOptions.InvokeCallbackMaxRetryCount + 1 :
+				retryCountType == 2 ? _easyMwsOptions.InvokeCallbackMaxRetryCount + 3 : 0;
+
+			var firstEntryToDelete = new ReportRequestEntry
+			{
+				Id = 1,
+				ReportRequestData = data,
+				AmazonRegion = _region,
+				MerchantId = _merchantId,
+				DateCreated = DateTime.UtcNow,
+				ReportDownloadRetryCount = 0,
+				ReportProcessRetryCount = 0,
+				InvokeCallbackRetryCount = retryCount,
+				ReportRequestRetryCount = 0
+			};
+			var entryToLeaveIntact = new ReportRequestEntry
+			{
+				Id = 2,
+				ReportRequestData = data,
+				AmazonRegion = _region,
+				MerchantId = _merchantId,
+				ReportDownloadRetryCount = 0,
+				ReportProcessRetryCount = 0,
+				InvokeCallbackRetryCount = 0,
+				ReportRequestRetryCount = 0,
+				DateCreated = DateTime.UtcNow
+			};
+			var entriesList = new List<ReportRequestEntry> { firstEntryToDelete, entryToLeaveIntact };
+			var entriesQueryable = entriesList.AsQueryable();
+			_reportRequestServiceMock.Setup(x => x.GetAll()).Returns(entriesQueryable);
+			var entryBeingDeleted = (ReportRequestEntry)null;
+			_reportRequestServiceMock.Setup(x => x.Delete(It.IsAny<ReportRequestEntry>())).Callback<ReportRequestEntry>(
+				e => { entryBeingDeleted = e; });
+
+
+			_requestReportProcessor.CleanupReportRequests(_reportRequestServiceMock.Object);
+
+			if (shouldEntryBeDeleted)
 			{
 				_reportRequestServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
 				Assert.NotNull(entryBeingDeleted);
@@ -836,6 +1029,9 @@ namespace EasyMWS.Tests.Processors
 			bool hasEntryWithProcessRetryCountExceeded,
 			bool hasEntryWithExpirationPeriodExceeded)
 		{
+			// arrange - This test intends to test the behavior of the Cleanup method for report entries
+			// not just by testing every cleanup scenario executed by the method - in isolation -, 
+			// but by asserting that potentially unwanted interactions don't happen between any of the cleanup scenarios
 			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
 			var data = JsonConvert.SerializeObject(propertiesContainer);
 			var entryToLeaveIntact = new ReportRequestEntry
@@ -891,25 +1087,36 @@ namespace EasyMWS.Tests.Processors
 			var entriesQueryable = entriesList.AsQueryable();
 			_reportRequestServiceMock.Setup(x => x.GetAll()).Returns(entriesQueryable);
 			var listOfDeletedEntriesIds = new List<int>();
+			var actualNumberOfDeletedEntries = 0;
+
+			// mock the service Delete method, so that whenever it is called for an entry,
+			// that entry's Id is added to a list - asserts will be made against the content of that list.
 			_reportRequestServiceMock.Setup(x => x.Delete(It.IsAny<ReportRequestEntry>()))
-				.Callback<ReportRequestEntry>(entry => { listOfDeletedEntriesIds.Add(entry.Id); });
+				.Callback<ReportRequestEntry>(entry =>
+				{
+					listOfDeletedEntriesIds.Add(entry.Id);
+					actualNumberOfDeletedEntries++;
+				});
 
 
 			_requestReportProcessor.CleanupReportRequests(_reportRequestServiceMock.Object);
 
+			// assert that the Delete method is called the expected number of times 
+			// and that the number of cleanup scenarios (or entries expected to be deleted) is equal to the number of invocations of the Delete method.
+			Assert.AreEqual(expectedNumberOfEntitiesToDelete, actualNumberOfDeletedEntries);
 			_reportRequestServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Exactly(expectedNumberOfEntitiesToDelete));
-			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+
+			// assert that the entry that has to be left intact is never used to invoke the Delete service method
 			CollectionAssert.DoesNotContain(listOfDeletedEntriesIds, entryToLeaveIntact.Id);
+
+			// for each cleanup partial scenario taking place, assert that the actual list of entries for which Delete is invoked contains the id of the expected entry to be deleted for that scenario
 			if (hasEntryWithRequestRetryCountExceeded) { CollectionAssert.Contains(listOfDeletedEntriesIds, entryWithRequestRetryCountExceeded.Id); }
-			else { CollectionAssert.DoesNotContain(listOfDeletedEntriesIds, entryWithRequestRetryCountExceeded.Id); }
 			if (hasEntryWithDownloadRetryCountExceeded) { CollectionAssert.Contains(listOfDeletedEntriesIds, entryWithDownloadRetryCountExceeded.Id); }
-			else { CollectionAssert.DoesNotContain(listOfDeletedEntriesIds, entryWithDownloadRetryCountExceeded.Id); }
 			if (hasEntryWithCallbackRetryCountExceeded) { CollectionAssert.Contains(listOfDeletedEntriesIds, entryWithCallbackRetryCountExceeded.Id); }
-			else { CollectionAssert.DoesNotContain(listOfDeletedEntriesIds, entryWithCallbackRetryCountExceeded.Id); }
 			if (hasEntryWithProcessRetryCountExceeded) { CollectionAssert.Contains(listOfDeletedEntriesIds, entryWithProcessRetryCountExceeded.Id); }
-			else { CollectionAssert.DoesNotContain(listOfDeletedEntriesIds, entryWithProcessRetryCountExceeded.Id); }
 			if (hasEntryWithExpirationPeriodExceeded) { CollectionAssert.Contains(listOfDeletedEntriesIds, entryWithExpirationPeriodExceeded.Id); }
-			else { CollectionAssert.DoesNotContain(listOfDeletedEntriesIds, entryWithExpirationPeriodExceeded.Id); }
+
+			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Once);
 		}
 
 		[Test]
