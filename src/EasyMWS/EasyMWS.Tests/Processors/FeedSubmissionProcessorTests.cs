@@ -264,7 +264,7 @@ namespace EasyMWS.Tests.Processors
 		}
 
 		[Test]
-		public void CleanUpFeedSubmissionQueue_DeletesFeedSubmissions_WithRetryCountAboveMaxRetryCount()
+		public void CleanUpFeedSubmissionQueue_WithRetryCountAboveMaxRetryCount_DeletesFeedSubmissions()
 		{
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
@@ -296,7 +296,7 @@ namespace EasyMWS.Tests.Processors
 		[TestCase(RetryCountIsEqualToConfiguredRetryCountLimit, false)]
 		[TestCase(RetryCountIsAboveConfiguredRetryCountLimitEdge, true)]
 		[TestCase(RetryCountIsStrictlyAboveConfiguredRetryCountLimit, true)]
-		public void CleanUpFeedSubmissionQueue_OneEntryWithSubmissionRetryContExceeded_DeletesOnlyTheCorrectEntry(int retryCountType, bool shouldEntryBeDeleted)
+		public void CleanUpFeedSubmissionQueue_OneEntryWithSubmissionRetryCountExceeded_DeletesOnlyTheCorrectEntry(int retryCountType, bool shouldEntryBeDeleted)
 		{
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
 			var data = JsonConvert.SerializeObject(propertiesContainer);
@@ -319,28 +319,42 @@ namespace EasyMWS.Tests.Processors
 			var entryToLeaveIntact = new FeedSubmissionEntry
 			{
 				Id = 2, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
-				FeedSubmissionRetryCount = 0,
-				FeedProcessingRetryCount = 0,
-				ReportDownloadRetryCount = 0,
-				InvokeCallbackRetryCount = 0
+				FeedSubmissionRetryCount = 0, FeedProcessingRetryCount = 0, ReportDownloadRetryCount = 0, InvokeCallbackRetryCount = 0
 			};
-			var entriesList = new List<FeedSubmissionEntry> { firstEntryToDelete, entryToLeaveIntact };
+			var testEntry3 = new FeedSubmissionEntry
+			{
+				Id = 3, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
+				FeedSubmissionRetryCount = 0, FeedProcessingRetryCount = 10, ReportDownloadRetryCount = 0, InvokeCallbackRetryCount = 0
+			};
+			var testEntry4 = new FeedSubmissionEntry
+			{
+				Id = 4, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
+				FeedSubmissionRetryCount = 0, FeedProcessingRetryCount = 0, ReportDownloadRetryCount = 10, InvokeCallbackRetryCount = 0
+			};
+			var testEntry5 = new FeedSubmissionEntry
+			{
+				Id = 5, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
+				FeedSubmissionRetryCount = 0, FeedProcessingRetryCount = 0, ReportDownloadRetryCount = 0, InvokeCallbackRetryCount = 10
+			};
+			var entriesList = new List<FeedSubmissionEntry> { firstEntryToDelete, entryToLeaveIntact, testEntry3, testEntry4, testEntry5 };
 			var entriesQueryable = entriesList.AsQueryable();
 			_feedSubmissionServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(entriesQueryable);
-			var entryBeingDeleted = (FeedSubmissionEntry)null;
+			var entriesIdsBeingDeleted = new List<int>();
 			_feedSubmissionServiceMock.Setup(x => x.Delete(It.IsAny<FeedSubmissionEntry>())).Callback<FeedSubmissionEntry>(
-				e => { entryBeingDeleted = e; });
+				e => { entriesIdsBeingDeleted.Add(e.Id); });
 
 			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_feedSubmissionServiceMock.Object);
 
 			if (shouldEntryBeDeleted)
 			{
-				_feedSubmissionServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-				Assert.NotNull(entryBeingDeleted);
-				Assert.AreEqual(firstEntryToDelete.Id, entryBeingDeleted.Id);
+				_feedSubmissionServiceMock.Verify(x => x.Delete(It.Is<FeedSubmissionEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Once);
+				CollectionAssert.Contains(entriesIdsBeingDeleted, firstEntryToDelete.Id);
 			}
-			else { _feedSubmissionServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never); }
-
+			else
+			{
+				_feedSubmissionServiceMock.Verify(x => x.Delete(It.Is<FeedSubmissionEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Never);
+				CollectionAssert.DoesNotContain(entriesIdsBeingDeleted, firstEntryToDelete.Id);
+			}
 			_feedSubmissionServiceMock.Verify(x => x.SaveChanges(), Times.Once);
 		}
 
@@ -349,7 +363,7 @@ namespace EasyMWS.Tests.Processors
 		[TestCase(RetryCountIsEqualToConfiguredRetryCountLimit, false)]
 		[TestCase(RetryCountIsAboveConfiguredRetryCountLimitEdge, true)]
 		[TestCase(RetryCountIsStrictlyAboveConfiguredRetryCountLimit, true)]
-		public void CleanUpFeedSubmissionQueue_OneEntryWithProcessingRetryContExceeded_DeletesOnlyTheCorrectEntry(int retryCountType, bool shouldEntryBeDeleted)
+		public void CleanUpFeedSubmissionQueue_OneEntryWithProcessingRetryCountExceeded_DeletesOnlyTheCorrectEntry(int retryCountType, bool shouldEntryBeDeleted)
 		{
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
 			var data = JsonConvert.SerializeObject(propertiesContainer);
@@ -377,23 +391,40 @@ namespace EasyMWS.Tests.Processors
 				ReportDownloadRetryCount = 0,
 				InvokeCallbackRetryCount = 0
 			};
-			var entriesList = new List<FeedSubmissionEntry> { firstEntryToDelete, entryToLeaveIntact };
+			var testEntry3 = new FeedSubmissionEntry
+			{
+				Id = 3, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
+				FeedSubmissionRetryCount = 0, FeedProcessingRetryCount = 0, ReportDownloadRetryCount = 0, InvokeCallbackRetryCount = 0
+			};
+			var testEntry4 = new FeedSubmissionEntry
+			{
+				Id = 4, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
+				FeedSubmissionRetryCount = 0, FeedProcessingRetryCount = 0, ReportDownloadRetryCount = 0, InvokeCallbackRetryCount = 0
+			};
+			var testEntry5 = new FeedSubmissionEntry
+			{
+				Id = 5, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
+				FeedSubmissionRetryCount = 0, FeedProcessingRetryCount = 0, ReportDownloadRetryCount = 0, InvokeCallbackRetryCount = 0
+			};
+			var entriesList = new List<FeedSubmissionEntry> { firstEntryToDelete, entryToLeaveIntact, testEntry3, testEntry4, testEntry5 };
 			var entriesQueryable = entriesList.AsQueryable();
 			_feedSubmissionServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(entriesQueryable);
-			var entryBeingDeleted = (FeedSubmissionEntry)null;
+			var entriesIdsBeingDeleted = new List<int>();
 			_feedSubmissionServiceMock.Setup(x => x.Delete(It.IsAny<FeedSubmissionEntry>())).Callback<FeedSubmissionEntry>(
-				e => { entryBeingDeleted = e; });
+				e => { entriesIdsBeingDeleted.Add(e.Id); });
 
 			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_feedSubmissionServiceMock.Object);
 
 			if (shouldEntryBeDeleted)
 			{
-				_feedSubmissionServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-				Assert.NotNull(entryBeingDeleted);
-				Assert.AreEqual(firstEntryToDelete.Id, entryBeingDeleted.Id);
+				_feedSubmissionServiceMock.Verify(x => x.Delete(It.Is<FeedSubmissionEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Once);
+				CollectionAssert.Contains(entriesIdsBeingDeleted, firstEntryToDelete.Id);
 			}
-			else { _feedSubmissionServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never); }
-
+			else
+			{
+				_feedSubmissionServiceMock.Verify(x => x.Delete(It.Is<FeedSubmissionEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Never);
+				CollectionAssert.DoesNotContain(entriesIdsBeingDeleted, firstEntryToDelete.Id);
+			}
 			_feedSubmissionServiceMock.Verify(x => x.SaveChanges(), Times.Once);
 		}
 
@@ -402,7 +433,7 @@ namespace EasyMWS.Tests.Processors
 		[TestCase(RetryCountIsEqualToConfiguredRetryCountLimit, false)]
 		[TestCase(RetryCountIsAboveConfiguredRetryCountLimitEdge, true)]
 		[TestCase(RetryCountIsStrictlyAboveConfiguredRetryCountLimit, true)]
-		public void CleanUpFeedSubmissionQueue_OneEntryWithDownloadRetryContExceeded_DeletesOnlyTheCorrectEntry(int retryCountType, bool shouldEntryBeDeleted)
+		public void CleanUpFeedSubmissionQueue_OneEntryWithDownloadRetryCountExceeded_DeletesOnlyTheCorrectEntry(int retryCountType, bool shouldEntryBeDeleted)
 		{
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
 			var data = JsonConvert.SerializeObject(propertiesContainer);
@@ -430,23 +461,40 @@ namespace EasyMWS.Tests.Processors
 				ReportDownloadRetryCount = 0,
 				InvokeCallbackRetryCount = 0
 			};
-			var entriesList = new List<FeedSubmissionEntry> { firstEntryToDelete, entryToLeaveIntact };
+			var testEntry3 = new FeedSubmissionEntry
+			{
+				Id = 3, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
+				FeedSubmissionRetryCount = 0, FeedProcessingRetryCount = 0, ReportDownloadRetryCount = 0, InvokeCallbackRetryCount = 0
+			};
+			var testEntry4 = new FeedSubmissionEntry
+			{
+				Id = 4, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
+				FeedSubmissionRetryCount = 0, FeedProcessingRetryCount = 0, ReportDownloadRetryCount = 0, InvokeCallbackRetryCount = 0
+			};
+			var testEntry5 = new FeedSubmissionEntry
+			{
+				Id = 5, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
+				FeedSubmissionRetryCount = 0, FeedProcessingRetryCount = 0, ReportDownloadRetryCount = 0, InvokeCallbackRetryCount = 0
+			};
+			var entriesList = new List<FeedSubmissionEntry> { firstEntryToDelete, entryToLeaveIntact, testEntry3, testEntry4, testEntry5 };
 			var entriesQueryable = entriesList.AsQueryable();
 			_feedSubmissionServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(entriesQueryable);
-			var entryBeingDeleted = (FeedSubmissionEntry)null;
+			var entriesIdsBeingDeleted = new List<int>();
 			_feedSubmissionServiceMock.Setup(x => x.Delete(It.IsAny<FeedSubmissionEntry>())).Callback<FeedSubmissionEntry>(
-				e => { entryBeingDeleted = e; });
+				e => { entriesIdsBeingDeleted.Add(e.Id); });
 
 			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_feedSubmissionServiceMock.Object);
 
 			if (shouldEntryBeDeleted)
 			{
-				_feedSubmissionServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-				Assert.NotNull(entryBeingDeleted);
-				Assert.AreEqual(firstEntryToDelete.Id, entryBeingDeleted.Id);
+				_feedSubmissionServiceMock.Verify(x => x.Delete(It.Is<FeedSubmissionEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Once);
+				CollectionAssert.Contains(entriesIdsBeingDeleted, firstEntryToDelete.Id);
 			}
-			else { _feedSubmissionServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never); }
-
+			else
+			{
+				_feedSubmissionServiceMock.Verify(x => x.Delete(It.Is<FeedSubmissionEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Never);
+				CollectionAssert.DoesNotContain(entriesIdsBeingDeleted, firstEntryToDelete.Id);
+			}
 			_feedSubmissionServiceMock.Verify(x => x.SaveChanges(), Times.Once);
 		}
 
@@ -455,7 +503,7 @@ namespace EasyMWS.Tests.Processors
 		[TestCase(RetryCountIsEqualToConfiguredRetryCountLimit, false)]
 		[TestCase(RetryCountIsAboveConfiguredRetryCountLimitEdge, true)]
 		[TestCase(RetryCountIsStrictlyAboveConfiguredRetryCountLimit, true)]
-		public void CleanUpFeedSubmissionQueue_OneEntryWithInvokeCallbackRetryContExceeded_DeletesOnlyTheCorrectEntry(int retryCountType, bool shouldEntryBeDeleted)
+		public void CleanUpFeedSubmissionQueue_OneEntryWithInvokeCallbackRetryCountExceeded_DeletesOnlyTheCorrectEntry(int retryCountType, bool shouldEntryBeDeleted)
 		{
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
 			var data = JsonConvert.SerializeObject(propertiesContainer);
@@ -483,141 +531,40 @@ namespace EasyMWS.Tests.Processors
 				ReportDownloadRetryCount = 0,
 				InvokeCallbackRetryCount = 0
 			};
-			var entriesList = new List<FeedSubmissionEntry> { firstEntryToDelete, entryToLeaveIntact };
+			var testEntry3 = new FeedSubmissionEntry
+			{
+				Id = 3, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
+				FeedSubmissionRetryCount = 0, FeedProcessingRetryCount = 0, ReportDownloadRetryCount = 0, InvokeCallbackRetryCount = 0
+			};
+			var testEntry4 = new FeedSubmissionEntry
+			{
+				Id = 4, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
+				FeedSubmissionRetryCount = 0, FeedProcessingRetryCount = 0, ReportDownloadRetryCount = 0, InvokeCallbackRetryCount = 0
+			};
+			var testEntry5 = new FeedSubmissionEntry
+			{
+				Id = 5, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
+				FeedSubmissionRetryCount = 0, FeedProcessingRetryCount = 0, ReportDownloadRetryCount = 0, InvokeCallbackRetryCount = 0
+			};
+			var entriesList = new List<FeedSubmissionEntry> { firstEntryToDelete, entryToLeaveIntact, testEntry3, testEntry4, testEntry5 };
 			var entriesQueryable = entriesList.AsQueryable();
 			_feedSubmissionServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(entriesQueryable);
-			var entryBeingDeleted = (FeedSubmissionEntry)null;
+			var entriesIdsBeingDeleted = new List<int>();
 			_feedSubmissionServiceMock.Setup(x => x.Delete(It.IsAny<FeedSubmissionEntry>())).Callback<FeedSubmissionEntry>(
-				e => { entryBeingDeleted = e; });
+				e => { entriesIdsBeingDeleted.Add(e.Id); });
 
 			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_feedSubmissionServiceMock.Object);
 
 			if (shouldEntryBeDeleted)
 			{
-				_feedSubmissionServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-				Assert.NotNull(entryBeingDeleted);
-				Assert.AreEqual(firstEntryToDelete.Id, entryBeingDeleted.Id);
+				_feedSubmissionServiceMock.Verify(x => x.Delete(It.Is<FeedSubmissionEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Once);
+				CollectionAssert.Contains(entriesIdsBeingDeleted, firstEntryToDelete.Id);
 			}
-			else { _feedSubmissionServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never); }
-
-			_feedSubmissionServiceMock.Verify(x => x.SaveChanges(), Times.Once);
-		}
-
-		[TestCase(false, false, false, false, false)]
-		[TestCase(true, true, true, true, true)]
-		[TestCase(true, true, false, false, false)]
-		[TestCase(true, false, true, false, false)]
-		[TestCase(true, false, false, true, false)]
-		[TestCase(true, false, false, false, true)]
-		[TestCase(false, true, true, false, false)]
-		[TestCase(false, true, false, true, false)]
-		[TestCase(false, true, false, false, true)]
-		[TestCase(false, false, true, true, false)]
-		[TestCase(false, false, true, false, true)]
-		[TestCase(false, false, false, true, true)]
-		[TestCase(true, true, true, false, false)]
-		[TestCase(true, true, false, true, false)]
-		[TestCase(true, true, false, false, true)]
-		[TestCase(true, false, true, true, false)]
-		[TestCase(true, false, true, false, true)]
-		[TestCase(true, false, false, true, true)]
-		[TestCase(false, true, true, true, false)]
-		[TestCase(false, true, true, false, true)]
-		[TestCase(false, false, true, true, true)]
-		[TestCase(true, true, true, true, false)]
-		[TestCase(true, true, true, false, true)]
-		[TestCase(true, true, false, true, true)]
-		[TestCase(true, false, true, true, true)]
-		[TestCase(false, true, true, true, true)]
-		public void CleanUpFeedSubmissionQueue_WithPotentiallyMultiplesEntriesToDelete_DeletesOnlyTheCorrectEntries(
-			bool hasEntryWithSubmissionRetryCountExceeded,
-			bool hasEntryWithDownloadRetryCountExceeded,
-			bool hasEntryWithCallbackRetryCountExceeded,
-			bool hasEntryWithProcessRetryCountExceeded,
-			bool hasEntryWithExpirationPeriodExceeded)
-		{
-			// arrange - This test intends to test the behavior of the Cleanup method for feed entries
-			// not just by testing every cleanup scenario executed by the method - in isolation -, 
-			// but by asserting that potentially unwanted interactions don't happen between any of the cleanup scenarios
-			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
-			var data = JsonConvert.SerializeObject(propertiesContainer);
-			var entryToLeaveIntact = new FeedSubmissionEntry
+			else
 			{
-				Id = 1, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
-				FeedSubmissionRetryCount = 0,
-				FeedProcessingRetryCount = 0,
-				ReportDownloadRetryCount = 0,
-				InvokeCallbackRetryCount = 0
-			};
-			var entryWithRequestRetryCountExceeded = new FeedSubmissionEntry { Id = 2, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId,
-				DateCreated = DateTime.UtcNow, ReportDownloadRetryCount = 0, FeedProcessingRetryCount = 0, InvokeCallbackRetryCount = 0, FeedSubmissionRetryCount = 10 };
-			var entryWithDownloadRetryCountExceeded = new FeedSubmissionEntry { Id = 3, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId,
-				DateCreated = DateTime.UtcNow, ReportDownloadRetryCount = 10, FeedProcessingRetryCount = 0, InvokeCallbackRetryCount = 0, FeedSubmissionRetryCount = 0 };
-			var entryWithCallbackRetryCountExceeded = new FeedSubmissionEntry { Id = 4, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId,
-				DateCreated = DateTime.UtcNow, ReportDownloadRetryCount = 0, FeedProcessingRetryCount = 0, InvokeCallbackRetryCount = 10, FeedSubmissionRetryCount = 0 };
-			var entryWithProcessRetryCountExceeded = new FeedSubmissionEntry { Id = 5, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId,
-				DateCreated = DateTime.UtcNow, ReportDownloadRetryCount = 0, FeedProcessingRetryCount = 10, InvokeCallbackRetryCount = 0, FeedSubmissionRetryCount = 0 };
-			var entryWithExpirationPeriodExceeded = new FeedSubmissionEntry { Id = 6, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId,
-				DateCreated = DateTime.UtcNow.AddDays(-10), ReportDownloadRetryCount = 0, FeedProcessingRetryCount = 0, InvokeCallbackRetryCount = 0, FeedSubmissionRetryCount = 0 };
-
-			var expectedNumberOfEntitiesToDelete = 0;
-			var entriesList = new List<FeedSubmissionEntry> { entryToLeaveIntact };
-			if (hasEntryWithSubmissionRetryCountExceeded)
-			{
-				entriesList.Add(entryWithRequestRetryCountExceeded);
-				expectedNumberOfEntitiesToDelete++;
+				_feedSubmissionServiceMock.Verify(x => x.Delete(It.Is<FeedSubmissionEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Never);
+				CollectionAssert.DoesNotContain(entriesIdsBeingDeleted, firstEntryToDelete.Id);
 			}
-			if (hasEntryWithDownloadRetryCountExceeded)
-			{
-				entriesList.Add(entryWithDownloadRetryCountExceeded);
-				expectedNumberOfEntitiesToDelete++;
-			}
-			if (hasEntryWithCallbackRetryCountExceeded)
-			{
-				entriesList.Add(entryWithCallbackRetryCountExceeded);
-				expectedNumberOfEntitiesToDelete++;
-			}
-			if (hasEntryWithProcessRetryCountExceeded)
-			{
-				entriesList.Add(entryWithProcessRetryCountExceeded);
-				expectedNumberOfEntitiesToDelete++;
-			}
-			if (hasEntryWithExpirationPeriodExceeded)
-			{
-				entriesList.Add(entryWithExpirationPeriodExceeded);
-				expectedNumberOfEntitiesToDelete++;
-			}
-			var entriesQueryable = entriesList.AsQueryable();
-			_feedSubmissionServiceMock.Setup(x => x.GetAll()).Returns(entriesQueryable);
-			var actualListOfDeletedEntries = new List<int>();
-			var actualNumberOfDeletedEntries = 0;
-
-			// mock the service Delete method, so that whenever it is called for an entry,
-			// that entry's Id is added to a list - asserts will be made against the content of that list.
-			_feedSubmissionServiceMock.Setup(x => x.Delete(It.IsAny<FeedSubmissionEntry>()))
-				.Callback<FeedSubmissionEntry>(entry => {
-					actualListOfDeletedEntries.Add(entry.Id);
-					actualNumberOfDeletedEntries++;
-				});
-
-			// act
-			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_feedSubmissionServiceMock.Object);
-
-			// assert that the Delete method is called the expected number of times 
-			// and that the number of cleanup scenarios (or entries expected to be deleted) is equal to the number of invocations of the Delete method.
-			Assert.AreEqual(expectedNumberOfEntitiesToDelete, actualNumberOfDeletedEntries);
-			_feedSubmissionServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Exactly(expectedNumberOfEntitiesToDelete));
-			
-			// assert that the entry that has to be left intact is never used to invoke the Delete service method
-			CollectionAssert.DoesNotContain(actualListOfDeletedEntries, entryToLeaveIntact.Id);
-
-			// for each cleanup partial scenario taking place, assert that the actual list of entries for which Delete is invoked contains the id of the expected entry to be deleted for that scenario
-			if (hasEntryWithSubmissionRetryCountExceeded) { CollectionAssert.Contains(actualListOfDeletedEntries, entryWithRequestRetryCountExceeded.Id); }
-			if (hasEntryWithDownloadRetryCountExceeded) { CollectionAssert.Contains(actualListOfDeletedEntries, entryWithDownloadRetryCountExceeded.Id); }
-			if (hasEntryWithCallbackRetryCountExceeded) { CollectionAssert.Contains(actualListOfDeletedEntries, entryWithCallbackRetryCountExceeded.Id); }
-			if (hasEntryWithProcessRetryCountExceeded) { CollectionAssert.Contains(actualListOfDeletedEntries, entryWithProcessRetryCountExceeded.Id); }
-			if (hasEntryWithExpirationPeriodExceeded) { CollectionAssert.Contains(actualListOfDeletedEntries, entryWithExpirationPeriodExceeded.Id); }
-
 			_feedSubmissionServiceMock.Verify(x => x.SaveChanges(), Times.Once);
 		}
 
