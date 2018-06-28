@@ -62,7 +62,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				feedSubmission.FeedSubmissionRetryCount++;
 				feedSubmission.LastSubmitted = DateTime.UtcNow;
 				feedSubmissionService.Update(feedSubmission);
-				_logger.Error($"AmazonMWS SubmitFeed failed for {feedSubmission.RegionAndTypeComputed}. Feed submission will be retried. FeedSubmissionRetryCount is now : {feedSubmission.FeedSubmissionRetryCount}.", e);
+				_logger.Warn($"AmazonMWS SubmitFeed failed for {feedSubmission.RegionAndTypeComputed}. Feed submission will be retried. FeedSubmissionRetryCount is now : {feedSubmission.FeedSubmissionRetryCount}.");
 			}
 			void HandleFatalException(Exception e)
 			{
@@ -165,12 +165,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 			catch (MarketplaceWebServiceException e)
 			{
-				_logger.Error($"AmazonMWS GetFeedSubmissionList failed! The operation will be executed again at the next poll request.", e);
+				_logger.Warn($"AmazonMWS GetFeedSubmissionList failed! The operation will be executed again at the next poll request.");
 				return null;
 			}
 			catch (Exception e)
 			{
-				_logger.Error($"AmazonMWS GetFeedSubmissionList failed! The operation will be executed again at the next poll request.", e);
+				_logger.Warn($"AmazonMWS GetFeedSubmissionList failed! The operation will be executed again at the next poll request.");
 				return null;
 			}
 		}
@@ -272,14 +272,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 				feedSubmissionEntry.ReportDownloadRetryCount++;
 				feedSubmissionEntry.LastSubmitted = DateTime.UtcNow;
 				feedSubmissionService.Update(feedSubmissionEntry);
-				_logger.Error($"AmazonMWS feed submission report download failed for {feedSubmissionEntry.RegionAndTypeComputed}! Report download will be retried. ReportDownloadRetryCount is now : {feedSubmissionEntry.ReportDownloadRetryCount}.", e);
+				_logger.Warn($"AmazonMWS feed submission report download failed for {feedSubmissionEntry.RegionAndTypeComputed}! Report download will be retried. ReportDownloadRetryCount is now : {feedSubmissionEntry.ReportDownloadRetryCount}.");
 			}
 			catch (Exception e)
 			{
 				feedSubmissionEntry.ReportDownloadRetryCount++;
 				feedSubmissionEntry.LastSubmitted = DateTime.UtcNow;
 				feedSubmissionService.Update(feedSubmissionEntry);
-				_logger.Error($"AmazonMWS feed submission report download failed for {feedSubmissionEntry.RegionAndTypeComputed}! Report download will be retried. ReportDownloadRetryCount is now : {feedSubmissionEntry.ReportDownloadRetryCount}.", e);
+				_logger.Warn($"AmazonMWS feed submission report download failed for {feedSubmissionEntry.RegionAndTypeComputed}! Report download will be retried. ReportDownloadRetryCount is now : {feedSubmissionEntry.ReportDownloadRetryCount}.");
 			}
 			finally
 			{

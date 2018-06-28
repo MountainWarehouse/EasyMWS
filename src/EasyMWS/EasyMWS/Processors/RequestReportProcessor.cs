@@ -81,21 +81,21 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    catch (MarketplaceWebServiceException e) when (e.StatusCode == HttpStatusCode.BadRequest && IsAmazonErrorCodeFatal(e.ErrorCode))
 		    {
 			    reportRequestService.Delete(reportRequestEntry);
-				_logger.Warn($"AmazonMWS RequestReport failed for {reportRequestEntry.RegionAndTypeComputed}. The entry will now be removed from queue.");
+				_logger.Error($"AmazonMWS RequestReport failed for {reportRequestEntry.RegionAndTypeComputed}. The entry will now be removed from queue.", e);
 			}
 		    catch (MarketplaceWebServiceException e) when (IsAmazonErrorCodeNonFatal(e.ErrorCode))
 		    {
 			    reportRequestEntry.ReportRequestRetryCount++;
 			    reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
 			    reportRequestService.Update(reportRequestEntry);
-				_logger.Error($"AmazonMWS RequestReport failed for {reportRequestEntry.RegionAndTypeComputed}. Report request will be retried. ReportRequestRetryCount is now : {reportRequestEntry.ReportRequestRetryCount}.", e);
+				_logger.Warn($"AmazonMWS RequestReport failed for {reportRequestEntry.RegionAndTypeComputed}. Report request will be retried. ReportRequestRetryCount is now : {reportRequestEntry.ReportRequestRetryCount}.");
 		    }
 		    catch (Exception e)
 		    {
 				reportRequestEntry.ReportRequestRetryCount++;
 			    reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
 			    reportRequestService.Update(reportRequestEntry);
-				_logger.Error($"AmazonMWS RequestReport failed for {reportRequestEntry.RegionAndTypeComputed}. Report request will be retried. ReportRequestRetryCount is now : {reportRequestEntry.ReportRequestRetryCount}.", e);
+				_logger.Warn($"AmazonMWS RequestReport failed for {reportRequestEntry.RegionAndTypeComputed}. Report request will be retried. ReportRequestRetryCount is now : {reportRequestEntry.ReportRequestRetryCount}.");
 			}
 		    finally
 			{
@@ -137,12 +137,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    }
 		    catch (MarketplaceWebServiceException e)
 		    {
-				_logger.Error($"AmazonMWS GetReportRequestList failed! The operation will be executed again at the next poll request.", e);
+				_logger.Warn($"AmazonMWS GetReportRequestList failed! The operation will be executed again at the next poll request.");
 			    return null;
 			}
 			catch (Exception e)
 		    {
-				_logger.Error($"AmazonMWS GetReportRequestList failed! The operation will be executed again at the next poll request.", e);
+				_logger.Warn($"AmazonMWS GetReportRequestList failed! The operation will be executed again at the next poll request.");
 			    return null;
 			}
 	    }
@@ -282,14 +282,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 				reportRequestEntry.ReportDownloadRetryCount++;
 				reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
 				reportRequestService.Update(reportRequestEntry);
-				_logger.Error($"AmazonMWS report download failed for {reportRequestEntry.RegionAndTypeComputed} Report download will be retried. ReportDownloadRetryCount is now : '{reportRequestEntry.ReportDownloadRetryCount}'.", e);
+				_logger.Warn($"AmazonMWS report download failed for {reportRequestEntry.RegionAndTypeComputed} Report download will be retried. ReportDownloadRetryCount is now : '{reportRequestEntry.ReportDownloadRetryCount}'.");
 			}
 			catch (Exception e)
 		    {
 			    reportRequestEntry.ReportDownloadRetryCount++;
 			    reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
 			    reportRequestService.Update(reportRequestEntry);
-				_logger.Error($"AmazonMWS report download failed for {reportRequestEntry.RegionAndTypeComputed}!", e);
+				_logger.Warn($"AmazonMWS report download failed for {reportRequestEntry.RegionAndTypeComputed}!");
 		    }
 		    finally
 		    {
