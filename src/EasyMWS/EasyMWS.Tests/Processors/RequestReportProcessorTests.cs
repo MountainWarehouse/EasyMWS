@@ -748,22 +748,18 @@ namespace EasyMWS.Tests.Processors
 		private const int RetryCountIsAboveConfiguredRetryCountLimitEdge = 1;
 		private const int RetryCountIsStrictlyAboveConfiguredRetryCountLimit = 2;
 
-		[TestCase(RetryCountIsStrictlyBelowConfiguredRetryCountLimit, false)]
-		[TestCase(RetryCountIsBelowConfiguredRetryCountLimitEdge, false)]
-		[TestCase(RetryCountIsEqualToConfiguredRetryCountLimit, false)]
-		[TestCase(RetryCountIsAboveConfiguredRetryCountLimitEdge, true)]
-		[TestCase(RetryCountIsStrictlyAboveConfiguredRetryCountLimit, true)]
-		public void CleanupReportRequests_OneEntryWithRequestRetryCountExceeded_DeletesOnlyTheCorrectEntry(int retryCountType, bool shouldEntryBeDeleted)
+		[TestCase(RetryCountIsBelowConfiguredRetryCountLimitEdge, 0)]
+		[TestCase(RetryCountIsEqualToConfiguredRetryCountLimit, 0)]
+		[TestCase(RetryCountIsAboveConfiguredRetryCountLimitEdge, 1)]
+		public void CleanupReportRequests_OneEntryWithRequestRetryCountExceeded_DeletesOnlyTheCorrectEntry(int retryCountType, int numberOfDeleteCalls)
 		{
 			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
 			var data = JsonConvert.SerializeObject(propertiesContainer);
 
 			var retryCount =
-				retryCountType == -2 ? 0 :
 				retryCountType == -1 ? _easyMwsOptions.ReportRequestMaxRetryCount - 1 :
 				retryCountType == 0 ? _easyMwsOptions.ReportRequestMaxRetryCount :
-				retryCountType == 1 ? _easyMwsOptions.ReportRequestMaxRetryCount + 1 :
-				retryCountType == 2 ? _easyMwsOptions.ReportRequestMaxRetryCount + 3 : 0;
+				retryCountType == 1 ? _easyMwsOptions.ReportRequestMaxRetryCount + 1 : 0;
 
 			var firstEntryToDelete = new ReportRequestEntry
 			{
@@ -782,64 +778,29 @@ namespace EasyMWS.Tests.Processors
 				Id = 2, ReportRequestData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
 				ReportDownloadRetryCount = 0, ReportProcessRetryCount = 0, InvokeCallbackRetryCount = 0, ReportRequestRetryCount = 0
 			};
-			var testEntry3 = new ReportRequestEntry
-			{
-				Id = 3, ReportRequestData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
-				ReportDownloadRetryCount = 10, ReportProcessRetryCount = 0, InvokeCallbackRetryCount = 0, ReportRequestRetryCount = 0
-			};
-			var testEntry4 = new ReportRequestEntry
-			{
-				Id = 4, ReportRequestData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
-				ReportDownloadRetryCount = 0, ReportProcessRetryCount = 10, InvokeCallbackRetryCount = 0, ReportRequestRetryCount = 0
-			};
-			var testEntry5 = new ReportRequestEntry
-			{
-				Id = 5, ReportRequestData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
-				ReportDownloadRetryCount = 0, ReportProcessRetryCount = 0, InvokeCallbackRetryCount = 10, ReportRequestRetryCount = 0
-			};
-			var entriesList = new List<ReportRequestEntry> { firstEntryToDelete, entryToLeaveIntact1, testEntry3, testEntry4, testEntry5 };
+			var entriesList = new List<ReportRequestEntry> { firstEntryToDelete, entryToLeaveIntact1 };
 			var entriesQueryable = entriesList.AsQueryable();
 			_reportRequestServiceMock.Setup(x => x.GetAll()).Returns(entriesQueryable);
-			var entriesIdsBeingDeleted = new List<int>();
-			_reportRequestServiceMock.Setup(x => x.Delete(It.IsAny<ReportRequestEntry>()))
-				.Callback<ReportRequestEntry>(e =>
-				{
-					entriesIdsBeingDeleted.Add(e.Id);
-				});
+			_reportRequestServiceMock.Setup(x => x.Delete(It.IsAny<ReportRequestEntry>()));
 
 
 			_requestReportProcessor.CleanupReportRequests(_reportRequestServiceMock.Object);
-
-			if (shouldEntryBeDeleted)
-			{
-				_reportRequestServiceMock.Verify(x => x.Delete(It.Is<ReportRequestEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Once);
-				CollectionAssert.Contains(entriesIdsBeingDeleted, firstEntryToDelete.Id);
-			}
-			else
-			{
-				_reportRequestServiceMock.Verify(x => x.Delete(It.Is<ReportRequestEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Never);
-				CollectionAssert.DoesNotContain(entriesIdsBeingDeleted, firstEntryToDelete.Id);
-			}
-
+			_reportRequestServiceMock.Verify(x => x.Delete(It.Is<ReportRequestEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Exactly(numberOfDeleteCalls));
 			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Once);
 		}
 
-		[TestCase(RetryCountIsStrictlyBelowConfiguredRetryCountLimit, false)]
-		[TestCase(RetryCountIsBelowConfiguredRetryCountLimitEdge, false)]
-		[TestCase(RetryCountIsEqualToConfiguredRetryCountLimit, false)]
-		[TestCase(RetryCountIsAboveConfiguredRetryCountLimitEdge, true)]
-		[TestCase(RetryCountIsStrictlyAboveConfiguredRetryCountLimit, true)]
-		public void CleanupReportRequests_OneEntryWithDownloadRetryCountExceeded_DeletesOnlyTheCorrectEntry(int retryCountType, bool shouldEntryBeDeleted)
+		[TestCase(RetryCountIsBelowConfiguredRetryCountLimitEdge, 0)]
+		[TestCase(RetryCountIsEqualToConfiguredRetryCountLimit, 0)]
+		[TestCase(RetryCountIsAboveConfiguredRetryCountLimitEdge, 1)]
+		public void CleanupReportRequests_OneEntryWithDownloadRetryCountExceeded_DeletesOnlyTheCorrectEntry(int retryCountType, int numberOfDeleteCalls)
 		{
 			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
 			var data = JsonConvert.SerializeObject(propertiesContainer);
 
 			var retryCount =
-				retryCountType == -2 ? 0 :
 				retryCountType == -1 ? _easyMwsOptions.ReportDownloadMaxRetryCount - 1 :
 				retryCountType == 0 ? _easyMwsOptions.ReportDownloadMaxRetryCount :
-				retryCountType == 1 ? _easyMwsOptions.ReportDownloadMaxRetryCount + 1 :
-				retryCountType == 2 ? _easyMwsOptions.ReportDownloadMaxRetryCount + 3 : 0;
+				retryCountType == 1 ? _easyMwsOptions.ReportDownloadMaxRetryCount + 1 : 0;
 
 			var firstEntryToDelete = new ReportRequestEntry
 			{
@@ -865,64 +826,29 @@ namespace EasyMWS.Tests.Processors
 				ReportRequestRetryCount = 0,
 				DateCreated = DateTime.UtcNow
 			};
-			var testEntry3 = new ReportRequestEntry
-			{
-				Id = 3, ReportRequestData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
-				ReportDownloadRetryCount = 0, ReportProcessRetryCount = 0, InvokeCallbackRetryCount = 0, ReportRequestRetryCount = 10
-			};
-			var testEntry4 = new ReportRequestEntry
-			{
-				Id = 4, ReportRequestData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
-				ReportDownloadRetryCount = 0, ReportProcessRetryCount = 10, InvokeCallbackRetryCount = 0, ReportRequestRetryCount = 0
-			};
-			var testEntry5 = new ReportRequestEntry
-			{
-				Id = 5, ReportRequestData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
-				ReportDownloadRetryCount = 0, ReportProcessRetryCount = 0, InvokeCallbackRetryCount = 10, ReportRequestRetryCount = 0
-			};
-			var entriesList = new List<ReportRequestEntry> { firstEntryToDelete, entryToLeaveIntact , testEntry3, testEntry4, testEntry5 };
+			var entriesList = new List<ReportRequestEntry> { firstEntryToDelete, entryToLeaveIntact };
 			var entriesQueryable = entriesList.AsQueryable();
 			_reportRequestServiceMock.Setup(x => x.GetAll()).Returns(entriesQueryable);
-			var entriesIdsBeingDeleted = new List<int>();
-			_reportRequestServiceMock.Setup(x => x.Delete(It.IsAny<ReportRequestEntry>()))
-				.Callback<ReportRequestEntry>(e =>
-				{
-					entriesIdsBeingDeleted.Add(e.Id);
-				});
+			_reportRequestServiceMock.Setup(x => x.Delete(It.IsAny<ReportRequestEntry>()));
 
 
 			_requestReportProcessor.CleanupReportRequests(_reportRequestServiceMock.Object);
-
-			if (shouldEntryBeDeleted)
-			{
-				_reportRequestServiceMock.Verify(x => x.Delete(It.Is<ReportRequestEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Once);
-				CollectionAssert.Contains(entriesIdsBeingDeleted, firstEntryToDelete.Id);
-			}
-			else
-			{
-				_reportRequestServiceMock.Verify(x => x.Delete(It.Is<ReportRequestEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Never);
-				CollectionAssert.DoesNotContain(entriesIdsBeingDeleted, firstEntryToDelete.Id);
-			}
-
+			_reportRequestServiceMock.Verify(x => x.Delete(It.Is<ReportRequestEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Exactly(numberOfDeleteCalls));
 			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Once);
 		}
 
-		[TestCase(RetryCountIsStrictlyBelowConfiguredRetryCountLimit, false)]
-		[TestCase(RetryCountIsBelowConfiguredRetryCountLimitEdge, false)]
-		[TestCase(RetryCountIsEqualToConfiguredRetryCountLimit, false)]
-		[TestCase(RetryCountIsAboveConfiguredRetryCountLimitEdge, true)]
-		[TestCase(RetryCountIsStrictlyAboveConfiguredRetryCountLimit, true)]
-		public void CleanupReportRequests_OneEntryWithProcessRetryCountExceeded_DeletesOnlyTheCorrectEntry(int retryCountType, bool shouldEntryBeDeleted)
+		[TestCase(RetryCountIsBelowConfiguredRetryCountLimitEdge, 0)]
+		[TestCase(RetryCountIsEqualToConfiguredRetryCountLimit, 0)]
+		[TestCase(RetryCountIsAboveConfiguredRetryCountLimitEdge, 1)]
+		public void CleanupReportRequests_OneEntryWithProcessRetryCountExceeded_DeletesOnlyTheCorrectEntry(int retryCountType, int numberOfDeleteCalls)
 		{
 			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
 			var data = JsonConvert.SerializeObject(propertiesContainer);
 
 			var retryCount =
-				retryCountType == -2 ? 0 :
 				retryCountType == -1 ? _easyMwsOptions.ReportProcessingMaxRetryCount - 1 :
 				retryCountType == 0 ? _easyMwsOptions.ReportProcessingMaxRetryCount :
-				retryCountType == 1 ? _easyMwsOptions.ReportProcessingMaxRetryCount + 1 :
-				retryCountType == 2 ? _easyMwsOptions.ReportProcessingMaxRetryCount + 3 : 0;
+				retryCountType == 1 ? _easyMwsOptions.ReportProcessingMaxRetryCount + 1 : 0;
 
 			var firstEntryToDelete = new ReportRequestEntry
 			{
@@ -948,64 +874,29 @@ namespace EasyMWS.Tests.Processors
 				ReportRequestRetryCount = 0,
 				DateCreated = DateTime.UtcNow
 			};
-			var testEntry3 = new ReportRequestEntry
-			{
-				Id = 3, ReportRequestData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
-				ReportDownloadRetryCount = 10, ReportProcessRetryCount = 0, InvokeCallbackRetryCount = 0, ReportRequestRetryCount = 0
-			};
-			var testEntry4 = new ReportRequestEntry
-			{
-				Id = 4, ReportRequestData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
-				ReportDownloadRetryCount = 0, ReportProcessRetryCount = 0, InvokeCallbackRetryCount = 10, ReportRequestRetryCount = 0
-			};
-			var testEntry5 = new ReportRequestEntry
-			{
-				Id = 5, ReportRequestData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
-				ReportDownloadRetryCount = 0, ReportProcessRetryCount = 0, InvokeCallbackRetryCount = 0, ReportRequestRetryCount = 10
-			};
-			var entriesList = new List<ReportRequestEntry> { firstEntryToDelete, entryToLeaveIntact, testEntry3, testEntry4, testEntry5 };
+			var entriesList = new List<ReportRequestEntry> { firstEntryToDelete, entryToLeaveIntact};
 			var entriesQueryable = entriesList.AsQueryable();
 			_reportRequestServiceMock.Setup(x => x.GetAll()).Returns(entriesQueryable);
-			var entriesIdsBeingDeleted = new List<int>();
-			_reportRequestServiceMock.Setup(x => x.Delete(It.IsAny<ReportRequestEntry>()))
-				.Callback<ReportRequestEntry>(e =>
-				{
-					entriesIdsBeingDeleted.Add(e.Id);
-				});
+			_reportRequestServiceMock.Setup(x => x.Delete(It.IsAny<ReportRequestEntry>()));
 
 
 			_requestReportProcessor.CleanupReportRequests(_reportRequestServiceMock.Object);
-
-			if (shouldEntryBeDeleted)
-			{
-				_reportRequestServiceMock.Verify(x => x.Delete(It.Is<ReportRequestEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Once);
-				CollectionAssert.Contains(entriesIdsBeingDeleted, firstEntryToDelete.Id);
-			}
-			else
-			{
-				_reportRequestServiceMock.Verify(x => x.Delete(It.Is<ReportRequestEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Never);
-				CollectionAssert.DoesNotContain(entriesIdsBeingDeleted, firstEntryToDelete.Id);
-			}
-
+			_reportRequestServiceMock.Verify(x => x.Delete(It.Is<ReportRequestEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Exactly(numberOfDeleteCalls));
 			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Once);
 		}
 
-		[TestCase(RetryCountIsStrictlyBelowConfiguredRetryCountLimit, false)]
-		[TestCase(RetryCountIsBelowConfiguredRetryCountLimitEdge, false)]
-		[TestCase(RetryCountIsEqualToConfiguredRetryCountLimit, false)]
-		[TestCase(RetryCountIsAboveConfiguredRetryCountLimitEdge, true)]
-		[TestCase(RetryCountIsStrictlyAboveConfiguredRetryCountLimit, true)]
-		public void CleanupReportRequests_OneEntryWithInvokeCallbackRetryCountExceeded_DeletesOnlyTheCorrectEntry(int retryCountType, bool shouldEntryBeDeleted)
+		[TestCase(RetryCountIsBelowConfiguredRetryCountLimitEdge, 0)]
+		[TestCase(RetryCountIsEqualToConfiguredRetryCountLimit, 0)]
+		[TestCase(RetryCountIsAboveConfiguredRetryCountLimitEdge, 1)]
+		public void CleanupReportRequests_OneEntryWithInvokeCallbackRetryCountExceeded_DeletesOnlyTheCorrectEntry(int retryCountType, int numberOfDeleteCalls)
 		{
 			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
 			var data = JsonConvert.SerializeObject(propertiesContainer);
 
 			var retryCount =
-				retryCountType == -2 ? 0 :
 				retryCountType == -1 ? _easyMwsOptions.InvokeCallbackMaxRetryCount - 1 :
 				retryCountType == 0 ? _easyMwsOptions.InvokeCallbackMaxRetryCount :
-				retryCountType == 1 ? _easyMwsOptions.InvokeCallbackMaxRetryCount + 1 :
-				retryCountType == 2 ? _easyMwsOptions.InvokeCallbackMaxRetryCount + 3 : 0;
+				retryCountType == 1 ? _easyMwsOptions.InvokeCallbackMaxRetryCount + 1 : 0;
 
 			var firstEntryToDelete = new ReportRequestEntry
 			{
@@ -1031,45 +922,14 @@ namespace EasyMWS.Tests.Processors
 				ReportRequestRetryCount = 0,
 				DateCreated = DateTime.UtcNow
 			};
-			var testEntry3 = new ReportRequestEntry
-			{
-				Id = 3, ReportRequestData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
-				ReportDownloadRetryCount = 10, ReportProcessRetryCount = 0, InvokeCallbackRetryCount = 0, ReportRequestRetryCount = 0
-			};
-			var testEntry4 = new ReportRequestEntry
-			{
-				Id = 4, ReportRequestData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
-				ReportDownloadRetryCount = 0, ReportProcessRetryCount = 10, InvokeCallbackRetryCount = 0, ReportRequestRetryCount = 0
-			};
-			var testEntry5 = new ReportRequestEntry
-			{
-				Id = 5, ReportRequestData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
-				ReportDownloadRetryCount = 0, ReportProcessRetryCount = 0, InvokeCallbackRetryCount = 0, ReportRequestRetryCount = 10
-			};
-			var entriesList = new List<ReportRequestEntry> { firstEntryToDelete, entryToLeaveIntact, testEntry3, testEntry4, testEntry5 };
+			var entriesList = new List<ReportRequestEntry> { firstEntryToDelete, entryToLeaveIntact };
 			var entriesQueryable = entriesList.AsQueryable();
 			_reportRequestServiceMock.Setup(x => x.GetAll()).Returns(entriesQueryable);
-			var entriesIdsBeingDeleted = new List<int>();
-			_reportRequestServiceMock.Setup(x => x.Delete(It.IsAny<ReportRequestEntry>()))
-				.Callback<ReportRequestEntry>(e =>
-				{
-					entriesIdsBeingDeleted.Add(e.Id);
-				});
+			_reportRequestServiceMock.Setup(x => x.Delete(It.IsAny<ReportRequestEntry>()));
 
 
 			_requestReportProcessor.CleanupReportRequests(_reportRequestServiceMock.Object);
-
-			if (shouldEntryBeDeleted)
-			{
-				_reportRequestServiceMock.Verify(x => x.Delete(It.Is<ReportRequestEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Once);
-				CollectionAssert.Contains(entriesIdsBeingDeleted, firstEntryToDelete.Id);
-			}
-			else
-			{
-				_reportRequestServiceMock.Verify(x => x.Delete(It.Is<ReportRequestEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Never);
-				CollectionAssert.DoesNotContain(entriesIdsBeingDeleted, firstEntryToDelete.Id);
-			}
-
+			_reportRequestServiceMock.Verify(x => x.Delete(It.Is<ReportRequestEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Exactly(numberOfDeleteCalls));
 			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Once);
 		}
 
