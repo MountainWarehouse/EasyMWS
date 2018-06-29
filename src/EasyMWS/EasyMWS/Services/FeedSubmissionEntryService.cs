@@ -15,13 +15,14 @@ namespace MountainWarehouse.EasyMWS.Services
 	{
 	    private readonly IFeedSubmissionEntryRepository _feedRepo;
 	    private readonly IEasyMwsLogger _logger;
+		private readonly EasyMwsOptions _options;
 
 		internal FeedSubmissionEntryService(IFeedSubmissionEntryRepository feedSubmissionRepo, EasyMwsOptions options = null,
 			IEasyMwsLogger logger = null) : this(options, logger)
 			=> (_feedRepo) = (feedSubmissionRepo);
 
 		public FeedSubmissionEntryService(EasyMwsOptions options = null, IEasyMwsLogger logger = null) =>
-		    (_feedRepo, _logger) = (_feedRepo ?? new FeedSubmissionEntryRepository(options?.LocalDbConnectionStringOverride), logger);
+		    (_feedRepo, _logger, _options) = (_feedRepo ?? new FeedSubmissionEntryRepository(options?.LocalDbConnectionStringOverride), logger, options);
 
 	    public void Create(FeedSubmissionEntry entry) => _feedRepo.Create(entry);
 	    public void Update(FeedSubmissionEntry entry) => _feedRepo.Update(entry);
@@ -60,7 +61,7 @@ namespace MountainWarehouse.EasyMWS.Services
 		public FeedSubmissionEntry LastOrDefault() => _feedRepo.GetAll().OrderByDescending(x => x.Id).FirstOrDefault();
 		public FeedSubmissionEntry LastOrDefault(Expression<Func<FeedSubmissionEntry, bool>> predicate) => _feedRepo.GetAll().OrderByDescending(x => x.Id).FirstOrDefault(predicate);
 
-		public FeedSubmissionEntry GetNextFromQueueOfFeedsToSubmit(EasyMwsOptions options, string merchantId, AmazonRegion region) 
+		public FeedSubmissionEntry GetNextFromQueueOfFeedsToSubmit(string merchantId, AmazonRegion region)
 			=> FirstOrDefault(fse => fse.AmazonRegion == region && fse.MerchantId == merchantId
 			                         && IsFeedInASubmitFeedQueue(fse)
 			                         && RetryIntervalHelper.IsRetryPeriodAwaited(fse.LastSubmitted,
@@ -68,19 +69,19 @@ namespace MountainWarehouse.EasyMWS.Services
 				                         _options.FeedSubmissionRetryInterval, _options.FeedSubmissionRetryType));
 
 
-		public IEnumerable<string> GetIdsForSubmittedFeedsFromQueue(EasyMwsOptions options, string merchantId, AmazonRegion region) 
+		public IEnumerable<string> GetIdsForSubmittedFeedsFromQueue(string merchantId, AmazonRegion region) 
 			=> Where(fse => fse.AmazonRegion == region && fse.MerchantId == merchantId
 				        && fse.FeedSubmissionId != null && fse.IsProcessingComplete == false
 			).Select(f => f.FeedSubmissionId);
 
-		public FeedSubmissionEntry GetNextFromQueueOfProcessingCompleteFeeds(EasyMwsOptions options, string merchantId, AmazonRegion region)
+		public FeedSubmissionEntry GetNextFromQueueOfProcessingCompleteFeeds(string merchantId, AmazonRegion region)
 			=> FirstOrDefault(fse => fse.AmazonRegion == region && fse.MerchantId == merchantId
 						 && fse.FeedSubmissionId != null && fse.IsProcessingComplete == true
 				         && RetryIntervalHelper.IsRetryPeriodAwaited(fse.LastSubmitted,
-				                         fse.ReportDownloadRetryCount, options.ReportDownloadRetryInitialDelay,
-				                         options.ReportDownloadRetryInterval, options.ReportDownloadRetryType));
+				                         fse.ReportDownloadRetryCount, _options.ReportDownloadRetryInitialDelay,
+				                         _options.ReportDownloadRetryInterval, _options.ReportDownloadRetryType));
 
-		public IEnumerable<FeedSubmissionEntry> GetAllFromQueueOfFeedsReadyForCallback(EasyMwsOptions options, string merchantId, AmazonRegion region)
+		public IEnumerable<FeedSubmissionEntry> GetAllFromQueueOfFeedsReadyForCallback(string merchantId, AmazonRegion region)
 			=> Where(fse => fse.AmazonRegion == region && fse.MerchantId == merchantId 
 						&& fse.Details != null && fse.Details.FeedSubmissionReport != null);
 
