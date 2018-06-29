@@ -291,29 +291,30 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			_logger.Info("Executing cleanup of feed submission requests queue.");
 			var allEntriesForRegionAndMerchant = feedSubmissionService.GetAll().Where(fse => IsMatchForRegionAndMerchantId(fse));
-			var removedEntriesIds = new List<int>();
+			var entriesToDelete = new List<EntryToDelete>();
 
-			var entriesWithFeedSubmissionRetryCountExceeded = allEntriesForRegionAndMerchant.Where(fse => IsFeedSubmissionRetryCountExceeded(fse));
-			var entriesWithFeedSubmissionRetryCountExceededDeleteReason = $"FeedSubmissionMaxRetryCount exceeded.";
-			MarkEntriesAsDeleted(feedSubmissionService, entriesWithFeedSubmissionRetryCountExceeded, removedEntriesIds, entriesWithFeedSubmissionRetryCountExceededDeleteReason);
+			void DeleteUniqueEntries(IEnumerable<EntryToDelete> entries)
+			{
+				foreach (var entryToDelete in entries)
+				{
+					feedSubmissionService.Delete(entryToDelete.Entry);
+					_logger.Warn($"Feed submission entry {entryToDelete.Entry.RegionAndTypeComputed} deleted from queue. {entryToDelete.DeleteReason.ToString()} exceeded");
+				}
+				feedSubmissionService.SaveChanges();
+			}
 
-			var entriesWithReportDownloadRetryCountExceeded = allEntriesForRegionAndMerchant.Where(fse => IsReportDownloadRetryCountExceeded(fse));
-			var entriesWithReportDownloadRetryCountExceededDeleteReason = $"ReportDownloadMaxRetryCount exceeded.";
-			MarkEntriesAsDeleted(feedSubmissionService, entriesWithReportDownloadRetryCountExceeded, removedEntriesIds, entriesWithReportDownloadRetryCountExceededDeleteReason);
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(fse => IsFeedSubmissionRetryCountExceeded(fse))
+				.Select(e => new EntryToDelete { Entry = e, DeleteReason = DeleteReasonType.FeedSubmissionMaxRetryCount }));
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(fse => IsReportDownloadRetryCountExceeded(fse))
+				.Select(e => new EntryToDelete { Entry = e, DeleteReason = DeleteReasonType.ReportDownloadMaxRetryCount }));
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(fse => IsExpirationPeriodExceeded(fse))
+				.Select(e => new EntryToDelete { Entry = e, DeleteReason = DeleteReasonType.FeedSubmissionRequestEntryExpirationPeriod }));
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(fse => IsFeedProcessingRetryCountExceeded(fse))
+				.Select(e => new EntryToDelete { Entry = e, DeleteReason = DeleteReasonType.FeedProcessingMaxRetryCount }));
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(fse => IsCallbackInvocationRetryCountExceeded(fse))
+				.Select(e => new EntryToDelete { Entry = e, DeleteReason = DeleteReasonType.InvokeCallbackMaxRetryCount }));
 
-			var entriesWithExpirationPeriodExceeded = allEntriesForRegionAndMerchant.Where(fse => IsExpirationPeriodExceeded(fse));
-			var entriesWithExpirationPeriodExceededDeleteReason = $"FeedSubmissionRequestEntryExpirationPeriod exceeded.";
-			MarkEntriesAsDeleted(feedSubmissionService, entriesWithExpirationPeriodExceeded, removedEntriesIds, entriesWithExpirationPeriodExceededDeleteReason);
-
-			var entriesWithFeedProcessingRetryCountExceeded = allEntriesForRegionAndMerchant.Where(fse => IsFeedProcessingRetryCountExceeded(fse));
-			var entriesWithFeedProcessingRetryCountExceededDeleteReason = $"FeedProcessingMaxRetryCount exceeded.";
-			MarkEntriesAsDeleted(feedSubmissionService, entriesWithFeedProcessingRetryCountExceeded, removedEntriesIds, entriesWithFeedProcessingRetryCountExceededDeleteReason);
-
-			var entriesWithCallbackInvocationRetryCountExceeded = allEntriesForRegionAndMerchant.Where(fse => IsCallbackInvocationRetryCountExceeded(fse));
-			var entriesWithCallbackInvocationRetryCountExceededDeleteReason = $"InvokeCallbackMaxRetryCount exceeded.";
-			MarkEntriesAsDeleted(feedSubmissionService, entriesWithCallbackInvocationRetryCountExceeded, removedEntriesIds, entriesWithCallbackInvocationRetryCountExceededDeleteReason);
-
-			feedSubmissionService.SaveChanges();
+			DeleteUniqueEntries(entriesToDelete.Distinct());
 		}
 
 
@@ -322,16 +323,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		private bool IsReportDownloadRetryCountExceeded(FeedSubmissionEntry e) => e.ReportDownloadRetryCount > _options.ReportDownloadMaxRetryCount;
 		private bool IsFeedProcessingRetryCountExceeded(FeedSubmissionEntry e) => e.FeedProcessingRetryCount > _options.FeedProcessingMaxRetryCount;
 		private bool IsCallbackInvocationRetryCountExceeded(FeedSubmissionEntry e) =>e.InvokeCallbackRetryCount > _options.InvokeCallbackMaxRetryCount;
-		private void MarkEntriesAsDeleted(IFeedSubmissionEntryService feedSubmissionService, IQueryable<FeedSubmissionEntry> entriesToMarkAsDeleted, List<int> entriesIdsAlreadyMarkedAsDeleted, string deleteReason)
-		{
-			foreach (var entry in entriesToMarkAsDeleted)
-			{
-				if (entriesIdsAlreadyMarkedAsDeleted.Exists(e => e == entry.Id)) continue;
-				entriesIdsAlreadyMarkedAsDeleted.Add(entry.Id);
-				feedSubmissionService.Delete(entry);
-				_logger.Warn($"Feed submission entry {entry.RegionAndTypeComputed} deleted from queue. {deleteReason}");
-			}
-		}
+
 		private bool IsExpirationPeriodExceeded(FeedSubmissionEntry feedSubmissionEntry) =>
 			(DateTime.Compare(feedSubmissionEntry.DateCreated, DateTime.UtcNow.Subtract(_options.FeedSubmissionRequestEntryExpirationPeriod)) < 0);
 		private bool IsAmazonErrorCodeFatal(string errorCode)
@@ -361,5 +353,32 @@ namespace MountainWarehouse.EasyMWS.Processors
 			return nonFatalErrorCodes.Contains(errorCode) || !IsAmazonErrorCodeFatal(errorCode);
 		}
 
+		 private class EntryToDelete : IEquatable<EntryToDelete>
+	    {
+		    public FeedSubmissionEntry Entry { get; set; }
+		    public DeleteReasonType DeleteReason { get; set; }
+
+		    public bool Equals(EntryToDelete other)
+		    {
+			    return other != null && this.Entry.Id == other.Entry.Id;
+		    }
+
+		    public override int GetHashCode()
+		    {
+			    unchecked
+			    {
+				    return Entry.Id;
+			    }
+		    }
+	    }
+
+	    private enum DeleteReasonType
+	    {
+		    FeedSubmissionMaxRetryCount,
+		    ReportDownloadMaxRetryCount,
+		    FeedSubmissionRequestEntryExpirationPeriod,
+		    FeedProcessingMaxRetryCount,
+			InvokeCallbackMaxRetryCount
+		}
 	}
 }
