@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MountainWarehouse.EasyMWS.Data;
 
 namespace MountainWarehouse.EasyMWS.Migrations
 {
     [DbContext(typeof(EasyMwsContext))]
-    partial class EasyMwsContextModelSnapshot : ModelSnapshot
+    [Migration("20180618104544_AddReportProcessRetryCountCol")]
+    partial class AddReportProcessRetryCountCol
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -110,9 +112,9 @@ namespace MountainWarehouse.EasyMWS.Migrations
 
                     b.Property<string>("GeneratedReportId");
 
-                    b.Property<int>("InvokeCallbackRetryCount");
+                    b.Property<int>("InvokeCallbackRetryDownload");
 
-                    b.Property<DateTime>("LastAmazonRequestDate");
+                    b.Property<DateTime>("LastRequested");
 
                     b.Property<string>("MerchantId");
 

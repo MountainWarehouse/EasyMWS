@@ -22,7 +22,7 @@ namespace EasyMWS.Tests.ReportProcessors
 	public class ReportProcessorTests
 	{
 		private ReportProcessor _reportProcessor;
-		private Mock<IReportRequestCallbackService> _reportRequestCallbackServiceMock;
+		private Mock<IReportRequestEntryService> _reportRequestServiceMock;
 		private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
 		private Mock<IRequestReportProcessor> _requestReportProcessor;
 		private Mock<ICallbackActivator> _callbackActivatorMock;
@@ -33,7 +33,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		public void SetUp()
 		{
 			var options = EasyMwsOptions.Defaults();
-			_reportRequestCallbackServiceMock = new Mock<IReportRequestCallbackService>();
+			_reportRequestServiceMock = new Mock<IReportRequestEntryService>();
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_requestReportProcessor = new Mock<IRequestReportProcessor>();
 			_callbackActivatorMock = new Mock<ICallbackActivator>();
@@ -55,10 +55,10 @@ namespace EasyMWS.Tests.ReportProcessors
 			var reportRequestContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
 			var callbackMethod = (Action<Stream, object>) null;
 
-			_reportProcessor.QueueReport(_reportRequestCallbackServiceMock.Object, reportRequestContainer, callbackMethod, new {Foo = "Bar"});
+			_reportProcessor.QueueReport(_reportRequestServiceMock.Object, reportRequestContainer, callbackMethod, new {Foo = "Bar"});
 
-			_reportRequestCallbackServiceMock.Verify(rrcs => rrcs.Create(It.IsAny<ReportRequestEntry>()), Times.Never);
-			_reportRequestCallbackServiceMock.Verify(rrcs => rrcs.SaveChanges(), Times.Never);
+			_reportRequestServiceMock.Verify(rrcs => rrcs.Create(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestServiceMock.Verify(rrcs => rrcs.SaveChanges(), Times.Never);
 			_loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<ArgumentNullException>()), Times.Once);
 		}
 
@@ -68,28 +68,28 @@ namespace EasyMWS.Tests.ReportProcessors
 			ReportRequestPropertiesContainer reportRequestContainer = null;
 			var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
 
-			_reportProcessor.QueueReport(_reportRequestCallbackServiceMock.Object, reportRequestContainer, callbackMethod, new { Foo = "Bar" });
+			_reportProcessor.QueueReport(_reportRequestServiceMock.Object, reportRequestContainer, callbackMethod, new { Foo = "Bar" });
 
 			_loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<Exception>()), Times.Once);
 		}
 
 		[Test]
-		public void QueueReport_WithNonEmptyArguments_CallsReportRequestCallbackServiceCreateOnceWithCorrectData()
+		public void QueueReport_WithNonEmptyArguments_CallsReportRequestEntryServiceCreateOnceWithCorrectData()
 		{
 			var reportRequestContainer =
 				new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.NearRealTime);
 			var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
 			ReportRequestEntry createReportRequestEntryObject = null;
-			_reportRequestCallbackServiceMock.Setup(rrcsm => rrcsm.Create(It.IsAny<ReportRequestEntry>()))
+			_reportRequestServiceMock.Setup(rrcsm => rrcsm.Create(It.IsAny<ReportRequestEntry>()))
 				.Callback<ReportRequestEntry>((p) => { createReportRequestEntryObject = p; });
-			_reportProcessor.QueueReport(_reportRequestCallbackServiceMock.Object, reportRequestContainer, callbackMethod, new {Foo = "Bar"});
+			_reportProcessor.QueueReport(_reportRequestServiceMock.Object, reportRequestContainer, callbackMethod, new {Foo = "Bar"});
 
-			_reportRequestCallbackServiceMock.Verify(rrcsm => rrcsm.Create(It.IsAny<ReportRequestEntry>()), Times.Once);
+			_reportRequestServiceMock.Verify(rrcsm => rrcsm.Create(It.IsAny<ReportRequestEntry>()), Times.Once);
 			Assert.AreEqual(JsonConvert.SerializeObject(reportRequestContainer),
 				createReportRequestEntryObject.ReportRequestData);
 			Assert.AreEqual(AmazonRegion.Europe, createReportRequestEntryObject.AmazonRegion);
 			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, createReportRequestEntryObject.ContentUpdateFrequency);
-			Assert.AreEqual(DateTime.MinValue, createReportRequestEntryObject.LastRequested);
+			Assert.AreEqual(DateTime.MinValue, createReportRequestEntryObject.LastAmazonRequestDate);
 			Assert.NotNull(createReportRequestEntryObject.TypeName);
 			Assert.NotNull(createReportRequestEntryObject.Data);
 			Assert.NotNull(createReportRequestEntryObject.DataTypeName);
@@ -97,14 +97,14 @@ namespace EasyMWS.Tests.ReportProcessors
 		}
 
 		[Test]
-		public void QueueReport_WithNonEmptyArguments_CallsReportRequestCallbackServiceSaveChangesOnce()
+		public void QueueReport_WithNonEmptyArguments_CallsReportRequestEntryServiceSaveChangesOnce()
 		{
 			var reportRequestContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
 			var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
 
-			_reportProcessor.QueueReport(_reportRequestCallbackServiceMock.Object, reportRequestContainer, callbackMethod, new {Foo = "Bar"});
+			_reportProcessor.QueueReport(_reportRequestServiceMock.Object, reportRequestContainer, callbackMethod, new {Foo = "Bar"});
 
-			_reportRequestCallbackServiceMock.Verify(rrcsm => rrcsm.SaveChanges(), Times.Once);
+			_reportRequestServiceMock.Verify(rrcsm => rrcsm.SaveChanges(), Times.Once);
 		}
 
 		#endregion
@@ -119,7 +119,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			_loggerMock.Setup(lm => lm.Error(It.IsAny<string>(), It.IsAny<Exception>()))
 				.Callback<string, Exception>((message, exception) => { actualLoggedException = exception; });
 
-			_reportProcessor.PollReports(_reportRequestCallbackServiceMock.Object);
+			_reportProcessor.PollReports(_reportRequestServiceMock.Object);
 
 			Assert.IsFalse(actualLoggedException is NullReferenceException);
 		}
@@ -127,7 +127,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		[Test]
 		public void Poll_IfNoReportIsDownloaded_LogErrorIsNotCalled()
 		{
-			_reportProcessor.PollReports(_reportRequestCallbackServiceMock.Object);
+			_reportProcessor.PollReports(_reportRequestServiceMock.Object);
 
 			_loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<Exception>()), Times.Never);
 		}
@@ -135,23 +135,23 @@ namespace EasyMWS.Tests.ReportProcessors
 		[Test]
 		public void Poll_CallsOnce_GetNextFromQueueOfReportsToRequest()
 		{
-			_reportProcessor.PollReports(_reportRequestCallbackServiceMock.Object);
+			_reportProcessor.PollReports(_reportRequestServiceMock.Object);
 
-			_requestReportProcessor.Verify(
-				rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<IReportRequestCallbackService>()), Times.Once);
+			_reportRequestServiceMock.Verify(
+				rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<EasyMwsOptions>(), It.IsAny<string>(), It.IsAny<AmazonRegion>()), Times.Once);
 		}
 
 		[Test]
 		public void Poll_WithGetNonRequestedReportFromQueueReturningNull_DoesNotRequestAReportFromAmazon()
 		{
-			_requestReportProcessor
-				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<IReportRequestCallbackService>()))
+			_reportRequestServiceMock
+				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<EasyMwsOptions>(), It.IsAny<string>(), It.IsAny<AmazonRegion>()))
 				.Returns((ReportRequestEntry) null);
 
-			_reportProcessor.PollReports(_reportRequestCallbackServiceMock.Object);
+			_reportProcessor.PollReports(_reportRequestServiceMock.Object);
 
 			_requestReportProcessor.Verify(
-				rrp => rrp.RequestReportFromAmazon(It.IsAny<ReportRequestEntry>()), Times.Never);
+				rrp => rrp.RequestReportFromAmazon(It.IsAny<IReportRequestEntryService>(), It.IsAny<ReportRequestEntry>()), Times.Never);
 		}
 
 		[Test]
@@ -160,96 +160,14 @@ namespace EasyMWS.Tests.ReportProcessors
 			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
 			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
 
-			_requestReportProcessor
-				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<IReportRequestCallbackService>()))
+			_reportRequestServiceMock
+				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<EasyMwsOptions>(), It.IsAny<string>(), It.IsAny<AmazonRegion>()))
 				.Returns(new ReportRequestEntry{ReportRequestData = serializedReportRequestData });
 
-			_reportProcessor.PollReports(_reportRequestCallbackServiceMock.Object);
+			_reportProcessor.PollReports(_reportRequestServiceMock.Object);
 
 			_requestReportProcessor.Verify(
-				rrp => rrp.RequestReportFromAmazon(It.IsAny<ReportRequestEntry>()), Times.Once);
-		}
-
-		[Test]
-		public void
-			Poll_WithGetNonRequestedReportFromQueueReturningNotNull_UpdatesLastRequestedPropertyForProcessedReportRequest()
-		{
-			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
-			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
-
-			ReportRequestEntry testReportRequestEntry = null;
-
-			_requestReportProcessor
-				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<IReportRequestCallbackService>()))
-				.Returns(new ReportRequestEntry {LastRequested = DateTime.MinValue, ReportRequestData = serializedReportRequestData});
-			_reportRequestCallbackServiceMock.Setup(rrcsm => rrcsm.Update(It.IsAny<ReportRequestEntry>()))
-				.Callback((ReportRequestEntry arg) =>
-				{
-					testReportRequestEntry = arg;
-				});
-
-			_reportProcessor.PollReports(_reportRequestCallbackServiceMock.Object);
-
-			Assert.IsTrue(DateTime.UtcNow - testReportRequestEntry.LastRequested < TimeSpan.FromHours(1));
-			_reportRequestCallbackServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestEntry>()), Times.AtLeastOnce);
-			_reportRequestCallbackServiceMock.Verify(x => x.SaveChanges(), Times.AtLeastOnce);
-		}
-
-		[Test]
-		public void Poll_WithRequestReportAmazonResponseNotNull_CallsOnce_GetNextFromQueueOfReportsToGenerate()
-		{
-			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
-			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
-
-			_requestReportProcessor
-				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<IReportRequestCallbackService>()))
-				.Returns(new ReportRequestEntry {LastRequested = DateTime.MinValue, ReportRequestData = serializedReportRequestData });
-			_requestReportProcessor.Setup(rrp =>
-					rrp.RequestReportFromAmazon(It.IsAny<ReportRequestEntry>()))
-				.Returns("testReportRequestId");
-
-			_reportProcessor.PollReports(_reportRequestCallbackServiceMock.Object);
-
-			_requestReportProcessor.Verify(
-				rrp => rrp.MoveToQueueOfReportsToGenerate(It.IsAny<IReportRequestCallbackService>(), It.IsAny<ReportRequestEntry>(), It.IsAny<string>()), Times.Once);
-		}
-
-		[Test]
-		public void Poll_WithRequestReportAmazonResponseNull_CallsOnce_AllocateReportRequestForRetry()
-		{
-			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
-			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
-
-			_requestReportProcessor
-				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<IReportRequestCallbackService>()))
-				.Returns(new ReportRequestEntry {LastRequested = DateTime.MinValue, ReportRequestData = serializedReportRequestData});
-			_requestReportProcessor.Setup(rrp =>
-					rrp.RequestReportFromAmazon(It.IsAny<ReportRequestEntry>()))
-				.Returns((string) null);
-
-			_reportProcessor.PollReports(_reportRequestCallbackServiceMock.Object);
-			_requestReportProcessor.Verify(rrp => rrp.MoveToRetryQueue(It.IsAny<IReportRequestCallbackService>(), It.IsAny<ReportRequestEntry>()),
-				Times.Once);
-		}
-
-		[Test]
-		public void Poll_WithRequestReportAmazonResponseEmpty_CallsOnce_AllocateReportRequestForRetry()
-		{
-			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
-			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
-
-			_requestReportProcessor
-				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<IReportRequestCallbackService>()))
-				.Returns(new ReportRequestEntry {LastRequested = DateTime.MinValue, ReportRequestData = serializedReportRequestData});
-			_requestReportProcessor.Setup(rrp =>
-					rrp.RequestReportFromAmazon(It.IsAny<ReportRequestEntry>()))
-				.Returns(string.Empty);
-
-
-			_reportProcessor.PollReports(_reportRequestCallbackServiceMock.Object);
-
-			_requestReportProcessor.Verify(rrp => rrp.MoveToRetryQueue(It.IsAny<IReportRequestCallbackService>(), It.IsAny<ReportRequestEntry>()),
-				Times.Once);
+				rrp => rrp.RequestReportFromAmazon(It.IsAny<IReportRequestEntryService>(), It.IsAny<ReportRequestEntry>()), Times.Once);
 		}
 		#endregion
 	}

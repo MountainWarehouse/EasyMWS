@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
@@ -12,7 +11,6 @@ using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Services;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService.Model;
-using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS.Processors
 {
@@ -33,27 +31,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_marketplaceWebServiceClient = marketplaceWebServiceClient;
 	    }
 
-	    public ReportRequestEntry GetNextFromQueueOfReportsToRequest(IReportRequestCallbackService reportRequestService)
+
+		public void RequestReportFromAmazon(IReportRequestEntryService reportRequestService, ReportRequestEntry reportRequestEntry)
 	    {
-			return string.IsNullOrEmpty(_merchantId)
-				? null
-				: reportRequestService.GetAll()
-					.FirstOrDefault(rrc => rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId
-					                        && rrc.RequestReportId == null
-					                        && RetryIntervalHelper.IsRetryPeriodAwaited(rrc.LastRequested, rrc.RequestRetryCount,
-						                        _options.ReportRequestRetryInitialDelay, _options.ReportRequestRetryInterval,
-						                        _options.ReportRequestRetryType)
-					);
-	    }
+		    var missingInformationExceptionMessage = "Cannot request report from amazon due to missing report request information.";
 
-
-
-	    public string RequestReportFromAmazon(ReportRequestEntry reportRequestEntry)
-	    {
-		    var missingInformationExceptionMessage = "Cannot request report from amazon due to missing report request information";
-
-			if (reportRequestEntry?.ReportRequestData == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Report request data is null.");
-		    if (string.IsNullOrEmpty(reportRequestEntry.ReportType)) throw new ArgumentException($"{missingInformationExceptionMessage}: Report Type is missing.");
+			if (reportRequestEntry?.ReportRequestData == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Report request data is missing.");
+		    if (string.IsNullOrEmpty(reportRequestEntry?.ReportType)) throw new ArgumentException($"{missingInformationExceptionMessage}: Report Type is missing.");
 
 			var reportRequestData = reportRequestEntry.GetPropertiesContainer();
 
@@ -65,59 +49,58 @@ namespace MountainWarehouse.EasyMWS.Processors
 				ReportType = reportRequestEntry.ReportType
 			};
 
-		    if (reportRequestData.MarketplaceIdList != null)
-			    reportRequest.MarketplaceIdList = new IdList {Id = reportRequestData.MarketplaceIdList};
-			if (reportRequestData.StartDate.HasValue)
-			    reportRequest.StartDate = reportRequestData.StartDate.Value;
-		    if (reportRequestData.EndDate.HasValue)
-			    reportRequest.EndDate = reportRequestData.EndDate.Value;
-		    if (!string.IsNullOrEmpty(reportRequestData.ReportOptions))
-			    reportRequest.ReportOptions = reportRequestData.ReportOptions;
+		    if (reportRequestData.MarketplaceIdList != null) reportRequest.MarketplaceIdList = new IdList {Id = reportRequestData.MarketplaceIdList};
+			if (reportRequestData.StartDate.HasValue) reportRequest.StartDate = reportRequestData.StartDate.Value;
+		    if (reportRequestData.EndDate.HasValue) reportRequest.EndDate = reportRequestData.EndDate.Value;
+		    if (!string.IsNullOrEmpty(reportRequestData.ReportOptions)) reportRequest.ReportOptions = reportRequestData.ReportOptions;
 
 		    try
 		    {
 			    var reportResponse = _marketplaceWebServiceClient.RequestReport(reportRequest);
-			    var requestId = reportResponse?.ResponseHeaderMetadata?.RequestId ?? "unknown";
-			    var timestamp = reportResponse?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
-			    _logger.Info($"Request to MWS.RequestReport was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']",
-				    new RequestInfo(timestamp, requestId));
+			    reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
+			    reportRequestEntry.RequestReportId = reportResponse?.RequestReportResult?.ReportRequestInfo?.ReportRequestId;
 
-			    return reportResponse?.RequestReportResult?.ReportRequestInfo?.ReportRequestId;
-		    }
-		    catch (MarketplaceWebServiceException e) when (e.StatusCode == HttpStatusCode.BadRequest)
-		    {
-			    _logger.Error($"Request to MWS.RequestReport failed! [HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}', Message: '{e.Message}']", e);
-			    return HttpStatusCode.BadRequest.ToString();
+				var requestId = reportResponse?.ResponseHeaderMetadata?.RequestId ?? "unknown";
+			    var timestamp = reportResponse?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
+
+				if (string.IsNullOrEmpty(reportRequestEntry.RequestReportId))
+			    {
+					reportRequestEntry.ReportRequestRetryCount++;
+					_logger.Warn($"RequestReport did not generate a ReportRequestId for {reportRequestEntry.RegionAndTypeComputed}. Report request will be retried. ReportRequestRetryCount is now : {reportRequestEntry.ReportRequestRetryCount}.",
+						new RequestInfo(timestamp, requestId));
+				}
+			    else
+			    {
+				    reportRequestEntry.ReportRequestRetryCount = 0;
+					_logger.Info($"AmazonMWS RequestReport succeeded for {reportRequestEntry.RegionAndTypeComputed}. ReportRequestId:'{reportRequestEntry.RequestReportId}'.",
+						new RequestInfo(timestamp, requestId));
+				}
+
+			    reportRequestService.Update(reportRequestEntry);
 			}
-		    catch (MarketplaceWebServiceException e)
+		    catch (MarketplaceWebServiceException e) when (e.StatusCode == HttpStatusCode.BadRequest && IsAmazonErrorCodeFatal(e.ErrorCode))
 		    {
-			    _logger.Error($"Request to MWS.RequestReport failed! [HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}', Message: '{e.Message}']", e);
-				return null;
+			    reportRequestService.Delete(reportRequestEntry);
+				_logger.Error($"AmazonMWS RequestReport failed for {reportRequestEntry.RegionAndTypeComputed}. The entry will now be removed from queue.", e);
+			}
+		    catch (MarketplaceWebServiceException e) when (IsAmazonErrorCodeNonFatal(e.ErrorCode))
+		    {
+			    reportRequestEntry.ReportRequestRetryCount++;
+			    reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
+			    reportRequestService.Update(reportRequestEntry);
+				_logger.Warn($"AmazonMWS RequestReport failed for {reportRequestEntry.RegionAndTypeComputed}. Report request will be retried. ReportRequestRetryCount is now : {reportRequestEntry.ReportRequestRetryCount}.");
 		    }
 		    catch (Exception e)
 		    {
-			    _logger.Error($"Request to MWS.RequestReport failed! [Message: '{e.Message}']", e);
-			    return null;
-		    }
-	    }
-
-	    public void MoveToQueueOfReportsToGenerate(IReportRequestCallbackService reportRequestService, ReportRequestEntry reportRequestEntry, string reportRequestId)
-	    {
-			reportRequestEntry.RequestReportId = reportRequestId;
-			reportRequestEntry.RequestRetryCount = 0;
-			reportRequestService.Update(reportRequestEntry);
-			reportRequestService.SaveChanges();
-	    }
-
-	    public IEnumerable<string> GetAllPendingReportFromQueue(IReportRequestCallbackService reportRequestService)
-	    {
-			    return string.IsNullOrEmpty(_merchantId)
-				    ? new List<string>().AsEnumerable()
-				    : reportRequestService
-						.Where(rrcs => rrcs.AmazonRegion == _region && rrcs.MerchantId == _merchantId
-					                   && rrcs.RequestReportId != null
-					                   && rrcs.GeneratedReportId == null)
-					    .Select(r => r.RequestReportId);
+				reportRequestEntry.ReportRequestRetryCount++;
+			    reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
+			    reportRequestService.Update(reportRequestEntry);
+				_logger.Warn($"AmazonMWS RequestReport failed for {reportRequestEntry.RegionAndTypeComputed}. Report request will be retried. ReportRequestRetryCount is now : {reportRequestEntry.ReportRequestRetryCount}.");
+			}
+		    finally
+			{
+			    reportRequestService.SaveChanges();
+			}
 	    }
 
 	    public List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> GetReportProcessingStatusesFromAmazon(IEnumerable<string> requestIdList, string merchant)
@@ -132,153 +115,123 @@ namespace MountainWarehouse.EasyMWS.Processors
 			    var response = _marketplaceWebServiceClient.GetReportRequestList(request);
 			    var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
 			    var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
-			    _logger.Info(
-				    $"Request to MWS.GetReportRequestList was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']",
-				    new RequestInfo(timestamp, requestId));
+			    _logger.Info($"Request to MWS.GetReportRequestList was successful!", new RequestInfo(timestamp, requestId));
 
 			    var responseInformation =
 				    new List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)>();
 
-			    if (response != null)
+			    if (response?.GetReportRequestListResult?.ReportRequestInfo != null)
 			    {
 				    foreach (var reportRequestInfo in response.GetReportRequestListResult.ReportRequestInfo)
 				    {
-					    responseInformation.Add(
-						    (reportRequestInfo.ReportRequestId, reportRequestInfo.GeneratedReportId, reportRequestInfo
-							    .ReportProcessingStatus));
+					    responseInformation.Add((reportRequestInfo.ReportRequestId, reportRequestInfo.GeneratedReportId, reportRequestInfo.ReportProcessingStatus));
 				    }
 			    }
+			    else
+			    {
+					_logger.Warn("AmazonMWS GetReportRequestList response does not contain any results. The operation will be executed again at the next poll request.");
+				}
 
 			    return responseInformation;
 
 		    }
 		    catch (MarketplaceWebServiceException e)
 		    {
-				_logger.Error($"Request to MWS.GetReportRequestList failed! [Message: '{e.Message}', HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}']", e);
+				_logger.Warn($"AmazonMWS GetReportRequestList failed! The operation will be executed again at the next poll request.");
 			    return null;
 			}
 			catch (Exception e)
 		    {
-				_logger.Error($"Request to MWS.GetReportRequestList failed! [Message: '{e.Message}']", e);
+				_logger.Warn($"AmazonMWS GetReportRequestList failed! The operation will be executed again at the next poll request.");
 			    return null;
 			}
 	    }
 
-	    public void CleanupReportRequests(IReportRequestCallbackService reportRequestService)
-	    {
+		public void CleanupReportRequests(IReportRequestEntryService reportRequestService)
+		{
 			_logger.Info("Executing cleanup of report requests queue.");
-			var expiredReportRequests = reportRequestService.GetAll()
-				.Where(rrc => (rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId) && rrc.Details == null && IsRequestRetryCountExceeded(rrc));
+			var allEntriesForRegionAndMerchant = reportRequestService.GetAll().Where(rrc => IsMatchForRegionAndMerchantId(rrc));
+			var entriesToDelete = new List<EntryToDelete>();
 
-			foreach (var expiredReport in expiredReportRequests)
+			void DeleteUniqueEntries(IEnumerable<EntryToDelete> entries)
 			{
-				reportRequestService.Delete(expiredReport);
-				_logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: Failure while trying to request the report from Amazon. Retry count exceeded : {_options.ReportRequestMaxRetryCount}.");
+				foreach (var entryToDelete in entries)
+				{
+					reportRequestService.Delete(entryToDelete.Entry);
+					_logger.Warn($"Report request entry {entryToDelete.Entry.RegionAndTypeComputed} deleted from queue. {entryToDelete.DeleteReason.ToString()} exceeded");
+				}
+				reportRequestService.SaveChanges();
 			}
+			
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(rrc => IsRequestRetryCountExceeded(rrc))
+				.Select(e => new EntryToDelete { Entry = e, DeleteReason = DeleteReasonType.ReportRequestMaxRetryCount }));
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(rrc => IsDownloadRetryCountExceeded(rrc))
+				.Select(e => new EntryToDelete { Entry = e, DeleteReason = DeleteReasonType.ReportDownloadMaxRetryCount }));
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(rrc => IsProcessingRetryCountExceeded(rrc))
+				.Select(e => new EntryToDelete { Entry = e, DeleteReason = DeleteReasonType.ReportProcessingMaxRetryCount }));
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(rrc => IsExpirationPeriodExceeded(rrc))
+				.Select(e => new EntryToDelete { Entry = e, DeleteReason = DeleteReasonType.ReportDownloadRequestEntryExpirationPeriod }));
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(rrc => IsCallbackInvocationRetryCountExceeded(rrc))
+				.Select(e => new EntryToDelete { Entry = e, DeleteReason = DeleteReasonType.InvokeCallbackMaxRetryCount }));
 
-		    var entriesWithExpirationPeriodExceeded = reportRequestService.GetAll()
-			    .Where(rrc => (rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId) && IsExpirationPeriodExceeded(rrc));
+			DeleteUniqueEntries(entriesToDelete.Distinct());
+		}
 
-		    foreach (var expiredReport in entriesWithExpirationPeriodExceeded)
-		    {
-			    reportRequestService.Delete(expiredReport);
-			    _logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: Expiration period of '{_options.ReportDownloadRequestEntryExpirationPeriod.Hours} hours' was exceeded.");
-		    }
-
-			var entriesWithCallbackInvocationRetryCountExceeded = reportRequestService.GetAll()
-				.Where(rrc => (rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId) && rrc.Details != null && IsReportRequestEntryCallbackInvocationRetryCountExceeded(rrc));
-
-		    foreach (var expiredReport in entriesWithCallbackInvocationRetryCountExceeded)
-		    {
-			    reportRequestService.Delete(expiredReport);
-			    _logger.Warn($"Report request {expiredReport.RegionAndTypeComputed} deleted from queue. Reason: The report was downloaded successfully but the callback method provided at QueueReport could not be invoked. Retry count exceeded : {_options.ReportReadyCallbackInvocationMaxRetryCount}");
-		    }
-
-			reportRequestService.SaveChanges();
-	    }
-
-	    private bool IsRequestRetryCountExceeded(ReportRequestEntry reportRequestEntry) => 
-			(reportRequestEntry.RequestRetryCount > _options.ReportRequestMaxRetryCount);
-
-		private bool IsReportRequestEntryCallbackInvocationRetryCountExceeded(ReportRequestEntry reportRequestEntry) =>
-		    (reportRequestEntry.RequestRetryCount > _options.ReportReadyCallbackInvocationMaxRetryCount); 
-
-
-		private bool IsExpirationPeriodExceeded(ReportRequestEntry reportRequestEntry) =>
-			(DateTime.Compare(reportRequestEntry.DateCreated, DateTime.UtcNow.Subtract(_options.ReportDownloadRequestEntryExpirationPeriod)) < 0);
-
-		public void QueueReportsAccordingToProcessingStatus(IReportRequestCallbackService reportRequestService,
+		public void QueueReportsAccordingToProcessingStatus(IReportRequestEntryService reportRequestService,
 			List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> reportGenerationStatuses)
 	    {
 			foreach (var reportGenerationInfo in reportGenerationStatuses)
 			{
-				var reportGenerationCallback = reportRequestService.FirstOrDefault(rrc =>
-					rrc.RequestReportId == reportGenerationInfo.ReportRequestId
-					&& rrc.GeneratedReportId == null);
+				var reportGenerationCallback = reportRequestService.FirstOrDefault(rrc => rrc.RequestReportId == reportGenerationInfo.ReportRequestId && rrc.GeneratedReportId == null);
 				if (reportGenerationCallback == null) continue;
+
+				var genericProcessingInfo = $"ProcessingStatus returned by Amazon for {reportGenerationCallback.RegionAndTypeComputed} is '{reportGenerationInfo.ReportProcessingStatus}'.";
 
 				if (reportGenerationInfo.ReportProcessingStatus == "_DONE_")
 				{
 					reportGenerationCallback.GeneratedReportId = reportGenerationInfo.GeneratedReportId;
-					reportGenerationCallback.RequestRetryCount = 0;
+					reportGenerationCallback.ReportProcessRetryCount = 0;
 					reportRequestService.Update(reportGenerationCallback);
-					_logger.Info(
-						$"Report was successfully generated by Amazon for {reportGenerationCallback.RegionAndTypeComputed}. GeneratedReportId:'{reportGenerationInfo.GeneratedReportId}'. ProcessingStatus:'{reportGenerationInfo.ReportProcessingStatus}'.");
+					_logger.Info($"{genericProcessingInfo}. The report is now ready for download.");
 				}
 				else if (reportGenerationInfo.ReportProcessingStatus == "_DONE_NO_DATA_")
 				{
 					reportRequestService.Delete(reportGenerationCallback);
-					_logger.Warn(
-						$"Report was successfully generated by Amazon for {reportGenerationCallback.RegionAndTypeComputed} but it didn't contain any data. ProcessingStatus:'{reportGenerationInfo.ReportProcessingStatus}'. Report request is now dequeued.");
+					_logger.Warn($"{genericProcessingInfo}. The Report request entry will now be removed from queue.");
 				}
-				else if (reportGenerationInfo.ReportProcessingStatus == "_SUBMITTED_" ||
-				            reportGenerationInfo.ReportProcessingStatus == "_IN_PROGRESS_")
+				else if (reportGenerationInfo.ReportProcessingStatus == "_SUBMITTED_" 
+					  || reportGenerationInfo.ReportProcessingStatus == "_IN_PROGRESS_")
 				{
-					reportGenerationCallback.GeneratedReportId = null;
-					reportGenerationCallback.RequestRetryCount = 0;
-					reportRequestService.Update(reportGenerationCallback);
-					_logger.Info(
-						$"Report generation by Amazon is still in progress for {reportGenerationCallback.RegionAndTypeComputed}. ProcessingStatus:'{reportGenerationInfo.ReportProcessingStatus}'.");
+					_logger.Info($"{genericProcessingInfo}. The report processing status will be checked again at the next poll request.");
 				}
 				else if (reportGenerationInfo.ReportProcessingStatus == "_CANCELLED_")
 				{
 					reportGenerationCallback.RequestReportId = null;
 					reportGenerationCallback.GeneratedReportId = null;
-					reportGenerationCallback.RequestRetryCount++;
+					reportGenerationCallback.ReportProcessRetryCount++;
 					reportRequestService.Update(reportGenerationCallback);
-					_logger.Warn(
-						$"Report generation was canceled by Amazon for {reportGenerationCallback.RegionAndTypeComputed}. ProcessingStatus:'{reportGenerationInfo.ReportProcessingStatus}'. Placing report back in report request queue! Retry count is now '{reportGenerationCallback.RequestRetryCount}'.");
+					_logger.Warn($"{genericProcessingInfo}. The Report request will be retried. ReportProcessRetryCount is now '{reportGenerationCallback.ReportProcessRetryCount}'.");
 				}
 				else
 				{
 					reportGenerationCallback.RequestReportId = null;
 					reportGenerationCallback.GeneratedReportId = null;
-					reportGenerationCallback.RequestRetryCount++;
+					reportGenerationCallback.ReportProcessRetryCount++;
 					reportRequestService.Update(reportGenerationCallback);
-					_logger.Warn(
-						$"Report status returned by amazon is {reportGenerationInfo.ReportProcessingStatus} for {reportGenerationCallback.RegionAndTypeComputed}. This status is not yet handled by EasyMws. Placing report back in report request queue! Retry count is now '{reportGenerationCallback.RequestRetryCount}'");
+					_logger.Warn($"{genericProcessingInfo}. The Report request will be retried. This report processing status is not yet handled by EasyMws. ReportProcessRetryCount is now '{reportGenerationCallback.ReportProcessRetryCount}'.");
 				}
 			}
 			reportRequestService.SaveChanges();
 	    }
 
-
-	    public ReportRequestEntry GetNextFromQueueOfReportsToDownload(IReportRequestCallbackService reportRequestService)
+		public void DownloadGeneratedReportFromAmazon(IReportRequestEntryService reportRequestService, ReportRequestEntry reportRequestEntry)
 	    {
-			return string.IsNullOrEmpty(_merchantId)
-				? null
-				: reportRequestService.FirstOrDefault(
-					rrc => rrc.AmazonRegion == _region && rrc.MerchantId == _merchantId
-					        && rrc.RequestReportId != null
-					        && rrc.GeneratedReportId != null
-							&& rrc.Details == null);
-	    }
+		    var missingInformationExceptionMessage = "Cannot request report from amazon due to missing report request information.";
+			_logger.Info($"Attempting to download the next report in queue from Amazon: {reportRequestEntry.RegionAndTypeComputed}.");
 
-		public (MemoryStream report, string md5Hash) DownloadGeneratedReportFromAmazon(ReportRequestEntry reportRequestEntry)
-	    {
-		    _logger.Info($"Attempting to download the next report in queue from Amazon: {reportRequestEntry.RegionAndTypeComputed}.");
+		    if (string.IsNullOrEmpty(reportRequestEntry?.GeneratedReportId)) throw new ArgumentException($"{missingInformationExceptionMessage}: GeneratedReportId is missing.");
 
-		    var reportResultStream = new MemoryStream();
+			var reportResultStream = new MemoryStream();
 		    var getReportRequest = new GetReportRequest
 		    {
 			    ReportId = reportRequestEntry.GeneratedReportId,
@@ -289,46 +242,130 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    try
 		    {
 			    var response = _marketplaceWebServiceClient.GetReport(getReportRequest);
+			    reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
 
-			    var reportContentStream = new MemoryStream();
-			    getReportRequest.Report.CopyTo(reportContentStream);
-			    reportContentStream.Position = 0;
-
-			    var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
+				
+				var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
 			    var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
-			    _logger.Info($"Request to MWS.GetReport was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']",
+			    _logger.Info(
+				    $"Report download from Amazon has succeeded for {reportRequestEntry.RegionAndTypeComputed}.",
 				    new RequestInfo(timestamp, requestId));
-			    _logger.Info($"Report download from Amazon has succeeded for {reportRequestEntry.RegionAndTypeComputed}.");
+			    reportResultStream.Position = 0;
 
-				return (reportContentStream, response?.GetReportResult?.ContentMD5);
+				var md5Hash = response?.GetReportResult?.ContentMD5;
+				var hasValidHash = MD5ChecksumHelper.IsChecksumCorrect(reportResultStream, md5Hash);
+			    if (hasValidHash)
+			    {
+				    _logger.Info($"Checksum verification succeeded for report {reportRequestEntry.RegionAndTypeComputed}");
+				    reportRequestEntry.ReportDownloadRetryCount = 0;
+
+					using (var streamReader = new StreamReader(reportResultStream))
+				    {
+					    var zippedReport = ZipHelper.CreateArchiveFromContent(streamReader.ReadToEnd());
+					    reportRequestEntry.Details = new ReportRequestDetails { ReportContent = zippedReport };
+				    }
+			    }
+			    else
+			    {
+				    reportRequestEntry.ReportDownloadRetryCount++;
+					_logger.Warn($"Checksum verification failed for report {reportRequestEntry.RegionAndTypeComputed}. Report download will be retried. ReportDownloadRetryCount is now : '{reportRequestEntry.ReportDownloadRetryCount}'.");
+				}
+
+			    reportRequestService.Update(reportRequestEntry);
 			}
-		    catch (MarketplaceWebServiceException e)
+		    catch (MarketplaceWebServiceException e) when (e.StatusCode == HttpStatusCode.BadRequest && IsAmazonErrorCodeFatal(e.ErrorCode))
 		    {
-				_logger.Error($"Request to MWS.GetReport failed! [Message: '{e.Message}', HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}']", e);
-			    return (null, null);
+			    reportRequestService.Delete(reportRequestEntry);
+			    _logger.Error($"AmazonMWS report download failed for {reportRequestEntry.RegionAndTypeComputed}! The entry will now be removed from queue.", e);
 			}
-		    catch (Exception e)
+		    catch (MarketplaceWebServiceException e) when (IsAmazonErrorCodeNonFatal(e.ErrorCode))
+			{
+				reportRequestEntry.ReportDownloadRetryCount++;
+				reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
+				reportRequestService.Update(reportRequestEntry);
+				_logger.Warn($"AmazonMWS report download failed for {reportRequestEntry.RegionAndTypeComputed} Report download will be retried. ReportDownloadRetryCount is now : '{reportRequestEntry.ReportDownloadRetryCount}'.");
+			}
+			catch (Exception e)
 		    {
-				_logger.Error($"Request to MWS.GetReport failed! [Message: '{e.Message}']", e);
-			    return (null, null);
+			    reportRequestEntry.ReportDownloadRetryCount++;
+			    reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
+			    reportRequestService.Update(reportRequestEntry);
+				_logger.Warn($"AmazonMWS report download failed for {reportRequestEntry.RegionAndTypeComputed}!");
+		    }
+		    finally
+		    {
+			    reportRequestService.SaveChanges();
+		    }
+		}
+
+
+	    private bool IsAmazonErrorCodeFatal(string errorCode)
+	    {
+		    var fatalErrorCodes = new List<string>
+		    {
+			    "AccessToReportDenied",
+			    "InvalidReportId",
+			    "InvalidReportType",
+			    "InvalidRequest",
+			    "ReportNoLongerAvailable"
+		    };
+
+		    return fatalErrorCodes.Contains(errorCode);
+	    }
+	    private bool IsAmazonErrorCodeNonFatal(string errorCode)
+	    {
+		    var nonFatalErrorCodes = new List<string>
+		    {
+			    "ReportNotReady",
+			    "InvalidScheduleFrequency"
+		    };
+
+		    return nonFatalErrorCodes.Contains(errorCode) || !IsAmazonErrorCodeFatal(errorCode);
+	    }
+	    private void MarkEntriesAsDeleted(IReportRequestEntryService reportRequestService, IQueryable<ReportRequestEntry> entriesToMarkAsDeleted, List<int> entriesIdsAlreadyMarkedAsDeleted, string deleteReason)
+	    {
+		    foreach (var entry in entriesToMarkAsDeleted)
+		    {
+			    if (entriesIdsAlreadyMarkedAsDeleted.Exists(e => e == entry.Id)) continue;
+			    entriesIdsAlreadyMarkedAsDeleted.Add(entry.Id);
+			    reportRequestService.Delete(entry);
+			    _logger.Warn($"Report request entry {entry.RegionAndTypeComputed} deleted from queue. {deleteReason}");
+		    }
+	    }
+	    private bool IsMatchForRegionAndMerchantId(ReportRequestEntry e) => e.AmazonRegion == _region && e.MerchantId == _merchantId;
+	    private bool IsRequestRetryCountExceeded(ReportRequestEntry e) => e.ReportRequestRetryCount > _options.ReportRequestMaxRetryCount;
+	    private bool IsDownloadRetryCountExceeded(ReportRequestEntry e) => e.ReportDownloadRetryCount > _options.ReportDownloadMaxRetryCount;
+	    private bool IsProcessingRetryCountExceeded(ReportRequestEntry e) => e.ReportProcessRetryCount > _options.ReportProcessingMaxRetryCount;
+	    private bool IsCallbackInvocationRetryCountExceeded(ReportRequestEntry e) => e.InvokeCallbackRetryCount > _options.InvokeCallbackMaxRetryCount;
+	    private bool IsExpirationPeriodExceeded(ReportRequestEntry reportRequestEntry) =>
+		    (DateTime.Compare(reportRequestEntry.DateCreated, DateTime.UtcNow.Subtract(_options.ReportDownloadRequestEntryExpirationPeriod)) < 0);
+
+	    private class EntryToDelete : IEquatable<EntryToDelete>
+	    {
+		    public ReportRequestEntry Entry { get; set; }
+		    public DeleteReasonType DeleteReason { get; set; }
+
+		    public bool Equals(EntryToDelete other)
+		    {
+			    return other != null && this.Entry.Id == other.Entry.Id;
+		    }
+
+		    public override int GetHashCode()
+		    {
+			    unchecked
+			    {
+				    return Entry.Id;
+			    }
 		    }
 	    }
 
-	    public void RemoveFromQueue(IReportRequestCallbackService reportRequestService, ReportRequestEntry reportRequestEntry)
+	    private enum DeleteReasonType
 	    {
-			reportRequestService.Delete(reportRequestEntry);
-			reportRequestService.SaveChanges();
+		    ReportRequestMaxRetryCount,
+		    ReportDownloadMaxRetryCount,
+		    ReportProcessingMaxRetryCount,
+		    InvokeCallbackMaxRetryCount,
+		    ReportDownloadRequestEntryExpirationPeriod
 	    }
-
-	    public void MoveToRetryQueue(IReportRequestCallbackService reportRequestService, ReportRequestEntry reportRequestEntry)
-	    {
-			reportRequestEntry.RequestRetryCount++;
-
-			reportRequestService.Update(reportRequestEntry);
-			reportRequestService.SaveChanges();
-
-			_logger.Warn(
-				$"Moving {reportRequestEntry.RegionAndTypeComputed} to retry queue. Retry count is now '{reportRequestEntry.RequestRetryCount}'.");
-	    }
-    }
+	}
 }

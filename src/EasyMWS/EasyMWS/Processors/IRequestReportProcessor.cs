@@ -1,25 +1,17 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using MountainWarehouse.EasyMWS.Data;
-using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Services;
 
 namespace MountainWarehouse.EasyMWS.Processors
 {
 	internal interface IRequestReportProcessor
 	{
-		ReportRequestEntry GetNextFromQueueOfReportsToRequest(IReportRequestCallbackService reportRequestService);
-		string RequestReportFromAmazon(ReportRequestEntry reportRequestEntry);
-		void MoveToQueueOfReportsToGenerate(IReportRequestCallbackService reportRequestService, ReportRequestEntry reportRequestEntry, string reportRequestId);
-		IEnumerable<string> GetAllPendingReportFromQueue(IReportRequestCallbackService reportRequestService);
+		void RequestReportFromAmazon(IReportRequestEntryService reportRequestService, ReportRequestEntry reportRequestEntry);
 		List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> GetReportProcessingStatusesFromAmazon(IEnumerable<string> requestIdList, string merchant);
-		ReportRequestEntry GetNextFromQueueOfReportsToDownload(IReportRequestCallbackService reportRequestService);
-		(MemoryStream report, string md5Hash) DownloadGeneratedReportFromAmazon(ReportRequestEntry reportRequestEntry);
-		void RemoveFromQueue(IReportRequestCallbackService reportRequestService, ReportRequestEntry reportRequest);
-		void MoveToRetryQueue(IReportRequestCallbackService reportRequestService, ReportRequestEntry reportRequestEntry);
-		void QueueReportsAccordingToProcessingStatus(IReportRequestCallbackService reportRequestService,
+		void QueueReportsAccordingToProcessingStatus(IReportRequestEntryService reportRequestService,
 			List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> reportGenerationStatuses);
-		void CleanupReportRequests(IReportRequestCallbackService reportRequestService);
+		void DownloadGeneratedReportFromAmazon(IReportRequestEntryService reportRequestService, ReportRequestEntry reportRequestEntry);
+		void CleanupReportRequests(IReportRequestEntryService reportRequestService);
 	}
 }
 		
