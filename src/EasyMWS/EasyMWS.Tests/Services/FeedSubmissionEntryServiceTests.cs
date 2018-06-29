@@ -47,7 +47,7 @@ namespace EasyMWS.Tests.Services
 
 		    _feedSubmissionCallbackRepoMock = new Mock<IFeedSubmissionEntryRepository>();
 		    _feedSubmissionCallbackRepoMock.Setup(x => x.GetAll()).Returns(_feedSubmissionEntries.AsQueryable());
-		    _feedSubmissionEntryService = new FeedSubmissionEntryService(_feedSubmissionCallbackRepoMock.Object);
+		    _feedSubmissionEntryService = new FeedSubmissionEntryService(_feedSubmissionCallbackRepoMock.Object, _options);
 		}
 
 	    [Test]
@@ -103,7 +103,7 @@ namespace EasyMWS.Tests.Services
 		    _feedSubmissionEntries.Add(feedSubmissionWithNullFeedSubmissionId2);
 
 		    var feedSubmissionCallback =
-			    _feedSubmissionEntryService.GetNextFromQueueOfFeedsToSubmit(_options, _merchantId, _region);
+			    _feedSubmissionEntryService.GetNextFromQueueOfFeedsToSubmit(_merchantId, _region);
 
 		    Assert.IsNotNull(feedSubmissionCallback);
 		    Assert.AreEqual(feedSubmissionWithNullFeedSubmissionId1.Id, feedSubmissionCallback.Id);
@@ -155,7 +155,7 @@ namespace EasyMWS.Tests.Services
 			_feedSubmissionEntries.Add(feedSubmissionWithSameRegionAndMerchantId2);
 
 			var feedSubmissionCallback =
-				_feedSubmissionEntryService.GetNextFromQueueOfFeedsToSubmit(_options, _merchantId, AmazonRegion.Australia);
+				_feedSubmissionEntryService.GetNextFromQueueOfFeedsToSubmit(_merchantId, AmazonRegion.Australia);
 
 			Assert.IsNotNull(feedSubmissionCallback);
 			Assert.AreEqual(feedSubmissionWithSameRegionAndMerchantId1.Id, feedSubmissionCallback.Id);
@@ -231,7 +231,7 @@ namespace EasyMWS.Tests.Services
 			_feedSubmissionEntries.AddRange(data);
 
 			// Act
-			var listSubmittedFeeds = _feedSubmissionEntryService.GetIdsForSubmittedFeedsFromQueue(_options, _merchantId, _region);
+			var listSubmittedFeeds = _feedSubmissionEntryService.GetIdsForSubmittedFeedsFromQueue(_merchantId, _region);
 
 			// Assert
 			Assert.AreEqual(2, listSubmittedFeeds.Count());

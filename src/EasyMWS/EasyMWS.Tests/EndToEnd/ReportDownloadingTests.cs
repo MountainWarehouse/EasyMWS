@@ -45,7 +45,7 @@ namespace EasyMWS.Tests.EndToEnd
 			var reportProcessor =  new ReportProcessor(_region, _merchantId, _options, _mwsClientMock.Object, _loggerMock.Object);
 
 			_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", "test", "test", reportProcessor,
-				feedProcessorMock.Object, _loggerMock.Object, EasyMwsOptions.Defaults());
+				feedProcessorMock.Object, _loggerMock.Object, _options);
 		}
 
 		[TearDown]

@@ -16,12 +16,13 @@ namespace MountainWarehouse.EasyMWS.Services
 	{
 		private readonly IReportRequestEntryRepository _reportRequestEntryRepository;
 		private readonly IEasyMwsLogger _logger;
+		private readonly EasyMwsOptions _options;
 
 		internal ReportRequestEntryService(IReportRequestEntryRepository reportRequestEntryRepository, EasyMwsOptions options = null, IEasyMwsLogger logger = null) : this(options, logger)
 			=> (_reportRequestEntryRepository) = (reportRequestEntryRepository);
 
-		internal ReportRequestEntryService(EasyMwsOptions options = null, IEasyMwsLogger logger = null) => (_reportRequestEntryRepository, _logger) =
-			(_reportRequestEntryRepository ?? new ReportRequestEntryRepository(options?.LocalDbConnectionStringOverride), logger);
+		internal ReportRequestEntryService(EasyMwsOptions options = null, IEasyMwsLogger logger = null) => (_reportRequestEntryRepository, _logger, _options) =
+			(_reportRequestEntryRepository ?? new ReportRequestEntryRepository(options?.LocalDbConnectionStringOverride), logger, options);
 
 		public void Create(ReportRequestEntry entry) => _reportRequestEntryRepository.Create(entry);
 		public async Task CreateAsync(ReportRequestEntry entry) => await _reportRequestEntryRepository.CreateAsync(entry);
@@ -60,32 +61,43 @@ namespace MountainWarehouse.EasyMWS.Services
 		public ReportRequestEntry LastOrDefault() => _reportRequestEntryRepository.GetAll().OrderByDescending(x => x.Id).FirstOrDefault();
 		public ReportRequestEntry LastOrDefault(Expression<Func<ReportRequestEntry, bool>> predicate) => _reportRequestEntryRepository.GetAll().OrderByDescending(x => x.Id).FirstOrDefault(predicate);
 
-		public ReportRequestEntry GetNextFromQueueOfReportsToRequest(EasyMwsOptions options, string merchantId, AmazonRegion region)
+		public ReportRequestEntry GetNextFromQueueOfReportsToRequest(string merchantId, AmazonRegion region)
 		=> FirstOrDefault(rre => rre.AmazonRegion == region && rre.MerchantId == merchantId
 										   && rre.RequestReportId == null
-					                       && RetryIntervalHelper.IsRetryPeriodAwaited(rre.LastAmazonRequestDate, rre.ReportRequestRetryCount,
-						                       options.ReportRequestRetryInitialDelay, options.ReportRequestRetryInterval,
-						                       options.ReportRequestRetryType));
-		
+					                       && IsReportRequestRetryPeriodAwaited(rre));
 
-		public ReportRequestEntry GetNextFromQueueOfReportsToDownload( EasyMwsOptions options, string merchantId, AmazonRegion region)
+		public ReportRequestEntry GetNextFromQueueOfReportsToDownload(string merchantId, AmazonRegion region)
 		=> FirstOrDefault(rre => rre.AmazonRegion == region && rre.MerchantId == merchantId
 						   && rre.RequestReportId != null && rre.GeneratedReportId != null && rre.Details == null
-					       && RetryIntervalHelper.IsRetryPeriodAwaited(rre.LastAmazonRequestDate, rre.ReportDownloadRetryCount,
-						       options.ReportDownloadRetryInitialDelay, options.ReportDownloadRetryInterval,
-						       options.ReportDownloadRetryType));
+					       && IsReportDownloadRetryPeriodAwaited(rre));
 
 		public IEnumerable<string> GetAllPendingReportFromQueue(string merchantId, AmazonRegion region)
 		=> Where(rre => rre.AmazonRegion == region && rre.MerchantId == merchantId
 								   && rre.RequestReportId != null && rre.GeneratedReportId == null)
 					.Select(r => r.RequestReportId);
 
-		public IEnumerable<ReportRequestEntry> GetAllFromQueueOfReportsReadyForCallback(EasyMwsOptions options, string merchantId, AmazonRegion region)
+		public IEnumerable<ReportRequestEntry> GetAllFromQueueOfReportsReadyForCallback(string merchantId, AmazonRegion region)
 		=> Where(rre => rre.AmazonRegion == region && rre.MerchantId == merchantId
 					       && rre.Details != null
-					       && RetryIntervalHelper.IsRetryPeriodAwaited(rre.LastAmazonRequestDate, rre.InvokeCallbackRetryCount,
-						       options.InvokeCallbackRetryInterval, options.InvokeCallbackRetryInterval,
-						       options.InvokeCallbackRetryPeriodType));
+					       && IsReportCallbackRetryPeriodAwaited(rre));
+
+		private bool IsReportRequestRetryPeriodAwaited(ReportRequestEntry reportEntry)
+			=> reportEntry.ReportRequestRetryCount == 0 || (reportEntry.ReportRequestRetryCount > 0
+			&& RetryIntervalHelper.IsRetryPeriodAwaited(reportEntry.LastAmazonRequestDate, reportEntry.ReportRequestRetryCount,
+				   _options.ReportRequestRetryInitialDelay, _options.ReportRequestRetryInterval,
+				   _options.ReportRequestRetryType));
+
+		private bool IsReportDownloadRetryPeriodAwaited(ReportRequestEntry reportEntry)
+			=> reportEntry.ReportDownloadRetryCount == 0 || (reportEntry.ReportDownloadRetryCount > 0
+			&& RetryIntervalHelper.IsRetryPeriodAwaited(reportEntry.LastAmazonRequestDate, reportEntry.ReportDownloadRetryCount,
+				   _options.ReportDownloadRetryInitialDelay, _options.ReportDownloadRetryInterval,
+				   _options.ReportDownloadRetryType));
+
+		private bool IsReportCallbackRetryPeriodAwaited(ReportRequestEntry reportEntry)
+			=> reportEntry.InvokeCallbackRetryCount == 0 || (reportEntry.InvokeCallbackRetryCount > 0
+			   && RetryIntervalHelper.IsRetryPeriodAwaited(reportEntry.LastAmazonRequestDate, reportEntry.InvokeCallbackRetryCount,
+				   _options.InvokeCallbackRetryInterval, _options.InvokeCallbackRetryInterval,
+				   _options.InvokeCallbackRetryPeriodType));
 
 		public void Dispose()
 		{

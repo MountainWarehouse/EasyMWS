@@ -63,7 +63,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void DownloadNextReportInQueueFromAmazon(IReportRequestEntryService reportRequestService)
 		{
-			var reportToDownload = reportRequestService.GetNextFromQueueOfReportsToDownload(_options, _merchantId, _region);
+			var reportToDownload = reportRequestService.GetNextFromQueueOfReportsToDownload(_merchantId, _region);
 			if (reportToDownload == null) return;
 
 			_requestReportProcessor.DownloadGeneratedReportFromAmazon(reportRequestService, reportToDownload);
@@ -71,7 +71,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		private void PerformCallbackForPreviouslyDownloadedReports(IReportRequestEntryService reportRequestService)
 		{
-			var reportsReadyForCallback = reportRequestService.GetAllFromQueueOfReportsReadyForCallback(_options, _merchantId, _region);
+			var reportsReadyForCallback = reportRequestService.GetAllFromQueueOfReportsReadyForCallback(_merchantId, _region);
 
 			foreach (var reportEntry in reportsReadyForCallback)
 			{
@@ -153,7 +153,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void RequestNextReportInQueueFromAmazon(IReportRequestEntryService reportRequestService)
 		{
-			var reportRequest = reportRequestService.GetNextFromQueueOfReportsToRequest(_options, _merchantId, _region);
+			var reportRequest = reportRequestService.GetNextFromQueueOfReportsToRequest(_merchantId, _region);
 
 			if (reportRequest == null) return;
 
