@@ -62,8 +62,8 @@ namespace MountainWarehouse.EasyMWS.Services
 
 		public FeedSubmissionEntry GetNextFromQueueOfFeedsToSubmit(EasyMwsOptions options, string merchantId, AmazonRegion region) 
 			=> FirstOrDefault(fse => fse.AmazonRegion == region && fse.MerchantId == merchantId
-										&& IsFeedInASubmitFeedQueue(fse)
-				                        && IsFeedReadyForSubmission(options, fse));
+										&& fse.FeedSubmissionId == null
+				                        && IsFeedSubmissionRetryPeriodAwaited(options, fse));
 
 
 		public IEnumerable<string> GetIdsForSubmittedFeedsFromQueue(EasyMwsOptions options, string merchantId, AmazonRegion region) 
@@ -74,40 +74,31 @@ namespace MountainWarehouse.EasyMWS.Services
 		public FeedSubmissionEntry GetNextFromQueueOfProcessingCompleteFeeds(EasyMwsOptions options, string merchantId, AmazonRegion region)
 			=> FirstOrDefault(fse => fse.AmazonRegion == region && fse.MerchantId == merchantId
 						 && fse.FeedSubmissionId != null && fse.IsProcessingComplete == true
-				         && IsReadyForRequestingSubmissionReport(options, fse));
+				         && IsProcessingReportDownloadRetryPeriodAwaited(options, fse));
 
 		public IEnumerable<FeedSubmissionEntry> GetAllFromQueueOfFeedsReadyForCallback(EasyMwsOptions options, string merchantId, AmazonRegion region)
 			=> Where(fse => fse.AmazonRegion == region && fse.MerchantId == merchantId 
-						&& fse.Details != null && fse.Details.FeedSubmissionReport != null);
+						&& fse.Details != null && fse.Details.FeedSubmissionReport != null
+						&& IsFeedCallbackRetryPeriodAwaited(options, fse));
 
-		private bool IsFeedReadyForSubmission(EasyMwsOptions options, FeedSubmissionEntry feedSubmission)
-		{
-			var isInRetryQueueAndReadyForRetry = feedSubmission.FeedSubmissionRetryCount > 0
-			                                     && RetryIntervalHelper.IsRetryPeriodAwaited(feedSubmission.LastSubmitted,
-				                                     feedSubmission.FeedSubmissionRetryCount, options.FeedSubmissionRetryInitialDelay,
-				                                     options.FeedSubmissionRetryInterval, options.FeedSubmissionRetryType);
+		private bool IsFeedCallbackRetryPeriodAwaited(EasyMwsOptions options, FeedSubmissionEntry feedSubmission)
+			=> feedSubmission.InvokeCallbackRetryCount == 0 || (feedSubmission.InvokeCallbackRetryCount > 0 
+			&& RetryIntervalHelper.IsRetryPeriodAwaited(feedSubmission.LastSubmitted, feedSubmission.InvokeCallbackRetryCount,
+				options.InvokeCallbackRetryInterval, options.InvokeCallbackRetryInterval,
+				options.InvokeCallbackRetryPeriodType));
 
-			var isNotInRetryState = feedSubmission.FeedSubmissionRetryCount == 0;
+		private bool IsFeedSubmissionRetryPeriodAwaited(EasyMwsOptions options, FeedSubmissionEntry feedSubmission)
+		=> feedSubmission.FeedSubmissionRetryCount == 0 || (feedSubmission.FeedSubmissionRetryCount > 0
+			&& RetryIntervalHelper.IsRetryPeriodAwaited(feedSubmission.LastSubmitted,
+				feedSubmission.FeedSubmissionRetryCount, options.FeedSubmissionRetryInitialDelay,
+				options.FeedSubmissionRetryInterval, options.FeedSubmissionRetryType));
+		
 
-			return isInRetryQueueAndReadyForRetry || isNotInRetryState;
-		}
-
-		private bool IsReadyForRequestingSubmissionReport(EasyMwsOptions options, FeedSubmissionEntry feedSubmission)
-		{
-			var isInRetryQueueAndReadyForRetry = feedSubmission.ReportDownloadRetryCount > 0
-			                                     && RetryIntervalHelper.IsRetryPeriodAwaited(feedSubmission.LastSubmitted,
-				                                     feedSubmission.ReportDownloadRetryCount, options.ReportDownloadRetryInitialDelay,
-				                                     options.ReportDownloadRetryInterval, options.ReportDownloadRetryType);
-
-			var isNotInRetryState = feedSubmission.ReportDownloadRetryCount == 0;
-
-			return isInRetryQueueAndReadyForRetry || isNotInRetryState;
-		}
-
-		private bool IsFeedInASubmitFeedQueue(FeedSubmissionEntry feedSubmission)
-		{
-			return feedSubmission.FeedSubmissionId == null;
-		}
+		private bool IsProcessingReportDownloadRetryPeriodAwaited(EasyMwsOptions options, FeedSubmissionEntry feedSubmission)
+		=> feedSubmission.ReportDownloadRetryCount == 0 || (feedSubmission.ReportDownloadRetryCount > 0
+			&& RetryIntervalHelper.IsRetryPeriodAwaited(feedSubmission.LastSubmitted,
+				feedSubmission.ReportDownloadRetryCount, options.ReportDownloadRetryInitialDelay,
+				options.ReportDownloadRetryInterval, options.ReportDownloadRetryType));
 
 		public void Dispose()
 		{
