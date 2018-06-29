@@ -134,6 +134,16 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public List<(string FeedSubmissionId, string FeedProcessingStatus)> RequestFeedSubmissionStatusesFromAmazon(IEnumerable<string> feedSubmissionIdList, string merchant)
 		{
+			List<(string FeedSubmissionId, string IsProcessingComplete)> GetProcessingStatusesPerSubmissionIdFromResponse(GetFeedSubmissionListResponse response)
+			{
+				var responseInfo = new List<(string FeedSubmissionId, string IsProcessingComplete)>();
+				foreach (var feedSubmissionInfo in response.GetFeedSubmissionListResult.FeedSubmissionInfo)
+				{
+					responseInfo.Add((feedSubmissionInfo.FeedSubmissionId, feedSubmissionInfo.FeedProcessingStatus));
+				}
+				return responseInfo;
+			}
+
 			_logger.Info($"Attempting to request feed submission statuses for all feeds in queue.");
 
 			var request = new GetFeedSubmissionListRequest() {FeedSubmissionIdList = new IdList(), Merchant = merchant};
@@ -147,21 +157,15 @@ namespace MountainWarehouse.EasyMWS.Processors
 				var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
 				_logger.Info($"AmazonMWS request for feed submission statuses succeeded.", new RequestInfo(timestamp, requestId));
 
-				var responseInfo = new List<(string FeedSubmissionId, string IsProcessingComplete)>();
-
 				if (response?.GetFeedSubmissionListResult?.FeedSubmissionInfo != null)
 				{
-					foreach (var feedSubmissionInfo in response.GetFeedSubmissionListResult.FeedSubmissionInfo)
-					{
-						responseInfo.Add((feedSubmissionInfo.FeedSubmissionId, feedSubmissionInfo.FeedProcessingStatus));
-					}
+					return GetProcessingStatusesPerSubmissionIdFromResponse(response);
 				}
 				else
 				{
 					_logger.Warn("AmazonMWS GetFeedSubmissionList response does not contain any results. The operation will be executed again at the next poll request.");
+					return null;
 				}
-				
-				return responseInfo;
 			}
 			catch (MarketplaceWebServiceException e)
 			{
@@ -177,6 +181,8 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void QueueFeedsAccordingToProcessingStatus(IFeedSubmissionEntryService feedSubmissionService, List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses)
 		{
+			if(feedProcessingStatuses == null || !feedProcessingStatuses.Any()) return;
+
 			foreach (var feedSubmissionInfo in feedProcessingStatuses)
 			{
 				var feedSubmissionEntry = feedSubmissionService.FirstOrDefault(fsc => fsc.FeedSubmissionId == feedSubmissionInfo.FeedSubmissionId);
