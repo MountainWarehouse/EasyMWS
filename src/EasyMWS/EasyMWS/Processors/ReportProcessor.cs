@@ -1,11 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Runtime.CompilerServices;
 using MountainWarehouse.EasyMWS.CallbackLogic;
-using MountainWarehouse.EasyMWS.Client;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
@@ -48,10 +46,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_requestReportProcessor = _requestReportProcessor ?? new RequestReportProcessor(_region, _merchantId, mwsClient, _logger, _options);
 		}
 
-
-		public void PollReports(IReportRequestCallbackService reportRequestService)
+		public void PollReports(IReportRequestEntryService reportRequestService)
 		{
-			_logger.Info("EasyMwsClient: Executing polling action for report requests.");
+			_logger.Info("Executing polling action for report requests.");
 
 			_requestReportProcessor.CleanupReportRequests(reportRequestService);
 
@@ -64,35 +61,44 @@ namespace MountainWarehouse.EasyMWS.Processors
 			PerformCallbackForPreviouslyDownloadedReports(reportRequestService);
 		}
 
-		private void PerformCallbackForPreviouslyDownloadedReports(IReportRequestCallbackService reportRequestService)
+		public void DownloadNextReportInQueueFromAmazon(IReportRequestEntryService reportRequestService)
 		{
-			var previouslyDownloadedReports = reportRequestService.GetAll()
-				.Where(rre => rre.AmazonRegion == _region && rre.MerchantId == _merchantId && rre.Details != null);
+			var reportToDownload = reportRequestService.GetNextFromQueueOfReportsToDownload(_merchantId, _region);
+			if (reportToDownload == null) return;
 
-			foreach (var reportEntry in previouslyDownloadedReports)
+			_requestReportProcessor.DownloadGeneratedReportFromAmazon(reportRequestService, reportToDownload);
+		}
+
+		private void PerformCallbackForPreviouslyDownloadedReports(IReportRequestEntryService reportRequestService)
+		{
+			var reportsReadyForCallback = reportRequestService.GetAllFromQueueOfReportsReadyForCallback(_merchantId, _region);
+
+			foreach (var reportEntry in reportsReadyForCallback)
 			{
 				try
 				{
-					ExecuteMethodCallback(reportEntry);
+					_logger.Info($"Attempting to perform method callback for the next downloaded report in queue : {reportEntry.RegionAndTypeComputed}.");
+					var callback = new Callback(reportEntry.TypeName, reportEntry.MethodName, reportEntry.Data, reportEntry.DataTypeName);
+					var unzippedReport = ZipHelper.ExtractArchivedSingleFileToStream(reportEntry.Details?.ReportContent);
+					_callbackActivator.CallMethod(callback, unzippedReport);
 					reportRequestService.Delete(reportEntry);
 				}
-				catch (SqlException e)
+				catch(SqlException e)
 				{
-					_logger.Error(e.Message, e);
+					_logger.Error($"Method callback failed for {reportEntry.RegionAndTypeComputed} due to an internal error '{e.Message}'. The callback will be retried at the next poll request.", e);
 				}
 				catch (Exception e)
 				{
-					reportEntry.RequestRetryCount++;
+					_logger.Error($"Method callback failed for {reportEntry.RegionAndTypeComputed}. Current retry count is :{reportEntry.InvokeCallbackRetryCount}. {e.Message}", e);
+					reportEntry.InvokeCallbackRetryCount++;
 					reportRequestService.Update(reportEntry);
-					_logger.Error(
-						$"Method callback failed for {reportEntry.RegionAndTypeComputed}. Placing report request entry in retry queue. Current retry count is :{reportEntry.RequestRetryCount}. {e.Message}", e);
 				}
 			}
 
 			reportRequestService.SaveChanges();
 		}
 
-		public void QueueReport(IReportRequestCallbackService reportRequestService, ReportRequestPropertiesContainer propertiesContainer, Action<Stream, object> callbackMethod, object callbackData)
+		public void QueueReport(IReportRequestEntryService reportRequestService, ReportRequestPropertiesContainer propertiesContainer, Action<Stream, object> callbackMethod, object callbackData)
 		{
 			try
 			{
@@ -109,12 +115,15 @@ namespace MountainWarehouse.EasyMWS.Processors
 				{
 					AmazonRegion = _region,
 					MerchantId = _merchantId,
-					LastRequested = DateTime.MinValue,
+					LastAmazonRequestDate = DateTime.MinValue,
 					DateCreated = DateTime.UtcNow,
 					ContentUpdateFrequency = propertiesContainer.UpdateFrequency,
 					RequestReportId = null,
 					GeneratedReportId = null,
-					RequestRetryCount = 0,
+					ReportRequestRetryCount = 0,
+					ReportDownloadRetryCount = 0,
+					ReportProcessRetryCount = 0,
+					InvokeCallbackRetryCount = 0,
 					ReportType = propertiesContainer.ReportType
 				};
 
@@ -135,46 +144,25 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public void PurgeQueue(IReportRequestCallbackService reportRequestService)
+		public void PurgeQueue(IReportRequestEntryService reportRequestService)
 		{
 			var entriesToDelete = reportRequestService.GetAll().Where(rre => rre.AmazonRegion == _region && rre.MerchantId == _merchantId);
 			reportRequestService.DeleteRange(entriesToDelete);
 			reportRequestService.SaveChanges();
 		}
 
-		public void RequestNextReportInQueueFromAmazon(IReportRequestCallbackService reportRequestService)
+		public void RequestNextReportInQueueFromAmazon(IReportRequestEntryService reportRequestService)
 		{
-			var reportRequest = _requestReportProcessor.GetNextFromQueueOfReportsToRequest(reportRequestService);
+			var reportRequest = reportRequestService.GetNextFromQueueOfReportsToRequest(_merchantId, _region);
 
 			if (reportRequest == null) return;
 
-			var reportRequestId = _requestReportProcessor.RequestReportFromAmazon(reportRequest);
-
-			reportRequest.LastRequested = DateTime.UtcNow;
-			reportRequestService.Update(reportRequest);
-			reportRequestService.SaveChanges();
-
-			if (string.IsNullOrEmpty(reportRequestId))
-			{
-				_requestReportProcessor.MoveToRetryQueue(reportRequestService, reportRequest);
-				_logger.Warn($"AmazonMWS request failed for {reportRequest.RegionAndTypeComputed}. Reason: ReportRequestId not generated by Amazon. Placing report request in retry queue. Retry count : {reportRequest.RequestRetryCount}");
-			}
-			else if (reportRequestId == HttpStatusCode.BadRequest.ToString())
-			{
-				_requestReportProcessor.RemoveFromQueue(reportRequestService, reportRequest);
-				_logger.Warn($"AmazonMWS request failed for {reportRequest.RegionAndTypeComputed}. The report request was removed from queue.");
-			}
-			else
-			{
-				_requestReportProcessor.MoveToQueueOfReportsToGenerate(reportRequestService, reportRequest, reportRequestId);
-				_logger.Info(
-					$"AmazonMWS request succeeded for {reportRequest.RegionAndTypeComputed}. ReportRequestId:'{reportRequestId}'");
-			}
+			_requestReportProcessor.RequestReportFromAmazon(reportRequestService, reportRequest);
 		}
 
-		public void RequestReportStatusesFromAmazon(IReportRequestCallbackService reportRequestService)
+		public void RequestReportStatusesFromAmazon(IReportRequestEntryService reportRequestService)
 		{
-			var pendingReportsRequestIds = _requestReportProcessor.GetAllPendingReportFromQueue(reportRequestService).ToList();
+			var pendingReportsRequestIds = reportRequestService.GetAllPendingReportFromQueue(_merchantId, _region).ToList();
 
 			if (!pendingReportsRequestIds.Any()) return;
 
@@ -185,40 +173,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				_requestReportProcessor.QueueReportsAccordingToProcessingStatus(reportRequestService, reportRequestStatuses);
 			}
-		}
-
-		public void DownloadNextReportInQueueFromAmazon(IReportRequestCallbackService reportRequestService)
-		{
-			var reportToDownload = _requestReportProcessor.GetNextFromQueueOfReportsToDownload(reportRequestService);
-			if (reportToDownload == null) return;
-			
-			var stream = _requestReportProcessor.DownloadGeneratedReportFromAmazon(reportToDownload);
-			if (stream == null)
-			{
-				_logger.Warn($"AmazonMWS report download failed for {reportToDownload.RegionAndTypeComputed}");
-				return;
-			}
-
-			using (var streamReader = new StreamReader(stream))
-			{
-				var zippedReport = ZipHelper.CreateArchiveFromContent(streamReader.ReadToEnd());
-				reportToDownload.Details = new ReportRequestDetails { ReportContent = zippedReport };
-			}
-			
-			reportRequestService.Update(reportToDownload);
-			reportRequestService.SaveChanges();
-		}
-
-		public void ExecuteMethodCallback(ReportRequestEntry reportRequest)
-		{
-			_logger.Info(
-				$"Attempting to perform method callback for the next downloaded report in queue : {reportRequest.RegionAndTypeComputed}.");
-
-			var callback = new Callback(reportRequest.TypeName, reportRequest.MethodName,
-				reportRequest.Data, reportRequest.DataTypeName);
-
-			var unzippedReport = ZipHelper.ExtractArchivedSingleFileToStream(reportRequest.Details?.ReportContent);
-			_callbackActivator.CallMethod(callback, unzippedReport);
 		}
 	}
 }

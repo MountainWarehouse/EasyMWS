@@ -14,9 +14,8 @@ namespace EasyMWS.Tests.Logging
     {
 	    private string DeserializeInternalMessage(string serializedMessage)
 	    {
-		    var deserializedMessage = ((JObject)JsonConvert.DeserializeObject(serializedMessage))["Message"];
-		    return ((JValue) deserializedMessage).Value.ToString();
-
+		    var deserializedMessage = ((JObject)JsonConvert.DeserializeObject(serializedMessage));
+		    return (string)((JContainer)deserializedMessage)["Message"];
 	    }
 
 	    [Test]
@@ -128,7 +127,7 @@ namespace EasyMWS.Tests.Logging
 
 		    var actualLogMessage = DeserializeInternalMessage(logAvailableArgs.Message);
 
-		    Assert.AreEqual("testMessage_ActionThatLogsStandardException", actualLogMessage);
+		    Assert.AreEqual("testMessage_ActionThatLogsStandardException test exception message", actualLogMessage);
 		    Assert.AreEqual(LogLevel.Error, logAvailableArgs.Level);
 		    Assert.IsFalse(logAvailableArgs.HasRequestInfo);
 		    Assert.IsNull(logAvailableArgs.RequestInfo);

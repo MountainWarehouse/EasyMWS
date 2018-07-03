@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net;
 using Moq;
 using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.CallbackLogic;
@@ -24,7 +27,7 @@ namespace EasyMWS.Tests.Processors
 		private IFeedSubmissionProcessor _feedSubmissionProcessor;
 		private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
 		private EasyMwsOptions _easyMwsOptions;
-		private Mock<IFeedSubmissionCallbackService> _feedSubmissionCallbackServiceMock;
+		private Mock<IFeedSubmissionEntryService> _feedSubmissionServiceMock;
 		private List<FeedSubmissionEntry> _feedSubmissionCallbacks;
 		private string _merchantId = "TestMerchantId";
 		private Mock<IEasyMwsLogger> _loggerMock;
@@ -35,7 +38,7 @@ namespace EasyMWS.Tests.Processors
 		{
 			_easyMwsOptions = EasyMwsOptions.Defaults();
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
-			_feedSubmissionCallbackServiceMock = new Mock<IFeedSubmissionCallbackService>();
+			_feedSubmissionServiceMock = new Mock<IFeedSubmissionEntryService>();
 			_loggerMock = new Mock<IEasyMwsLogger>();
 			_feedSubmissionProcessor = new FeedSubmissionProcessor(_region, _merchantId,_marketplaceWebServiceClientMock.Object, _loggerMock.Object, _easyMwsOptions);
 
@@ -52,360 +55,49 @@ namespace EasyMWS.Tests.Processors
 				}
 			};
 
-			_feedSubmissionCallbackServiceMock.Setup(x => x.GetAll()).Returns(_feedSubmissionCallbacks.AsQueryable());
+			_feedSubmissionServiceMock.Setup(x => x.GetAll()).Returns(_feedSubmissionCallbacks.AsQueryable());
 
-			_feedSubmissionCallbackServiceMock.Setup(x => x.Where(It.IsAny<Expression<Func<FeedSubmissionEntry, bool>>>()))
+			_feedSubmissionServiceMock.Setup(x => x.Where(It.IsAny<Expression<Func<FeedSubmissionEntry, bool>>>()))
 				.Returns((Expression<Func<FeedSubmissionEntry, bool>> e) => _feedSubmissionCallbacks.AsQueryable().Where(e));
 
-			_feedSubmissionCallbackServiceMock
+			_feedSubmissionServiceMock
 				.Setup(x => x.FirstOrDefault(It.IsAny<Expression<Func<FeedSubmissionEntry, bool>>>()))
 				.Returns((Expression<Func<FeedSubmissionEntry, bool>> e) =>
 					_feedSubmissionCallbacks.AsQueryable().FirstOrDefault(e));
 		}
 
 		[Test]
-		public void
-			GetNextFromQueueOfFeedsToSubmit_ReturnsFirstFeedSubmissionFromQueueWithNullFeedSubmissionId_AndSkipsEntriesWithNonNullFeedSubmissionId()
-		{
-			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
-			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
-
-			var feedSubmissionWithNonNullFeedSubmissionId1 = new FeedSubmissionEntry(serializedPropertiesContainer)
-			{
-				AmazonRegion = AmazonRegion.Europe,
-				MerchantId = _merchantId,
-				Id = 2,
-				FeedSubmissionId = "testSubmissionId2",
-				SubmissionRetryCount = 0
-			};
-			var feedSubmissionWithNullFeedSubmissionId1 = new FeedSubmissionEntry(serializedPropertiesContainer)
-			{
-				AmazonRegion = AmazonRegion.Europe,
-				MerchantId = _merchantId,
-				Id = 3,
-				FeedSubmissionId = null,
-				SubmissionRetryCount = 0
-			};
-			var feedSubmissionWithNullFeedSubmissionId2 = new FeedSubmissionEntry(serializedPropertiesContainer)
-			{
-				AmazonRegion = AmazonRegion.Europe,
-				MerchantId = _merchantId,
-				Id = 4,
-				FeedSubmissionId = null,
-				SubmissionRetryCount = 0
-			};
-
-
-			_feedSubmissionCallbacks.Add(feedSubmissionWithNonNullFeedSubmissionId1);
-			_feedSubmissionCallbacks.Add(feedSubmissionWithNullFeedSubmissionId1);
-			_feedSubmissionCallbacks.Add(feedSubmissionWithNullFeedSubmissionId2);
-
-			var feedSubmissionCallback =
-				_feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit(_feedSubmissionCallbackServiceMock.Object);
-
-			Assert.IsNotNull(feedSubmissionCallback);
-			Assert.AreEqual(feedSubmissionWithNullFeedSubmissionId1.Id, feedSubmissionCallback.Id);
-		}
-
-		[Test]
-		public void GetNextFromQueueOfFeedsToSubmit_ReturnsFirstFeedSubmissionFromQueueForGivenRegionAndMerchantId()
-		{
-			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
-			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
-			var merchantId1 = "test merchant id 1";
-			var feedSubmissionWithDifferentRegion = new FeedSubmissionEntry(serializedPropertiesContainer)
-			{
-				AmazonRegion = AmazonRegion.Europe,
-				MerchantId = merchantId1,
-				Id = 2,
-				FeedSubmissionId = null,
-				SubmissionRetryCount = 0
-			};
-			var feedSubmissionWithSameRegionButDifferentMerchantId = new FeedSubmissionEntry(serializedPropertiesContainer)
-			{
-				AmazonRegion = AmazonRegion.Australia,
-				MerchantId = merchantId1,
-				Id = 2,
-				FeedSubmissionId = null,
-				SubmissionRetryCount = 0
-			};
-			var feedSubmissionWithSameRegionAndMerchantId1 = new FeedSubmissionEntry(serializedPropertiesContainer)
-			{
-				AmazonRegion = AmazonRegion.Australia,
-				MerchantId = _merchantId,
-				Id = 3,
-				FeedSubmissionId = null,
-				SubmissionRetryCount = 0
-			};
-			var feedSubmissionWithSameRegionAndMerchantId2 = new FeedSubmissionEntry(serializedPropertiesContainer)
-			{
-				AmazonRegion = AmazonRegion.Australia,
-				MerchantId = _merchantId,
-				Id = 4,
-				FeedSubmissionId = null,
-				SubmissionRetryCount = 0
-			};
-
-
-			_feedSubmissionCallbacks.Add(feedSubmissionWithDifferentRegion);
-			_feedSubmissionCallbacks.Add(feedSubmissionWithSameRegionButDifferentMerchantId);
-			_feedSubmissionCallbacks.Add(feedSubmissionWithSameRegionAndMerchantId1);
-			_feedSubmissionCallbacks.Add(feedSubmissionWithSameRegionAndMerchantId2);
-
-			_feedSubmissionProcessor = new FeedSubmissionProcessor(AmazonRegion.Australia, _merchantId, _marketplaceWebServiceClientMock.Object, _loggerMock.Object, _easyMwsOptions);
-
-			var feedSubmissionCallback =
-				_feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit(_feedSubmissionCallbackServiceMock.Object);
-
-			Assert.IsNotNull(feedSubmissionCallback);
-			Assert.AreEqual(feedSubmissionWithSameRegionAndMerchantId1.Id, feedSubmissionCallback.Id);
-		}
-
-		[Test]
-		public void GetNextFromQueueOfFeedsToSubmit_CalledWithNullMerchantId_ReturnsNull()
-		{
-			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
-			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
-			var testMerchantId = "test merchant id";
-			var feedSubmissionWithNonNullFeedSubmissionId1 = new FeedSubmissionEntry(serializedPropertiesContainer)
-			{
-				AmazonRegion = AmazonRegion.Europe,
-				MerchantId = testMerchantId,
-				Id = 2,
-				FeedSubmissionId = "testSubmissionId2",
-				SubmissionRetryCount = 0
-			};
-			var feedSubmissionWithNullFeedSubmissionId1 = new FeedSubmissionEntry(serializedPropertiesContainer)
-			{
-				AmazonRegion = AmazonRegion.Europe,
-				MerchantId = testMerchantId,
-				Id = 3,
-				FeedSubmissionId = null,
-				SubmissionRetryCount = 0
-			};
-			var feedSubmissionWithNullFeedSubmissionId2 = new FeedSubmissionEntry(serializedPropertiesContainer)
-			{
-				AmazonRegion = AmazonRegion.Europe,
-				MerchantId = testMerchantId,
-				Id = 4,
-				FeedSubmissionId = null,
-				SubmissionRetryCount = 0
-			};
-			var feedSubmissionWithNullMerchant = new FeedSubmissionEntry(serializedPropertiesContainer)
-			{
-				AmazonRegion = AmazonRegion.Europe,
-				MerchantId = null,
-				Id = 5,
-				FeedSubmissionId = null,
-				SubmissionRetryCount = 0
-			};
-
-
-			_feedSubmissionCallbacks.Add(feedSubmissionWithNonNullFeedSubmissionId1);
-			_feedSubmissionCallbacks.Add(feedSubmissionWithNullFeedSubmissionId1);
-			_feedSubmissionCallbacks.Add(feedSubmissionWithNullFeedSubmissionId2);
-			_feedSubmissionCallbacks.Add(feedSubmissionWithNullMerchant);
-
-			_feedSubmissionProcessor = new FeedSubmissionProcessor(_region, null, _marketplaceWebServiceClientMock.Object, _loggerMock.Object, _easyMwsOptions);
-
-			var feedSubmissionCallback =
-				_feedSubmissionProcessor.GetNextFromQueueOfFeedsToSubmit(It.IsAny<IFeedSubmissionCallbackService>());
-
-			Assert.IsNull(feedSubmissionCallback);
-		}
-
-		[Test]
 		public void SubmitFeedToAmazon_CalledWithNullFeedSubmissionCallback_ThrowsArgumentNullException()
 		{
 			Assert.Throws<ArgumentNullException>(() =>
-				_feedSubmissionProcessor.SubmitFeedToAmazon(null));
+				_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionServiceMock.Object, null));
+		}
+
+		[Test]
+		public void SubmitFeedToAmazon_CalledWithNullFeedContent_ThrowsArgumentNullException()
+		{
+			Assert.Throws<ArgumentNullException>(() =>
+				_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry{Details = new FeedSubmissionDetails{FeedContent = null}}));
+		}
+
+		[Test]
+		public void SubmitFeedToAmazon_CalledWithNullFeedSubmissionData_ThrowsArgumentNullException()
+		{
+			Assert.Throws<ArgumentNullException>(() =>
+				_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry { Details = new FeedSubmissionDetails { FeedContent = new byte[1] }, FeedSubmissionData = null}));
+		}
+
+		[Test]
+		public void SubmitFeedToAmazon_CalledWithNullFeedType_ThrowsArgumentNullException()
+		{
+			Assert.Throws<ArgumentException>(() =>
+				_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry { Details = new FeedSubmissionDetails { FeedContent = new byte[1] }, FeedSubmissionData = "", FeedType = null}));
 		}
 
 		[Test]
 		public void RequestReportFromAmazon_CalledWithReportRequestCallbackWithNullFeedSubmissionData_ThrowsArgumentException()
 		{
-			Assert.Throws<ArgumentException>(() => _feedSubmissionProcessor.SubmitFeedToAmazon(new FeedSubmissionEntry(null)));
-		}
-
-		[Test]
-		public void MoveToQueueOfSubmittedFeeds_UpdatesFeedSubmissionId_OnTheCallback()
-		{
-			var testFeedSubmissionId = "testFeedSubmissionId";
-
-			_feedSubmissionProcessor.MoveToQueueOfSubmittedFeeds(_feedSubmissionCallbackServiceMock.Object, _feedSubmissionCallbacks[0], testFeedSubmissionId);
-
-			Assert.AreEqual("testFeedSubmissionId", _feedSubmissionCallbacks[0].FeedSubmissionId);
-			_feedSubmissionCallbackServiceMock.Verify(x => x.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-		}
-
-		[Test]
-		public void MoveToRetryQueue_CalledOnce_IncrementsRequestRetryCountCorrectly()
-		{
-			Assert.AreEqual(0, _feedSubmissionCallbacks.First().SubmissionRetryCount);
-
-			_feedSubmissionProcessor.MoveToRetryQueue(_feedSubmissionCallbackServiceMock.Object, _feedSubmissionCallbacks.First());
-
-			Assert.AreEqual(1, _feedSubmissionCallbacks.First().SubmissionRetryCount);
-			_feedSubmissionCallbackServiceMock.Verify(x => x.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-		}
-
-		[Test]
-		public void MoveToRetryQueue_CalledMultipleTimes_IncrementsRequestRetryCountCorrectly()
-		{
-			Assert.AreEqual(0, _feedSubmissionCallbacks.First().SubmissionRetryCount);
-
-			_feedSubmissionProcessor.MoveToRetryQueue(_feedSubmissionCallbackServiceMock.Object, _feedSubmissionCallbacks.First());
-			_feedSubmissionProcessor.MoveToRetryQueue(_feedSubmissionCallbackServiceMock.Object, _feedSubmissionCallbacks.First());
-			_feedSubmissionProcessor.MoveToRetryQueue(_feedSubmissionCallbackServiceMock.Object, _feedSubmissionCallbacks.First());
-
-			Assert.AreEqual(3, _feedSubmissionCallbacks.First().SubmissionRetryCount);
-			_feedSubmissionCallbackServiceMock.Verify(x => x.Update(It.IsAny<FeedSubmissionEntry>()), Times.Exactly(3));
-		}
-
-		[Test]
-		public void GetAllSubmittedFeedsFromQueue_ReturnsListOfSubmittedFeeds_ForGivenMerchant()
-		{
-			// Arrange
-			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
-			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
-			var testMerchantId2 = "test merchant id 2";
-			var data = new List<FeedSubmissionEntry>
-			{
-				new FeedSubmissionEntry(serializedPropertiesContainer)
-				{
-					AmazonRegion = AmazonRegion.Europe,
-					MerchantId = testMerchantId2,
-					Id = 2,
-					FeedSubmissionId = "FeedSubmissionId2",
-					IsProcessingComplete = false
-				},
-				new FeedSubmissionEntry(serializedPropertiesContainer)
-				{
-					AmazonRegion = AmazonRegion.Europe,
-					MerchantId = testMerchantId2,
-					Id = 3,
-					FeedSubmissionId = "FeedSubmissionId3",
-					IsProcessingComplete = false
-				},
-				new FeedSubmissionEntry(serializedPropertiesContainer)
-				{
-					AmazonRegion = AmazonRegion.Europe,
-					MerchantId = _merchantId,
-					Id = 4,
-					FeedSubmissionId = "FeedSubmissionId4",
-					IsProcessingComplete = false
-				},
-				new FeedSubmissionEntry(serializedPropertiesContainer)
-				{
-					AmazonRegion = AmazonRegion.Europe,
-					MerchantId = _merchantId,
-					Id = 5,
-					FeedSubmissionId = "FeedSubmissionId5",
-					IsProcessingComplete = false
-				},
-				new FeedSubmissionEntry(serializedPropertiesContainer)
-				{
-					AmazonRegion = AmazonRegion.Europe,
-					MerchantId = _merchantId,
-					Id = 6,
-					FeedSubmissionId = null,
-					IsProcessingComplete = false
-				},
-				new FeedSubmissionEntry(serializedPropertiesContainer)
-				{
-					AmazonRegion = AmazonRegion.Europe,
-					MerchantId = _merchantId,
-					Id = 7,
-					FeedSubmissionId = "FeedSubmissionId7",
-					IsProcessingComplete = true
-				},
-				new FeedSubmissionEntry(serializedPropertiesContainer)
-				{
-					AmazonRegion = AmazonRegion.NorthAmerica,
-					MerchantId = _merchantId,
-					Id = 8,
-					FeedSubmissionId = "FeedSubmissionId8",
-					IsProcessingComplete = false
-				}
-			};
-
-			_feedSubmissionCallbacks.AddRange(data);
-
-			// Act
-			var listSubmittedFeeds = _feedSubmissionProcessor.GetIdsForSubmittedFeedsFromQueue(_feedSubmissionCallbackServiceMock.Object);
-
-			// Assert
-			Assert.AreEqual(2, listSubmittedFeeds.Count());
-			Assert.IsTrue(listSubmittedFeeds.Count(sf => sf == "FeedSubmissionId4" || sf == "FeedSubmissionId5") == 2);
-		}
-
-		[Test]
-		public void GetAllSubmittedFeedsFromQueue_CalledWithNullMerchantId_ReturnsNull()
-		{
-			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
-			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
-			var data = new List<FeedSubmissionEntry>
-			{
-				new FeedSubmissionEntry(serializedPropertiesContainer)
-				{
-					AmazonRegion = AmazonRegion.Europe,
-					MerchantId = _merchantId,
-					Id = 2,
-					FeedSubmissionId = "FeedSubmissionId1",
-					IsProcessingComplete = false
-				},
-				new FeedSubmissionEntry(serializedPropertiesContainer)
-				{
-					AmazonRegion = AmazonRegion.Europe,
-					MerchantId = null,
-					Id = 3,
-					FeedSubmissionId = "FeedSubmissionId2",
-					IsProcessingComplete = false
-				},
-				new FeedSubmissionEntry(serializedPropertiesContainer)
-				{
-					AmazonRegion = AmazonRegion.Europe,
-					MerchantId = null,
-					Id = 2,
-					FeedSubmissionId = "FeedSubmissionId3",
-					IsProcessingComplete = false
-				},
-				new FeedSubmissionEntry(serializedPropertiesContainer)
-				{
-					AmazonRegion = AmazonRegion.Europe,
-					MerchantId = null,
-					Id = 3,
-					FeedSubmissionId = "FeedSubmissionId4",
-					IsProcessingComplete = false
-				},
-				new FeedSubmissionEntry(serializedPropertiesContainer)
-				{
-					AmazonRegion = AmazonRegion.Europe,
-					MerchantId = null,
-					Id = 4,
-					FeedSubmissionId = "FeedSubmissionId5",
-					IsProcessingComplete = true
-				},
-				new FeedSubmissionEntry(serializedPropertiesContainer)
-				{
-					AmazonRegion = AmazonRegion.NorthAmerica,
-					MerchantId = null,
-					Id = 5,
-					FeedSubmissionId = "FeedSubmissionId6",
-					IsProcessingComplete = false
-				}
-			};
-
-			_feedSubmissionCallbacks.AddRange(data);
-
-			_feedSubmissionProcessor = new FeedSubmissionProcessor(_region, null, _marketplaceWebServiceClientMock.Object, _loggerMock.Object, _easyMwsOptions);
-
-			// Act
-			var listOfSubmittedFeeds = _feedSubmissionProcessor.GetIdsForSubmittedFeedsFromQueue(It.IsAny<IFeedSubmissionCallbackService>());
-
-			// Assert
-			Assert.IsEmpty(listOfSubmittedFeeds);
-
+			Assert.Throws<ArgumentException>(() => _feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry(null)));
 		}
 
 		[Test]
@@ -458,7 +150,7 @@ namespace EasyMWS.Tests.Processors
 				{
 					FeedSubmissionId = "testId",
 					IsProcessingComplete = false,
-					SubmissionRetryCount = 0
+					FeedSubmissionRetryCount = 0
 				}
 			};
 
@@ -469,12 +161,12 @@ namespace EasyMWS.Tests.Processors
 				("testId", "_DONE_")
 			};
 
-			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(_feedSubmissionCallbackServiceMock.Object, resultsInfo);
+			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(_feedSubmissionServiceMock.Object, resultsInfo);
 
 			Assert.IsTrue(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").IsProcessingComplete);
-			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").SubmissionRetryCount);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").FeedSubmissionRetryCount);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
 		}
 
 		[Test]
@@ -485,11 +177,11 @@ namespace EasyMWS.Tests.Processors
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 			var data = new List<FeedSubmissionEntry>
 			{
-				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId1", IsProcessingComplete = false, SubmissionRetryCount = 0},
-				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId2", IsProcessingComplete = false, SubmissionRetryCount = 0},
-				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId3", IsProcessingComplete = false, SubmissionRetryCount = 0},
-				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId4", IsProcessingComplete = false, SubmissionRetryCount = 0},
-				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId5", IsProcessingComplete = false, SubmissionRetryCount = 0}
+				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId1", IsProcessingComplete = false, FeedProcessingRetryCount = 2},
+				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId2", IsProcessingComplete = false, FeedProcessingRetryCount = 2},
+				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId3", IsProcessingComplete = false, FeedProcessingRetryCount = 2},
+				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId4", IsProcessingComplete = false, FeedProcessingRetryCount = 2},
+				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId5", IsProcessingComplete = false, FeedProcessingRetryCount = 2}
 			};
 			_feedSubmissionCallbacks.AddRange(data);
 
@@ -502,31 +194,31 @@ namespace EasyMWS.Tests.Processors
 				("testId5", "_UNCONFIRMED_")
 			};
 
-			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(_feedSubmissionCallbackServiceMock.Object, resultsInfo);
+			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(_feedSubmissionServiceMock.Object, resultsInfo);
 
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId1").IsProcessingComplete);
-			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId1").SubmissionRetryCount);
+			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId1").FeedProcessingRetryCount);
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId2").IsProcessingComplete);
-			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId2").SubmissionRetryCount);
+			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId2").FeedProcessingRetryCount);
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId3").IsProcessingComplete);
-			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId3").SubmissionRetryCount);
+			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId3").FeedProcessingRetryCount);
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId4").IsProcessingComplete);
-			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId4").SubmissionRetryCount);
+			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId4").FeedProcessingRetryCount);
 			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId5").IsProcessingComplete);
-			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId5").SubmissionRetryCount);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Exactly(5));
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			Assert.AreEqual(0, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId5").FeedProcessingRetryCount);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Exactly(5));
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
 		}
 
 		[Test]
-		public void QueueFeedsAccordingToProcessingStatus_RemovesFeedFromDb_IfProcessingStatusIsCancelled()
+		public void QueueFeedsAccordingToProcessingStatus_IfProcessingStatusIsCancelled_IncrementsFeedSubmissionRetryCountAndResetsFeedSubmissionId()
 		{
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 			var data = new List<FeedSubmissionEntry>
 			{
-				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId", IsProcessingComplete = false, SubmissionRetryCount = 0},
-				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId2", IsProcessingComplete = false, SubmissionRetryCount = 0}
+				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 555, FeedSubmissionId = "testId", IsProcessingComplete = false, FeedProcessingRetryCount = 0},
+				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 557, FeedSubmissionId = "testId2", IsProcessingComplete = false, FeedProcessingRetryCount = 0}
 			};
 
 			_feedSubmissionCallbacks.AddRange(data);
@@ -536,23 +228,24 @@ namespace EasyMWS.Tests.Processors
 				("testId", "_CANCELLED_"),
 			};
 
-			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(_feedSubmissionCallbackServiceMock.Object, resultsInfo);
+			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(_feedSubmissionServiceMock.Object, resultsInfo);
 
-			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").IsProcessingComplete);
-			Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").SubmissionRetryCount);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			Assert.IsNull(_feedSubmissionCallbacks.First(x => x.Id == 555).FeedSubmissionId);
+			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.Id == 555).IsProcessingComplete);
+			Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.Id == 555).FeedProcessingRetryCount);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
 		}
 
 		[Test]
-		public void QueueFeedsAccordingToProcessingStatus_RemovesFeedFromDb_IfProcessingStatusIsUnknown()
+		public void QueueFeedsAccordingToProcessingStatus_IfProcessingStatusIsUnknown_IncrementsFeedSubmissionRetryCount()
 		{
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 			var data = new List<FeedSubmissionEntry>
 			{
-				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId", IsProcessingComplete = false, SubmissionRetryCount = 0},
-				new FeedSubmissionEntry(serializedPropertiesContainer) {FeedSubmissionId = "testId2", IsProcessingComplete = false, SubmissionRetryCount = 0}
+				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 555, FeedSubmissionId = "testId", IsProcessingComplete = false, FeedProcessingRetryCount = 0},
+				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 557, FeedSubmissionId = "testId2", IsProcessingComplete = false, FeedProcessingRetryCount = 0}
 			};
 
 			_feedSubmissionCallbacks.AddRange(data);
@@ -562,34 +255,713 @@ namespace EasyMWS.Tests.Processors
 				("testId", "_SOME_MADE_UP_STATUS_")
 			};
 			 
-			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(_feedSubmissionCallbackServiceMock.Object, resultsInfo);
+			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(_feedSubmissionServiceMock.Object, resultsInfo);
 
-			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").IsProcessingComplete);
-			Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.FeedSubmissionId == "testId").SubmissionRetryCount);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-			_feedSubmissionCallbackServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			Assert.IsFalse(_feedSubmissionCallbacks.First(x => x.Id == 555).IsProcessingComplete);
+			Assert.AreEqual(1, _feedSubmissionCallbacks.First(x => x.Id == 555).FeedProcessingRetryCount);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
 		}
 
 		[Test]
-		public void Poll_DeletesFeedSubmissions_WithRetryCountAboveMaxRetryCount()
+		public void CleanUpFeedSubmissionQueue_WithRetryCountAboveMaxRetryCount_DeletesFeedSubmissions()
 		{
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 			var testFeedSubmissionCallbacks = new List<FeedSubmissionEntry>
 			{
-				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 1, SubmissionRetryCount = 0, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-3) },
-				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 2, SubmissionRetryCount = 1, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-2).AddHours(-1) },
-				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 3, SubmissionRetryCount = 2, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-2).AddHours(1) },
-				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 4, SubmissionRetryCount = 3, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-1) },
-				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 5, SubmissionRetryCount = 4, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-1), FeedSubmissionId = null },
-				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 6, SubmissionRetryCount = 5, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-1), FeedSubmissionId = "testFeedSubmissionId" }
+				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 1, FeedSubmissionRetryCount = 0, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-3) },
+				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 2, FeedSubmissionRetryCount = 1, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-2).AddHours(-1) },
+				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 3, FeedSubmissionRetryCount = 2, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-2).AddHours(1) },
+				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 4, FeedSubmissionRetryCount = 3, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-1) },
+				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 5, FeedSubmissionRetryCount = 5, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-1), FeedSubmissionId = null },
+				new FeedSubmissionEntry(serializedPropertiesContainer) {Id = 6, FeedSubmissionRetryCount = 5, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-1), FeedSubmissionId = "testFeedSubmissionId" }
 			}.AsQueryable();
-			_feedSubmissionCallbackServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(testFeedSubmissionCallbacks);
+			_feedSubmissionServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(testFeedSubmissionCallbacks);
 
-			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_feedSubmissionCallbackServiceMock.Object);
+			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_feedSubmissionServiceMock.Object);
 
 			// Id=5 deleted - FeedSubmissionMaxRetryCount. Id=6 deleted - FeedResultFailedChecksumMaxRetryCount. Id=1,2 deleted - FeedSubmissionRequestEntryExpirationPeriod=2days exceeded.
-			_feedSubmissionCallbackServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Exactly(4));
+			_feedSubmissionServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Exactly(4));
+		}
+
+		private const int RetryCountIsStrictlyBelowConfiguredRetryCountLimit = -2;
+		private const int RetryCountIsBelowConfiguredRetryCountLimitEdge = -1;
+		private const int RetryCountIsEqualToConfiguredRetryCountLimit = 0;
+		private const int RetryCountIsAboveConfiguredRetryCountLimitEdge = 1;
+		private const int RetryCountIsStrictlyAboveConfiguredRetryCountLimit = 2;
+
+		[TestCase(RetryCountIsBelowConfiguredRetryCountLimitEdge, 0)]
+		[TestCase(RetryCountIsEqualToConfiguredRetryCountLimit, 0)]
+		[TestCase(RetryCountIsAboveConfiguredRetryCountLimitEdge, 1)]
+		public void CleanUpFeedSubmissionQueue_OneEntryWithSubmissionRetryCountExceeded_DeletesOnlyTheCorrectEntry(int retryCountType, int numberOfDeleteCalls)
+		{
+			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
+			var data = JsonConvert.SerializeObject(propertiesContainer);
+
+			var retryCount =
+				retryCountType == -1 ? _easyMwsOptions.FeedSubmissionMaxRetryCount - 1 :
+				retryCountType == 0 ? _easyMwsOptions.FeedSubmissionMaxRetryCount :
+				retryCountType == 1 ? _easyMwsOptions.FeedSubmissionMaxRetryCount + 1 : 0;
+
+			var firstEntryToDelete = new FeedSubmissionEntry
+			{
+				Id = 1, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
+				FeedSubmissionRetryCount = retryCount,
+				FeedProcessingRetryCount = 0,
+				ReportDownloadRetryCount = 0,
+				InvokeCallbackRetryCount = 0
+			};
+			var entryToLeaveIntact = new FeedSubmissionEntry
+			{
+				Id = 2, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
+				FeedSubmissionRetryCount = 0, FeedProcessingRetryCount = 0, ReportDownloadRetryCount = 0, InvokeCallbackRetryCount = 0
+			};
+			var entriesList = new List<FeedSubmissionEntry> { firstEntryToDelete, entryToLeaveIntact };
+			var entriesQueryable = entriesList.AsQueryable();
+			_feedSubmissionServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(entriesQueryable);
+			_feedSubmissionServiceMock.Setup(x => x.Delete(It.IsAny<FeedSubmissionEntry>()));
+
+			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_feedSubmissionServiceMock.Object);
+			_feedSubmissionServiceMock.Verify(x => x.Delete(It.Is<FeedSubmissionEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Exactly(numberOfDeleteCalls));
+			_feedSubmissionServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+		}
+
+		[TestCase(RetryCountIsBelowConfiguredRetryCountLimitEdge, 0)]
+		[TestCase(RetryCountIsEqualToConfiguredRetryCountLimit, 0)]
+		[TestCase(RetryCountIsAboveConfiguredRetryCountLimitEdge, 1)]
+		public void CleanUpFeedSubmissionQueue_OneEntryWithProcessingRetryCountExceeded_DeletesOnlyTheCorrectEntry(int retryCountType, int numberOfDeleteCalls)
+		{
+			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
+			var data = JsonConvert.SerializeObject(propertiesContainer);
+
+			var retryCount =
+				retryCountType == -1 ? _easyMwsOptions.FeedProcessingMaxRetryCount - 1 :
+				retryCountType == 0 ? _easyMwsOptions.FeedProcessingMaxRetryCount :
+				retryCountType == 1 ? _easyMwsOptions.FeedProcessingMaxRetryCount + 1 : 0;
+
+			var firstEntryToDelete = new FeedSubmissionEntry
+			{
+				Id = 1, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
+				FeedSubmissionRetryCount = 0,
+				FeedProcessingRetryCount = retryCount,
+				ReportDownloadRetryCount = 0,
+				InvokeCallbackRetryCount = 0
+			};
+			var entryToLeaveIntact = new FeedSubmissionEntry
+			{
+				Id = 2, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
+				FeedSubmissionRetryCount = 0,
+				FeedProcessingRetryCount = 0,
+				ReportDownloadRetryCount = 0,
+				InvokeCallbackRetryCount = 0
+			};
+			
+			var entriesList = new List<FeedSubmissionEntry> { firstEntryToDelete, entryToLeaveIntact };
+			var entriesQueryable = entriesList.AsQueryable();
+			_feedSubmissionServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(entriesQueryable);
+			_feedSubmissionServiceMock.Setup(x => x.Delete(It.IsAny<FeedSubmissionEntry>()));
+
+			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_feedSubmissionServiceMock.Object);
+			_feedSubmissionServiceMock.Verify(x => x.Delete(It.Is<FeedSubmissionEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Exactly(numberOfDeleteCalls));
+			_feedSubmissionServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+		}
+
+		[TestCase(RetryCountIsBelowConfiguredRetryCountLimitEdge, 0)]
+		[TestCase(RetryCountIsEqualToConfiguredRetryCountLimit, 0)]
+		[TestCase(RetryCountIsAboveConfiguredRetryCountLimitEdge, 1)]
+		public void CleanUpFeedSubmissionQueue_OneEntryWithDownloadRetryCountExceeded_DeletesOnlyTheCorrectEntry(int retryCountType, int numberOfDeleteCalls)
+		{
+			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
+			var data = JsonConvert.SerializeObject(propertiesContainer);
+
+			var retryCount =
+				retryCountType == -1 ? _easyMwsOptions.ReportDownloadMaxRetryCount - 1 :
+				retryCountType == 0 ? _easyMwsOptions.ReportDownloadMaxRetryCount :
+				retryCountType == 1 ? _easyMwsOptions.ReportDownloadMaxRetryCount + 1 : 0;
+
+			var firstEntryToDelete = new FeedSubmissionEntry
+			{
+				Id = 1, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
+				FeedSubmissionRetryCount = 0,
+				FeedProcessingRetryCount = 0,
+				ReportDownloadRetryCount = retryCount,
+				InvokeCallbackRetryCount = 0
+			};
+			var entryToLeaveIntact = new FeedSubmissionEntry
+			{
+				Id = 2, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
+				FeedSubmissionRetryCount = 0,
+				FeedProcessingRetryCount = 0,
+				ReportDownloadRetryCount = 0,
+				InvokeCallbackRetryCount = 0
+			};
+			
+			var entriesList = new List<FeedSubmissionEntry> { firstEntryToDelete, entryToLeaveIntact };
+			var entriesQueryable = entriesList.AsQueryable();
+			_feedSubmissionServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(entriesQueryable);
+			_feedSubmissionServiceMock.Setup(x => x.Delete(It.IsAny<FeedSubmissionEntry>()));
+
+			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_feedSubmissionServiceMock.Object);
+			_feedSubmissionServiceMock.Verify(x => x.Delete(It.Is<FeedSubmissionEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Exactly(numberOfDeleteCalls));
+			_feedSubmissionServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+		}
+
+		[TestCase(RetryCountIsBelowConfiguredRetryCountLimitEdge, 0)]
+		[TestCase(RetryCountIsEqualToConfiguredRetryCountLimit, 0)]
+		[TestCase(RetryCountIsAboveConfiguredRetryCountLimitEdge, 1)]
+		public void CleanUpFeedSubmissionQueue_OneEntryWithInvokeCallbackRetryCountExceeded_DeletesOnlyTheCorrectEntry(int retryCountType, int numberOfDeleteCalls)
+		{
+			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
+			var data = JsonConvert.SerializeObject(propertiesContainer);
+
+			var retryCount =
+				retryCountType == -1 ? _easyMwsOptions.InvokeCallbackMaxRetryCount - 1 :
+				retryCountType == 0 ? _easyMwsOptions.InvokeCallbackMaxRetryCount :
+				retryCountType == 1 ? _easyMwsOptions.InvokeCallbackMaxRetryCount + 1 : 0;
+
+			var firstEntryToDelete = new FeedSubmissionEntry
+			{
+				Id = 1, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
+				FeedSubmissionRetryCount = 0,
+				FeedProcessingRetryCount = 0,
+				ReportDownloadRetryCount = 0,
+				InvokeCallbackRetryCount = retryCount
+			};
+			var entryToLeaveIntact = new FeedSubmissionEntry
+			{
+				Id = 2, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
+				FeedSubmissionRetryCount = 0,
+				FeedProcessingRetryCount = 0,
+				ReportDownloadRetryCount = 0,
+				InvokeCallbackRetryCount = 0
+			};
+			var entriesList = new List<FeedSubmissionEntry> { firstEntryToDelete, entryToLeaveIntact };
+			var entriesQueryable = entriesList.AsQueryable();
+			_feedSubmissionServiceMock.Setup(rrcsm => rrcsm.GetAll()).Returns(entriesQueryable);
+			_feedSubmissionServiceMock.Setup(x => x.Delete(It.IsAny<FeedSubmissionEntry>()));
+
+			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_feedSubmissionServiceMock.Object);
+			_feedSubmissionServiceMock.Verify(x => x.Delete(It.Is<FeedSubmissionEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Exactly(numberOfDeleteCalls));
+			_feedSubmissionServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+		}
+
+		[Test]
+		public void CleanUpFeedSubmissionQueue_WithMultipleReasonsToDeleteOneEntry_OnlyCallsDeleteOneSingleTime()
+		{
+			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
+			var data = JsonConvert.SerializeObject(propertiesContainer);
+			var entryToDelete = new FeedSubmissionEntry
+			{
+				Id = 1, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow.AddDays(-10),
+				FeedSubmissionRetryCount = 10,
+				FeedProcessingRetryCount = 10,
+				ReportDownloadRetryCount = 10,
+				InvokeCallbackRetryCount = 10
+			};
+			var entryToLeaveIntact = new FeedSubmissionEntry
+			{
+				Id = 1, FeedSubmissionData = data, AmazonRegion = _region, MerchantId = _merchantId, DateCreated = DateTime.UtcNow,
+				FeedSubmissionRetryCount = 0,
+				FeedProcessingRetryCount = 0,
+				ReportDownloadRetryCount = 0,
+				InvokeCallbackRetryCount = 0
+			};
+			var entriesList = new List<FeedSubmissionEntry> { entryToDelete, entryToLeaveIntact };
+			var entriesQueryable = entriesList.AsQueryable();
+			_feedSubmissionServiceMock.Setup(x => x.GetAll()).Returns(entriesQueryable);
+
+			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_feedSubmissionServiceMock.Object);
+
+			_feedSubmissionServiceMock.Verify(x => x.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+		}
+
+		[Test]
+		public void SubmitFeedToAmazon_WithSubmitSingleQueuedFeedToAmazonResponseNotNull_UpdatesLastSubmittedDateAndFeedSubmissionIdAndResetsRetryCounter()
+		{
+			var feedContent = "testFeedContent";
+			var feedType = "testFeedType";
+			var propertiesContainer = new FeedSubmissionPropertiesContainer(feedContent, feedType);
+			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
+			var expectedFeedSubmissionId = "testFeedSubmissionId";
+
+			_marketplaceWebServiceClientMock.Setup(rrp =>
+					rrp.SubmitFeed(It.IsAny<SubmitFeedRequest>()))
+				.Returns(new SubmitFeedResponse{SubmitFeedResult = new SubmitFeedResult{FeedSubmissionInfo = new FeedSubmissionInfo{FeedSubmissionId = expectedFeedSubmissionId } }});
+			var entryBeingUpdated = (FeedSubmissionEntry) null;
+			_feedSubmissionServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
+				.Callback<FeedSubmissionEntry>(
+					entry => { entryBeingUpdated = entry; });
+
+			_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry(serializedPropertiesContainer)
+			{
+				LastSubmitted = DateTime.MinValue,
+				FeedType = feedType,
+				Details = new FeedSubmissionDetails { FeedContent = GenerateValidArchive(feedContent).ToArray() }
+			});
+
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
+			Assert.NotNull(entryBeingUpdated);
+			Assert.AreEqual(expectedFeedSubmissionId, entryBeingUpdated.FeedSubmissionId);
+			Assert.AreEqual(DateTime.UtcNow.Date, entryBeingUpdated.LastSubmitted.Date);
+			Assert.AreEqual(0, entryBeingUpdated.FeedSubmissionRetryCount);
+		}
+
+		[Test]
+		public void SubmitFeedToAmazon_WithSubmitSingleQueuedFeedToAmazonResponseNull_UpdatesLastSubmittedDateAndRetryCounter()
+		{
+			var feedContent = "testFeedContent";
+			var feedType = "testFeedType";
+			var propertiesContainer = new FeedSubmissionPropertiesContainer(feedContent, feedType);
+			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
+
+			_marketplaceWebServiceClientMock.Setup(rrp =>
+					rrp.SubmitFeed(It.IsAny<SubmitFeedRequest>()))
+				.Returns(new SubmitFeedResponse { SubmitFeedResult = new SubmitFeedResult { FeedSubmissionInfo = new FeedSubmissionInfo { FeedSubmissionId = null } } });
+			var entryBeingUpdated = (FeedSubmissionEntry)null;
+			_feedSubmissionServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
+				.Callback<FeedSubmissionEntry>(
+					entry => { entryBeingUpdated = entry; });
+
+			_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry(serializedPropertiesContainer)
+			{
+				LastSubmitted = DateTime.MinValue,
+				FeedType = feedType,
+				Details = new FeedSubmissionDetails { FeedContent = GenerateValidArchive(feedContent).ToArray() }
+			});
+
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
+			Assert.NotNull(entryBeingUpdated);
+			Assert.IsNull(entryBeingUpdated.FeedSubmissionId);
+			Assert.AreEqual(DateTime.UtcNow.Date, entryBeingUpdated.LastSubmitted.Date);
+			Assert.AreEqual(1, entryBeingUpdated.FeedSubmissionRetryCount);
+		}
+
+		[Test]
+		public void SubmitFeedToAmazon_WithSubmitSingleQueuedFeedToAmazonResponseEmpty_UpdatesLastSubmittedDateAndRetryCounter()
+		{
+			var feedContent = "testFeedContent";
+			var feedType = "testFeedType";
+			var propertiesContainer = new FeedSubmissionPropertiesContainer(feedContent, feedType);
+			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
+
+			_marketplaceWebServiceClientMock.Setup(rrp =>
+					rrp.SubmitFeed(It.IsAny<SubmitFeedRequest>()))
+				.Returns(new SubmitFeedResponse { SubmitFeedResult = new SubmitFeedResult { FeedSubmissionInfo = new FeedSubmissionInfo { FeedSubmissionId = string.Empty } } });
+			var entryBeingUpdated = (FeedSubmissionEntry)null;
+			_feedSubmissionServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
+				.Callback<FeedSubmissionEntry>(
+					entry => { entryBeingUpdated = entry; });
+
+			_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionServiceMock.Object,
+				new FeedSubmissionEntry(serializedPropertiesContainer)
+				{
+					LastSubmitted = DateTime.MinValue,
+					FeedType = feedType,
+					Details = new FeedSubmissionDetails {FeedContent = GenerateValidArchive(feedContent).ToArray()}
+				});
+
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
+			Assert.NotNull(entryBeingUpdated);
+			Assert.IsNull(entryBeingUpdated.FeedSubmissionId);
+			Assert.AreEqual(DateTime.UtcNow.Date, entryBeingUpdated.LastSubmitted.Date);
+			Assert.AreEqual(1, entryBeingUpdated.FeedSubmissionRetryCount);
+		}
+
+		[TestCase("AccessToFeedProcessingResultDenied")]
+		[TestCase("FeedCanceled")]
+		[TestCase("FeedProcessingResultNoLongerAvailable")]
+		[TestCase("InputDataError")]
+		[TestCase("InvalidFeedType")]
+		[TestCase("InvalidRequest")]
+		public void SubmitFeedToAmazon_WithSubmitSingleQueuedFeedToAmazonThrowsFatalErrorCodeException_DeletesEntryFromQueue(string fatalErrorCode)
+		{
+			var feedContent = "testFeedContent";
+			var feedType = "testFeedType";
+			var propertiesContainer = new FeedSubmissionPropertiesContainer(feedContent, feedType);
+			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
+
+			_marketplaceWebServiceClientMock.Setup(rrp =>
+					rrp.SubmitFeed(It.IsAny<SubmitFeedRequest>()))
+				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, fatalErrorCode, "errorType", "123", "xml", new ResponseHeaderMetadata()));
+
+			_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionServiceMock.Object,
+				new FeedSubmissionEntry(serializedPropertiesContainer)
+				{
+					LastSubmitted = DateTime.MinValue,
+					FeedType = feedType,
+					Details = new FeedSubmissionDetails { FeedContent = GenerateValidArchive(feedContent).ToArray() }
+				});
+
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
+		}
+
+		[TestCase("ContentMD5Missing")]
+		[TestCase("ContentMD5DoesNotMatch")]
+		[TestCase("FeedProcessingResultNotReady")]
+		[TestCase("InvalidFeedSubmissionId")]
+		[TestCase("SomeUnhandledNewErrorCode")]
+		public void SubmitFeedToAmazon_WithSubmitSingleQueuedFeedToAmazonThrowsNonFatalErrorCodeException_UpdatesLastSubmittedDateAndRetryCounter(string nonFatalErrorCode)
+		{
+			var feedContent = "testFeedContent";
+			var feedType = "testFeedType";
+			var propertiesContainer = new FeedSubmissionPropertiesContainer(feedContent, feedType);
+			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
+
+			_marketplaceWebServiceClientMock.Setup(rrp =>
+					rrp.SubmitFeed(It.IsAny<SubmitFeedRequest>()))
+				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, nonFatalErrorCode, "errorType", "123", "xml", new ResponseHeaderMetadata()));
+			var entryBeingUpdated = (FeedSubmissionEntry)null;
+			_feedSubmissionServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
+				.Callback<FeedSubmissionEntry>(
+					entry => { entryBeingUpdated = entry; });
+
+			_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionServiceMock.Object,
+				new FeedSubmissionEntry(serializedPropertiesContainer)
+				{
+					LastSubmitted = DateTime.MinValue,
+					FeedType = feedType,
+					Details = new FeedSubmissionDetails { FeedContent = GenerateValidArchive(feedContent).ToArray() }
+				});
+
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
+			Assert.NotNull(entryBeingUpdated);
+			Assert.IsNull(entryBeingUpdated.FeedSubmissionId);
+			Assert.AreEqual(DateTime.UtcNow.Date, entryBeingUpdated.LastSubmitted.Date);
+			Assert.AreEqual(1, entryBeingUpdated.FeedSubmissionRetryCount);
+		}
+
+		[Test]
+		public void SubmitFeedToAmazon_WithSubmitSingleQueuedFeedToAmazonThrowingNonMarketplaceWebServiceException_UpdatesLastSubmittedDateAndRetryCounter()
+		{
+			var feedContent = "testFeedContent";
+			var feedType = "testFeedType";
+			var propertiesContainer = new FeedSubmissionPropertiesContainer(feedContent, feedType);
+			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
+
+			_marketplaceWebServiceClientMock.Setup(rrp =>
+					rrp.SubmitFeed(It.IsAny<SubmitFeedRequest>()))
+				.Throws(new Exception(""));
+			var entryBeingUpdated = (FeedSubmissionEntry)null;
+			_feedSubmissionServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
+				.Callback<FeedSubmissionEntry>(
+					entry => { entryBeingUpdated = entry; });
+
+			_feedSubmissionProcessor.SubmitFeedToAmazon(_feedSubmissionServiceMock.Object,
+				new FeedSubmissionEntry(serializedPropertiesContainer)
+				{
+					LastSubmitted = DateTime.MinValue,
+					FeedType = feedType,
+					Details = new FeedSubmissionDetails { FeedContent = GenerateValidArchive(feedContent).ToArray() }
+				});
+
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
+			Assert.NotNull(entryBeingUpdated);
+			Assert.IsNull(entryBeingUpdated.FeedSubmissionId);
+			Assert.AreEqual(DateTime.UtcNow.Date, entryBeingUpdated.LastSubmitted.Date);
+			Assert.AreEqual(1, entryBeingUpdated.FeedSubmissionRetryCount);
+		}
+
+		[Test]
+		public void DownloadFeedSubmissionResultFromAmazon_WithNullFeedSubmissionArgument_ThrowsNullArgumentException()
+		{
+			Assert.Throws<ArgumentNullException>(() =>
+				_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionServiceMock.Object, null));
+		}
+
+		[Test]
+		public void DownloadFeedSubmissionResultFromAmazon_WithNullMerchantId_ThrowsArgumentException()
+		{
+			Assert.Throws<ArgumentException>(() =>
+				_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry{MerchantId = null}));
+		}
+
+		[Test]
+		public void DownloadFeedSubmissionResultFromAmazon_WithEmptyMerchantId_ThrowsArgumentException()
+		{
+			Assert.Throws<ArgumentException>(() =>
+				_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry { MerchantId = string.Empty }));
+		}
+
+		[Test]
+		public void DownloadFeedSubmissionResultFromAmazon_WithEmptyFeedSubmissionId_ThrowsArgumentException()
+		{
+			Assert.Throws<ArgumentException>(() =>
+				_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry { MerchantId = _merchantId, FeedSubmissionId = string.Empty}));
+		}
+
+		[Test]
+		public void DownloadFeedSubmissionResultFromAmazon_WithNullFeedSubmissionId_ThrowsArgumentException()
+		{
+			Assert.Throws<ArgumentException>(() =>
+				_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry { MerchantId = _merchantId, FeedSubmissionId = null }));
+		}
+
+		[Test]
+		public void DownloadFeedSubmissionResultFromAmazon_WithGetFeedSubmissionResultResponseWithMatchingMd5Hash_UpdatesLastSubmittedDateAndSavesReportAsZipFileAndResetsRetryCounter()
+		{
+			var expectedContent = "This is some test content. Und die Katze läuft auf der Straße.";
+			var expectedContentStream = StreamHelper.CreateMemoryStream(expectedContent);
+			var expectedContentStreamHash = MD5ChecksumHelper.ComputeHashForAmazon(expectedContentStream);
+			var expectedZippedContent = GenerateValidArchive(expectedContent);
+			var feedType = "testFeedType";
+			var propertiesContainer = new FeedSubmissionPropertiesContainer(expectedContent, feedType);
+			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
+			var expectedFeedSubmissionId = "testFeedSubmissionId";
+			var expectedMd5Hash = expectedContentStreamHash;
+			var streamBeingSentToAmazon = (MemoryStream)null;
+
+			_marketplaceWebServiceClientMock.Setup(rrp =>
+					rrp.GetFeedSubmissionResult(It.IsAny<GetFeedSubmissionResultRequest>()))
+				.Returns(new GetFeedSubmissionResultResponse
+				{
+					GetFeedSubmissionResultResult = new GetFeedSubmissionResultResult {ContentMD5 = expectedMd5Hash}
+				})
+				.Callback<GetFeedSubmissionResultRequest>(req =>
+				{
+					expectedContentStream.CopyTo(req.FeedSubmissionResult);
+					expectedContentStream.Position = 0;
+
+					streamBeingSentToAmazon = new MemoryStream();
+					req.FeedSubmissionResult.CopyTo(streamBeingSentToAmazon);
+					req.FeedSubmissionResult.Position = 0;
+					streamBeingSentToAmazon.Position = 0;
+				});
+			var entryBeingUpdated = (FeedSubmissionEntry)null;
+			_feedSubmissionServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
+				.Callback<FeedSubmissionEntry>(
+					entry => { entryBeingUpdated = entry; });
+
+			_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry(serializedPropertiesContainer)
+			{
+				MerchantId = _merchantId,
+				FeedSubmissionId = expectedFeedSubmissionId,
+				LastSubmitted = DateTime.MinValue,
+				FeedType = feedType,
+				Details = new FeedSubmissionDetails { FeedContent = expectedZippedContent.ToArray() }
+			});
+
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
+			Assert.NotNull(streamBeingSentToAmazon);
+			Assert.NotNull(entryBeingUpdated);
+			Assert.IsNull(entryBeingUpdated.Details.FeedContent);
+			Assert.NotNull(entryBeingUpdated.Details.FeedSubmissionReport);
+			using (var actualReportReader = new StreamReader(ExtractArchivedSingleFileToStream(entryBeingUpdated.Details.FeedSubmissionReport)))
+			{
+				Assert.AreEqual(expectedContent, actualReportReader.ReadToEnd());
+			}
+			Assert.AreEqual(DateTime.UtcNow.Date, entryBeingUpdated.LastSubmitted.Date);
+			Assert.AreEqual(0, entryBeingUpdated.ReportDownloadRetryCount);
+		}
+
+		[Test]
+		public void DownloadFeedSubmissionResultFromAmazon_WithGetFeedSubmissionResultResponseWithNonMatchingMd5Hash_UpdatesLastSubmittedDateAndIncrementsRetryCounter()
+		{
+			var expectedContent = "This is some test content. Und die Katze läuft auf der Straße.";
+			var expectedContentStream = StreamHelper.CreateMemoryStream(expectedContent);
+			var expectedContentStreamHash = MD5ChecksumHelper.ComputeHashForAmazon(expectedContentStream);
+			var expectedZippedContent = GenerateValidArchive(expectedContent);
+			var feedType = "testFeedType";
+			var propertiesContainer = new FeedSubmissionPropertiesContainer(expectedContent, feedType);
+			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
+			var expectedFeedSubmissionId = "testFeedSubmissionId";
+			var expectedMd5Hash = expectedContentStreamHash;
+
+			_marketplaceWebServiceClientMock.Setup(rrp =>
+					rrp.GetFeedSubmissionResult(It.IsAny<GetFeedSubmissionResultRequest>()))
+				.Returns(new GetFeedSubmissionResultResponse
+				{
+					GetFeedSubmissionResultResult = new GetFeedSubmissionResultResult {ContentMD5 = $"{expectedMd5Hash}NonMatchingSequence"}
+				});
+			var entryBeingUpdated = (FeedSubmissionEntry)null;
+			_feedSubmissionServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
+				.Callback<FeedSubmissionEntry>(
+					entry => { entryBeingUpdated = entry; });
+
+			_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry(serializedPropertiesContainer)
+			{
+				MerchantId = _merchantId,
+				FeedSubmissionId = expectedFeedSubmissionId,
+				LastSubmitted = DateTime.MinValue,
+				FeedType = feedType,
+				Details = new FeedSubmissionDetails { FeedContent = expectedZippedContent.ToArray() }
+			});
+
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
+			Assert.NotNull(entryBeingUpdated);
+			Assert.NotNull(entryBeingUpdated.Details.FeedContent);
+			Assert.IsNull(entryBeingUpdated.Details.FeedSubmissionReport);
+			Assert.AreEqual(DateTime.UtcNow.Date, entryBeingUpdated.LastSubmitted.Date);
+			Assert.AreEqual(1, entryBeingUpdated.ReportDownloadRetryCount);
+		}
+
+		[TestCase("ContentMD5Missing")]
+		[TestCase("ContentMD5DoesNotMatch")]
+		[TestCase("FeedProcessingResultNotReady")]
+		[TestCase("InvalidFeedSubmissionId")]
+		[TestCase("SomeUnhandledNewErrorCode")]
+		public void DownloadFeedSubmissionResultFromAmazon_WithGetFeedSubmissionResultThrowingNonFatalErrorCodeException_UpdatesLastSubmittedDateAndIncrementsRetryCounter(string nonFatalErrorCode)
+		{
+			var expectedContent = "This is some test content. Und die Katze läuft auf der Straße.";
+			var expectedZippedContent = GenerateValidArchive(expectedContent);
+			var feedType = "testFeedType";
+			var propertiesContainer = new FeedSubmissionPropertiesContainer(expectedContent, feedType);
+			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
+			var expectedFeedSubmissionId = "testFeedSubmissionId";
+
+			_marketplaceWebServiceClientMock.Setup(rrp =>
+					rrp.GetFeedSubmissionResult(It.IsAny<GetFeedSubmissionResultRequest>()))
+				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, nonFatalErrorCode, "errorType", "123", "xml", new ResponseHeaderMetadata()));
+			var entryBeingUpdated = (FeedSubmissionEntry)null;
+			_feedSubmissionServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
+				.Callback<FeedSubmissionEntry>(
+					entry => { entryBeingUpdated = entry; });
+
+			_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry(serializedPropertiesContainer)
+			{
+				MerchantId = _merchantId,
+				FeedSubmissionId = expectedFeedSubmissionId,
+				LastSubmitted = DateTime.MinValue,
+				FeedType = feedType,
+				Details = new FeedSubmissionDetails { FeedContent = expectedZippedContent.ToArray() }
+			});
+
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
+			Assert.NotNull(entryBeingUpdated);
+			Assert.NotNull(entryBeingUpdated.Details.FeedContent);
+			Assert.IsNull(entryBeingUpdated.Details.FeedSubmissionReport);
+			Assert.AreEqual(DateTime.UtcNow.Date, entryBeingUpdated.LastSubmitted.Date);
+			Assert.AreEqual(1, entryBeingUpdated.ReportDownloadRetryCount);
+		}
+
+		[Test]
+		public void DownloadFeedSubmissionResultFromAmazon_WithGetFeedSubmissionResultThrowingNonMarketplaceWebServiceException_UpdatesLastSubmittedDateAndIncrementsRetryCounter()
+		{
+			var expectedContent = "This is some test content. Und die Katze läuft auf der Straße.";
+			var expectedZippedContent = GenerateValidArchive(expectedContent);
+			var feedType = "testFeedType";
+			var propertiesContainer = new FeedSubmissionPropertiesContainer(expectedContent, feedType);
+			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
+			var expectedFeedSubmissionId = "testFeedSubmissionId";
+
+			_marketplaceWebServiceClientMock.Setup(rrp =>
+					rrp.GetFeedSubmissionResult(It.IsAny<GetFeedSubmissionResultRequest>()))
+				.Throws(new Exception("some random exception"));
+			var entryBeingUpdated = (FeedSubmissionEntry)null;
+			_feedSubmissionServiceMock.Setup(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()))
+				.Callback<FeedSubmissionEntry>(
+					entry => { entryBeingUpdated = entry; });
+
+			_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry(serializedPropertiesContainer)
+			{
+				MerchantId = _merchantId,
+				FeedSubmissionId = expectedFeedSubmissionId,
+				LastSubmitted = DateTime.MinValue,
+				FeedType = feedType,
+				Details = new FeedSubmissionDetails { FeedContent = expectedZippedContent.ToArray() }
+			});
+
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
+			Assert.NotNull(entryBeingUpdated);
+			Assert.NotNull(entryBeingUpdated.Details.FeedContent);
+			Assert.IsNull(entryBeingUpdated.Details.FeedSubmissionReport);
+			Assert.AreEqual(DateTime.UtcNow.Date, entryBeingUpdated.LastSubmitted.Date);
+			Assert.AreEqual(1, entryBeingUpdated.ReportDownloadRetryCount);
+		}
+
+		[TestCase("AccessToFeedProcessingResultDenied")]
+		[TestCase("FeedCanceled")]
+		[TestCase("FeedProcessingResultNoLongerAvailable")]
+		[TestCase("InputDataError")]
+		[TestCase("InvalidFeedType")]
+		[TestCase("InvalidRequest")]
+		public void DownloadFeedSubmissionResultFromAmazon_WithGetFeedSubmissionResultThrowingFatalErrorCodeException_DeletesEntryFromQueue(string fatalErrorCode)
+		{
+			var expectedContent = "This is some test content. Und die Katze läuft auf der Straße.";
+			var expectedZippedContent = GenerateValidArchive(expectedContent);
+			var feedType = "testFeedType";
+			var propertiesContainer = new FeedSubmissionPropertiesContainer(expectedContent, feedType);
+			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
+			var expectedFeedSubmissionId = "testFeedSubmissionId";
+
+			_marketplaceWebServiceClientMock.Setup(rrp =>
+					rrp.GetFeedSubmissionResult(It.IsAny<GetFeedSubmissionResultRequest>()))
+				.Throws(new MarketplaceWebServiceException("message", HttpStatusCode.BadRequest, fatalErrorCode, "errorType", "123", "xml", new ResponseHeaderMetadata()));
+			var entryBeingDeleted = (FeedSubmissionEntry)null;
+			_feedSubmissionServiceMock.Setup(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()))
+				.Callback<FeedSubmissionEntry>(
+					entry => { entryBeingDeleted = entry; });
+
+			_feedSubmissionProcessor.DownloadFeedSubmissionResultFromAmazon(_feedSubmissionServiceMock.Object, new FeedSubmissionEntry(serializedPropertiesContainer)
+			{
+				MerchantId = _merchantId,
+				AmazonRegion = AmazonRegion.Australia,
+				FeedSubmissionId = expectedFeedSubmissionId,
+				LastSubmitted = DateTime.MinValue,
+				FeedType = feedType,
+				Details = new FeedSubmissionDetails { FeedContent = expectedZippedContent.ToArray() }
+			});
+
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
+			Assert.NotNull(entryBeingDeleted);
+			Assert.AreEqual((feedType, AmazonRegion.Australia, _merchantId), (entryBeingDeleted.FeedType, entryBeingDeleted.AmazonRegion, entryBeingDeleted.MerchantId));
+		}
+
+		private MemoryStream GenerateValidArchive(string content)
+		{
+			using (var zipFileStream = new MemoryStream())
+			{
+				using (var archive = new ZipArchive(zipFileStream, ZipArchiveMode.Create, true))
+				{
+					var fileToArchive = archive.CreateEntry("testFilename.txt", CompressionLevel.Fastest);
+					using (var fileStream = fileToArchive.Open())
+					using (var streamWriter = new StreamWriter(fileStream))
+					{
+						streamWriter.Write(content);
+					}
+				}
+
+				zipFileStream.Position = 0;
+				return zipFileStream;
+			}
+		}
+
+		private static MemoryStream ExtractArchivedSingleFileToStream(byte[] zipArchive)
+		{
+			if (zipArchive == null) return null;
+
+			using (var archiveStream = new MemoryStream(zipArchive))
+			using (var zip = new ZipArchive(archiveStream, ZipArchiveMode.Read))
+			{
+				var file = zip.Entries.FirstOrDefault();
+				var resultStream = new MemoryStream();
+				file?.Open()?.CopyTo(resultStream);
+				resultStream.Position = 0;
+				return resultStream;
+			}
 		}
 	}
 }

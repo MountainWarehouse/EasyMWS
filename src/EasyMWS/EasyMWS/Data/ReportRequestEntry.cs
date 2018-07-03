@@ -15,14 +15,17 @@ namespace MountainWarehouse.EasyMWS.Data
 		public string RegionAndTypeComputed
 		{
 			// this field is populated based on ReportRequestData which, once set in the ctor, should never change again for the same entity.
-			get { return _regionAndType = _regionAndType ?? $"[AmazonRegion:'{AmazonRegion.ToString()}', ReportType:'{ReportType}']"; }
+			get { return _regionAndType = _regionAndType ?? $"(ReportType:{ReportType},Region:{AmazonRegion.ToString()})"; }
 		}
 
 		[Key]
 		public int Id { get; set; }
 
-		public int RequestRetryCount { get; set; }
-		public DateTime LastRequested { get; set; }
+		public int ReportRequestRetryCount { get; set; }
+		public int ReportDownloadRetryCount { get; set; }
+		public int InvokeCallbackRetryCount { get; set; }
+		public int ReportProcessRetryCount { get; set; }
+		public DateTime LastAmazonRequestDate { get; set; }
 		public DateTime DateCreated { get; set; }
 
 		#region Serialized callback data necessary to invoke a method with it's argument values.

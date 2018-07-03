@@ -23,21 +23,18 @@ namespace MountainWarehouse.EasyMWS.Logging
 		{
 			if (!_isEnabled) return;
 
-			var eventArgs =
-				new LogAvailableEventArgs(level, $"{JsonConvert.SerializeObject(new {Message = message}, Formatting.None)}");
-
-			if (requestInfo != null)
+			var messageObject = new
 			{
-				var messageObject = new
-				{
-					Source = "EasyMws",
-					RequestInfo = requestInfo,
-					Message = message
-				};
+				Application = "EasyMws",
+				Message = message,
+				RequestInfo = requestInfo
+			};
 
-				eventArgs.Message = $"{JsonConvert.SerializeObject(messageObject, Formatting.None)}";
-				eventArgs.RequestInfo = requestInfo;
-			}
+			var eventArgs = new LogAvailableEventArgs(level,
+				$"{JsonConvert.SerializeObject(messageObject, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.None})}")
+			{
+				RequestInfo = requestInfo
+			};
 
 			EventHandler<LogAvailableEventArgs> handler = LogAvailable;
 			handler?.Invoke(this, eventArgs);
@@ -61,30 +58,49 @@ namespace MountainWarehouse.EasyMWS.Logging
 		{
 			if (!_isEnabled) return;
 
-			var eventArgs = new LogAvailableEventArgs(LogLevel.Error, $"{JsonConvert.SerializeObject(new { Message = message }, Formatting.None)}", e);
+			RequestInfo requestInfo = null;
+			var messageObject = new
+			{
+				Application = string.Empty,
+				Message = string.Empty,
+				RequestInfo = requestInfo,
+			};
 
 			if (e is MarketplaceWebServiceException mwsWebServiceException)
 			{
-				eventArgs.RequestInfo = new RequestInfo(
+				requestInfo = new RequestInfo(
 					mwsWebServiceException.ResponseHeaderMetadata?.Timestamp,
 					mwsWebServiceException.RequestId,
 					mwsWebServiceException.StatusCode,
 					mwsWebServiceException.ErrorType,
 					mwsWebServiceException.ErrorCode);
 
-				var messageObject = new
+				messageObject = new
 				{
-					Source = "EasyMws",
-					RequestInfo = eventArgs.RequestInfo,
-					Message = message
+					Application = "EasyMws",
+					Message = message,
+					RequestInfo = requestInfo
 				};
-
-				eventArgs.Message = $"{JsonConvert.SerializeObject(messageObject, Formatting.None)}";
-				
 			}
+			else
+			{
+				messageObject = new
+				{
+					Application = "EasyMws",
+					Message = $"{message} {e.Message}",
+					RequestInfo = requestInfo
+				};
+			}
+			
+
+			var eventArgs = new LogAvailableEventArgs(LogLevel.Error, $"{JsonConvert.SerializeObject(messageObject, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.None })}", e)
+				{
+					RequestInfo = requestInfo
+				};
 
 			EventHandler<LogAvailableEventArgs> handler = LogAvailable;
 			handler?.Invoke(this, eventArgs);
 		}
+
 	}
 }

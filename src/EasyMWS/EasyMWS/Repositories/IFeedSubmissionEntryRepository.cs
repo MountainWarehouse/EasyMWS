@@ -4,7 +4,7 @@ using MountainWarehouse.EasyMWS.Data;
 
 namespace MountainWarehouse.EasyMWS.Repositories
 {
-    internal interface IFeedSubmissionCallbackRepo
+    internal interface IFeedSubmissionEntryRepository
     {
 	    void Create(FeedSubmissionEntry entry);
 	    void Update(FeedSubmissionEntry entry);
