@@ -113,9 +113,31 @@ public static class EasyMwsLoggingHelper
 				log4NetInstance.Warn(logArgs.Message);
 				break;
 			case EasyMWS.Enums.LogLevel.Error:
-				log4NetInstance.Error(logArgs.Message, logArgs.Exception);
-				break;
+				{
+					log4NetInstance.Error(logArgs.Message, logArgs.Exception);
+					if (logArgs.HasRequestInfo) HandleMarketplaceWebServiceException(logArgs.RequestInfo);
+					break;
+				}
 		}
+	}
+	
+	private static void HandleMarketplaceWebServiceException(RequestInfo requestInfo)
+	{
+		HttpStatusCode? statusCode = requestInfo.StatusCode;
+		string errorCode = requestInfo.ErrorCode;
+		string errorType = requestInfo.ErrorType;
+		string requestId = requestInfo.RequestId;
+		string requestTimestamp = requestInfo.Timestamp;
+
+		// EasyMws deletes queued entries from it's internal queue, if a request from Amazon throws a MarketplaceWebServiceException with a fatal error code.
+		// A fatal MarketplaceWebServiceException error code is considered by EasyMws to correspond to a scenario that cannot be retried.
+		// If the error code is considered to be a fatal one, an automatic requeueing logic could be triggered from this place.
+		// For more details about amazon error codes see : https://docs.developer.amazonservices.com/en_US/reports/Reports_ErrorCodes.html or the equivalent page for feeds.
+		// The following error codes are considered to be fatal by EasyMws : 
+		// Report request related error codes : AccessToReportDenied, InvalidReportId, InvalidReportType, InvalidRequest, ReportNoLongerAvailable.
+		// Feed request related error codes : AccessToFeedProcessingResultDenied, FeedCanceled, FeedProcessingResultNoLongerAvailable, InputDataError, InvalidFeedType, InvalidRequest.
+		// The following error codes are considered to be non-fatal by EasyMws : 
+		// Reports related : ReportNotReady, InvalidScheduleFrequency. Feeds related : ContentMD5Missing, ContentMD5DoesNotMatch, FeedProcessingResultNotReady, InvalidFeedSubmissionId. 
 	}
 }
 ```
