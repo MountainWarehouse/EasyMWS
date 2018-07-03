@@ -98,7 +98,7 @@ public void Main(object[] arguments)
 	var easyMwsLogger = new EasyMwsLogger();
 	easyMwsLogger.LogAvailable += (sender, args) => { args.PlugInLog4Net(log); };
 
-	var euClient = new EasyMwsClient(AmazonRegion.Europe, "EUSellerId", "EUSellerAccessKey", "EUSellerSecretAccessKey");
+	var euClient = new EasyMwsClient(AmazonRegion.Europe, "EUSellerId", "EUSellerAccessKey", "EUSellerSecretAccessKey", easyMwsLogger);
 	var propertiesContainer = new FeedSubmissionPropertiesContainer("feed content", "feed type");
 	euClient.QueueFeed(propertiesContainer, DoSomethingWithDownloadedReport, null);
 	var timer = new System.Threading.Timer(e => { euClient.Poll(); }, null, TimeSpan.Zero, TimeSpan.FromMinutes(2));
