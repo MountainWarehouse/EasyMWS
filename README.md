@@ -7,12 +7,12 @@ It tries to do that by abstracting away the request/check/download cycle for dow
 Detailed logs describing the state of either lifecycle can be accessed.
 
 
-## Downloading reports from Amazon MWS
+## Downloading reports from Amazon MWS using EasyMWS
 
-EasyMws provides factories that can be used to generate requests for downloading reports from Amazon MWS. One has to specify the report type, any required/optional arguments needed by Amazon to process the report and a set of amazon seller account credentials.
+EasyMWS provides factories that can be used to generate requests for downloading reports from Amazon MWS. One has to specify the report type, any required/optional arguments needed by Amazon to process the report and a set of amazon seller account credentials.
 (Adding support for more reports is still ongoing).
 
-A user can create requests to download reports from amazon and can add these requests to an internal EasyMws queue.
+A user can create requests to download reports from amazon and can add these requests to an internal EasyMWS queue.
 
 When queuing a request the user also needs to provide a static method reference. This method will be invoked once the request has been completed, in order to provide access to the report content.
 
@@ -20,8 +20,36 @@ All that is left to do is making periodic calls to the Poll() method. This metho
 
 Once a report has been downloaded, the callback method will be invoked and will provide access to the report content.
 
+```
+public void Main(object[] arguments)
+{
+	var euClient = new EasyMwsClient(AmazonRegion.Europe, "EUSellerId", "EUSellerAccessKey", "EUSellerSecretAccessKey");
+	var marketplaces = new MwsMarketplaceGroup(marketplace: MwsMarketplace.UK)
+			.AddMarketplace(MwsMarketplace.Germany).AddMarketplace(MwsMarketplace.France);
+	IReportRequestFactoryInventory reportRequestFactory = new ReportRequestFactoryInventory();
+	// if the marketplaces argument is not provided, the report is generated for the region(s) used to initialize the client.
+	var propertiesContainer = reportRequestFactory.AllListingsReport(requestedMarketplacesGroup: marketplaces,
+			startDate: DateTime.UtcNow.AddMonths(-1), endDate: DateTime.UtcNow);
+	var reportFilename = $"AllListingsReport_{DateTime.UtcNow.ToFileTimeUtc()}";
+	(string some, int data, string reportFileName) someData = ("C#7 named tuples are supported", 123, reportFilename);
+	euClient.QueueReport(propertiesContainer, DoSomethingWithDownloadedReport, someData);
 
-## Submitting feeds to Amazon MWS
+	// A better solution to call Poll repeatedly is recommended. example: https://www.hangfire.io/.
+	var timer = new System.Threading.Timer(e => { euClient.Poll(); }, null, TimeSpan.Zero, TimeSpan.FromMinutes(2));
+}
+
+// This method will be invoked when the report is downloaded.
+public static void DoSomethingWithDownloadedReport(Stream reportContent, object someData)
+{
+	var parameters = ((string some, string data, int reportFilename))someData;
+	using (var streamReader = new StreamReader(reportContent))
+	{
+		File.WriteAllText($@"C:\AmazonReports\{parameters.reportFilename}", streamReader.ReadToEnd());
+	}
+}
+```
+
+## Submitting feeds to Amazon MWS using EasyMWS
 
 A user can also create requests to submit feeds to amazon (feed content has to be provided separately), and add the requests to an internal queue.
 
@@ -31,59 +59,20 @@ All that is left to do is making periodic calls to the Poll() method. This metho
 
 Once a feed has been submitted to amazon and a feed processing result report has been downloaded, the callback method will be invoked and will provide access to the feed processing result report.
 
-## Code usage sample performing a report download and submitting a feed to Amazon using EasyMws.
-
 ```
 public void Main(object[] arguments)
 {
-	log4net.ILog log = log4net.LogManager.GetLogger(GetType());
-	var easyMwsLogger = new EasyMwsLogger();
-	easyMwsLogger.LogAvailable += (sender, args) => { args.PlugInLog4Net(log); };
-
-	var euClient = new EasyMwsClient(AmazonRegion.Europe, "euSellerId", "sellerAccessKey", "sellerSecretAccessKey");
-	QueueAllListingsReport(euClient);
-
-	// logging is optional, and it does not depend on a particular logging framework
-	var usClient = new EasyMwsClient(AmazonRegion.NorthAmerica, "usSellerId", "sellerAccessKey", "sellerSecretAccessKey", easyMwsLogger);
+	var usClient = new EasyMwsClient(AmazonRegion.NorthAmerica, "USSellerId", "USSellerAccessKey", "USSellerSecretAccessKey");
 	string productsFeedContent = "This should be the actual products feed content in XML format or some other format accepted by the Amazon MWS SubmitFeed endpoint";
-	QueueProductsFeed(usClient, productsFeedContent);
-
-	// A better solution to call Poll repeatedly is recommended. example: https://www.hangfire.io/.
-	var timer = new System.Threading.Timer((e) =>
-	{
-		euClient.Poll();
-	}, null, TimeSpan.Zero, TimeSpan.FromMinutes(2));
-}
-
-// Example method for queuing a ProductsFeed for Amazon submission, for a particular set of marketplaces.
-public static void QueueProductsFeed(IEasyMwsClient client, string feedContent) {
-	var marketplaces = new MwsMarketplaceGroup(marketplace: MwsMarketplace.UK)
-		.AddMarketplace(MwsMarketplace.Germany)
-		.AddMarketplace(MwsMarketplace.France)
-		.GetMarketplacesIdList.ToList();
-
 	// if the marketplaces argument is not provided, the feed will be submitted to the region(s) used to initialize the client.
-	var propertiesContainer = new FeedSubmissionPropertiesContainer(feedContent, feedType: 
-		"_POST_PRODUCT_DATA_", purgeAndReplace: false, marketplaceIdList: marketplaces);
+	var propertiesContainer = new FeedSubmissionPropertiesContainer(productsFeedContent, feedType: "_POST_PRODUCT_DATA_", purgeAndReplace: false);
 	var feedSubmissionReportFilename = $"ProductsFeed_SubmissionReport_{DateTime.UtcNow.ToFileTimeUtc()}";
 	(string some, int data, string reportFileName) someData = ("C#7 named tuples are supported", 123, feedSubmissionReportFilename);
 
-	client.QueueFeed(propertiesContainer, DoSomethingWithDownloadedReport, someData));
-}
+	usClient.QueueFeed(propertiesContainer, DoSomethingWithDownloadedReport, someData);
 
-// Example method for queuing the AllListingsReport for download from Amazon, for a particular set of marketplaces.
-public void QueueAllListingsReport(IEasyMwsClient client) {
-	var marketplaces = new MwsMarketplaceGroup(marketplace: MwsMarketplace.UK)
-		.AddMarketplace(MwsMarketplace.Germany)
-		.AddMarketplace(MwsMarketplace.France);
-	IReportRequestFactoryInventory reportRequestFactory = new ReportRequestFactoryInventory();
-	// if the marketplaces argument is not provided, the report is generated for the region(s) used to initialize the client.
-	var propertiesContainer = reportRequestFactory.AllListingsReport(requestedMarketplacesGroup: marketplaces,
-										 startDate: DateTime.UtcNow.AddMonths(-1),
-										 endDate: DateTime.UtcNow);
-	var reportFilename = $"AllListingsReport_{DateTime.UtcNow.ToFileTimeUtc()}";
-	(string some, int data, string reportFileName) someData = ("C#7 named tuples are supported", 123, reportFilename);
-	client.QueueReport(propertiesContainer, DoSomethingWithDownloadedReport, someData);
+	// A better solution to call Poll repeatedly is recommended. example: https://www.hangfire.io/.
+	var timer = new System.Threading.Timer(e => { usClient.Poll(); }, null, TimeSpan.Zero, TimeSpan.FromMinutes(2));
 }
 
 // This method will be invoked when the report is downloaded.
@@ -97,7 +86,28 @@ public static void DoSomethingWithDownloadedReport(Stream reportContent, object 
 		File.WriteAllText($@"C:\AmazonReports\{parameters.reportFilename}", streamReader.ReadToEnd());
 	}
 }
-		
+```
+
+
+## Sample - getting logs from EasyMWS and overriding EasyMWS default settings
+
+```
+public void Main(object[] arguments)
+{
+	var customEasyMwsOptions = EasyMwsOptions.Defaults();
+	customEasyMwsOptions.FeedSubmissionMaxRetryCount = 5;
+	customEasyMwsOptions.ReportRequestRetryInterval = TimeSpan.FromMinutes(2);
+
+	log4net.ILog log = log4net.LogManager.GetLogger(GetType());
+	var easyMwsLogger = new EasyMwsLogger();
+	easyMwsLogger.LogAvailable += (sender, args) => { args.PlugInLog4Net(log); };
+
+	var euClient = new EasyMwsClient(AmazonRegion.Europe, "EUSellerId", "EUSellerAccessKey", "EUSellerSecretAccessKey", easyMwsLogger: easyMwsLogger, options: customEasyMwsOptions);
+	var propertiesContainer = new FeedSubmissionPropertiesContainer("feed content", "feed type");
+	euClient.QueueFeed(propertiesContainer, DoSomethingWithDownloadedReport, null);
+	var timer = new System.Threading.Timer(e => { euClient.Poll(); }, null, TimeSpan.Zero, TimeSpan.FromMinutes(2));
+}
+
 // Example class containing an extension method that can access EasyMws logs using Log4net.
 // Any other logging framework can access EasyMws logs in a similar fashion.
 public static class EasyMwsLoggingHelper
@@ -120,7 +130,7 @@ public static class EasyMwsLoggingHelper
 				}
 		}
 	}
-	
+
 	private static void HandleMarketplaceWebServiceException(RequestInfo requestInfo)
 	{
 		HttpStatusCode? statusCode = requestInfo.StatusCode;
@@ -132,6 +142,7 @@ public static class EasyMwsLoggingHelper
 		// EasyMws deletes queued entries from it's internal queue, if a request from Amazon throws a MarketplaceWebServiceException with a fatal error code.
 		// A fatal MarketplaceWebServiceException error code is considered by EasyMws to correspond to a scenario that cannot be retried.
 		// If the error code is considered to be a fatal one, an automatic requeueing logic could be triggered from this place.
+		// If the error code is considered to be non-fatal, EasyMWS will automatically retry the failing step internally.
 		// For more details about amazon error codes see : https://docs.developer.amazonservices.com/en_US/reports/Reports_ErrorCodes.html or the equivalent page for feeds.
 		// The following error codes are considered to be fatal by EasyMws : 
 		// Report request related error codes : AccessToReportDenied, InvalidReportId, InvalidReportType, InvalidRequest, ReportNoLongerAvailable.
