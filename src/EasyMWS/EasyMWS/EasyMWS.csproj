@@ -12,7 +12,8 @@
     <Company>Mountain Warehouse</Company>
     <Product>EasyMWS</Product>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Description>MWS Client that can handle Amazon report downloading and feed submission, while abstracting away the request/check/download cycle.</Description>
+    <Description>EasyMWS is a .NET library that intends to simplify the interaction with the Amazon Marketplace Web Services API.
+It tries to do that by abstracting away the request/check/download cycle for downloading reports / submitting feeds.</Description>
     <PackageLicenseUrl>http://aws.amazon.com/apache2.0</PackageLicenseUrl>
   </PropertyGroup>
 
