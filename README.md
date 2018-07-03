@@ -89,16 +89,20 @@ public static void DoSomethingWithDownloadedReport(Stream reportContent, object 
 ```
 
 
-## Sample - getting logs from EasyMWS
+## Sample - getting logs from EasyMWS and overriding EasyMWS default settings
 
 ```
 public void Main(object[] arguments)
 {
+	var customEasyMwsOptions = EasyMwsOptions.Defaults();
+	customEasyMwsOptions.FeedSubmissionMaxRetryCount = 5;
+	customEasyMwsOptions.ReportRequestRetryInterval = TimeSpan.FromMinutes(2);
+
 	log4net.ILog log = log4net.LogManager.GetLogger(GetType());
 	var easyMwsLogger = new EasyMwsLogger();
 	easyMwsLogger.LogAvailable += (sender, args) => { args.PlugInLog4Net(log); };
 
-	var euClient = new EasyMwsClient(AmazonRegion.Europe, "EUSellerId", "EUSellerAccessKey", "EUSellerSecretAccessKey", easyMwsLogger);
+	var euClient = new EasyMwsClient(AmazonRegion.Europe, "EUSellerId", "EUSellerAccessKey", "EUSellerSecretAccessKey", easyMwsLogger: easyMwsLogger, options: customEasyMwsOptions);
 	var propertiesContainer = new FeedSubmissionPropertiesContainer("feed content", "feed type");
 	euClient.QueueFeed(propertiesContainer, DoSomethingWithDownloadedReport, null);
 	var timer = new System.Threading.Timer(e => { euClient.Poll(); }, null, TimeSpan.Zero, TimeSpan.FromMinutes(2));
