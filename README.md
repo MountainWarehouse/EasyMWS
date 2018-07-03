@@ -20,6 +20,34 @@ All that is left to do is making periodic calls to the Poll() method. This metho
 
 Once a report has been downloaded, the callback method will be invoked and will provide access to the report content.
 
+```
+public void Main(object[] arguments)
+{
+	var euClient = new EasyMwsClient(AmazonRegion.Europe, "EUSellerId", "EUSellerAccessKey", "EUSellerSecretAccessKey");
+	var marketplaces = new MwsMarketplaceGroup(marketplace: MwsMarketplace.UK)
+			.AddMarketplace(MwsMarketplace.Germany).AddMarketplace(MwsMarketplace.France);
+	IReportRequestFactoryInventory reportRequestFactory = new ReportRequestFactoryInventory();
+	// if the marketplaces argument is not provided, the report is generated for the region(s) used to initialize the client.
+	var propertiesContainer = reportRequestFactory.AllListingsReport(requestedMarketplacesGroup: marketplaces,
+			startDate: DateTime.UtcNow.AddMonths(-1), endDate: DateTime.UtcNow);
+	var reportFilename = $"AllListingsReport_{DateTime.UtcNow.ToFileTimeUtc()}";
+	(string some, int data, string reportFileName) someData = ("C#7 named tuples are supported", 123, reportFilename);
+	euClient.QueueReport(propertiesContainer, DoSomethingWithDownloadedReport, someData);
+
+	// A better solution to call Poll repeatedly is recommended. example: https://www.hangfire.io/.
+	var timer = new System.Threading.Timer(e => { euClient.Poll(); }, null, TimeSpan.Zero, TimeSpan.FromMinutes(2));
+}
+
+// This method will be invoked when the report is downloaded.
+public static void DoSomethingWithDownloadedReport(Stream reportContent, object someData)
+{
+	var parameters = ((string some, string data, int reportFilename))someData;
+	using (var streamReader = new StreamReader(reportContent))
+	{
+		File.WriteAllText($@"C:\AmazonReports\{parameters.reportFilename}", streamReader.ReadToEnd());
+	}
+}
+```
 
 ## Submitting feeds to Amazon MWS
 
@@ -30,8 +58,6 @@ When queuing a request the user also needs to provide a static method reference.
 All that is left to do is making periodic calls to the Poll() method. This method also handles all the lifecycle of submitting feeds to amazon. A call every 2 to 5 minutes is recommended in order to make sure request throttling won't happen.
 
 Once a feed has been submitted to amazon and a feed processing result report has been downloaded, the callback method will be invoked and will provide access to the feed processing result report.
-
-## Sample for submitting a feed to Amazon using EasyMws
 
 ```
 public void Main(object[] arguments)
@@ -62,38 +88,8 @@ public static void DoSomethingWithDownloadedReport(Stream reportContent, object 
 }
 ```
 
-## Sample for downloading a report from Amazon using EasyMws
 
-```
-public void Main(object[] arguments)
-{
-	var euClient = new EasyMwsClient(AmazonRegion.Europe, "EUSellerId", "EUSellerAccessKey", "EUSellerSecretAccessKey");
-	var marketplaces = new MwsMarketplaceGroup(marketplace: MwsMarketplace.UK)
-			.AddMarketplace(MwsMarketplace.Germany).AddMarketplace(MwsMarketplace.France);
-	IReportRequestFactoryInventory reportRequestFactory = new ReportRequestFactoryInventory();
-	// if the marketplaces argument is not provided, the report is generated for the region(s) used to initialize the client.
-	var propertiesContainer = reportRequestFactory.AllListingsReport(requestedMarketplacesGroup: marketplaces,
-			startDate: DateTime.UtcNow.AddMonths(-1), endDate: DateTime.UtcNow);
-	var reportFilename = $"AllListingsReport_{DateTime.UtcNow.ToFileTimeUtc()}";
-	(string some, int data, string reportFileName) someData = ("C#7 named tuples are supported", 123, reportFilename);
-	euClient.QueueReport(propertiesContainer, DoSomethingWithDownloadedReport, someData);
-
-	// A better solution to call Poll repeatedly is recommended. example: https://www.hangfire.io/.
-	var timer = new System.Threading.Timer(e => { euClient.Poll(); }, null, TimeSpan.Zero, TimeSpan.FromMinutes(2));
-}
-
-// This method will be invoked when the report is downloaded.
-public static void DoSomethingWithDownloadedReport(Stream reportContent, object someData)
-{
-	var parameters = ((string some, string data, int reportFilename))someData;
-	using (var streamReader = new StreamReader(reportContent))
-	{
-		File.WriteAllText($@"C:\AmazonReports\{parameters.reportFilename}", streamReader.ReadToEnd());
-	}
-}
-```
-
-## Sample for obtaining logs from EasyMws
+## Sample - getting logs for EasyMws
 
 ```
 public void Main(object[] arguments)
