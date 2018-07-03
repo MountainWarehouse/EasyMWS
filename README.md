@@ -138,6 +138,7 @@ public static class EasyMwsLoggingHelper
 		// EasyMws deletes queued entries from it's internal queue, if a request from Amazon throws a MarketplaceWebServiceException with a fatal error code.
 		// A fatal MarketplaceWebServiceException error code is considered by EasyMws to correspond to a scenario that cannot be retried.
 		// If the error code is considered to be a fatal one, an automatic requeueing logic could be triggered from this place.
+		// If the error code is considered to be non-fatal, EasyMWS will automatically retry the failing step internally.
 		// For more details about amazon error codes see : https://docs.developer.amazonservices.com/en_US/reports/Reports_ErrorCodes.html or the equivalent page for feeds.
 		// The following error codes are considered to be fatal by EasyMws : 
 		// Report request related error codes : AccessToReportDenied, InvalidReportId, InvalidReportType, InvalidRequest, ReportNoLongerAvailable.
