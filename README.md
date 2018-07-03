@@ -7,12 +7,12 @@ It tries to do that by abstracting away the request/check/download cycle for dow
 Detailed logs describing the state of either lifecycle can be accessed.
 
 
-## Downloading reports from Amazon MWS
+## Downloading reports from Amazon MWS using EasyMWS
 
-EasyMws provides factories that can be used to generate requests for downloading reports from Amazon MWS. One has to specify the report type, any required/optional arguments needed by Amazon to process the report and a set of amazon seller account credentials.
+EasyMWS provides factories that can be used to generate requests for downloading reports from Amazon MWS. One has to specify the report type, any required/optional arguments needed by Amazon to process the report and a set of amazon seller account credentials.
 (Adding support for more reports is still ongoing).
 
-A user can create requests to download reports from amazon and can add these requests to an internal EasyMws queue.
+A user can create requests to download reports from amazon and can add these requests to an internal EasyMWS queue.
 
 When queuing a request the user also needs to provide a static method reference. This method will be invoked once the request has been completed, in order to provide access to the report content.
 
@@ -49,7 +49,7 @@ public static void DoSomethingWithDownloadedReport(Stream reportContent, object 
 }
 ```
 
-## Submitting feeds to Amazon MWS
+## Submitting feeds to Amazon MWS using EasyMWS
 
 A user can also create requests to submit feeds to amazon (feed content has to be provided separately), and add the requests to an internal queue.
 
@@ -89,7 +89,7 @@ public static void DoSomethingWithDownloadedReport(Stream reportContent, object 
 ```
 
 
-## Sample - getting logs for EasyMws
+## Sample - getting logs from EasyMWS
 
 ```
 public void Main(object[] arguments)
