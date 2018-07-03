@@ -68,7 +68,7 @@ public static void QueueProductsFeed(IEasyMwsClient client, string feedContent) 
 	var feedSubmissionReportFilename = $"ProductsFeed_SubmissionReport_{DateTime.UtcNow.ToFileTimeUtc()}";
 	(string some, int data, string reportFileName) someData = ("C#7 named tuples are supported", 123, feedSubmissionReportFilename);
 
-	client.QueueFeed(propertiesContainer, DoSomethingWithDownloadedReport, (feedSubmissionReportFilename, someData));
+	client.QueueFeed(propertiesContainer, DoSomethingWithDownloadedReport, someData));
 }
 
 // Example method for queuing the AllListingsReport for download from Amazon, for a particular set of marketplaces.
