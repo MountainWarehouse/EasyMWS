@@ -67,14 +67,14 @@ namespace MountainWarehouse.EasyMWS.Client
 			Parallel.Invoke(
 				() =>
 				{
-					using (var reportRequestService = new ReportRequestCallbackService(_options, _easyMwsLogger))
+					using (var reportRequestService = new ReportRequestEntryService(_options, _easyMwsLogger))
 					{
 						_reportProcessor.PollReports(reportRequestService);
 					}
 				},
 				() =>
 				{
-					using (var feedSubmissionService = new FeedSubmissionCallbackService(_options, _easyMwsLogger))
+					using (var feedSubmissionService = new FeedSubmissionEntryService(_options, _easyMwsLogger))
 					{
 						_feedProcessor.PollFeeds(feedSubmissionService);
 					}
@@ -85,7 +85,7 @@ namespace MountainWarehouse.EasyMWS.Client
 		public void QueueReport(ReportRequestPropertiesContainer reportRequestContainer,
 			Action<Stream, object> callbackMethod, object callbackData)
 		{
-			using (var reportRequestService = new ReportRequestCallbackService(_options, _easyMwsLogger))
+			using (var reportRequestService = new ReportRequestEntryService(_options, _easyMwsLogger))
 			{
 				_reportProcessor.QueueReport(reportRequestService, reportRequestContainer, callbackMethod, callbackData);
 			}
@@ -94,7 +94,7 @@ namespace MountainWarehouse.EasyMWS.Client
 		public void QueueFeed(FeedSubmissionPropertiesContainer feedSubmissionContainer,
 			Action<Stream, object> callbackMethod, object callbackData)
 		{
-			using (var feedSubmissionService = new FeedSubmissionCallbackService(_options, _easyMwsLogger))
+			using (var feedSubmissionService = new FeedSubmissionEntryService(_options, _easyMwsLogger))
 			{
 				_feedProcessor.QueueFeed(feedSubmissionService, feedSubmissionContainer, callbackMethod, callbackData);
 			}
@@ -102,7 +102,7 @@ namespace MountainWarehouse.EasyMWS.Client
 
 		public void PurgeReportRequestEntriesQueue()
 		{
-			using (var reportRequestService = new ReportRequestCallbackService(_options, _easyMwsLogger))
+			using (var reportRequestService = new ReportRequestEntryService(_options, _easyMwsLogger))
 			{
 				_reportProcessor.PurgeQueue(reportRequestService);
 			}
@@ -110,7 +110,7 @@ namespace MountainWarehouse.EasyMWS.Client
 
 		public void PurgeFeedSubmissionEntriesQueue()
 		{
-			using (var feedSubmissionService = new FeedSubmissionCallbackService(_options, _easyMwsLogger))
+			using (var feedSubmissionService = new FeedSubmissionEntryService(_options, _easyMwsLogger))
 			{
 				_feedProcessor.PurgeQueue(feedSubmissionService);
 			}

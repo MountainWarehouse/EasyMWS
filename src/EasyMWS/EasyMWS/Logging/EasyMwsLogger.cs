@@ -25,15 +25,16 @@ namespace MountainWarehouse.EasyMWS.Logging
 
 			var messageObject = new
 			{
-				Source = "EasyMws",
-				Content = message,
+				Application = "EasyMws",
+				Message = message,
 				RequestInfo = requestInfo
 			};
 
-			var eventArgs = new LogAvailableEventArgs(level, $"{JsonConvert.SerializeObject(new { Message = messageObject }, Formatting.None)}")
-				{
-					RequestInfo = requestInfo
-				};
+			var eventArgs = new LogAvailableEventArgs(level,
+				$"{JsonConvert.SerializeObject(messageObject, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.None})}")
+			{
+				RequestInfo = requestInfo
+			};
 
 			EventHandler<LogAvailableEventArgs> handler = LogAvailable;
 			handler?.Invoke(this, eventArgs);
@@ -58,6 +59,12 @@ namespace MountainWarehouse.EasyMWS.Logging
 			if (!_isEnabled) return;
 
 			RequestInfo requestInfo = null;
+			var messageObject = new
+			{
+				Application = string.Empty,
+				Message = string.Empty,
+				RequestInfo = requestInfo,
+			};
 
 			if (e is MarketplaceWebServiceException mwsWebServiceException)
 			{
@@ -67,16 +74,26 @@ namespace MountainWarehouse.EasyMWS.Logging
 					mwsWebServiceException.StatusCode,
 					mwsWebServiceException.ErrorType,
 					mwsWebServiceException.ErrorCode);
+
+				messageObject = new
+				{
+					Application = "EasyMws",
+					Message = message,
+					RequestInfo = requestInfo
+				};
 			}
-
-			var messageObject = new
+			else
 			{
-				Source = "EasyMws",
-				Content = message,
-				RequestInfo = requestInfo
-			};
+				messageObject = new
+				{
+					Application = "EasyMws",
+					Message = $"{message} {e.Message}",
+					RequestInfo = requestInfo
+				};
+			}
+			
 
-			var eventArgs = new LogAvailableEventArgs(LogLevel.Error, $"{JsonConvert.SerializeObject(new {Message = messageObject}, Formatting.None)}", e)
+			var eventArgs = new LogAvailableEventArgs(LogLevel.Error, $"{JsonConvert.SerializeObject(messageObject, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.None })}", e)
 				{
 					RequestInfo = requestInfo
 				};
@@ -84,5 +101,6 @@ namespace MountainWarehouse.EasyMWS.Logging
 			EventHandler<LogAvailableEventArgs> handler = LogAvailable;
 			handler?.Invoke(this, eventArgs);
 		}
+
 	}
 }

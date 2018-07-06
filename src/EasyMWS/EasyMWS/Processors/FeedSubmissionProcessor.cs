@@ -11,7 +11,6 @@ using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Services;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService.Model;
-using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS.Processors
 {
@@ -23,6 +22,15 @@ namespace MountainWarehouse.EasyMWS.Processors
 		private readonly AmazonRegion _region;
 		private readonly string _merchantId;
 
+		private readonly Dictionary<string, string> PendingStatusCodesAndMessages = new Dictionary<string, string>()
+		{
+			{"_AWAITING_ASYNCHRONOUS_REPLY_", "The request is being processed, but is waiting for external information before it can complete."},
+			{"_IN_PROGRESS_", "The request is being processed."},
+			{"_IN_SAFETY_NET_", "The request is being processed, but the system has determined that there is a potential error with the feed (for example, the request will remove all inventory from a seller's account.) An Amazon seller support associate will contact the seller to confirm whether the feed should be processed."},
+			{"_SUBMITTED_", "The request has been received, but has not yet started processing."},
+			{"_UNCONFIRMED_", "The request is pending."}
+		};
+
 		internal FeedSubmissionProcessor(AmazonRegion region, string merchantId, IMarketplaceWebServiceClient marketplaceWebServiceClient, IEasyMwsLogger logger, EasyMwsOptions options)
 		{
 			_region = region;
@@ -32,17 +40,40 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_marketplaceWebServiceClient = marketplaceWebServiceClient;
 		}
 
-		public FeedSubmissionEntry GetNextFromQueueOfFeedsToSubmit(IFeedSubmissionCallbackService feedSubmissionService) =>
-			string.IsNullOrEmpty(_merchantId) ? null : feedSubmissionService.GetAll()
-				.FirstOrDefault(fscs => fscs.AmazonRegion == _region && fscs.MerchantId == _merchantId
-				&& IsFeedInASubmitFeedQueue(fscs)
-				&& IsFeedReadyForSubmission(fscs));
 
-		public string SubmitFeedToAmazon(FeedSubmissionEntry feedSubmission)
+		public void SubmitFeedToAmazon(IFeedSubmissionEntryService feedSubmissionService, FeedSubmissionEntry feedSubmission)
 		{
+			void HandleSubmitFeedSuccess(SubmitFeedResponse response)
+			{
+				var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
+				var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
+				feedSubmission.FeedSubmissionId = response?.SubmitFeedResult?.FeedSubmissionInfo?.FeedSubmissionId;
+				feedSubmission.FeedSubmissionRetryCount = 0;
+				_logger.Info($"AmazonMWS feed submission has succeeded for {feedSubmission.RegionAndTypeComputed}. FeedSubmissionId:'{feedSubmission.FeedSubmissionId}'.",
+					new RequestInfo(timestamp, requestId));
+			}
+			void HandleMissingFeedSubmissionId()
+			{
+				feedSubmission.FeedSubmissionRetryCount++;
+				_logger.Warn($"SubmitFeed did not generate a FeedSubmissionId for {feedSubmission.RegionAndTypeComputed}. Feed submission will be retried. FeedSubmissionRetryCount is now : {feedSubmission.FeedSubmissionRetryCount}.");
+			}
+			void HandleNonFatalOrGenericException(Exception e)
+			{
+				feedSubmission.FeedSubmissionRetryCount++;
+				feedSubmission.LastSubmitted = DateTime.UtcNow;
+				feedSubmissionService.Update(feedSubmission);
+				_logger.Warn($"AmazonMWS SubmitFeed failed for {feedSubmission.RegionAndTypeComputed}. Feed submission will be retried. FeedSubmissionRetryCount is now : {feedSubmission.FeedSubmissionRetryCount}.");
+			}
+			void HandleFatalException(Exception e)
+			{
+				feedSubmissionService.Delete(feedSubmission);
+				_logger.Error($"AmazonMWS SubmitFeed failed for {feedSubmission.RegionAndTypeComputed}. The entry will now be removed from queue.", e);
+			}
+
 			var missingInformationExceptionMessage = "Cannot submit queued feed to amazon due to missing feed submission information";
 
-			if (feedSubmission?.FeedSubmissionData == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Feed submission data is null.");
+			if (feedSubmission == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Feed submission entry is null.");
+			if (feedSubmission.FeedSubmissionData == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Feed submission data is null.");
 
 			var feedContentZip = feedSubmission.Details?.FeedContent;
 			if (feedContentZip == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Feed content is missing.");
@@ -68,69 +99,51 @@ namespace MountainWarehouse.EasyMWS.Processors
 				try
 				{
 					var response = _marketplaceWebServiceClient.SubmitFeed(submitFeedRequest);
+					feedSubmission.LastSubmitted = DateTime.UtcNow;
 
-					var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
-					var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
-					_logger.Info($"Request to MWS.SubmitFeed was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']",
-						new RequestInfo(timestamp, requestId));
+					if (string.IsNullOrEmpty(response?.SubmitFeedResult?.FeedSubmissionInfo?.FeedSubmissionId))
+					{
+						HandleMissingFeedSubmissionId();
+					}
+					else
+					{
+						HandleSubmitFeedSuccess(response);
+					}
 
-					return response?.SubmitFeedResult?.FeedSubmissionInfo?.FeedSubmissionId;
+					feedSubmissionService.Update(feedSubmission);
 				}
-				catch (MarketplaceWebServiceException e) when (e.StatusCode == HttpStatusCode.BadRequest)
+				catch (MarketplaceWebServiceException e) when (e.StatusCode == HttpStatusCode.BadRequest && IsAmazonErrorCodeFatal(e.ErrorCode))
 				{
-					stream.Dispose();
-					_logger.Error($"Request to MWS.SubmitFeed failed! [HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}', Message: '{e.Message}']", e);
-					return HttpStatusCode.BadRequest.ToString();
-					
+					HandleFatalException(e);
 				}
-				catch (MarketplaceWebServiceException e)
+				catch (MarketplaceWebServiceException e) when (IsAmazonErrorCodeNonFatal(e.ErrorCode))
 				{
-					stream.Dispose();
-					_logger.Error($"Request to MWS.SubmitFeed failed! [HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}', Message: '{e.Message}']", e);
-					return null;
+					HandleNonFatalOrGenericException(e);
 				}
 				catch (Exception e)
 				{
-					stream.Dispose();
-					_logger.Error($"Request to MWS.SubmitFeed failed! [Message: '{e.Message}']", e);
-					return null;
+					HandleNonFatalOrGenericException(e);
 				}
 				finally
 				{
-					stream.Close();
+					stream.Dispose();
+					feedSubmissionService.SaveChanges();
 				}
 			}
 		}
 
-		public void MoveToQueueOfSubmittedFeeds(IFeedSubmissionCallbackService feedSubmissionService, FeedSubmissionEntry feedSubmission, string feedSubmissionId)
+		public List<(string FeedSubmissionId, string FeedProcessingStatus)> RequestFeedSubmissionStatusesFromAmazon(IEnumerable<string> feedSubmissionIdList, string merchant)
 		{
-			feedSubmission.FeedSubmissionId = feedSubmissionId;
-			feedSubmission.SubmissionRetryCount = 0;
-			feedSubmissionService.Update(feedSubmission);
-			feedSubmissionService.SaveChanges();
+			List<(string FeedSubmissionId, string IsProcessingComplete)> GetProcessingStatusesPerSubmissionIdFromResponse(GetFeedSubmissionListResponse response)
+			{
+				var responseInfo = new List<(string FeedSubmissionId, string IsProcessingComplete)>();
+				foreach (var feedSubmissionInfo in response.GetFeedSubmissionListResult.FeedSubmissionInfo)
+				{
+					responseInfo.Add((feedSubmissionInfo.FeedSubmissionId, feedSubmissionInfo.FeedProcessingStatus));
+				}
+				return responseInfo;
+			}
 
-			_logger.Info($"Moving {feedSubmission.RegionAndTypeComputed} to queue of feed submissions that await processing results.");
-		}
-
-		public void MoveToRetryQueue(IFeedSubmissionCallbackService feedSubmissionService, FeedSubmissionEntry feedSubmission)
-		{
-			feedSubmission.SubmissionRetryCount++;
-			feedSubmissionService.Update(feedSubmission);
-			feedSubmissionService.SaveChanges();
-
-			_logger.Warn($"Moving {feedSubmission.RegionAndTypeComputed} to retry queue. Retry count is now '{feedSubmission.SubmissionRetryCount}'.");
-		}
-
-		public IEnumerable<string> GetIdsForSubmittedFeedsFromQueue(IFeedSubmissionCallbackService feedSubmissionService) =>
-			string.IsNullOrEmpty(_merchantId) ? new List<string>().AsEnumerable() : feedSubmissionService.Where(
-				rrcs => rrcs.AmazonRegion == _region && rrcs.MerchantId == _merchantId
-				        && rrcs.FeedSubmissionId != null
-						&& rrcs.IsProcessingComplete == false
-				).Select(f => f.FeedSubmissionId);
-
-		public List<(string FeedSubmissionId, string FeedProcessingStatus)> RequestFeedSubmissionStatusesFromAmazon(
-			IEnumerable<string> feedSubmissionIdList, string merchant)
-		{
 			_logger.Info($"Attempting to request feed submission statuses for all feeds in queue.");
 
 			var request = new GetFeedSubmissionListRequest() {FeedSubmissionIdList = new IdList(), Merchant = merchant};
@@ -142,83 +155,78 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 				var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
 				var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
-				_logger.Info(
-					$"Request to MWS.GetFeedSubmissionList was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']",
-					new RequestInfo(timestamp, requestId));
+				_logger.Info($"AmazonMWS request for feed submission statuses succeeded.", new RequestInfo(timestamp, requestId));
 
-				var responseInfo = new List<(string FeedSubmissionId, string IsProcessingComplete)>();
-
-				foreach (var feedSubmissionInfo in response.GetFeedSubmissionListResult.FeedSubmissionInfo)
+				if (response?.GetFeedSubmissionListResult?.FeedSubmissionInfo != null)
 				{
-					responseInfo.Add((feedSubmissionInfo.FeedSubmissionId, feedSubmissionInfo.FeedProcessingStatus));
+					return GetProcessingStatusesPerSubmissionIdFromResponse(response);
 				}
-
-				_logger.Info($"AmazonMWS request for feed submission statuses succeeded.");
-				return responseInfo;
+				else
+				{
+					_logger.Warn("AmazonMWS GetFeedSubmissionList response does not contain any results. The operation will be executed again at the next poll request.");
+					return null;
+				}
 			}
 			catch (MarketplaceWebServiceException e)
 			{
-				_logger.Error($"Request to MWS.GetFeedSubmissionList failed! [Message: '{e.Message}', HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}']", e);
+				_logger.Warn($"AmazonMWS GetFeedSubmissionList failed! The operation will be executed again at the next poll request.");
 				return null;
 			}
 			catch (Exception e)
 			{
-				_logger.Error($"Request to MWS.GetFeedSubmissionList failed! [Message: '{e.Message}']", e);
+				_logger.Warn($"AmazonMWS GetFeedSubmissionList failed! The operation will be executed again at the next poll request.");
 				return null;
 			}
 		}
 
-		public void QueueFeedsAccordingToProcessingStatus(IFeedSubmissionCallbackService feedSubmissionService, List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses)
+		public void QueueFeedsAccordingToProcessingStatus(IFeedSubmissionEntryService feedSubmissionService, List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses)
 		{
+			if(feedProcessingStatuses == null || !feedProcessingStatuses.Any()) return;
+
 			foreach (var feedSubmissionInfo in feedProcessingStatuses)
 			{
-				var feedSubmissionCallback = feedSubmissionService.FirstOrDefault(fsc => fsc.FeedSubmissionId == feedSubmissionInfo.FeedSubmissionId);
-				if(feedSubmissionCallback == null) continue;
+				var feedSubmissionEntry = feedSubmissionService.FirstOrDefault(fsc => fsc.FeedSubmissionId == feedSubmissionInfo.FeedSubmissionId);
+				if(feedSubmissionEntry == null) continue;
+
+				var genericProcessingInfo = $"ProcessingStatus returned by Amazon for {feedSubmissionEntry.RegionAndTypeComputed} is '{feedSubmissionInfo.FeedProcessingStatus}'.";
 
 				if (feedSubmissionInfo.FeedProcessingStatus == "_DONE_")
 				{
-					feedSubmissionCallback.IsProcessingComplete = true;
-					feedSubmissionCallback.SubmissionRetryCount = 0;
-					feedSubmissionService.Update(feedSubmissionCallback);
+					feedSubmissionEntry.IsProcessingComplete = true;
+					feedSubmissionEntry.FeedProcessingRetryCount = 0;
+					_logger.Info($"{genericProcessingInfo}. The request has been processed. The feed processing report download is ready to be attempted.");
 				}
-				else if (feedSubmissionInfo.FeedProcessingStatus == "_AWAITING_ASYNCHRONOUS_REPLY_"
-				           || feedSubmissionInfo.FeedProcessingStatus == "_IN_PROGRESS_"
-				           || feedSubmissionInfo.FeedProcessingStatus == "_IN_SAFETY_NET_"
-				           || feedSubmissionInfo.FeedProcessingStatus == "_SUBMITTED_"
-				           || feedSubmissionInfo.FeedProcessingStatus == "_UNCONFIRMED_")
+				else if (PendingStatusCodesAndMessages.Keys.Any(pendingStatus => pendingStatus == feedSubmissionInfo.FeedProcessingStatus))
 				{
-					feedSubmissionCallback.IsProcessingComplete = false;
-					feedSubmissionCallback.SubmissionRetryCount = 0;
-					feedSubmissionService.Update(feedSubmissionCallback);
+					var specificProcessingInfo = PendingStatusCodesAndMessages[feedSubmissionInfo.FeedProcessingStatus];
+					feedSubmissionEntry.FeedProcessingRetryCount = 0;
+					_logger.Info($"{genericProcessingInfo} {specificProcessingInfo} The feed processing status will be checked again at the next poll request.");
 				}
 				else if (feedSubmissionInfo.FeedProcessingStatus == "_CANCELLED_")
 				{
-					feedSubmissionCallback.IsProcessingComplete = false;
-					feedSubmissionCallback.SubmissionRetryCount++;
-					feedSubmissionService.Update(feedSubmissionCallback);
+					feedSubmissionEntry.FeedProcessingRetryCount++;
+					feedSubmissionEntry.FeedSubmissionId = null;
+					_logger.Info($"{genericProcessingInfo}. The request has been aborted due to a fatal error. The feed submission operation will be retried. FeedProcessingRetryCount is now '{feedSubmissionEntry.FeedProcessingRetryCount}'.");
 				}
 				else
 				{
-					feedSubmissionCallback.IsProcessingComplete = false;
-					feedSubmissionCallback.SubmissionRetryCount++;
-					feedSubmissionService.Update(feedSubmissionCallback);
+					feedSubmissionEntry.FeedProcessingRetryCount++;
+					_logger.Info($"{genericProcessingInfo}. The feed submission operation will be retried. This feed processing status is not yet handled by EasyMws. FeedProcessingRetryCount is now '{feedSubmissionEntry.FeedProcessingRetryCount}'.");
 				}
+				feedSubmissionService.Update(feedSubmissionEntry);
 			}
 
 			feedSubmissionService.SaveChanges();
 		}
 
-		public FeedSubmissionEntry GetNextFromQueueOfProcessingCompleteFeeds(IFeedSubmissionCallbackService feedSubmissionService)
-			=> string.IsNullOrEmpty(_merchantId) ? null : feedSubmissionService.FirstOrDefault(
-				ffscs => ffscs.AmazonRegion == _region && ffscs.MerchantId == _merchantId
-				&& ffscs.FeedSubmissionId != null
-				&& ffscs.IsProcessingComplete == true
-				&& IsReadyForRequestingSubmissionResult(ffscs));
-
-		public (MemoryStream processingReport, string md5hash) GetFeedSubmissionResultFromAmazon(FeedSubmissionEntry feedSubmissionEntry)
+		public void DownloadFeedSubmissionResultFromAmazon(IFeedSubmissionEntryService feedSubmissionService, FeedSubmissionEntry feedSubmissionEntry)
 		{
-			_logger.Info(
-				$"Attempting to request the feed submission result for the next feed in queue from Amazon: {feedSubmissionEntry.RegionAndTypeComputed}.");
+			var missingInformationExceptionMessage = "Cannot download report from amazon due to missing report request information";
+
+			if (feedSubmissionEntry == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Feed submission entry is null.");
+			if (string.IsNullOrEmpty(feedSubmissionEntry.FeedSubmissionId)) throw new ArgumentException($"{missingInformationExceptionMessage}: FeedSubmissionId is missing.");
+
+			_logger.Info($"Attempting to request the feed submission result for the next feed in queue from Amazon: {feedSubmissionEntry.RegionAndTypeComputed}.");
 
 			var reportResultStream = new MemoryStream();
 			var request = new GetFeedSubmissionResultRequest
@@ -231,114 +239,152 @@ namespace MountainWarehouse.EasyMWS.Processors
 			try
 			{
 				var response = _marketplaceWebServiceClient.GetFeedSubmissionResult(request);
+				feedSubmissionEntry.LastSubmitted = DateTime.UtcNow;
 
 				var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
 				var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
-				_logger.Info(
-					$"Request to MWS.GetFeedSubmissionResult was successful! [RequestId:'{requestId}',Timestamp:'{timestamp}']",
+				_logger.Info($"Feed submission report download from Amazon has succeeded for {feedSubmissionEntry.RegionAndTypeComputed}.",
 					new RequestInfo(timestamp, requestId));
-				_logger.Info(
-					$"Feed submission result request from Amazon has succeeded for {feedSubmissionEntry.RegionAndTypeComputed}.");
 
-				return (reportResultStream, response?.GetFeedSubmissionResultResult?.ContentMD5);
+				var md5Hash = response?.GetFeedSubmissionResultResult?.ContentMD5;
+				var hasValidHash = MD5ChecksumHelper.IsChecksumCorrect(reportResultStream, md5Hash);
+				if (hasValidHash)
+				{
+					_logger.Info($"Checksum verification succeeded for feed submission report for {feedSubmissionEntry.RegionAndTypeComputed}");
+					feedSubmissionEntry.Details.FeedContent = null;
+					feedSubmissionEntry.ReportDownloadRetryCount = 0;
+
+					using (var streamReader = new StreamReader(reportResultStream))
+					{
+						var zippedProcessingReport = ZipHelper.CreateArchiveFromContent(streamReader.ReadToEnd());
+						feedSubmissionEntry.Details.FeedSubmissionReport = zippedProcessingReport;
+					}
+				}
+				else
+				{
+					feedSubmissionEntry.ReportDownloadRetryCount++;
+					_logger.Warn($"Checksum verification failed for feed submission report for {feedSubmissionEntry.RegionAndTypeComputed}");
+				}
+
+				feedSubmissionService.Update(feedSubmissionEntry);
 			}
-			catch (MarketplaceWebServiceException e)
+			catch (MarketplaceWebServiceException e) when (e.StatusCode == HttpStatusCode.BadRequest && IsAmazonErrorCodeFatal(e.ErrorCode))
 			{
-				_logger.Error($"Request to MWS.GetFeedSubmissionResult failed! [Message: '{e.Message}', HttpStatusCode:'{e.StatusCode}', ErrorType:'{e.ErrorType}', ErrorCode:'{e.ErrorCode}']", e);
-				return (null, null);
+				feedSubmissionService.Delete(feedSubmissionEntry);
+				_logger.Error($"AmazonMWS feed submission report download failed for {feedSubmissionEntry.RegionAndTypeComputed}! The entry will now be removed from queue.", e);
+			}
+			catch (MarketplaceWebServiceException e) when (IsAmazonErrorCodeNonFatal(e.ErrorCode))
+			{
+				feedSubmissionEntry.ReportDownloadRetryCount++;
+				feedSubmissionEntry.LastSubmitted = DateTime.UtcNow;
+				feedSubmissionService.Update(feedSubmissionEntry);
+				_logger.Warn($"AmazonMWS feed submission report download failed for {feedSubmissionEntry.RegionAndTypeComputed}! Report download will be retried. ReportDownloadRetryCount is now : {feedSubmissionEntry.ReportDownloadRetryCount}.");
 			}
 			catch (Exception e)
 			{
-				_logger.Error($"Request to MWS.GetFeedSubmissionResult failed! [Message: '{e.Message}']", e);
-				return (null, null);
+				feedSubmissionEntry.ReportDownloadRetryCount++;
+				feedSubmissionEntry.LastSubmitted = DateTime.UtcNow;
+				feedSubmissionService.Update(feedSubmissionEntry);
+				_logger.Warn($"AmazonMWS feed submission report download failed for {feedSubmissionEntry.RegionAndTypeComputed}! Report download will be retried. ReportDownloadRetryCount is now : {feedSubmissionEntry.ReportDownloadRetryCount}.");
+			}
+			finally
+			{
+				feedSubmissionService.SaveChanges();
 			}
 		}
 
-		public void RemoveFromQueue(IFeedSubmissionCallbackService feedSubmissionService, FeedSubmissionEntry entry)
-		{
-			feedSubmissionService.Delete(entry);
-			feedSubmissionService.SaveChanges();
-		}
-
-		public void CleanUpFeedSubmissionQueue(IFeedSubmissionCallbackService feedSubmissionService)
+		public void CleanUpFeedSubmissionQueue(IFeedSubmissionEntryService feedSubmissionService)
 		{
 			_logger.Info("Executing cleanup of feed submission requests queue.");
-			var expiredFeedSubmissions = feedSubmissionService.GetAll()
-				.Where(fscs => fscs.AmazonRegion == _region && fscs.MerchantId == _merchantId
-							   && fscs.FeedSubmissionId == null
-				               && fscs.SubmissionRetryCount > _options.FeedSubmissionMaxRetryCount);
+			var allEntriesForRegionAndMerchant = feedSubmissionService.GetAll().Where(fse => IsMatchForRegionAndMerchantId(fse));
+			var entriesToDelete = new List<EntryToDelete>();
 
-			foreach (var feedSubmission in expiredFeedSubmissions)
+			void DeleteUniqueEntries(IEnumerable<EntryToDelete> entries)
 			{
-				feedSubmissionService.Delete(feedSubmission);
-				_logger.Warn($"Feed submission entry {feedSubmission.RegionAndTypeComputed} deleted from queue. Reason: A feedSubmissionId could not be obtained from amazon for the feed submission request. Retry count exceeded : {_options.FeedSubmissionMaxRetryCount}.");
+				foreach (var entryToDelete in entries)
+				{
+					feedSubmissionService.Delete(entryToDelete.Entry);
+					_logger.Warn($"Feed submission entry {entryToDelete.Entry.RegionAndTypeComputed} deleted from queue. {entryToDelete.DeleteReason.ToString()} exceeded");
+				}
+				feedSubmissionService.SaveChanges();
 			}
 
-			var expiredFeedProcessingResultRequestIds = feedSubmissionService.GetAll()
-				.Where(fscs => fscs.AmazonRegion == _region && fscs.MerchantId == _merchantId
-							   && fscs.FeedSubmissionId != null
-				               && fscs.SubmissionRetryCount > _options.FeedResultFailedChecksumMaxRetryCount);
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(fse => IsFeedSubmissionRetryCountExceeded(fse))
+				.Select(e => new EntryToDelete { Entry = e, DeleteReason = DeleteReasonType.FeedSubmissionMaxRetryCount }));
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(fse => IsReportDownloadRetryCountExceeded(fse))
+				.Select(e => new EntryToDelete { Entry = e, DeleteReason = DeleteReasonType.ReportDownloadMaxRetryCount }));
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(fse => IsExpirationPeriodExceeded(fse))
+				.Select(e => new EntryToDelete { Entry = e, DeleteReason = DeleteReasonType.FeedSubmissionRequestEntryExpirationPeriod }));
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(fse => IsFeedProcessingRetryCountExceeded(fse))
+				.Select(e => new EntryToDelete { Entry = e, DeleteReason = DeleteReasonType.FeedProcessingMaxRetryCount }));
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(fse => IsCallbackInvocationRetryCountExceeded(fse))
+				.Select(e => new EntryToDelete { Entry = e, DeleteReason = DeleteReasonType.InvokeCallbackMaxRetryCount }));
 
-			foreach (var feedSubmission in expiredFeedProcessingResultRequestIds)
-			{
-				feedSubmissionService.Delete(feedSubmission);
-				_logger.Warn($"Feed submission entry {feedSubmission.RegionAndTypeComputed} deleted from queue. Reason: While the feed might have been submitted to amazon, the checksum verification failed for the Feed Submission Report content received from Amazon. Retry count exceeded : {_options.FeedResultFailedChecksumMaxRetryCount}.");
-			}
-
-			var entriesWithExpirationPeriodExceeded = feedSubmissionService.GetAll()
-				.Where(fse => fse.AmazonRegion == _region && fse.MerchantId == _merchantId && IsExpirationPeriodExceeded(fse));
-
-			foreach (var feedSubmission in entriesWithExpirationPeriodExceeded)
-			{
-				feedSubmissionService.Delete(feedSubmission);
-				_logger.Warn($"Feed submission entry {feedSubmission.RegionAndTypeComputed} deleted from queue. Reason: Expiration period of '{_options.FeedSubmissionRequestEntryExpirationPeriod.Hours} hours' was exceeded.");
-			}
-
-			var entriesWithCallbackInvocationRetryCountExceeded = feedSubmissionService.GetAll()
-				.Where(fse => (fse.AmazonRegion == _region && fse.MerchantId == _merchantId) && fse.Details != null && fse.Details.FeedSubmissionReport != null && IsFeedSubmissionEntryCallbackInvocationRetryCountExceeded(fse));
-
-			foreach (var expiredSubmission in entriesWithCallbackInvocationRetryCountExceeded)
-			{
-				feedSubmissionService.Delete(expiredSubmission);
-				_logger.Warn($"Feed submission entry {expiredSubmission.RegionAndTypeComputed} deleted from queue. Reason: The feed submission report was downloaded successfully but the callback method provided at QueueFeed could not be invoked. Retry count exceeded : {_options.FeedSubmissionRequestEntryExpirationPeriod}");
-			}
-
-			feedSubmissionService.SaveChanges();
+			DeleteUniqueEntries(entriesToDelete.Distinct());
 		}
 
-		private bool IsFeedSubmissionEntryCallbackInvocationRetryCountExceeded(FeedSubmissionEntry feedSubmissionEntry) =>
-			(feedSubmissionEntry.SubmissionRetryCount > _options.FeedSubmissionResponseCallbackInvocationMaxRetryCount);
+
+		private bool IsMatchForRegionAndMerchantId(FeedSubmissionEntry e) => e.AmazonRegion == _region && e.MerchantId == _merchantId;
+		private bool IsFeedSubmissionRetryCountExceeded(FeedSubmissionEntry e) => e.FeedSubmissionRetryCount > _options.FeedSubmissionMaxRetryCount;
+		private bool IsReportDownloadRetryCountExceeded(FeedSubmissionEntry e) => e.ReportDownloadRetryCount > _options.ReportDownloadMaxRetryCount;
+		private bool IsFeedProcessingRetryCountExceeded(FeedSubmissionEntry e) => e.FeedProcessingRetryCount > _options.FeedProcessingMaxRetryCount;
+		private bool IsCallbackInvocationRetryCountExceeded(FeedSubmissionEntry e) =>e.InvokeCallbackRetryCount > _options.InvokeCallbackMaxRetryCount;
 
 		private bool IsExpirationPeriodExceeded(FeedSubmissionEntry feedSubmissionEntry) =>
 			(DateTime.Compare(feedSubmissionEntry.DateCreated, DateTime.UtcNow.Subtract(_options.FeedSubmissionRequestEntryExpirationPeriod)) < 0);
-
-		private bool IsFeedReadyForSubmission(FeedSubmissionEntry feedSubmission)
+		private bool IsAmazonErrorCodeFatal(string errorCode)
 		{
-			var isInRetryQueueAndReadyForRetry = feedSubmission.SubmissionRetryCount > 0
-			        && RetryIntervalHelper.IsRetryPeriodAwaited(feedSubmission.LastSubmitted, 
-					feedSubmission.SubmissionRetryCount, _options.FeedSubmissionRetryInitialDelay, 
-					_options.FeedSubmissionRetryInterval, _options.FeedSubmissionRetryType);
+			var fatalErrorCodes = new List<string>
+			{
+				"AccessToFeedProcessingResultDenied",
+				"FeedCanceled",
+				"FeedProcessingResultNoLongerAvailable",
+				"InputDataError",
+				"InvalidFeedType",
+				"InvalidRequest"
+			};
 
-			var isNotInRetryState = feedSubmission.SubmissionRetryCount == 0;
+			return fatalErrorCodes.Contains(errorCode);
+		}
+		private bool IsAmazonErrorCodeNonFatal(string errorCode)
+		{
+			var nonFatalErrorCodes = new List<string>
+			{
+				"ContentMD5Missing",
+				"ContentMD5DoesNotMatch",
+				"FeedProcessingResultNotReady",
+				"InvalidFeedSubmissionId"
+			};
 
-			return isInRetryQueueAndReadyForRetry || isNotInRetryState;
+			return nonFatalErrorCodes.Contains(errorCode) || !IsAmazonErrorCodeFatal(errorCode);
 		}
 
-		private bool IsReadyForRequestingSubmissionResult(FeedSubmissionEntry feedSubmission)
-		{
-			var isInRetryQueueAndReadyForRetry = feedSubmission.SubmissionRetryCount > 0
-			        && RetryIntervalHelper.IsRetryPeriodAwaited(feedSubmission.LastSubmitted,
-				        feedSubmission.SubmissionRetryCount, _options.FeedResultFailedChecksumRetryInterval,
-				        _options.FeedResultFailedChecksumRetryInterval, RetryPeriodType.ArithmeticProgression);
+		 private class EntryToDelete : IEquatable<EntryToDelete>
+	    {
+		    public FeedSubmissionEntry Entry { get; set; }
+		    public DeleteReasonType DeleteReason { get; set; }
 
-			var isNotInRetryState = feedSubmission.SubmissionRetryCount == 0;
+		    public bool Equals(EntryToDelete other)
+		    {
+			    return other != null && this.Entry.Id == other.Entry.Id;
+		    }
 
-			return isInRetryQueueAndReadyForRetry || isNotInRetryState;
-		}
+		    public override int GetHashCode()
+		    {
+			    unchecked
+			    {
+				    return Entry.Id;
+			    }
+		    }
+	    }
 
-		private bool IsFeedInASubmitFeedQueue(FeedSubmissionEntry feedSubmission)
-		{
-			return feedSubmission.FeedSubmissionId == null;
+	    private enum DeleteReasonType
+	    {
+		    FeedSubmissionMaxRetryCount,
+		    ReportDownloadMaxRetryCount,
+		    FeedSubmissionRequestEntryExpirationPeriod,
+		    FeedProcessingMaxRetryCount,
+			InvokeCallbackMaxRetryCount
 		}
 	}
 }

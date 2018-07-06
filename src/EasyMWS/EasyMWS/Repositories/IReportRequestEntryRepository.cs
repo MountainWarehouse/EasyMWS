@@ -8,7 +8,7 @@ using MountainWarehouse.EasyMWS.Data;
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 namespace MountainWarehouse.EasyMWS.Repositories
 {
-    internal interface IReportRequestCallbackRepo
+    internal interface IReportRequestEntryRepository
     {
 	    void Create(ReportRequestEntry entry);
 	    Task CreateAsync(ReportRequestEntry entry);

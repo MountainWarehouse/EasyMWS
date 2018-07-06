@@ -9,11 +9,11 @@ using MountainWarehouse.EasyMWS.Data;
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 namespace MountainWarehouse.EasyMWS.Repositories
 {
-    internal class ReportRequestCallbackRepo : IReportRequestCallbackRepo, IDisposable
+    internal class ReportRequestEntryRepository : IReportRequestEntryRepository, IDisposable
 	{
 	    private readonly EasyMwsContext _dbContext;
 
-		internal ReportRequestCallbackRepo(string connectionString = null) => (_dbContext) = (new EasyMwsContext(connectionString));
+		internal ReportRequestEntryRepository(string connectionString = null) => (_dbContext) = (new EasyMwsContext(connectionString));
 
 	    public void Create(ReportRequestEntry entry) => _dbContext.ReportRequestEntries.Add(entry);
 	    public async Task CreateAsync(ReportRequestEntry entry) => await _dbContext.ReportRequestEntries.AddAsync(entry);
