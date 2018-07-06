@@ -12,6 +12,102 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 	/// </summary>
 	public interface IFbaReportsFactory
 	{
+		#region FBA Sales Reports
+
+		/// <summary>
+		/// Generate a request object for a MWS report of type : _GET_AMAZON_FULFILLED_SHIPMENTS_DATA_ <para />
+		/// Tab-delimited flat file. Contains detailed order/shipment/item information including price, address, and tracking data.<para />
+		/// You can request up to one month of data in a single report. Content updated near real-time in Europe (EU), Japan, and North America (NA).<para/>
+		/// In China, content updated daily. For FBA sellers only. For Marketplace and Seller Central sellers.<para/>
+		/// Note: In Japan, EU, and NA, in most cases, there will be a delay of approximately one to three hours from the time a fulfillment order ships<para/>
+		/// and the time the items in the fulfillment order appear in the report. In some rare cases there could be a delay of up to 24 hours.
+		/// </summary>
+		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <returns></returns>
+		ReportRequestPropertiesContainer FbaAmazonFulfilledShipmentsReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+
+		/// <summary>
+		/// Generate a request object for a MWS report of type : _GET_FLAT_FILE_ALL_ORDERS_DATA_BY_LAST_UPDATE_ <para />
+		/// Tab-delimited flat file. Returns all orders updated in the specified date range regardless of fulfillment channel or shipment status. <para />
+		/// This report is intended for order tracking, not to drive your fulfillment process; it does not include customer identifying information and scheduling is not supported. For all sellers. <para />
+		/// </summary>
+		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <returns></returns>
+		ReportRequestPropertiesContainer FlatFileAllOrdersReportByLastUpdate(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+
+		/// <summary>
+		/// Generate a request object for a MWS report of type : _GET_FLAT_FILE_ALL_ORDERS_DATA_BY_ORDER_DATE_ <para />
+		/// Tab-delimited flat file. Returns all orders placed in the specified date range regardless of fulfillment channel or shipment status. <para />
+		/// This report is intended for order tracking, not to drive your fulfillment process; it does not include customer identifying information and scheduling is not supported. For all sellers. <para />
+		/// </summary>
+		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <returns></returns>
+		ReportRequestPropertiesContainer FlatFileAllOrdersReportByOrderDate(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+
+		/// <summary>
+		/// Generate a request object for a MWS report of type : _GET_XML_ALL_ORDERS_DATA_BY_LAST_UPDATE_ <para />
+		/// XML file order report that returns all orders updated in the specified date range regardless of fulfillment channel or shipment status. <para />
+		/// This report is intended for order tracking, not to drive your fulfillment process; it does not include customer identifying information and scheduling is not supported. For all sellers. <para />
+		/// </summary>
+		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <returns></returns>
+		ReportRequestPropertiesContainer XMLAllOrdersReportByLastUpdate(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+
+		/// <summary>
+		/// Generate a request object for a MWS report of type : _GET_XML_ALL_ORDERS_DATA_BY_ORDER_DATE_ <para />
+		/// XML file order report that returns all orders placed in the specified date range regardless of fulfillment channel or shipment status. <para />
+		/// This report is intended for order tracking, not to drive your fulfillment process; it does not include customer identifying information and scheduling is not supported. For all sellers. <para />
+		/// </summary>
+		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <returns></returns>
+		ReportRequestPropertiesContainer XMLAllOrdersReportByOrderDate(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+
+		/// <summary>
+		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_CUSTOMER_SHIPMENT_SALES_DATA_ <para />
+		/// Tab-delimited flat file. Contains condensed item level data on shipped FBA customer orders including price, quantity, and ship to location. <para />
+		/// Content updated near real-time in Europe (EU), Japan, and North America (NA). In China, content updated daily. For FBA sellers only. For Marketplace and Seller Central sellers. <para />
+		/// Note: In Japan, EU, and NA, in most cases, there will be a delay of approximately one to three hours from the time a fulfillment order ships and the time the items in the fulfillment order appear in the report. In some rare cases there could be a delay of up to 24 hours.<para/>
+		/// </summary>
+		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <returns></returns>
+		ReportRequestPropertiesContainer FBACustomerShipmentSalesReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+
+		/// <summary>
+		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_CUSTOMER_SHIPMENT_PROMOTION_DATA_ <para />
+		/// Tab-delimited flat file. Contains promotions applied to FBA customer orders sold through Amazon; e.g. Super Saver Shipping. <para />
+		/// Content updated daily. This report is only available to FBA sellers in the North America (NA) region. For Marketplace and Seller Central sellers. <para />
+		/// </summary>
+		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <returns></returns>
+		ReportRequestPropertiesContainer FBAPromotionsReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+
+		/// <summary>
+		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_CUSTOMER_TAXES_DATA_ <para />
+		/// Tab-delimited flat file for tax-enabled US sellers. This report contains data through February 28, 2013. All new transaction data can be found in the Sales Tax Report. <para />
+		/// For FBA sellers only. For Marketplace and Seller Central sellers. <para />
+		/// </summary>
+		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <returns></returns>
+		ReportRequestPropertiesContainer FBACustomerTaxes(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+
+		#endregion
+
 		#region FBA Inventory Reports
 
 		/// <summary>
@@ -245,8 +341,17 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// <returns></returns>
 		ReportRequestPropertiesContainer FbaFeePreviewReport(DateTime startDate, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
-		#endregion
+		/// <summary>
+		/// Generate a request object for a MWS report of type : _GET_FBA_REIMBURSEMENTS_DATA_ <para />
+		/// Tab-delimited flat file. Contains itemized details of your inventory reimbursements including the reason for the reimbursement. Content updated daily. For FBA sellers only. For Marketplace and Seller Central sellers.<para/>																					
+		/// </summary>
+		/// <param name="endDate">To successfully generate a report, specify EndDate to NOW. If endDate is not specified, it is set automatically to NOW.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="startDate">To successfully generate a report, specify the StartDate parameter to a minimum of 72 hours prior to NOW</param>
+		/// <returns></returns>
+		ReportRequestPropertiesContainer FbaReimbursementsReport(DateTime startDate, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
+		#endregion
 
 		#region FBA Customer Concessions Reports
 
@@ -260,6 +365,54 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer FbaReturnsReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+
+		/// <summary>
+		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_CUSTOMER_SHIPMENT_REPLACEMENT_DATA_ <para />
+		/// Tab-delimited flat file. Contains replacements that have been issued to customers for completed orders. Content updated daily. For FBA sellers only. For Marketplace and Seller Central sellers. Available in the US and China (CN) only.<para/>
+		/// </summary>
+		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <returns></returns>
+		ReportRequestPropertiesContainer FbaReplacementsReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+
+		#endregion
+
+		#region FBA Removals Reports
+
+		/// <summary>
+		/// Generate a request object for a MWS report of type : _GET_FBA_RECOMMENDED_REMOVAL_DATA_ <para />
+		/// Tab-delimited flat file. The report identifies sellable items that will be 365 days or older during the next Long-Term Storage cleanup event, if the report is generated within six weeks of the cleanup event date.<para/>
+		/// The report includes both sellable and unsellable items. Content updated daily. For FBA sellers. For Marketplace and Seller Central sellers.
+		/// </summary>
+		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <returns></returns>
+		ReportRequestPropertiesContainer FbaRecommendedRemovalReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+
+		/// <summary>
+		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_REMOVAL_ORDER_DETAIL_DATA_ <para />
+		/// Tab-delimited flat file. This report contains all the removal orders, including the items in each removal order, placed during any given time period.<para/>
+		/// This can be used to help reconcile the total number of items requested to be removed from an Amazon fulfillment center with the actual number of items removed along with the status of each item in the removal order.<para/>
+		/// Content updated in near real-time. For FBA sellers. For Marketplace and Seller Central sellers.<para/>
+		/// </summary>
+		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <returns></returns>
+		ReportRequestPropertiesContainer FbaRemovalOrderDetailReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+
+		/// <summary>
+		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_REMOVAL_SHIPMENT_DETAIL_DATA_ <para />
+		/// Tab-delimited flat file. This report provides shipment tracking information for all removal orders and includes the items that have been removed from an Amazon fulfillment center for either a single removal order or for a date range.<para/>
+		/// This report will not include canceled returns or disposed items; it is only for shipment information. Content updated in near real-time. For FBA sellers. For Marketplace and Seller Central sellers.
+		/// </summary>
+		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <returns></returns>
+		ReportRequestPropertiesContainer FbaRemovalShipmentDetailReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
 
 		#endregion
 
