@@ -11,6 +11,62 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 	{
 		#region FBA Inventory Reports
 
+		public ReportRequestPropertiesContainer FbaAmazonFulfilledShipmentsReport(DateTime? startDate = null, DateTime? endDate = null,
+			MwsMarketplaceGroup requestedMarketplacesGroup = null)
+			=> ReportGeneratorHelper.GenerateReportRequest("_GET_AMAZON_FULFILLED_SHIPMENTS_DATA_", ContentUpdateFrequency.Daily,
+				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
+				requestedMarketplaces: requestedMarketplacesGroup?.GetMarketplacesIdList.ToList(),
+				startDate: startDate, endDate: endDate);
+
+		public ReportRequestPropertiesContainer FlatFileAllOrdersReportByLastUpdate(DateTime? startDate = null,
+			DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null)
+			=> ReportGeneratorHelper.GenerateReportRequest("_GET_FLAT_FILE_ALL_ORDERS_DATA_BY_LAST_UPDATE_", ContentUpdateFrequency.Unknown,
+				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
+				requestedMarketplaces: requestedMarketplacesGroup?.GetMarketplacesIdList.ToList(),
+				startDate: startDate, endDate: endDate);
+
+		public ReportRequestPropertiesContainer FlatFileAllOrdersReportByOrderDate(DateTime? startDate = null,
+			DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null)
+			=> ReportGeneratorHelper.GenerateReportRequest("_GET_FLAT_FILE_ALL_ORDERS_DATA_BY_ORDER_DATE_", ContentUpdateFrequency.Unknown,
+				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
+				requestedMarketplaces: requestedMarketplacesGroup?.GetMarketplacesIdList.ToList(),
+				startDate: startDate, endDate: endDate);
+
+		public ReportRequestPropertiesContainer XMLAllOrdersReportByLastUpdate(DateTime? startDate = null, DateTime? endDate = null,
+			MwsMarketplaceGroup requestedMarketplacesGroup = null)
+			=> ReportGeneratorHelper.GenerateReportRequest("_GET_XML_ALL_ORDERS_DATA_BY_LAST_UPDATE_", ContentUpdateFrequency.Unknown,
+				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
+				requestedMarketplaces: requestedMarketplacesGroup?.GetMarketplacesIdList.ToList(),
+				startDate: startDate, endDate: endDate);
+
+		public ReportRequestPropertiesContainer XMLAllOrdersReportByOrderDate(DateTime? startDate = null, DateTime? endDate = null,
+			MwsMarketplaceGroup requestedMarketplacesGroup = null)
+			=> ReportGeneratorHelper.GenerateReportRequest("_GET_XML_ALL_ORDERS_DATA_BY_ORDER_DATE_", ContentUpdateFrequency.Unknown,
+				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
+				requestedMarketplaces: requestedMarketplacesGroup?.GetMarketplacesIdList.ToList(),
+				startDate: startDate, endDate: endDate);
+
+		public ReportRequestPropertiesContainer FBACustomerShipmentSalesReport(DateTime? startDate = null, DateTime? endDate = null,
+			MwsMarketplaceGroup requestedMarketplacesGroup = null)
+			=> ReportGeneratorHelper.GenerateReportRequest("_GET_FBA_FULFILLMENT_CUSTOMER_SHIPMENT_SALES_DATA_", ContentUpdateFrequency.Unknown,
+				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
+				requestedMarketplaces: requestedMarketplacesGroup?.GetMarketplacesIdList.ToList(),
+				startDate: startDate, endDate: endDate);
+
+		public ReportRequestPropertiesContainer FBAPromotionsReport(DateTime? startDate = null, DateTime? endDate = null,
+			MwsMarketplaceGroup requestedMarketplacesGroup = null)
+			=> ReportGeneratorHelper.GenerateReportRequest("_GET_FBA_FULFILLMENT_CUSTOMER_SHIPMENT_PROMOTION_DATA_", ContentUpdateFrequency.Unknown,
+				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
+				requestedMarketplaces: requestedMarketplacesGroup?.GetMarketplacesIdList.ToList(),
+				startDate: startDate, endDate: endDate);
+
+		public ReportRequestPropertiesContainer FBACustomerTaxes(DateTime? startDate = null, DateTime? endDate = null,
+			MwsMarketplaceGroup requestedMarketplacesGroup = null)
+			=> ReportGeneratorHelper.GenerateReportRequest("_GET_FBA_FULFILLMENT_CUSTOMER_TAXES_DATA_", ContentUpdateFrequency.Unknown,
+				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
+				requestedMarketplaces: requestedMarketplacesGroup?.GetMarketplacesIdList.ToList(),
+				startDate: startDate, endDate: endDate);
+
 		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		public ReportRequestPropertiesContainer FbaAmazonFulfilledInventoryReport(DateTime? startDate = null,
 			DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplaces = null)
@@ -182,6 +238,14 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList(),
 				startDate: startDate, endDate: endDate ?? DateTime.UtcNow);
 
+		public ReportRequestPropertiesContainer FbaReimbursementsReport(DateTime startDate, DateTime? endDate = null,
+			MwsMarketplaceGroup requestedMarketplacesGroup = null)
+			=> ReportGeneratorHelper.GenerateReportRequest("_GET_FBA_REIMBURSEMENTS_DATA_",
+				ContentUpdateFrequency.Daily,
+				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
+				requestedMarketplaces: requestedMarketplacesGroup?.GetMarketplacesIdList.ToList(),
+				startDate: startDate, endDate: endDate);
+
 		#endregion
 
 		#region FBA Customer Concessions Reports
@@ -192,6 +256,34 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 				ContentUpdateFrequency.Daily,
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList(),
+				startDate: startDate, endDate: endDate);
+
+		public ReportRequestPropertiesContainer FbaReplacementsReport(DateTime? startDate = null, DateTime? endDate = null,
+			MwsMarketplaceGroup requestedMarketplacesGroup = null)
+			=> ReportGeneratorHelper.GenerateReportRequest("_GET_FBA_FULFILLMENT_CUSTOMER_SHIPMENT_REPLACEMENT_DATA_", ContentUpdateFrequency.Unknown,
+				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
+				requestedMarketplaces: requestedMarketplacesGroup?.GetMarketplacesIdList.ToList(),
+				startDate: startDate, endDate: endDate);
+
+		public ReportRequestPropertiesContainer FbaRecommendedRemovalReport(DateTime? startDate = null, DateTime? endDate = null,
+			MwsMarketplaceGroup requestedMarketplacesGroup = null)
+			=> ReportGeneratorHelper.GenerateReportRequest("_GET_FBA_RECOMMENDED_REMOVAL_DATA_", ContentUpdateFrequency.Unknown,
+				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
+				requestedMarketplaces: requestedMarketplacesGroup?.GetMarketplacesIdList.ToList(),
+				startDate: startDate, endDate: endDate);
+
+		public ReportRequestPropertiesContainer FbaRemovalOrderDetailReport(DateTime? startDate = null, DateTime? endDate = null,
+			MwsMarketplaceGroup requestedMarketplacesGroup = null)
+			=> ReportGeneratorHelper.GenerateReportRequest("_GET_FBA_FULFILLMENT_REMOVAL_ORDER_DETAIL_DATA_", ContentUpdateFrequency.Unknown,
+				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
+				requestedMarketplaces: requestedMarketplacesGroup?.GetMarketplacesIdList.ToList(),
+				startDate: startDate, endDate: endDate);
+
+		public ReportRequestPropertiesContainer FbaRemovalShipmentDetailReport(DateTime? startDate = null, DateTime? endDate = null,
+			MwsMarketplaceGroup requestedMarketplacesGroup = null)
+			=> ReportGeneratorHelper.GenerateReportRequest("_GET_FBA_FULFILLMENT_REMOVAL_SHIPMENT_DETAIL_DATA_", ContentUpdateFrequency.Unknown,
+				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
+				requestedMarketplaces: requestedMarketplacesGroup?.GetMarketplacesIdList.ToList(),
 				startDate: startDate, endDate: endDate);
 
 		#endregion
