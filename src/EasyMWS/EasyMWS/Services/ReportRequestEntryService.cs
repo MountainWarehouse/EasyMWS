@@ -119,12 +119,26 @@ namespace MountainWarehouse.EasyMWS.Services
 			return entriesIds;
 		}
 
-		public IEnumerable<ReportRequestEntry> GetAllFromQueueOfReportsReadyForCallback(string merchantId, AmazonRegion region)
-		=> Where(rre => rre.AmazonRegion == region && rre.MerchantId == merchantId
-					       && rre.Details != null
-					       && RetryIntervalHelper.IsRetryPeriodAwaited(rre.LastAmazonRequestDate, rre.InvokeCallbackRetryCount,
-			                _options.InvokeCallbackRetryInterval, _options.InvokeCallbackRetryInterval,
-			                _options.InvokeCallbackRetryPeriodType));
+		public IEnumerable<ReportRequestEntry> GetAllFromQueueOfReportsReadyForCallback(string merchantId, AmazonRegion region, bool markEntriesAsLocked = true)
+		{
+			var entries = Where(rre => rre.AmazonRegion == region && rre.MerchantId == merchantId
+							  && rre.Details != null
+							  && RetryIntervalHelper.IsRetryPeriodAwaited(rre.LastAmazonRequestDate, rre.InvokeCallbackRetryCount,
+							   _options.InvokeCallbackRetryInterval, _options.InvokeCallbackRetryInterval,
+							   _options.InvokeCallbackRetryPeriodType) && rre.IsLocked == false).ToList();
+
+			if (entries.Any() && markEntriesAsLocked)
+			{
+				foreach (var entry in entries)
+				{
+					entry.IsLocked = true;
+					Update(entry);
+				}
+				SaveChanges();
+			}
+
+			return entries;
+		}
 
 		public void Dispose()
 		{
