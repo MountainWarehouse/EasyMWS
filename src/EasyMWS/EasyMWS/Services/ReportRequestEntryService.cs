@@ -67,7 +67,8 @@ namespace MountainWarehouse.EasyMWS.Services
 											 && rre.RequestReportId == null
 											 && RetryIntervalHelper.IsRetryPeriodAwaited(rre.LastAmazonRequestDate, rre.ReportRequestRetryCount,
 									   _options.ReportRequestRetryInitialDelay, _options.ReportRequestRetryInterval,
-									   _options.ReportRequestRetryType));
+									   _options.ReportRequestRetryType)
+									   && rre.IsLocked == false);
 
 			if (entry != null && markEntryAsLocked)
 			{
@@ -86,7 +87,8 @@ namespace MountainWarehouse.EasyMWS.Services
 							 && rre.RequestReportId != null && rre.GeneratedReportId != null && rre.Details == null
 							 && RetryIntervalHelper.IsRetryPeriodAwaited(rre.LastAmazonRequestDate, rre.ReportDownloadRetryCount,
 									   _options.ReportDownloadRetryInitialDelay, _options.ReportDownloadRetryInterval,
-									   _options.ReportDownloadRetryType));
+									   _options.ReportDownloadRetryType)
+									   && rre.IsLocked == false);
 
 			if (entry != null && markEntryAsLocked)
 			{
@@ -101,9 +103,10 @@ namespace MountainWarehouse.EasyMWS.Services
 		public IEnumerable<string> GetAllPendingReportFromQueue(string merchantId, AmazonRegion region, bool markEntriesAsLocked = true)
 		{
 			var entries = Where(rre => rre.AmazonRegion == region && rre.MerchantId == merchantId
-									 && rre.RequestReportId != null && rre.GeneratedReportId == null);
+									 && rre.RequestReportId != null && rre.GeneratedReportId == null && rre.IsLocked == false);
+			var entriesIds = entries.Select(r => r.RequestReportId).ToList();
 
-			if(entries.Any() && markEntriesAsLocked)
+			if (entries.Any() && markEntriesAsLocked)
 			{
 				foreach (var entry in entries)
 				{
@@ -112,8 +115,6 @@ namespace MountainWarehouse.EasyMWS.Services
 				}
 				SaveChanges();
 			}
-
-			var entriesIds = entries.Select(r => r.RequestReportId);
 
 			return entriesIds;
 		}
