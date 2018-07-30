@@ -21,6 +21,7 @@ namespace MountainWarehouse.EasyMWS.Data
 
 	    [Key]
 	    public int Id { get; set; }
+		public bool IsLocked { get; set; }
 	    public int FeedSubmissionRetryCount { get; set; }
 	    public int FeedProcessingRetryCount { get; set; }
 	    public int ReportDownloadRetryCount { get; set; }

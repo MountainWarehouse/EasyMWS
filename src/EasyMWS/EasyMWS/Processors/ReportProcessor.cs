@@ -113,6 +113,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 				var reportRequest = new ReportRequestEntry(serializedPropertiesContainer)
 				{
+					IsLocked = false,
 					AmazonRegion = _region,
 					MerchantId = _merchantId,
 					LastAmazonRequestDate = DateTime.MinValue,

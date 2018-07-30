@@ -101,6 +101,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 				var feedSubmission = new FeedSubmissionEntry(serializedPropertiesContainer)
 				{
+					IsLocked = false,
 					AmazonRegion = _region,
 					MerchantId = _merchantId,
 					LastSubmitted = DateTime.MinValue,
