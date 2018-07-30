@@ -61,20 +61,40 @@ namespace MountainWarehouse.EasyMWS.Services
 		public ReportRequestEntry LastOrDefault() => _reportRequestEntryRepository.GetAll().OrderByDescending(x => x.Id).FirstOrDefault();
 		public ReportRequestEntry LastOrDefault(Expression<Func<ReportRequestEntry, bool>> predicate) => _reportRequestEntryRepository.GetAll().OrderByDescending(x => x.Id).FirstOrDefault(predicate);
 
-		public ReportRequestEntry GetNextFromQueueOfReportsToRequest( string merchantId, AmazonRegion region)
-		=> FirstOrDefault(rre => rre.AmazonRegion == region && rre.MerchantId == merchantId
-										   && rre.RequestReportId == null
-					                       && RetryIntervalHelper.IsRetryPeriodAwaited(rre.LastAmazonRequestDate, rre.ReportRequestRetryCount,
-			                         _options.ReportRequestRetryInitialDelay, _options.ReportRequestRetryInterval,
-			                         _options.ReportRequestRetryType));
-		
+		public ReportRequestEntry GetNextFromQueueOfReportsToRequest(string merchantId, AmazonRegion region, bool markEntryAsLocked = true)
+		{
+			var entry = FirstOrDefault(rre => rre.AmazonRegion == region && rre.MerchantId == merchantId
+											 && rre.RequestReportId == null
+											 && RetryIntervalHelper.IsRetryPeriodAwaited(rre.LastAmazonRequestDate, rre.ReportRequestRetryCount,
+									   _options.ReportRequestRetryInitialDelay, _options.ReportRequestRetryInterval,
+									   _options.ReportRequestRetryType));
 
-		public ReportRequestEntry GetNextFromQueueOfReportsToDownload(string merchantId, AmazonRegion region)
-		=> FirstOrDefault(rre => rre.AmazonRegion == region && rre.MerchantId == merchantId
-						   && rre.RequestReportId != null && rre.GeneratedReportId != null && rre.Details == null
-					       && RetryIntervalHelper.IsRetryPeriodAwaited(rre.LastAmazonRequestDate, rre.ReportDownloadRetryCount,
-			                         _options.ReportDownloadRetryInitialDelay, _options.ReportDownloadRetryInterval,
-			                         _options.ReportDownloadRetryType));
+			if (entry != null && markEntryAsLocked)
+			{
+				entry.IsLocked = true;
+				SaveChanges();
+			}
+
+			return entry;
+		}
+
+
+		public ReportRequestEntry GetNextFromQueueOfReportsToDownload(string merchantId, AmazonRegion region, bool markEntryAsLocked = true)
+		{
+			var entry = FirstOrDefault(rre => rre.AmazonRegion == region && rre.MerchantId == merchantId
+							 && rre.RequestReportId != null && rre.GeneratedReportId != null && rre.Details == null
+							 && RetryIntervalHelper.IsRetryPeriodAwaited(rre.LastAmazonRequestDate, rre.ReportDownloadRetryCount,
+									   _options.ReportDownloadRetryInitialDelay, _options.ReportDownloadRetryInterval,
+									   _options.ReportDownloadRetryType));
+
+			if (entry != null && markEntryAsLocked)
+			{
+				entry.IsLocked = true;
+				SaveChanges();
+			}
+
+			return entry;
+		}
 
 		public IEnumerable<string> GetAllPendingReportFromQueue(string merchantId, AmazonRegion region)
 		=> Where(rre => rre.AmazonRegion == region && rre.MerchantId == merchantId

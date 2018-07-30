@@ -27,8 +27,8 @@ namespace MountainWarehouse.EasyMWS.Services
 		ReportRequestEntry LastOrDefault();
 		ReportRequestEntry LastOrDefault(Expression<Func<ReportRequestEntry, bool>> predicate);
 
-		ReportRequestEntry GetNextFromQueueOfReportsToRequest(string merchantId, AmazonRegion region);
-		ReportRequestEntry GetNextFromQueueOfReportsToDownload(string merchantId, AmazonRegion region);
+		ReportRequestEntry GetNextFromQueueOfReportsToRequest(string merchantId, AmazonRegion region, bool markEntryAsLocked = true);
+		ReportRequestEntry GetNextFromQueueOfReportsToDownload(string merchantId, AmazonRegion region, bool markEntryAsLocked = true);
 		IEnumerable<string> GetAllPendingReportFromQueue(string merchantId, AmazonRegion region);
 		IEnumerable<ReportRequestEntry> GetAllFromQueueOfReportsReadyForCallback(string merchantId, AmazonRegion region);
 	}
