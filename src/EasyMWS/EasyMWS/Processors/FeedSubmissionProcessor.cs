@@ -306,10 +306,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				foreach (var entryToDelete in entries)
 				{
+					if (!feedSubmissionService.GetAll().Any(fse => fse.Id == entryToDelete.Entry.Id)) continue;
 					feedSubmissionService.Delete(entryToDelete.Entry);
+					feedSubmissionService.SaveChanges();
+
 					_logger.Warn($"Feed submission entry {entryToDelete.Entry.RegionAndTypeComputed} deleted from queue. {entryToDelete.DeleteReason.ToString()} exceeded");
 				}
-				feedSubmissionService.SaveChanges();
 			}
 
 			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(fse => IsFeedSubmissionRetryCountExceeded(fse))

@@ -158,10 +158,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				foreach (var entryToDelete in entries)
 				{
+					if (!reportRequestService.GetAll().Any(rrc => rrc.Id == entryToDelete.Entry.Id)) continue;
 					reportRequestService.Delete(entryToDelete.Entry);
+					reportRequestService.SaveChanges();
+
 					_logger.Warn($"Report request entry {entryToDelete.Entry.RegionAndTypeComputed} deleted from queue. {entryToDelete.DeleteReason.ToString()} exceeded");
 				}
-				reportRequestService.SaveChanges();
 			}
 			
 			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(rrc => IsRequestRetryCountExceeded(rrc))
