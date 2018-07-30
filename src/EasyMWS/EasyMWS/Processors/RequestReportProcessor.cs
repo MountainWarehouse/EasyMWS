@@ -99,7 +99,8 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		    finally
 			{
-			    reportRequestService.SaveChanges();
+				reportRequestEntry.IsLocked = false;
+				reportRequestService.SaveChanges();
 			}
 	    }
 
@@ -294,7 +295,8 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    }
 		    finally
 		    {
-			    reportRequestService.SaveChanges();
+				reportRequestEntry.IsLocked = false;
+				reportRequestService.SaveChanges();
 		    }
 		}
 
