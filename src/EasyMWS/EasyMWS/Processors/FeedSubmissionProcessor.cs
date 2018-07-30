@@ -127,6 +127,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				finally
 				{
 					stream.Dispose();
+					feedSubmission.IsLocked = false;
 					feedSubmissionService.SaveChanges();
 				}
 			}
@@ -289,6 +290,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 			finally
 			{
+				feedSubmissionEntry.IsLocked = false;
 				feedSubmissionService.SaveChanges();
 			}
 		}
