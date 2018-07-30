@@ -73,6 +73,7 @@ namespace MountainWarehouse.EasyMWS.Services
 			if(entry != null && markEntryAsLocked)
 			{
 				entry.IsLocked = true;
+				Update(entry);
 				SaveChanges();
 			}
 
@@ -90,6 +91,7 @@ namespace MountainWarehouse.EasyMWS.Services
 				foreach (var entry in entries)
 				{
 					entry.IsLocked = true;
+					Update(entry);
 				}
 				SaveChanges();
 			}

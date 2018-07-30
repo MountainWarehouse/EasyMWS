@@ -29,7 +29,7 @@ namespace MountainWarehouse.EasyMWS.Services
 
 		ReportRequestEntry GetNextFromQueueOfReportsToRequest(string merchantId, AmazonRegion region, bool markEntryAsLocked = true);
 		ReportRequestEntry GetNextFromQueueOfReportsToDownload(string merchantId, AmazonRegion region, bool markEntryAsLocked = true);
-		IEnumerable<string> GetAllPendingReportFromQueue(string merchantId, AmazonRegion region);
+		IEnumerable<string> GetAllPendingReportFromQueue(string merchantId, AmazonRegion region, bool markEntriesAsLocked = true);
 		IEnumerable<ReportRequestEntry> GetAllFromQueueOfReportsReadyForCallback(string merchantId, AmazonRegion region);
 	}
 }

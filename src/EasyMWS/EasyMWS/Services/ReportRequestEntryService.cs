@@ -96,10 +96,25 @@ namespace MountainWarehouse.EasyMWS.Services
 			return entry;
 		}
 
-		public IEnumerable<string> GetAllPendingReportFromQueue(string merchantId, AmazonRegion region)
-		=> Where(rre => rre.AmazonRegion == region && rre.MerchantId == merchantId
-								   && rre.RequestReportId != null && rre.GeneratedReportId == null)
-					.Select(r => r.RequestReportId);
+		public IEnumerable<string> GetAllPendingReportFromQueue(string merchantId, AmazonRegion region, bool markEntriesAsLocked = true)
+		{
+			var entries = Where(rre => rre.AmazonRegion == region && rre.MerchantId == merchantId
+									 && rre.RequestReportId != null && rre.GeneratedReportId == null);
+
+			if(entries.Any() && markEntriesAsLocked)
+			{
+				foreach (var entry in entries)
+				{
+					entry.IsLocked = true;
+					Update(entry);
+				}
+				SaveChanges();
+			}
+
+			var entriesIds = entries.Select(r => r.RequestReportId);
+
+			return entriesIds;
+		}
 
 		public IEnumerable<ReportRequestEntry> GetAllFromQueueOfReportsReadyForCallback(string merchantId, AmazonRegion region)
 		=> Where(rre => rre.AmazonRegion == region && rre.MerchantId == merchantId

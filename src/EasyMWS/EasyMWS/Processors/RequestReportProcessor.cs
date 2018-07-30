@@ -183,21 +183,22 @@ namespace MountainWarehouse.EasyMWS.Processors
 	    {
 			foreach (var reportGenerationInfo in reportGenerationStatuses)
 			{
-				var reportGenerationCallback = reportRequestService.FirstOrDefault(rrc => rrc.RequestReportId == reportGenerationInfo.ReportRequestId && rrc.GeneratedReportId == null);
-				if (reportGenerationCallback == null) continue;
+				var reportRequestEntry = reportRequestService.FirstOrDefault(rrc => rrc.RequestReportId == reportGenerationInfo.ReportRequestId && rrc.GeneratedReportId == null);
+				if (reportRequestEntry == null) continue;
+				reportRequestEntry.IsLocked = false;
 
-				var genericProcessingInfo = $"ProcessingStatus returned by Amazon for {reportGenerationCallback.RegionAndTypeComputed} is '{reportGenerationInfo.ReportProcessingStatus}'.";
+				var genericProcessingInfo = $"ProcessingStatus returned by Amazon for {reportRequestEntry.RegionAndTypeComputed} is '{reportGenerationInfo.ReportProcessingStatus}'.";
 
 				if (reportGenerationInfo.ReportProcessingStatus == "_DONE_")
 				{
-					reportGenerationCallback.GeneratedReportId = reportGenerationInfo.GeneratedReportId;
-					reportGenerationCallback.ReportProcessRetryCount = 0;
-					reportRequestService.Update(reportGenerationCallback);
+					reportRequestEntry.GeneratedReportId = reportGenerationInfo.GeneratedReportId;
+					reportRequestEntry.ReportProcessRetryCount = 0;
+					reportRequestService.Update(reportRequestEntry);
 					_logger.Info($"{genericProcessingInfo}. The report is now ready for download.");
 				}
 				else if (reportGenerationInfo.ReportProcessingStatus == "_DONE_NO_DATA_")
 				{
-					reportRequestService.Delete(reportGenerationCallback);
+					reportRequestService.Delete(reportRequestEntry);
 					_logger.Warn($"{genericProcessingInfo}. The Report request entry will now be removed from queue.");
 				}
 				else if (reportGenerationInfo.ReportProcessingStatus == "_SUBMITTED_" 
@@ -207,19 +208,19 @@ namespace MountainWarehouse.EasyMWS.Processors
 				}
 				else if (reportGenerationInfo.ReportProcessingStatus == "_CANCELLED_")
 				{
-					reportGenerationCallback.RequestReportId = null;
-					reportGenerationCallback.GeneratedReportId = null;
-					reportGenerationCallback.ReportProcessRetryCount++;
-					reportRequestService.Update(reportGenerationCallback);
-					_logger.Warn($"{genericProcessingInfo}. The Report request will be retried. ReportProcessRetryCount is now '{reportGenerationCallback.ReportProcessRetryCount}'.");
+					reportRequestEntry.RequestReportId = null;
+					reportRequestEntry.GeneratedReportId = null;
+					reportRequestEntry.ReportProcessRetryCount++;
+					reportRequestService.Update(reportRequestEntry);
+					_logger.Warn($"{genericProcessingInfo}. The Report request will be retried. ReportProcessRetryCount is now '{reportRequestEntry.ReportProcessRetryCount}'.");
 				}
 				else
 				{
-					reportGenerationCallback.RequestReportId = null;
-					reportGenerationCallback.GeneratedReportId = null;
-					reportGenerationCallback.ReportProcessRetryCount++;
-					reportRequestService.Update(reportGenerationCallback);
-					_logger.Warn($"{genericProcessingInfo}. The Report request will be retried. This report processing status is not yet handled by EasyMws. ReportProcessRetryCount is now '{reportGenerationCallback.ReportProcessRetryCount}'.");
+					reportRequestEntry.RequestReportId = null;
+					reportRequestEntry.GeneratedReportId = null;
+					reportRequestEntry.ReportProcessRetryCount++;
+					reportRequestService.Update(reportRequestEntry);
+					_logger.Warn($"{genericProcessingInfo}. The Report request will be retried. This report processing status is not yet handled by EasyMws. ReportProcessRetryCount is now '{reportRequestEntry.ReportProcessRetryCount}'.");
 				}
 			}
 			reportRequestService.SaveChanges();
