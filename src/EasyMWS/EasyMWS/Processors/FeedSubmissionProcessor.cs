@@ -215,6 +215,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 					_logger.Info($"{genericProcessingInfo}. The feed submission operation will be retried. This feed processing status is not yet handled by EasyMws. FeedProcessingRetryCount is now '{feedSubmissionEntry.FeedProcessingRetryCount}'.");
 				}
 				feedSubmissionService.Update(feedSubmissionEntry);
+				feedSubmissionEntry.IsLocked = false;
 			}
 
 			feedSubmissionService.SaveChanges();

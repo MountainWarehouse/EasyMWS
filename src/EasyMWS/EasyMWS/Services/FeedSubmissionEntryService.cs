@@ -80,10 +80,24 @@ namespace MountainWarehouse.EasyMWS.Services
 		}
 
 
-		public IEnumerable<string> GetIdsForSubmittedFeedsFromQueue(string merchantId, AmazonRegion region) 
-			=> Where(fse => fse.AmazonRegion == region && fse.MerchantId == merchantId
-				        && fse.FeedSubmissionId != null && fse.IsProcessingComplete == false
-			).Select(f => f.FeedSubmissionId);
+		public IEnumerable<string> GetIdsForSubmittedFeedsFromQueue(string merchantId, AmazonRegion region, bool markEntriesAsLocked = true)
+		{
+			var entries = Where(fse => fse.AmazonRegion == region && fse.MerchantId == merchantId
+						  && fse.FeedSubmissionId != null && fse.IsProcessingComplete == false);
+
+			if(entries.Any() && markEntriesAsLocked)
+			{
+				foreach (var entry in entries)
+				{
+					entry.IsLocked = true;
+				}
+				SaveChanges();
+			}
+
+			var entriesIds = entries.Select(f => f.FeedSubmissionId);
+
+			return entriesIds;
+		}
 
 		public FeedSubmissionEntry GetNextFromQueueOfProcessingCompleteFeeds(string merchantId, AmazonRegion region, bool markEntryAsLocked = true)
 		{

@@ -26,7 +26,7 @@ namespace MountainWarehouse.EasyMWS.Services
 
 	    FeedSubmissionEntry GetNextFromQueueOfFeedsToSubmit(string merchantId, AmazonRegion region, bool markEntryAsLocked = true);
 
-	    IEnumerable<string> GetIdsForSubmittedFeedsFromQueue(string merchantId, AmazonRegion region);
+	    IEnumerable<string> GetIdsForSubmittedFeedsFromQueue(string merchantId, AmazonRegion region, bool markEntriesAsLocked = true);
 
 	    FeedSubmissionEntry GetNextFromQueueOfProcessingCompleteFeeds(string merchantId, AmazonRegion region, bool markEntryAsLocked = true);
 	    IEnumerable<FeedSubmissionEntry> GetAllFromQueueOfFeedsReadyForCallback(string merchantId, AmazonRegion region);
