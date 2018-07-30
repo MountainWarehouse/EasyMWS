@@ -81,6 +81,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			if (string.IsNullOrEmpty(feedSubmission?.FeedType)) throw new ArgumentException($"{missingInformationExceptionMessage}: Feed type is missing.");
 
 			_logger.Info($"Attempting to submit the next feed in queue to Amazon: {feedSubmission.RegionAndTypeComputed}.");
+			feedSubmission.IsLocked = false;
 
 			var feedSubmissionData = feedSubmission.GetPropertiesContainer();
 
@@ -127,7 +128,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 				finally
 				{
 					stream.Dispose();
-					feedSubmission.IsLocked = false;
 					feedSubmissionService.SaveChanges();
 				}
 			}
@@ -188,6 +188,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				var feedSubmissionEntry = feedSubmissionService.FirstOrDefault(fsc => fsc.FeedSubmissionId == feedSubmissionInfo.FeedSubmissionId);
 				if(feedSubmissionEntry == null) continue;
+				feedSubmissionEntry.IsLocked = false;
 
 				var genericProcessingInfo = $"ProcessingStatus returned by Amazon for {feedSubmissionEntry.RegionAndTypeComputed} is '{feedSubmissionInfo.FeedProcessingStatus}'.";
 
@@ -215,7 +216,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 					_logger.Info($"{genericProcessingInfo}. The feed submission operation will be retried. This feed processing status is not yet handled by EasyMws. FeedProcessingRetryCount is now '{feedSubmissionEntry.FeedProcessingRetryCount}'.");
 				}
 				feedSubmissionService.Update(feedSubmissionEntry);
-				feedSubmissionEntry.IsLocked = false;
 			}
 
 			feedSubmissionService.SaveChanges();
@@ -229,6 +229,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			if (string.IsNullOrEmpty(feedSubmissionEntry.FeedSubmissionId)) throw new ArgumentException($"{missingInformationExceptionMessage}: FeedSubmissionId is missing.");
 
 			_logger.Info($"Attempting to request the feed submission result for the next feed in queue from Amazon: {feedSubmissionEntry.RegionAndTypeComputed}.");
+			feedSubmissionEntry.IsLocked = false;
 
 			var reportResultStream = new MemoryStream();
 			var request = new GetFeedSubmissionResultRequest
@@ -291,7 +292,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 			finally
 			{
-				feedSubmissionEntry.IsLocked = false;
 				feedSubmissionService.SaveChanges();
 			}
 		}

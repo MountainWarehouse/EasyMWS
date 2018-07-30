@@ -113,6 +113,7 @@ namespace MountainWarehouse.EasyMWS.Services
 			if (entry != null && markEntryAsLocked)
 			{
 				entry.IsLocked = true;
+				Update(entry);
 				SaveChanges();
 			}
 
