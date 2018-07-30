@@ -84,9 +84,10 @@ namespace MountainWarehouse.EasyMWS.Services
 		public IEnumerable<string> GetIdsForSubmittedFeedsFromQueue(string merchantId, AmazonRegion region, bool markEntriesAsLocked = true)
 		{
 			var entries = Where(fse => fse.AmazonRegion == region && fse.MerchantId == merchantId
-						  && fse.FeedSubmissionId != null && fse.IsProcessingComplete == false);
+						  && fse.FeedSubmissionId != null && fse.IsProcessingComplete == false && fse.IsLocked == false);
+			var entriesIds = entries.Select(f => f.FeedSubmissionId).ToList();
 
-			if(entries.Any() && markEntriesAsLocked)
+			if (entries.Any() && markEntriesAsLocked)
 			{
 				foreach (var entry in entries)
 				{
@@ -95,8 +96,6 @@ namespace MountainWarehouse.EasyMWS.Services
 				}
 				SaveChanges();
 			}
-
-			var entriesIds = entries.Select(f => f.FeedSubmissionId);
 
 			return entriesIds;
 		}
@@ -120,9 +119,23 @@ namespace MountainWarehouse.EasyMWS.Services
 			return entry;
 		}
 
-		public IEnumerable<FeedSubmissionEntry> GetAllFromQueueOfFeedsReadyForCallback(string merchantId, AmazonRegion region)
-			=> Where(fse => fse.AmazonRegion == region && fse.MerchantId == merchantId 
-						&& fse.Details != null && fse.Details.FeedSubmissionReport != null);
+		public IEnumerable<FeedSubmissionEntry> GetAllFromQueueOfFeedsReadyForCallback(string merchantId, AmazonRegion region, bool markEntriesAsLocked = true)
+		{
+			var entries = Where(fse => fse.AmazonRegion == region && fse.MerchantId == merchantId
+						   && fse.Details != null && fse.Details.FeedSubmissionReport != null && fse.IsLocked == false).ToList();
+
+			if(entries.Any() && markEntriesAsLocked)
+			{
+				foreach (var entry in entries)
+				{
+					entry.IsLocked = true;
+					Update(entry);
+				}
+				SaveChanges();
+			}
+
+			return entries;
+		}
 
 		private bool IsFeedInASubmitFeedQueue(FeedSubmissionEntry feedSubmission)
 		{
