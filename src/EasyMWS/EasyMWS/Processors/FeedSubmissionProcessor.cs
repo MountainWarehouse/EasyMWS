@@ -81,6 +81,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			if (string.IsNullOrEmpty(feedSubmission?.FeedType)) throw new ArgumentException($"{missingInformationExceptionMessage}: Feed type is missing.");
 
 			_logger.Info($"Attempting to submit the next feed in queue to Amazon: {feedSubmission.RegionAndTypeComputed}.");
+			feedSubmission.IsLocked = false;
 
 			var feedSubmissionData = feedSubmission.GetPropertiesContainer();
 
@@ -187,6 +188,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				var feedSubmissionEntry = feedSubmissionService.FirstOrDefault(fsc => fsc.FeedSubmissionId == feedSubmissionInfo.FeedSubmissionId);
 				if(feedSubmissionEntry == null) continue;
+				feedSubmissionEntry.IsLocked = false;
 
 				var genericProcessingInfo = $"ProcessingStatus returned by Amazon for {feedSubmissionEntry.RegionAndTypeComputed} is '{feedSubmissionInfo.FeedProcessingStatus}'.";
 
@@ -227,6 +229,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			if (string.IsNullOrEmpty(feedSubmissionEntry.FeedSubmissionId)) throw new ArgumentException($"{missingInformationExceptionMessage}: FeedSubmissionId is missing.");
 
 			_logger.Info($"Attempting to request the feed submission result for the next feed in queue from Amazon: {feedSubmissionEntry.RegionAndTypeComputed}.");
+			feedSubmissionEntry.IsLocked = false;
 
 			var reportResultStream = new MemoryStream();
 			var request = new GetFeedSubmissionResultRequest
@@ -303,10 +306,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				foreach (var entryToDelete in entries)
 				{
+					if (!feedSubmissionService.GetAll().Any(fse => fse.Id == entryToDelete.Entry.Id)) continue;
 					feedSubmissionService.Delete(entryToDelete.Entry);
+					feedSubmissionService.SaveChanges();
+
 					_logger.Warn($"Feed submission entry {entryToDelete.Entry.RegionAndTypeComputed} deleted from queue. {entryToDelete.DeleteReason.ToString()} exceeded");
 				}
-				feedSubmissionService.SaveChanges();
 			}
 
 			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(fse => IsFeedSubmissionRetryCountExceeded(fse))

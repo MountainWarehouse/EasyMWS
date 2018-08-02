@@ -34,7 +34,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void RequestReportFromAmazon(IReportRequestEntryService reportRequestService, ReportRequestEntry reportRequestEntry)
 	    {
-		    var missingInformationExceptionMessage = "Cannot request report from amazon due to missing report request information.";
+			var missingInformationExceptionMessage = "Cannot request report from amazon due to missing report request information.";
 
 			if (reportRequestEntry?.ReportRequestData == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Report request data is missing.");
 		    if (string.IsNullOrEmpty(reportRequestEntry?.ReportType)) throw new ArgumentException($"{missingInformationExceptionMessage}: Report Type is missing.");
@@ -42,6 +42,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var reportRequestData = reportRequestEntry.GetPropertiesContainer();
 
 			_logger.Info($"Attempting to request the next report in queue from Amazon: {reportRequestEntry.RegionAndTypeComputed}.");
+			reportRequestEntry.IsLocked = false;
 
 			var reportRequest = new RequestReportRequest
 			{
@@ -99,7 +100,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		    finally
 			{
-			    reportRequestService.SaveChanges();
+				reportRequestService.SaveChanges();
 			}
 	    }
 
@@ -157,10 +158,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				foreach (var entryToDelete in entries)
 				{
+					if (!reportRequestService.GetAll().Any(rrc => rrc.Id == entryToDelete.Entry.Id)) continue;
 					reportRequestService.Delete(entryToDelete.Entry);
+					reportRequestService.SaveChanges();
+
 					_logger.Warn($"Report request entry {entryToDelete.Entry.RegionAndTypeComputed} deleted from queue. {entryToDelete.DeleteReason.ToString()} exceeded");
 				}
-				reportRequestService.SaveChanges();
 			}
 			
 			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(rrc => IsRequestRetryCountExceeded(rrc))
@@ -182,21 +185,22 @@ namespace MountainWarehouse.EasyMWS.Processors
 	    {
 			foreach (var reportGenerationInfo in reportGenerationStatuses)
 			{
-				var reportGenerationCallback = reportRequestService.FirstOrDefault(rrc => rrc.RequestReportId == reportGenerationInfo.ReportRequestId && rrc.GeneratedReportId == null);
-				if (reportGenerationCallback == null) continue;
+				var reportRequestEntry = reportRequestService.FirstOrDefault(rrc => rrc.RequestReportId == reportGenerationInfo.ReportRequestId && rrc.GeneratedReportId == null);
+				if (reportRequestEntry == null) continue;
+				reportRequestEntry.IsLocked = false;
 
-				var genericProcessingInfo = $"ProcessingStatus returned by Amazon for {reportGenerationCallback.RegionAndTypeComputed} is '{reportGenerationInfo.ReportProcessingStatus}'.";
+				var genericProcessingInfo = $"ProcessingStatus returned by Amazon for {reportRequestEntry.RegionAndTypeComputed} is '{reportGenerationInfo.ReportProcessingStatus}'.";
 
 				if (reportGenerationInfo.ReportProcessingStatus == "_DONE_")
 				{
-					reportGenerationCallback.GeneratedReportId = reportGenerationInfo.GeneratedReportId;
-					reportGenerationCallback.ReportProcessRetryCount = 0;
-					reportRequestService.Update(reportGenerationCallback);
+					reportRequestEntry.GeneratedReportId = reportGenerationInfo.GeneratedReportId;
+					reportRequestEntry.ReportProcessRetryCount = 0;
+					reportRequestService.Update(reportRequestEntry);
 					_logger.Info($"{genericProcessingInfo}. The report is now ready for download.");
 				}
 				else if (reportGenerationInfo.ReportProcessingStatus == "_DONE_NO_DATA_")
 				{
-					reportRequestService.Delete(reportGenerationCallback);
+					reportRequestService.Delete(reportRequestEntry);
 					_logger.Warn($"{genericProcessingInfo}. The Report request entry will now be removed from queue.");
 				}
 				else if (reportGenerationInfo.ReportProcessingStatus == "_SUBMITTED_" 
@@ -206,19 +210,19 @@ namespace MountainWarehouse.EasyMWS.Processors
 				}
 				else if (reportGenerationInfo.ReportProcessingStatus == "_CANCELLED_")
 				{
-					reportGenerationCallback.RequestReportId = null;
-					reportGenerationCallback.GeneratedReportId = null;
-					reportGenerationCallback.ReportProcessRetryCount++;
-					reportRequestService.Update(reportGenerationCallback);
-					_logger.Warn($"{genericProcessingInfo}. The Report request will be retried. ReportProcessRetryCount is now '{reportGenerationCallback.ReportProcessRetryCount}'.");
+					reportRequestEntry.RequestReportId = null;
+					reportRequestEntry.GeneratedReportId = null;
+					reportRequestEntry.ReportProcessRetryCount++;
+					reportRequestService.Update(reportRequestEntry);
+					_logger.Warn($"{genericProcessingInfo}. The Report request will be retried. ReportProcessRetryCount is now '{reportRequestEntry.ReportProcessRetryCount}'.");
 				}
 				else
 				{
-					reportGenerationCallback.RequestReportId = null;
-					reportGenerationCallback.GeneratedReportId = null;
-					reportGenerationCallback.ReportProcessRetryCount++;
-					reportRequestService.Update(reportGenerationCallback);
-					_logger.Warn($"{genericProcessingInfo}. The Report request will be retried. This report processing status is not yet handled by EasyMws. ReportProcessRetryCount is now '{reportGenerationCallback.ReportProcessRetryCount}'.");
+					reportRequestEntry.RequestReportId = null;
+					reportRequestEntry.GeneratedReportId = null;
+					reportRequestEntry.ReportProcessRetryCount++;
+					reportRequestService.Update(reportRequestEntry);
+					_logger.Warn($"{genericProcessingInfo}. The Report request will be retried. This report processing status is not yet handled by EasyMws. ReportProcessRetryCount is now '{reportRequestEntry.ReportProcessRetryCount}'.");
 				}
 			}
 			reportRequestService.SaveChanges();
@@ -226,10 +230,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void DownloadGeneratedReportFromAmazon(IReportRequestEntryService reportRequestService, ReportRequestEntry reportRequestEntry)
 	    {
-		    var missingInformationExceptionMessage = "Cannot request report from amazon due to missing report request information.";
+			var missingInformationExceptionMessage = "Cannot request report from amazon due to missing report request information.";
 			_logger.Info($"Attempting to download the next report in queue from Amazon: {reportRequestEntry.RegionAndTypeComputed}.");
+			reportRequestEntry.IsLocked = false;
 
-		    if (string.IsNullOrEmpty(reportRequestEntry?.GeneratedReportId)) throw new ArgumentException($"{missingInformationExceptionMessage}: GeneratedReportId is missing.");
+			if (string.IsNullOrEmpty(reportRequestEntry?.GeneratedReportId)) throw new ArgumentException($"{missingInformationExceptionMessage}: GeneratedReportId is missing.");
 
 			var reportResultStream = new MemoryStream();
 		    var getReportRequest = new GetReportRequest
@@ -294,7 +299,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    }
 		    finally
 		    {
-			    reportRequestService.SaveChanges();
+				reportRequestService.SaveChanges();
 		    }
 		}
 
