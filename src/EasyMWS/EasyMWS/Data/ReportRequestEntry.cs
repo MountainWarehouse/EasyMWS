@@ -20,7 +20,7 @@ namespace MountainWarehouse.EasyMWS.Data
 
 		[Key]
 		public int Id { get; set; }
-
+		public bool IsLocked { get; set; }
 		public int ReportRequestRetryCount { get; set; }
 		public int ReportDownloadRetryCount { get; set; }
 		public int InvokeCallbackRetryCount { get; set; }

@@ -324,7 +324,7 @@ namespace EasyMWS.Tests.Processors
 
 			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_feedSubmissionServiceMock.Object);
 			_feedSubmissionServiceMock.Verify(x => x.Delete(It.Is<FeedSubmissionEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Exactly(numberOfDeleteCalls));
-			_feedSubmissionServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+			_feedSubmissionServiceMock.Verify(x => x.SaveChanges(), Times.Exactly(numberOfDeleteCalls));
 		}
 
 		[TestCase(RetryCountIsBelowConfiguredRetryCountLimitEdge, 0)]
@@ -364,7 +364,7 @@ namespace EasyMWS.Tests.Processors
 
 			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_feedSubmissionServiceMock.Object);
 			_feedSubmissionServiceMock.Verify(x => x.Delete(It.Is<FeedSubmissionEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Exactly(numberOfDeleteCalls));
-			_feedSubmissionServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+			_feedSubmissionServiceMock.Verify(x => x.SaveChanges(), Times.Exactly(numberOfDeleteCalls));
 		}
 
 		[TestCase(RetryCountIsBelowConfiguredRetryCountLimitEdge, 0)]
@@ -404,7 +404,7 @@ namespace EasyMWS.Tests.Processors
 
 			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_feedSubmissionServiceMock.Object);
 			_feedSubmissionServiceMock.Verify(x => x.Delete(It.Is<FeedSubmissionEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Exactly(numberOfDeleteCalls));
-			_feedSubmissionServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+			_feedSubmissionServiceMock.Verify(x => x.SaveChanges(), Times.Exactly(numberOfDeleteCalls));
 		}
 
 		[TestCase(RetryCountIsBelowConfiguredRetryCountLimitEdge, 0)]
@@ -443,7 +443,7 @@ namespace EasyMWS.Tests.Processors
 
 			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(_feedSubmissionServiceMock.Object);
 			_feedSubmissionServiceMock.Verify(x => x.Delete(It.Is<FeedSubmissionEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Exactly(numberOfDeleteCalls));
-			_feedSubmissionServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+			_feedSubmissionServiceMock.Verify(x => x.SaveChanges(), Times.Exactly(numberOfDeleteCalls));
 		}
 
 		[Test]

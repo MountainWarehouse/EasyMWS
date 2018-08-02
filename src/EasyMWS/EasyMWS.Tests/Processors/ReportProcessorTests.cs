@@ -28,6 +28,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		private Mock<ICallbackActivator> _callbackActivatorMock;
 		private Mock<IEasyMwsLogger> _loggerMock;
 		private static bool _called;
+		private readonly bool MarkEntryAsLocked = true;
 
 		[SetUp]
 		public void SetUp()
@@ -138,14 +139,14 @@ namespace EasyMWS.Tests.ReportProcessors
 			_reportProcessor.PollReports(_reportRequestServiceMock.Object);
 
 			_reportRequestServiceMock.Verify(
-				rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<string>(), It.IsAny<AmazonRegion>()), Times.Once);
+				rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<string>(), It.IsAny<AmazonRegion>(), MarkEntryAsLocked), Times.Once);
 		}
 
 		[Test]
 		public void Poll_WithGetNonRequestedReportFromQueueReturningNull_DoesNotRequestAReportFromAmazon()
 		{
 			_reportRequestServiceMock
-				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<string>(), It.IsAny<AmazonRegion>()))
+				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<string>(), It.IsAny<AmazonRegion>(), MarkEntryAsLocked))
 				.Returns((ReportRequestEntry) null);
 
 			_reportProcessor.PollReports(_reportRequestServiceMock.Object);
@@ -161,7 +162,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
 
 			_reportRequestServiceMock
-				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<string>(), It.IsAny<AmazonRegion>()))
+				.Setup(rrp => rrp.GetNextFromQueueOfReportsToRequest(It.IsAny<string>(), It.IsAny<AmazonRegion>(), MarkEntryAsLocked))
 				.Returns(new ReportRequestEntry{ReportRequestData = serializedReportRequestData });
 
 			_reportProcessor.PollReports(_reportRequestServiceMock.Object);

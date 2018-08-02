@@ -786,7 +786,7 @@ namespace EasyMWS.Tests.Processors
 
 			_requestReportProcessor.CleanupReportRequests(_reportRequestServiceMock.Object);
 			_reportRequestServiceMock.Verify(x => x.Delete(It.Is<ReportRequestEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Exactly(numberOfDeleteCalls));
-			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Exactly(numberOfDeleteCalls));
 		}
 
 		[TestCase(RetryCountIsBelowConfiguredRetryCountLimitEdge, 0)]
@@ -834,7 +834,7 @@ namespace EasyMWS.Tests.Processors
 
 			_requestReportProcessor.CleanupReportRequests(_reportRequestServiceMock.Object);
 			_reportRequestServiceMock.Verify(x => x.Delete(It.Is<ReportRequestEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Exactly(numberOfDeleteCalls));
-			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Exactly(numberOfDeleteCalls));
 		}
 
 		[TestCase(RetryCountIsBelowConfiguredRetryCountLimitEdge, 0)]
@@ -882,7 +882,7 @@ namespace EasyMWS.Tests.Processors
 
 			_requestReportProcessor.CleanupReportRequests(_reportRequestServiceMock.Object);
 			_reportRequestServiceMock.Verify(x => x.Delete(It.Is<ReportRequestEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Exactly(numberOfDeleteCalls));
-			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Exactly(numberOfDeleteCalls));
 		}
 
 		[TestCase(RetryCountIsBelowConfiguredRetryCountLimitEdge, 0)]
@@ -930,7 +930,7 @@ namespace EasyMWS.Tests.Processors
 
 			_requestReportProcessor.CleanupReportRequests(_reportRequestServiceMock.Object);
 			_reportRequestServiceMock.Verify(x => x.Delete(It.Is<ReportRequestEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Exactly(numberOfDeleteCalls));
-			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Exactly(numberOfDeleteCalls));
 		}
 
 		[Test]
