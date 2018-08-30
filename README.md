@@ -172,3 +172,5 @@ Library dependencies  (all the dependencies are available on the NuGet platform)
 
 
 Package available on NuGet.org at [this location](https://www.nuget.org/packages/MountainWarehouse.EasyMWS/). tags : Amazon, MWS, MarketplaceWebService.
+
+**EasyMws does not currently manage distributed locks. The calling code should either take that into consideration or avoid calling EasyMws in a distributed manner altogether.**
