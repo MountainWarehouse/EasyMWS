@@ -195,5 +195,16 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 				startDate: startDate, endDate: endDate);
 
 		#endregion
+
+		#region FBA Removals Reports
+
+		public ReportRequestPropertiesContainer FbaRemovalShipmentDetailReport(DateTime? startDate = null, DateTime? endDate = null,
+			MwsMarketplaceGroup requestedMarketplacesGroup = null)
+			=> ReportGeneratorHelper.GenerateReportRequest("_GET_FBA_FULFILLMENT_REMOVAL_SHIPMENT_DETAIL_DATA_", ContentUpdateFrequency.Unknown,
+				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
+				requestedMarketplaces: requestedMarketplacesGroup?.GetMarketplacesIdList.ToList(),
+				startDate: startDate, endDate: endDate);
+
+		#endregion
 	}
 }
