@@ -263,5 +263,21 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 
 		#endregion
 
+		#region FBA Removals Reports
+
+		/// <summary>
+		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_REMOVAL_SHIPMENT_DETAIL_DATA_ <para />
+		/// Tab-delimited flat file. This report provides shipment tracking information for all removal orders and includes the items that have been removed from an Amazon fulfillment center for either a single removal order or for a date range.<para/>
+		/// This report will not include canceled returns or disposed items; it is only for shipment information. Content updated in near real-time. For FBA sellers. For Marketplace and Seller Central sellers.
+		/// </summary>
+		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <returns></returns>
+		ReportRequestPropertiesContainer FbaRemovalShipmentDetailReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+
+
+		#endregion
+
 	}
 }
