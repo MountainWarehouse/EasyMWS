@@ -57,12 +57,12 @@ namespace EasyMWS.Tests.Processors
 
 			_feedSubmissionServiceMock.Setup(x => x.GetAll()).Returns(_feedSubmissionCallbacks.AsQueryable());
 
-			_feedSubmissionServiceMock.Setup(x => x.Where(It.IsAny<Expression<Func<FeedSubmissionEntry, bool>>>()))
-				.Returns((Expression<Func<FeedSubmissionEntry, bool>> e) => _feedSubmissionCallbacks.AsQueryable().Where(e));
+			_feedSubmissionServiceMock.Setup(x => x.Where(It.IsAny<Func<FeedSubmissionEntry, bool>>()))
+				.Returns((Func<FeedSubmissionEntry, bool> e) => _feedSubmissionCallbacks.AsQueryable().Where(e));
 
 			_feedSubmissionServiceMock
-				.Setup(x => x.FirstOrDefault(It.IsAny<Expression<Func<FeedSubmissionEntry, bool>>>()))
-				.Returns((Expression<Func<FeedSubmissionEntry, bool>> e) =>
+				.Setup(x => x.FirstOrDefault(It.IsAny<Func<FeedSubmissionEntry, bool>>()))
+				.Returns((Func<FeedSubmissionEntry, bool> e) =>
 					_feedSubmissionCallbacks.AsQueryable().FirstOrDefault(e));
 		}
 
