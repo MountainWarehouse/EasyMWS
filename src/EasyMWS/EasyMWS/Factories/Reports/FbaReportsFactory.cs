@@ -67,7 +67,6 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 				requestedMarketplaces: requestedMarketplacesGroup?.GetMarketplacesIdList.ToList(),
 				startDate: startDate, endDate: endDate);
 
-		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		public ReportRequestPropertiesContainer FbaAmazonFulfilledInventoryReport(DateTime? startDate = null,
 			DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplaces = null)
 			=> ReportGeneratorHelper.GenerateReportRequest("_GET_AFN_INVENTORY_DATA_", ContentUpdateFrequency.NearRealTime,
@@ -75,7 +74,6 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList(),
 				startDate: startDate, endDate: endDate);
 
-		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		public ReportRequestPropertiesContainer FbaMultiCountryInventoryReport(DateTime? startDate = null,
 			DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplaces = null)
 			=> ReportGeneratorHelper.GenerateReportRequest("_GET_AFN_INVENTORY_DATA_BY_COUNTRY_",
@@ -84,7 +82,6 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList(),
 				startDate: startDate, endDate: endDate);
 
-		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		public ReportRequestPropertiesContainer FbaManageExcessInventoryReport(DateTime? startDate = null,
 			DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplaces = null)
 			=> ReportGeneratorHelper.GenerateReportRequest("_GET_EXCESS_INVENTORY_DATA_", ContentUpdateFrequency.NearRealTime,
@@ -92,7 +89,6 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList(),
 				startDate: startDate, endDate: endDate);
 
-		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		public ReportRequestPropertiesContainer FbaCrossBorderInventoryMovementReport(DateTime? startDate = null,
 			DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplaces = null)
 			=> ReportGeneratorHelper.GenerateReportRequest("_GET_FBA_FULFILLMENT_CROSS_BORDER_INVENTORY_MOVEMENT_DATA_",
@@ -101,7 +97,6 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList(),
 				startDate: startDate, endDate: endDate);
 
-		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		public ReportRequestPropertiesContainer FbaDailyInventoryHistoryReport(DateTime? startDate = null,
 			DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplaces = null)
 			=> ReportGeneratorHelper.GenerateReportRequest("_GET_FBA_FULFILLMENT_CURRENT_INVENTORY_DATA_",
@@ -110,7 +105,6 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList(),
 				startDate: startDate, endDate: endDate);
 
-		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		public ReportRequestPropertiesContainer FbaInboundPerformanceReport(DateTime? startDate = null,
 			DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplaces = null)
 			=> ReportGeneratorHelper.GenerateReportRequest("_GET_FBA_FULFILLMENT_INBOUND_NONCOMPLIANCE_DATA_",
@@ -119,7 +113,6 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList(),
 				startDate: startDate, endDate: endDate);
 
-		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		public ReportRequestPropertiesContainer FbaInventoryAdjustmentsReport(DateTime? startDate = null,
 			DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplaces = null)
 			=> ReportGeneratorHelper.GenerateReportRequest("_GET_FBA_FULFILLMENT_INVENTORY_ADJUSTMENTS_DATA_",
@@ -128,7 +121,6 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList(),
 				startDate: startDate, endDate: endDate);
 
-		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		public ReportRequestPropertiesContainer FbaInventoryHealthReport(DateTime? startDate = null,
 			DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplaces = null)
 			=> ReportGeneratorHelper.GenerateReportRequest("_GET_FBA_FULFILLMENT_INVENTORY_HEALTH_DATA_",
@@ -137,7 +129,6 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList(),
 				startDate: startDate, endDate: endDate);
 
-		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		public ReportRequestPropertiesContainer FbaReceivedInventoryReport(DateTime? startDate = null,
 			DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplaces = null)
 			=> ReportGeneratorHelper.GenerateReportRequest("_GET_FBA_FULFILLMENT_INVENTORY_RECEIPTS_DATA_",
@@ -146,7 +137,6 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList(),
 				startDate: startDate, endDate: endDate);
 
-		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		public ReportRequestPropertiesContainer FbaInventoryEventDetailReport(DateTime? startDate = null,
 			DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplaces = null)
 			=> ReportGeneratorHelper.GenerateReportRequest("_GET_FBA_FULFILLMENT_INVENTORY_SUMMARY_DATA_",
@@ -155,7 +145,6 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList(),
 				startDate: startDate, endDate: endDate);
 
-		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		public ReportRequestPropertiesContainer FbaMonthlyInventoryHistoryReport(DateTime? startDate = null,
 			DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplaces = null)
 			=> ReportGeneratorHelper.GenerateReportRequest("_GET_FBA_FULFILLMENT_MONTHLY_INVENTORY_DATA_",
@@ -164,7 +153,6 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList(),
 				startDate: startDate, endDate: endDate);
 
-		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		public ReportRequestPropertiesContainer FbaInventoryAgeReport(DateTime? startDate = null,
 			DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplaces = null)
 			=> ReportGeneratorHelper.GenerateReportRequest("_GET_FBA_INVENTORY_AGED_DATA_", ContentUpdateFrequency.Daily,
@@ -172,7 +160,6 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList(),
 				startDate: startDate, endDate: endDate);
 
-		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		public ReportRequestPropertiesContainer FbaManageInventoryArchived(DateTime? startDate = null,
 			DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplaces = null)
 			=> ReportGeneratorHelper.GenerateReportRequest("_GET_FBA_MYI_ALL_INVENTORY_DATA_",
@@ -181,7 +168,6 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList(),
 				startDate: startDate, endDate: endDate);
 
-		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		public ReportRequestPropertiesContainer FbaManageInventory(DateTime? startDate = null,
 			DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplaces = null)
 			=> ReportGeneratorHelper.GenerateReportRequest("_GET_FBA_MYI_UNSUPPRESSED_INVENTORY_DATA_",
@@ -190,7 +176,6 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 				requestedMarketplaces: requestedMarketplaces?.GetMarketplacesIdList.ToList(),
 				startDate: startDate, endDate: endDate);
 
-		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		public ReportRequestPropertiesContainer FbaReservedInventoryReport(DateTime? startDate = null,
 			DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplaces = null)
 			=> ReportGeneratorHelper.GenerateReportRequest("_GET_RESERVED_INVENTORY_DATA_", ContentUpdateFrequency.NearRealTime,
