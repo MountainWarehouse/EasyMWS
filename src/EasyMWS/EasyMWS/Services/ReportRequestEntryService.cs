@@ -49,17 +49,13 @@ namespace MountainWarehouse.EasyMWS.Services
 
 		public void SaveChanges() => _reportRequestEntryRepository.SaveChanges();
 		public async Task SaveChangesAsync() => await _reportRequestEntryRepository.SaveChangesAsync();
-		public IQueryable<ReportRequestEntry> GetAll() => _reportRequestEntryRepository.GetAll().OrderBy(x => x.Id);
+		public IEnumerable<ReportRequestEntry> GetAll() => _reportRequestEntryRepository.GetAll().OrderBy(x => x.Id);
 
-		public IQueryable<ReportRequestEntry> Where(Expression<Func<ReportRequestEntry, bool>> predicate) => _reportRequestEntryRepository.GetAll().OrderBy(x => x.Id).Where(predicate);
+		public IEnumerable<ReportRequestEntry> Where(Func<ReportRequestEntry, bool> predicate) => _reportRequestEntryRepository.GetAll().OrderBy(x => x.Id).Where(predicate);
 
 		public ReportRequestEntry First() => _reportRequestEntryRepository.GetAll().OrderBy(x => x.Id).First();
 		public ReportRequestEntry FirstOrDefault() => _reportRequestEntryRepository.GetAll().OrderBy(x => x.Id).FirstOrDefault();
-		public ReportRequestEntry FirstOrDefault(Expression<Func<ReportRequestEntry, bool>> predicate) => _reportRequestEntryRepository.GetAll().OrderBy(x => x.Id).FirstOrDefault(predicate);
-
-		public ReportRequestEntry Last() => _reportRequestEntryRepository.GetAll().OrderByDescending(x => x.Id).First();
-		public ReportRequestEntry LastOrDefault() => _reportRequestEntryRepository.GetAll().OrderByDescending(x => x.Id).FirstOrDefault();
-		public ReportRequestEntry LastOrDefault(Expression<Func<ReportRequestEntry, bool>> predicate) => _reportRequestEntryRepository.GetAll().OrderByDescending(x => x.Id).FirstOrDefault(predicate);
+		public ReportRequestEntry FirstOrDefault(Func<ReportRequestEntry, bool> predicate) => _reportRequestEntryRepository.GetAll().OrderBy(x => x.Id).FirstOrDefault(predicate);
 
 		public ReportRequestEntry GetNextFromQueueOfReportsToRequest(string merchantId, AmazonRegion region, bool markEntryAsLocked = true)
 		{

@@ -50,7 +50,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				ReportType = reportRequestEntry.ReportType
 			};
 
-		    if (reportRequestData.MarketplaceIdList != null) reportRequest.MarketplaceIdList = new IdList {Id = reportRequestData.MarketplaceIdList};
+		    if (reportRequestData.MarketplaceIdList != null) reportRequest.MarketplaceIdList = new IdList {Id = reportRequestData.MarketplaceIdList.ToList()};
 			if (reportRequestData.StartDate.HasValue) reportRequest.StartDate = reportRequestData.StartDate.Value;
 		    if (reportRequestData.EndDate.HasValue) reportRequest.EndDate = reportRequestData.EndDate.Value;
 		    if (!string.IsNullOrEmpty(reportRequestData.ReportOptions)) reportRequest.ReportOptions = reportRequestData.ReportOptions;

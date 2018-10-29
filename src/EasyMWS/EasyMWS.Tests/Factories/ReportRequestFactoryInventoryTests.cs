@@ -9,21 +9,21 @@ namespace EasyMWS.Tests.Factories
 {
     public class ReportRequestFactoryInventoryTests
     {
-	    private IReportRequestFactoryInventory _reportRequestFactoryInventory;
+	    private IInventoryReportsFactory _inventoryReportsFactory;
 	    private AmazonRegion _region = AmazonRegion.Europe;
 
 	    [SetUp]
 	    public void Setup()
 	    {
-		    _reportRequestFactoryInventory = new ReportRequestFactoryInventory();
+		    _inventoryReportsFactory = new InventoryReportsFactory();
 	    }
 
 	    [Test]
 	    public void AllListingsReport_ReturnsType_ReportRequestPropertiesContainer()
 	    {
-		    _reportRequestFactoryInventory = new ReportRequestFactoryInventory();
+		    _inventoryReportsFactory = new InventoryReportsFactory();
 
-		    var propertiesContainer = _reportRequestFactoryInventory.AllListingsReport();
+		    var propertiesContainer = _inventoryReportsFactory.AllListingsReport();
 
 		    Assert.AreEqual(typeof(ReportRequestPropertiesContainer), propertiesContainer.GetType());
 		}
@@ -31,7 +31,7 @@ namespace EasyMWS.Tests.Factories
 		[Test]
 	    public void AllListingsReport_WithNoMarketplacesProvided_ReturnsContainerWithReportOptionsPropertyContains_CustomArgumentSerializedWithValueFalse()
 	    {
-		    var propertiesContainer = _reportRequestFactoryInventory.AllListingsReport();
+		    var propertiesContainer = _inventoryReportsFactory.AllListingsReport();
 
 			Assert.AreEqual("custom=false;", propertiesContainer.ReportOptions);
 	    }
@@ -42,7 +42,7 @@ namespace EasyMWS.Tests.Factories
 	    {
 		    var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Canada);
 
-			var propertiesContainer = _reportRequestFactoryInventory.AllListingsReport(requestedMarketplacesGroup: marketplaceGroup,custom: false);
+			var propertiesContainer = _inventoryReportsFactory.AllListingsReport(requestedMarketplacesGroup: marketplaceGroup.GetMarketplacesIdList,custom: false);
 
 		    Assert.AreEqual("custom=false;", propertiesContainer.ReportOptions);
 		}
@@ -53,7 +53,7 @@ namespace EasyMWS.Tests.Factories
 	    {
 		    var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Canada);
 
-		    var propertiesContainer = _reportRequestFactoryInventory.AllListingsReport(requestedMarketplacesGroup: marketplaceGroup, custom: true);
+		    var propertiesContainer = _inventoryReportsFactory.AllListingsReport(requestedMarketplacesGroup: marketplaceGroup.GetMarketplacesIdList, custom: true);
 
 		    Assert.AreEqual("custom=true;", propertiesContainer.ReportOptions);
 	    }
@@ -65,7 +65,7 @@ namespace EasyMWS.Tests.Factories
 				.AddMarketplace(MwsMarketplace.Canada)
 				.AddMarketplace(MwsMarketplace.Mexico);
 
-			var propertiesContainer = _reportRequestFactoryInventory.AllListingsReport(requestedMarketplacesGroup: marketplaceGroup);
+			var propertiesContainer = _inventoryReportsFactory.AllListingsReport(requestedMarketplacesGroup: marketplaceGroup.GetMarketplacesIdList);
 
 			Assert.NotNull(propertiesContainer);
 	    }
@@ -79,7 +79,7 @@ namespace EasyMWS.Tests.Factories
 				.AddMarketplace(MwsMarketplace.Italy)
 				.AddMarketplace(MwsMarketplace.Spain);
 
-			var propertiesContainer = _reportRequestFactoryInventory.AllListingsReport(requestedMarketplacesGroup: marketplaceGroup);
+			var propertiesContainer = _inventoryReportsFactory.AllListingsReport(requestedMarketplacesGroup: marketplaceGroup.GetMarketplacesIdList);
 
 		    Assert.NotNull(propertiesContainer);
 	    }
@@ -89,7 +89,7 @@ namespace EasyMWS.Tests.Factories
 	    {
 		    var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Japan);
 
-			var propertiesContainer = _reportRequestFactoryInventory.AllListingsReport(requestedMarketplacesGroup: marketplaceGroup);
+			var propertiesContainer = _inventoryReportsFactory.AllListingsReport(requestedMarketplacesGroup: marketplaceGroup.GetMarketplacesIdList);
 
 		    Assert.NotNull(propertiesContainer);
 	    }
@@ -99,7 +99,7 @@ namespace EasyMWS.Tests.Factories
 	    {
 		    var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Canada);
 
-		    var propertiesContainer = _reportRequestFactoryInventory.AllListingsReport(requestedMarketplacesGroup: marketplaceGroup,custom: true);
+		    var propertiesContainer = _inventoryReportsFactory.AllListingsReport(requestedMarketplacesGroup: marketplaceGroup.GetMarketplacesIdList, custom: true);
 
 		    Assert.NotNull(propertiesContainer);
 	    }
@@ -109,7 +109,7 @@ namespace EasyMWS.Tests.Factories
 	    {
 		    var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US);
 
-		    var propertiesContainer = _reportRequestFactoryInventory.AllListingsReport(requestedMarketplacesGroup: marketplaceGroup,custom: true);
+		    var propertiesContainer = _inventoryReportsFactory.AllListingsReport(requestedMarketplacesGroup: marketplaceGroup.GetMarketplacesIdList, custom: true);
 
 		    Assert.NotNull(propertiesContainer);
 	    }
@@ -119,7 +119,7 @@ namespace EasyMWS.Tests.Factories
 	    {
 		    var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.UK);
 
-		    var propertiesContainer = _reportRequestFactoryInventory.AllListingsReport(requestedMarketplacesGroup: marketplaceGroup,custom: true);
+		    var propertiesContainer = _inventoryReportsFactory.AllListingsReport(requestedMarketplacesGroup: marketplaceGroup.GetMarketplacesIdList, custom: true);
 
 		    Assert.NotNull(propertiesContainer);
 	    }
@@ -129,7 +129,7 @@ namespace EasyMWS.Tests.Factories
 	    {
 		    var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.India);
 
-		    var propertiesContainer = _reportRequestFactoryInventory.AllListingsReport(requestedMarketplacesGroup: marketplaceGroup,custom: true);
+		    var propertiesContainer = _inventoryReportsFactory.AllListingsReport(requestedMarketplacesGroup: marketplaceGroup.GetMarketplacesIdList, custom: true);
 
 		    Assert.NotNull(propertiesContainer);
 	    }
@@ -139,7 +139,7 @@ namespace EasyMWS.Tests.Factories
 	    {
 		    var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Mexico);
 
-		    Assert.Throws<ArgumentException>(() => _reportRequestFactoryInventory.AllListingsReport(requestedMarketplacesGroup: marketplaceGroup,custom: true));
+		    Assert.Throws<ArgumentException>(() => _inventoryReportsFactory.AllListingsReport(requestedMarketplacesGroup: marketplaceGroup.GetMarketplacesIdList, custom: true));
 	    }
 
 	    [Test]
@@ -147,7 +147,7 @@ namespace EasyMWS.Tests.Factories
 	    {
 		    var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.France);
 
-		    Assert.Throws<ArgumentException>(() => _reportRequestFactoryInventory.AllListingsReport(requestedMarketplacesGroup: marketplaceGroup,custom: true));
+		    Assert.Throws<ArgumentException>(() => _inventoryReportsFactory.AllListingsReport(requestedMarketplacesGroup: marketplaceGroup.GetMarketplacesIdList, custom: true));
 	    }
 
 	    [Test]
@@ -155,7 +155,7 @@ namespace EasyMWS.Tests.Factories
 	    {
 		    var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Japan);
 
-		    Assert.Throws<ArgumentException>(() => _reportRequestFactoryInventory.AllListingsReport(requestedMarketplacesGroup: marketplaceGroup,custom: true));
+		    Assert.Throws<ArgumentException>(() => _inventoryReportsFactory.AllListingsReport(requestedMarketplacesGroup: marketplaceGroup.GetMarketplacesIdList, custom: true));
 	    }
 	}
 }

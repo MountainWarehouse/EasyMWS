@@ -10,16 +10,16 @@ namespace EasyMWS.Tests.Factories
 {
     public class ReportRequestFactoryFbaPaymentTests
     {
-	    private IReportRequestFactoryFba _reportRequestFactoryFBA;
+	    private IFbaReportsFactory _fbaReportsFactory;
 	    private AmazonRegion _region = AmazonRegion.Europe;
 
 		[Test]
 		public void
 			FbaFeePreviewReport_ReturnsTypeReportRequestPropertiesContainer()
 		{
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
+			_fbaReportsFactory = new FbaReportsFactory();
 
-			var reportRequest = _reportRequestFactoryFBA.FbaFeePreviewReport(DateTime.UtcNow);
+			var reportRequest = _fbaReportsFactory.FbaFeePreviewReport(DateTime.UtcNow);
 
 			Assert.AreEqual(typeof(ReportRequestPropertiesContainer), reportRequest.GetType());
 		}
@@ -28,9 +28,9 @@ namespace EasyMWS.Tests.Factories
 	    public void FbaFeePreviewReport_ReturnsRequestWithStartDateSetAsExpected()
 	    {
 		    var testStartDate = DateTime.UtcNow.AddDays(-2);
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
+			_fbaReportsFactory = new FbaReportsFactory();
 
-		    var reportRequest = _reportRequestFactoryFBA.FbaFeePreviewReport(testStartDate);
+		    var reportRequest = _fbaReportsFactory.FbaFeePreviewReport(testStartDate);
 
 		    Assert.NotNull(reportRequest);
 		    Assert.IsNotNull(reportRequest.StartDate);
@@ -41,9 +41,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaFeePreviewReport_WithNoMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
+			_fbaReportsFactory = new FbaReportsFactory();
 
-			var reportRequest = _reportRequestFactoryFBA.FbaFeePreviewReport(DateTime.UtcNow);
+			var reportRequest = _fbaReportsFactory.FbaFeePreviewReport(DateTime.UtcNow);
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -53,9 +53,9 @@ namespace EasyMWS.Tests.Factories
 		public void
 			FbaFeePreviewReport_WithNullMarketplaceProvided_ReturnsRequestWithMarketplaceIdList_NotSet()
 		{
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
+			_fbaReportsFactory = new FbaReportsFactory();
 
-			var reportRequest = _reportRequestFactoryFBA.FbaFeePreviewReport(DateTime.UtcNow);
+			var reportRequest = _fbaReportsFactory.FbaFeePreviewReport(DateTime.UtcNow);
 
 			Assert.NotNull(reportRequest);
 			Assert.IsNull(reportRequest.MarketplaceIdList);
@@ -65,9 +65,9 @@ namespace EasyMWS.Tests.Factories
 	    public void
 		    FbaFeePreviewReport_WithNoEndDateProvided_ReturnsRequestWithEndDateSetToUtcNow()
 	    {
-		    _reportRequestFactoryFBA = new ReportRequestFactoryFba();
+		    _fbaReportsFactory = new FbaReportsFactory();
 
-		    var reportRequest = _reportRequestFactoryFBA.FbaFeePreviewReport(DateTime.UtcNow);
+		    var reportRequest = _fbaReportsFactory.FbaFeePreviewReport(DateTime.UtcNow);
 
 		    Assert.NotNull(reportRequest);
 		    Assert.IsTrue(reportRequest.EndDate - DateTime.UtcNow < TimeSpan.FromSeconds(1));
@@ -81,9 +81,9 @@ namespace EasyMWS.Tests.Factories
 				.AddMarketplace(MwsMarketplace.France)
 				.AddMarketplace(MwsMarketplace.Italy)
 				.AddMarketplace(MwsMarketplace.Spain);
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
+			_fbaReportsFactory = new FbaReportsFactory();
 
-			var reportRequest = _reportRequestFactoryFBA.FbaFeePreviewReport(DateTime.UtcNow,requestedMarketplacesGroup: marketplaceGroup);
+			var reportRequest = _fbaReportsFactory.FbaFeePreviewReport(DateTime.UtcNow,requestedMarketplacesGroup: marketplaceGroup.GetMarketplacesIdList);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -94,9 +94,9 @@ namespace EasyMWS.Tests.Factories
 		    var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US)
 			    .AddMarketplace(MwsMarketplace.Canada)
 			    .AddMarketplace(MwsMarketplace.Mexico);
-		    _reportRequestFactoryFBA = new ReportRequestFactoryFba();
+		    _fbaReportsFactory = new FbaReportsFactory();
 
-		    var reportRequest = _reportRequestFactoryFBA.FbaFeePreviewReport(DateTime.UtcNow, requestedMarketplacesGroup: marketplaceGroup);
+		    var reportRequest = _fbaReportsFactory.FbaFeePreviewReport(DateTime.UtcNow, requestedMarketplacesGroup: marketplaceGroup.GetMarketplacesIdList);
 
 		    Assert.NotNull(reportRequest);
 	    }
@@ -107,9 +107,9 @@ namespace EasyMWS.Tests.Factories
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.US)
 				.AddMarketplace(MwsMarketplace.Canada)
 				.AddMarketplace(MwsMarketplace.Mexico);
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
+			_fbaReportsFactory = new FbaReportsFactory();
 
-			var reportRequest = _reportRequestFactoryFBA.FbaFeePreviewReport(DateTime.UtcNow, requestedMarketplacesGroup: marketplaceGroup);
+			var reportRequest = _fbaReportsFactory.FbaFeePreviewReport(DateTime.UtcNow, requestedMarketplacesGroup: marketplaceGroup.GetMarketplacesIdList);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -118,17 +118,17 @@ namespace EasyMWS.Tests.Factories
 		public void FbaFeePreviewReport_WithNonUsOrEUMarketplaceProvided_ThrowsArgumentException()
 		{
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Japan);
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
+			_fbaReportsFactory = new FbaReportsFactory();
 
-			Assert.Throws<ArgumentException>(() => _reportRequestFactoryFBA.FbaFeePreviewReport(DateTime.UtcNow, requestedMarketplacesGroup: marketplaceGroup));
+			Assert.Throws<ArgumentException>(() => _fbaReportsFactory.FbaFeePreviewReport(DateTime.UtcNow, requestedMarketplacesGroup: marketplaceGroup.GetMarketplacesIdList));
 		}
 
 		[Test]
 		public void FbaFeePreviewReport_ReturnsReportRequest_WithCorrectType()
 		{
-			_reportRequestFactoryFBA = new ReportRequestFactoryFba();
+			_fbaReportsFactory = new FbaReportsFactory();
 
-			var reportRequest = _reportRequestFactoryFBA.FbaFeePreviewReport(DateTime.UtcNow);
+			var reportRequest = _fbaReportsFactory.FbaFeePreviewReport(DateTime.UtcNow);
 
 			Assert.AreEqual("_GET_FBA_ESTIMATED_FBA_FEES_TXT_DATA_", reportRequest.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.AtLeast72Hours, reportRequest.UpdateFrequency);
