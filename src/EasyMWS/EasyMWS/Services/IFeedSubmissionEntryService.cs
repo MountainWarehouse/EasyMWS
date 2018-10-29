@@ -15,20 +15,16 @@ namespace MountainWarehouse.EasyMWS.Services
 	    void Delete(FeedSubmissionEntry entry);
 	    void DeleteRange(IEnumerable<FeedSubmissionEntry> entries);
 		void SaveChanges();
-	    IQueryable<FeedSubmissionEntry> GetAll();
-	    IQueryable<FeedSubmissionEntry> Where(Expression<Func<FeedSubmissionEntry, bool>> predicate);
+		IEnumerable<FeedSubmissionEntry> GetAll();
+		IEnumerable<FeedSubmissionEntry> Where(Func<FeedSubmissionEntry, bool> predicate);
 	    FeedSubmissionEntry First();
 	    FeedSubmissionEntry FirstOrDefault();
-	    FeedSubmissionEntry FirstOrDefault(Expression<Func<FeedSubmissionEntry, bool>> predicate);
-	    FeedSubmissionEntry Last();
-	    FeedSubmissionEntry LastOrDefault();
-	    FeedSubmissionEntry LastOrDefault(Expression<Func<FeedSubmissionEntry, bool>> predicate);
+	    FeedSubmissionEntry FirstOrDefault(Func<FeedSubmissionEntry, bool> predicate);
+	    FeedSubmissionEntry GetNextFromQueueOfFeedsToSubmit(string merchantId, AmazonRegion region, bool markEntryAsLocked = true);
 
-	    FeedSubmissionEntry GetNextFromQueueOfFeedsToSubmit(string merchantId, AmazonRegion region);
+	    IEnumerable<string> GetIdsForSubmittedFeedsFromQueue(string merchantId, AmazonRegion region, bool markEntriesAsLocked = true);
 
-	    IEnumerable<string> GetIdsForSubmittedFeedsFromQueue(string merchantId, AmazonRegion region);
-
-	    FeedSubmissionEntry GetNextFromQueueOfProcessingCompleteFeeds(string merchantId, AmazonRegion region);
-	    IEnumerable<FeedSubmissionEntry> GetAllFromQueueOfFeedsReadyForCallback(string merchantId, AmazonRegion region);
+	    FeedSubmissionEntry GetNextFromQueueOfProcessingCompleteFeeds(string merchantId, AmazonRegion region, bool markEntryAsLocked = true);
+	    IEnumerable<FeedSubmissionEntry> GetAllFromQueueOfFeedsReadyForCallback(string merchantId, AmazonRegion region, bool markEntriesAsLocked = true);
 	}
 }

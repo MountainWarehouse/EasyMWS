@@ -99,8 +99,8 @@ namespace EasyMWS.Tests.Processors
 
 			var reportRequestCallbacks = _reportRequestCallbacks.AsQueryable();
 
-			_reportRequestServiceMock.Setup(x => x.Where(It.IsAny<Expression<Func<ReportRequestEntry, bool>>>()))
-				.Returns((Expression<Func<ReportRequestEntry, bool>> e) => reportRequestCallbacks.Where(e));
+			_reportRequestServiceMock.Setup(x => x.Where(It.IsAny<Func<ReportRequestEntry, bool>>()))
+				.Returns((Func<ReportRequestEntry, bool> e) => reportRequestCallbacks.Where(e));
 
 			_reportRequestServiceMock.Setup(x => x.GetAll()).Returns(reportRequestCallbacks);
 
@@ -111,8 +111,8 @@ namespace EasyMWS.Tests.Processors
 				.Returns(getReportRequestListResponse);
 
 			_reportRequestServiceMock
-				.Setup(x => x.FirstOrDefault(It.IsAny<Expression<Func<ReportRequestEntry, bool>>>()))
-				.Returns((Expression<Func<ReportRequestEntry, bool>> e) => reportRequestCallbacks.FirstOrDefault(e));
+				.Setup(x => x.FirstOrDefault(It.IsAny<Func<ReportRequestEntry, bool>>()))
+				.Returns((Func<ReportRequestEntry, bool> e) => reportRequestCallbacks.FirstOrDefault(e));
 
 			_marketplaceWebServiceClientMock.Setup(x => x.GetReport(It.IsAny<GetReportRequest>()))
 				.Returns(new GetReportResponse());
@@ -786,7 +786,7 @@ namespace EasyMWS.Tests.Processors
 
 			_requestReportProcessor.CleanupReportRequests(_reportRequestServiceMock.Object);
 			_reportRequestServiceMock.Verify(x => x.Delete(It.Is<ReportRequestEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Exactly(numberOfDeleteCalls));
-			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Exactly(numberOfDeleteCalls));
 		}
 
 		[TestCase(RetryCountIsBelowConfiguredRetryCountLimitEdge, 0)]
@@ -834,7 +834,7 @@ namespace EasyMWS.Tests.Processors
 
 			_requestReportProcessor.CleanupReportRequests(_reportRequestServiceMock.Object);
 			_reportRequestServiceMock.Verify(x => x.Delete(It.Is<ReportRequestEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Exactly(numberOfDeleteCalls));
-			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Exactly(numberOfDeleteCalls));
 		}
 
 		[TestCase(RetryCountIsBelowConfiguredRetryCountLimitEdge, 0)]
@@ -882,7 +882,7 @@ namespace EasyMWS.Tests.Processors
 
 			_requestReportProcessor.CleanupReportRequests(_reportRequestServiceMock.Object);
 			_reportRequestServiceMock.Verify(x => x.Delete(It.Is<ReportRequestEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Exactly(numberOfDeleteCalls));
-			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Exactly(numberOfDeleteCalls));
 		}
 
 		[TestCase(RetryCountIsBelowConfiguredRetryCountLimitEdge, 0)]
@@ -930,7 +930,7 @@ namespace EasyMWS.Tests.Processors
 
 			_requestReportProcessor.CleanupReportRequests(_reportRequestServiceMock.Object);
 			_reportRequestServiceMock.Verify(x => x.Delete(It.Is<ReportRequestEntry>(e => e.Id == firstEntryToDelete.Id)), Times.Exactly(numberOfDeleteCalls));
-			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Once);
+			_reportRequestServiceMock.Verify(x => x.SaveChanges(), Times.Exactly(numberOfDeleteCalls));
 		}
 
 		[Test]

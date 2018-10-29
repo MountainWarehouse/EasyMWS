@@ -30,6 +30,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		private static bool _called;
 		private readonly AmazonRegion _amazonRegion = AmazonRegion.Europe;
 		private readonly string _merchantId = "testMerchantId1";
+		private bool MarkEntryAsHandled = true;
 
 		[SetUp]
 		public void SetUp()
@@ -116,14 +117,14 @@ namespace EasyMWS.Tests.ReportProcessors
 			_feedProcessor.PollFeeds(_feedSubmissionServiceMock.Object);
 
 			_feedSubmissionServiceMock.Verify(
-				rrp => rrp.GetNextFromQueueOfFeedsToSubmit(It.IsAny<string>(), It.IsAny<AmazonRegion>()), Times.Once);
+				rrp => rrp.GetNextFromQueueOfFeedsToSubmit(It.IsAny<string>(), It.IsAny<AmazonRegion>(), MarkEntryAsHandled), Times.Once);
 		}
 
 		[Test]
 		public void Poll_WithGetNextFeedToSubmitFromQueueReturningNull_DoesNotSubmitFeedToAmazon()
 		{
 			_feedSubmissionServiceMock
-				.Setup(rrp => rrp.GetNextFromQueueOfFeedsToSubmit(It.IsAny<string>(), It.IsAny<AmazonRegion>()))
+				.Setup(rrp => rrp.GetNextFromQueueOfFeedsToSubmit(It.IsAny<string>(), It.IsAny<AmazonRegion>(), MarkEntryAsHandled))
 				.Returns((FeedSubmissionEntry) null);
 
 			_feedProcessor.PollFeeds(_feedSubmissionServiceMock.Object);
@@ -139,7 +140,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 
 			_feedSubmissionServiceMock
-				.Setup(rrp => rrp.GetNextFromQueueOfFeedsToSubmit(It.IsAny<string>(), It.IsAny<AmazonRegion>()))
+				.Setup(rrp => rrp.GetNextFromQueueOfFeedsToSubmit(It.IsAny<string>(), It.IsAny<AmazonRegion>(), MarkEntryAsHandled))
 				.Returns(new FeedSubmissionEntry(serializedPropertiesContainer));
 
 			_feedProcessor.PollFeeds(_feedSubmissionServiceMock.Object);

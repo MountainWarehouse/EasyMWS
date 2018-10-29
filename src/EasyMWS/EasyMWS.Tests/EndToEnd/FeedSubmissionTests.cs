@@ -66,7 +66,18 @@ namespace EasyMWS.Tests.EndToEnd
 		    _dbContext.Dispose();
 	    }
 
-	    [Test]
+		[Test]
+		[Ignore("This should only be ran manually in debug mode, in order to check for potential memory leaks with MemoryProfiler.")]
+		public void Test_ContinouslyInitializingClientAndPolling_ShouldNotCauseMemoryLeaks()
+		{
+			while (true)
+			{
+				_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", "test", "test", _loggerMock.Object, _options);
+				_easyMwsClient.Poll();
+			}
+		}
+
+		[Test]
 	    public void
 		    GivenQueuingReportAndPolling_WhenAllDataIsValid_TheReportIsDownloaded_AndIsReturnedInTheCallbackMethodAlongWithTheCallbackData()
 	    {
