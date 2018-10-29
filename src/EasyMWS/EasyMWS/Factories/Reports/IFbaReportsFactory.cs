@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Model;
 
@@ -6,8 +7,8 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 {
 	/// <summary>
 	/// Factory that can generate report requests for amazon MWS client.<para />
-	/// At least one MarketplaceId value is required for Listings Reports. No MarketplaceId value is required for reports that are not Listings Reports. <para />
-	/// When providing no MarketplaceId value for a reports that is not a Listings Reports, data for all marketplaces the seller is registered in will be shown.<para />
+	/// At least one MarketplaceId value is required for IEnumerableings Reports. No MarketplaceId value is required for reports that are not IEnumerableings Reports. <para />
+	/// When providing no MarketplaceId value for a reports that is not a IEnumerableings Reports, data for all marketplaces the seller is registered in will be shown.<para />
 	/// For more info see : https://docs.developer.amazonservices.com/en_UK/reports/Reports_ReportType.html
 	/// </summary>
 	public interface IFbaReportsFactory
@@ -24,9 +25,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FbaAmazonFulfilledShipmentsReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaAmazonFulfilledShipmentsReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FLAT_FILE_ALL_ORDERS_DATA_BY_LAST_UPDATE_ <para />
@@ -35,9 +36,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FlatFileAllOrdersReportByLastUpdate(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FlatFileAllOrdersReportByLastUpdate(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FLAT_FILE_ALL_ORDERS_DATA_BY_ORDER_DATE_ <para />
@@ -46,9 +47,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FlatFileAllOrdersReportByOrderDate(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FlatFileAllOrdersReportByOrderDate(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_XML_ALL_ORDERS_DATA_BY_LAST_UPDATE_ <para />
@@ -57,9 +58,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer XMLAllOrdersReportByLastUpdate(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer XMLAllOrdersReportByLastUpdate(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_XML_ALL_ORDERS_DATA_BY_ORDER_DATE_ <para />
@@ -68,9 +69,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer XMLAllOrdersReportByOrderDate(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer XMLAllOrdersReportByOrderDate(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_CUSTOMER_SHIPMENT_SALES_DATA_ <para />
@@ -80,9 +81,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FBACustomerShipmentSalesReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FBACustomerShipmentSalesReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_CUSTOMER_SHIPMENT_PROMOTION_DATA_ <para />
@@ -91,9 +92,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FBAPromotionsReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FBAPromotionsReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_CUSTOMER_TAXES_DATA_ <para />
@@ -102,9 +103,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FBACustomerTaxes(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FBACustomerTaxes(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		#endregion
 
@@ -117,9 +118,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FbaAmazonFulfilledInventoryReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaAmazonFulfilledInventoryReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_AFN_INVENTORY_DATA_BY_COUNTRY_ <para />
@@ -129,21 +130,21 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional IEnumerable of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>a
-		ReportRequestPropertiesContainer FbaMultiCountryInventoryReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaMultiCountryInventoryReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_EXCESS_INVENTORY_DATA_ <para />
-		/// Tab-delimited flat file. Contains listings with excess inventory, which helps sellers take action to sell through faster. <para />
+		/// Tab-delimited flat file. Contains IEnumerableings with excess inventory, which helps sellers take action to sell through faster. <para />
 		/// Content updated in near real-time. This report is only available to FBA sellers in the US, India, and Japan marketplaces. <para />
 		/// For more information, see Excess Inventory Report.
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional IEnumerable of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FbaManageExcessInventoryReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaManageExcessInventoryReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_CROSS_BORDER_INVENTORY_MOVEMENT_DATA_ <para />
@@ -155,9 +156,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional IEnumerable of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FbaCrossBorderInventoryMovementReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaCrossBorderInventoryMovementReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_CURRENT_INVENTORY_DATA_ <para />
@@ -166,9 +167,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional IEnumerable of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FbaDailyInventoryHistoryReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaDailyInventoryHistoryReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_INBOUND_NONCOMPLIANCE_DATA_ <para />
@@ -178,9 +179,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional IEnumerable of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FbaInboundPerformanceReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaInboundPerformanceReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_INVENTORY_ADJUSTMENTS_DATA_ <para />
@@ -189,9 +190,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional IEnumerable of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FbaInventoryAdjustmentsReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaInventoryAdjustmentsReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_INVENTORY_HEALTH_DATA_ <para />
@@ -200,9 +201,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional IEnumerable of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FbaInventoryHealthReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaInventoryHealthReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_INVENTORY_RECEIPTS_DATA_ <para />
@@ -212,9 +213,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional IEnumerable of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FbaReceivedInventoryReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaReceivedInventoryReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_INVENTORY_SUMMARY_DATA_ <para />
@@ -224,9 +225,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional IEnumerable of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FbaInventoryEventDetailReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaInventoryEventDetailReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_MONTHLY_INVENTORY_DATA_ <para />
@@ -235,9 +236,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional IEnumerable of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FbaMonthlyInventoryHistoryReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaMonthlyInventoryHistoryReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_INVENTORY_AGED_DATA_ <para />
@@ -247,9 +248,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional IEnumerable of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FbaInventoryAgeReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaInventoryAgeReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_MYI_ALL_INVENTORY_DATA_ <para />
@@ -259,9 +260,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional IEnumerable of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FbaManageInventoryArchived(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaManageInventoryArchived(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_MYI_UNSUPPRESSED_INVENTORY_DATA_ <para />
@@ -271,9 +272,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional IEnumerable of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FbaManageInventory(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaManageInventory(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_RESERVED_INVENTORY_DATA_ <para />
@@ -283,9 +284,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional IEnumerable of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FbaReservedInventoryReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaReservedInventoryReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_RESTOCK_INVENTORY_RECOMMENDATIONS_REPORT_ <para />
@@ -295,22 +296,22 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional IEnumerable of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer RestockInventoryReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer RestockInventoryReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_STRANDED_INVENTORY_LOADER_DATA_ <para />
-		/// Tab-delimited flat file. Contains a list of stranded inventory. <para />
-		/// Update the listing information in this report file and then submit the file using Content updated in near real-time. <para />
+		/// Tab-delimited flat file. Contains a IEnumerable of stranded inventory. <para />
+		/// Update the IEnumerableing information in this report file and then submit the file using Content updated in near real-time. <para />
 		/// This report is only available to FBA sellers in the US, India, and Japan marketplaces. <para />
 		/// For more information, see Bulk Fix Stranded Inventory Report.
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional IEnumerable of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FbaBulkFixStrandedInventoryReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaBulkFixStrandedInventoryReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_STRANDED_INVENTORY_UI_DATA_ <para />
@@ -320,9 +321,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional IEnumerable of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FbaStrandedInventoryReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaStrandedInventoryReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		#endregion
 
@@ -336,20 +337,20 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// For FBA sellers in the NA and EU only. For Marketplace and Seller Central sellers.						<para />																					
 		/// </summary>
 		/// <param name="endDate">To successfully generate a report, specify EndDate to NOW. If endDate is not specified, it is set automatically to NOW.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional IEnumerable of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <param name="startDate">To successfully generate a report, specify the StartDate parameter to a minimum of 72 hours prior to NOW</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FbaFeePreviewReport(DateTime startDate, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaFeePreviewReport(DateTime startDate, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_REIMBURSEMENTS_DATA_ <para />
 		/// Tab-delimited flat file. Contains itemized details of your inventory reimbursements including the reason for the reimbursement. Content updated daily. For FBA sellers only. For Marketplace and Seller Central sellers.<para/>																					
 		/// </summary>
 		/// <param name="endDate">To successfully generate a report, specify EndDate to NOW. If endDate is not specified, it is set automatically to NOW.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional IEnumerable of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <param name="startDate">To successfully generate a report, specify the StartDate parameter to a minimum of 72 hours prior to NOW</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FbaReimbursementsReport(DateTime startDate, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaReimbursementsReport(DateTime startDate, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		#endregion
 
@@ -361,20 +362,20 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// Content updated daily. For FBA sellers only. For Marketplace and Seller Central sellers.<para />
 		/// </summary>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional IEnumerable of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FbaReturnsReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaReturnsReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_CUSTOMER_SHIPMENT_REPLACEMENT_DATA_ <para />
 		/// Tab-delimited flat file. Contains replacements that have been issued to customers for completed orders. Content updated daily. For FBA sellers only. For Marketplace and Seller Central sellers. Available in the US and China (CN) only.<para/>
 		/// </summary>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional IEnumerable of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FbaReplacementsReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaReplacementsReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		#endregion
 
@@ -386,10 +387,10 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// The report includes both sellable and unsellable items. Content updated daily. For FBA sellers. For Marketplace and Seller Central sellers.
 		/// </summary>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional IEnumerable of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FbaRecommendedRemovalReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaRecommendedRemovalReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_REMOVAL_ORDER_DETAIL_DATA_ <para />
@@ -398,10 +399,10 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// Content updated in near real-time. For FBA sellers. For Marketplace and Seller Central sellers.<para/>
 		/// </summary>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional IEnumerable of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FbaRemovalOrderDetailReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaRemovalOrderDetailReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_FULFILLMENT_REMOVAL_SHIPMENT_DETAIL_DATA_ <para />
@@ -409,10 +410,10 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// This report will not include canceled returns or disposed items; it is only for shipment information. Content updated in near real-time. For FBA sellers. For Marketplace and Seller Central sellers.
 		/// </summary>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional IEnumerable of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FbaRemovalShipmentDetailReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		ReportRequestPropertiesContainer FbaRemovalShipmentDetailReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
 		#endregion
 

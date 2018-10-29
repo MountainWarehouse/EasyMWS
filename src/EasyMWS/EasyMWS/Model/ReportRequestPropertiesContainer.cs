@@ -25,7 +25,7 @@ namespace MountainWarehouse.EasyMWS.Model
 		/// The resulting report will include information for all marketplaces you specify. <para />
 		/// Example: &amp;MarketplaceIdList.Id.1=A13V1IB3VIYZZH &amp;MarketplaceIdList.Id.2=A1PA6795UKMFR9<para />
 		/// </summary>
-		public List<string> MarketplaceIdList { get; set; }
+		public IEnumerable<string> MarketplaceIdList { get; set; }
 		public DateTime? StartDate { get; set; }
 		public DateTime? EndDate { get; set; }
 		public string ReportOptions { get; set; }
@@ -53,7 +53,7 @@ namespace MountainWarehouse.EasyMWS.Model
 		/// <param name="reportType"></param>
 		/// <param name="marketplaceIdList"></param>
 		/// <param name="updateFrequency"></param>
-		public ReportRequestPropertiesContainer(string reportType, ContentUpdateFrequency updateFrequency, List<string> marketplaceIdList = null, DateTime? startDate = null, DateTime? endDate = null, string reportOptions = null)
+		public ReportRequestPropertiesContainer(string reportType, ContentUpdateFrequency updateFrequency, IEnumerable<string> marketplaceIdList = null, DateTime? startDate = null, DateTime? endDate = null, string reportOptions = null)
 		{
 			ReportType = reportType;
 			MarketplaceIdList = marketplaceIdList;

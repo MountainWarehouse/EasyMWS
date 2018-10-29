@@ -1,5 +1,6 @@
 ﻿using MountainWarehouse.EasyMWS.Model;
 using System;
+using System.Collections.Generic;
 
 namespace MountainWarehouse.EasyMWS.Factories.Reports
 {
@@ -16,12 +17,12 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// Tab-delimited flat file detailed all listings report. For Marketplace and Seller Central sellers. <para />
 		/// This report accepts the following ReportOptions values: Custom<para/>
 		/// </summary>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <param name="custom">A Boolean value that indicates whether a custom report is returned. For more information, see Custom Inventory Reports. <para/>
 		/// Default: false. This functionality is available only in the Canada, US, UK, and India marketplaces.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer AllListingsReport(DateTime? startDate = null, DateTime? endDate = null,
-			MwsMarketplaceGroup requestedMarketplacesGroup = null, bool custom = false);
+			IEnumerable<string> requestedMarketplacesGroup = null, bool custom = false);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FLAT_FILE_OPEN_LISTINGS_DATA_ <para />
@@ -30,12 +31,12 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <param name="custom">A Boolean value that indicates whether a custom report is returned. For more information, see Custom Inventory Reports.<para/>
 		/// Default: false. This functionality is available only in the Canada, US, UK, and India marketplaces.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer InventoryReport(DateTime? startDate = null, DateTime? endDate = null,
-			MwsMarketplaceGroup requestedMarketplacesGroup = null, bool custom = false);
+			IEnumerable<string> requestedMarketplacesGroup = null, bool custom = false);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_MERCHANT_LISTINGS_DATA_ <para />
@@ -43,10 +44,10 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer ActiveListingsReport(DateTime? startDate = null, DateTime? endDate = null,
-		    MwsMarketplaceGroup requestedMarketplacesGroup = null);
+			IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_MERCHANT_LISTINGS_INACTIVE_DATA_ <para />
@@ -54,10 +55,10 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer InactiveListingsReport(DateTime? startDate = null, DateTime? endDate = null,
-		    MwsMarketplaceGroup requestedMarketplacesGroup = null);
+			IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_MERCHANT_LISTINGS_DATA_BACK_COMPAT_ <para />
@@ -66,12 +67,12 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <param name="custom">A Boolean value that indicates whether a custom report is returned. For more information, see Custom Inventory Reports.<para/>
 		/// Default: false. This functionality is available only in the Canada, US, UK, and India marketplaces.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer OpenListingsReport(DateTime? startDate = null, DateTime? endDate = null,
-		    MwsMarketplaceGroup requestedMarketplacesGroup = null, bool custom = false);
+		    IEnumerable<string> requestedMarketplacesGroup = null, bool custom = false);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_MERCHANT_LISTINGS_DATA_LITE_ <para />
@@ -79,10 +80,10 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer OpenListingsLiteReport(DateTime? startDate = null, DateTime? endDate = null,
-		    MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		    IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_MERCHANT_LISTINGS_DATA_LITER_ <para />
@@ -90,10 +91,10 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer OpenListingsLiterReport(DateTime? startDate = null, DateTime? endDate = null,
-		    MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		    IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_MERCHANT_CANCELLED_LISTINGS_DATA_ <para />
@@ -102,12 +103,12 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <param name="custom">A Boolean value that indicates whether a custom report is returned. For more information, see Custom Inventory Reports.<para/>
 		/// Default: false. This functionality is available only in the Canada, US, UK, and India marketplaces.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer CanceledListingsReport(DateTime? startDate = null, DateTime? endDate = null,
-		    MwsMarketplaceGroup requestedMarketplacesGroup = null, bool custom = false);
+		    IEnumerable<string> requestedMarketplacesGroup = null, bool custom = false);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_CONVERGED_FLAT_FILE_SOLD_LISTINGS_DATA_ <para />
@@ -115,10 +116,10 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer SoldListingsReport(DateTime? startDate = null, DateTime? endDate = null,
-		    MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		    IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_MERCHANT_LISTINGS_DEFECT_DATA_ <para />
@@ -126,10 +127,10 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer ListingQualityAndSuppressedListingReport(DateTime? startDate = null, DateTime? endDate = null,
-		    MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		    IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_PAN_EU_OFFER_STATUS_ <para />
@@ -138,10 +139,10 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer PanEuropeanEligibilityFbaASINs(DateTime? startDate = null, DateTime? endDate = null,
-		    MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		    IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_MFN_PAN_EU_OFFER_STATUS_ <para />
@@ -151,9 +152,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer PanEuropeanEligibilitySelfFulfilledASINs(DateTime? startDate = null, DateTime? endDate = null,
-		    MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		    IEnumerable<string> requestedMarketplacesGroup = null);
 	}
 }
