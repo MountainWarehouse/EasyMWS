@@ -16,10 +16,10 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer FlatFilePendingOrdersReport(DateTime? startDate = null, DateTime? endDate = null,
-		    MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		    IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_PENDING_ORDERS_DATA_ <para />
@@ -27,10 +27,10 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer XMLPendingOrdersReport(DateTime? startDate = null, DateTime? endDate = null,
-		    MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		    IEnumerable<string> requestedMarketplacesGroup = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_CONVERGED_FLAT_FILE_PENDING_ORDERS_DATA_ <para />
@@ -38,9 +38,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer ConvergedFlatFilePendingOrdersReport(DateTime? startDate = null, DateTime? endDate = null,
-		    MwsMarketplaceGroup requestedMarketplacesGroup = null);
+		    IEnumerable<string> requestedMarketplacesGroup = null);
 	}
 }

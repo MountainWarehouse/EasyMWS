@@ -7,17 +7,17 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 {
 	public class SettlementReportsFactory : ISettlementReportsFactory
 	{
-		public ReportRequestPropertiesContainer FlatFileSettlementReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null)
+		public ReportRequestPropertiesContainer FlatFileSettlementReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null)
 		{
 			throw new NotImplementedException();
 		}
 
-		public ReportRequestPropertiesContainer FlatFileV2SettlementReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null)
+		public ReportRequestPropertiesContainer FlatFileV2SettlementReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null)
 		{
 			throw new NotImplementedException();
 		}
 
-		public ReportRequestPropertiesContainer XmlSettlementReport(DateTime? startDate = null, DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null)
+		public ReportRequestPropertiesContainer XmlSettlementReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null)
 		{
 			throw new NotImplementedException();
 		}

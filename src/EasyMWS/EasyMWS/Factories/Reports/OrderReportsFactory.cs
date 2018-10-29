@@ -11,46 +11,46 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
     public class OrderReportsFactory : IOrderReportsFactory
 	{
 		public ReportRequestPropertiesContainer UnshippedOrdersReport(DateTime? startDate = null, DateTime? endDate = null,
-			MwsMarketplaceGroup requestedMarketplacesGroup = null, bool showSalesChannel = false)
+			IEnumerable<string> requestedMarketplacesGroup = null, bool showSalesChannel = false)
 		{
 			var reportOptions = new ReportOptions();
 			reportOptions.AddBooleanOption("showSalesChannel", showSalesChannel);
 
 			return ReportGeneratorHelper.GenerateReportRequest("_GET_FLAT_FILE_ACTIONABLE_ORDER_DATA_", ContentUpdateFrequency.Unknown,
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
-				requestedMarketplaces: requestedMarketplacesGroup?.GetMarketplacesIdList.ToList(),
+				requestedMarketplaces: requestedMarketplacesGroup,
 				reportOptions: reportOptions, startDate: startDate, endDate: endDate);
 		}
 
 
 		public ReportRequestPropertiesContainer ScheduledXMLOrderReport(DateTime? startDate = null, DateTime? endDate = null,
-			MwsMarketplaceGroup requestedMarketplacesGroup = null)
+			IEnumerable<string> requestedMarketplacesGroup = null)
 			=> ReportGeneratorHelper.GenerateReportRequest("_GET_ORDERS_DATA_", ContentUpdateFrequency.Unknown,
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
-				requestedMarketplaces: requestedMarketplacesGroup?.GetMarketplacesIdList.ToList(),
+				requestedMarketplaces: requestedMarketplacesGroup,
 				startDate: startDate, endDate: endDate);
 
 		public ReportRequestPropertiesContainer RequestedOrScheduledFlatFileOrderReport(DateTime? startDate = null,
-			DateTime? endDate = null, MwsMarketplaceGroup requestedMarketplacesGroup = null, bool showSalesChannel = false)
+			DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null, bool showSalesChannel = false)
 		{
 			var reportOptions = new ReportOptions();
 			reportOptions.AddBooleanOption("showSalesChannel", showSalesChannel);
 
 			return ReportGeneratorHelper.GenerateReportRequest("_GET_FLAT_FILE_ORDERS_DATA_", ContentUpdateFrequency.Unknown,
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
-				requestedMarketplaces: requestedMarketplacesGroup?.GetMarketplacesIdList.ToList(),
+				requestedMarketplaces: requestedMarketplacesGroup,
 				reportOptions: reportOptions, startDate: startDate, endDate: endDate);
 		}
 
 		public ReportRequestPropertiesContainer FlatFileOrderReport(DateTime? startDate = null, DateTime? endDate = null,
-			MwsMarketplaceGroup requestedMarketplacesGroup = null, bool showSalesChannel = false)
+			IEnumerable<string> requestedMarketplacesGroup = null, bool showSalesChannel = false)
 		{
 			var reportOptions = new ReportOptions();
 			reportOptions.AddBooleanOption("showSalesChannel", showSalesChannel);
 
 			return ReportGeneratorHelper.GenerateReportRequest("_GET_CONVERGED_FLAT_FILE_ORDER_REPORT_DATA_", ContentUpdateFrequency.Unknown,
 				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
-				requestedMarketplaces: requestedMarketplacesGroup?.GetMarketplacesIdList.ToList(),
+				requestedMarketplaces: requestedMarketplacesGroup,
 				reportOptions: reportOptions, startDate: startDate, endDate: endDate);
 		}
 	}

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Model;
 
@@ -10,7 +11,7 @@ namespace MountainWarehouse.EasyMWS.Helpers
 
 		public static ReportRequestPropertiesContainer GenerateReportRequest(string reportType,
 			ContentUpdateFrequency reportUpdateFrequency,
-			List<string> permittedMarketplaces, List<string> requestedMarketplaces = null, DateTime? startDate = null,
+			IEnumerable<string> permittedMarketplaces, IEnumerable<string> requestedMarketplaces = null, DateTime? startDate = null,
 			DateTime? endDate = null, ReportOptions reportOptions = null)
 		{
 			ValidateMarketplaceCompatibility(reportType, permittedMarketplaces, requestedMarketplaces);
@@ -18,8 +19,8 @@ namespace MountainWarehouse.EasyMWS.Helpers
 				endDate, reportOptions?.GetOptionsString());
 		}
 
-		private static void ValidateMarketplaceCompatibility(string reportType, List<string> permittedMarketplaces,
-			List<string> requestedMarketplaces = null)
+		private static void ValidateMarketplaceCompatibility(string reportType, IEnumerable<string> permittedMarketplaces,
+			IEnumerable<string> requestedMarketplaces = null)
 		{
 			if (requestedMarketplaces == null) return;
 
