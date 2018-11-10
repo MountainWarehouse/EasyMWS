@@ -108,6 +108,7 @@ namespace MountainWarehouse.EasyMWS.Model
 	    /// </summary>
 	    public TimeSpan FeedSubmissionRequestEntryExpirationPeriod { get; set; }
 
+        public bool InvokeCallbackForReportStatusDoneNoData { get; set; }
 
 		/// <summary>
 		/// The set of default settings that will be used if no custom settings are specified.<para/>
@@ -171,8 +172,10 @@ namespace MountainWarehouse.EasyMWS.Model
 			    FeedSubmissionRetryInterval = TimeSpan.FromHours(worstCaseScenarioRetryInterval),
 
 			    ReportDownloadRequestEntryExpirationPeriod = TimeSpan.FromDays(1),
-				FeedSubmissionRequestEntryExpirationPeriod = TimeSpan.FromDays(2)
-			};
+				FeedSubmissionRequestEntryExpirationPeriod = TimeSpan.FromDays(2),
+
+                InvokeCallbackForReportStatusDoneNoData = false
+            };
 		}
 	}
 
