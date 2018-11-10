@@ -80,8 +80,8 @@ namespace MountainWarehouse.EasyMWS.Services
 		public ReportRequestEntry GetNextFromQueueOfReportsToDownload(string merchantId, AmazonRegion region, bool markEntryAsLocked = true)
 		{
 			var entry = FirstOrDefault(rre => rre.AmazonRegion == region && rre.MerchantId == merchantId
-							 && rre.RequestReportId != null && rre.GeneratedReportId != null && rre.Details == null
-							 && RetryIntervalHelper.IsRetryPeriodAwaited(rre.LastAmazonRequestDate, rre.ReportDownloadRetryCount,
+							 && rre.RequestReportId != null && rre.GeneratedReportId != null && rre.Details == null && rre.LastAmazonReportProcessingStatus != AmazonReportProcessingStatus.DoneNoData
+                             && RetryIntervalHelper.IsRetryPeriodAwaited(rre.LastAmazonRequestDate, rre.ReportDownloadRetryCount,
 									   _options.ReportDownloadRetryInitialDelay, _options.ReportDownloadRetryInterval,
 									   _options.ReportDownloadRetryType)
 									   && rre.IsLocked == false);
