@@ -24,11 +24,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		private readonly Dictionary<string, string> PendingStatusCodesAndMessages = new Dictionary<string, string>()
 		{
-			{"_AWAITING_ASYNCHRONOUS_REPLY_", "The request is being processed, but is waiting for external information before it can complete."},
-			{"_IN_PROGRESS_", "The request is being processed."},
-			{"_IN_SAFETY_NET_", "The request is being processed, but the system has determined that there is a potential error with the feed (for example, the request will remove all inventory from a seller's account.) An Amazon seller support associate will contact the seller to confirm whether the feed should be processed."},
-			{"_SUBMITTED_", "The request has been received, but has not yet started processing."},
-			{"_UNCONFIRMED_", "The request is pending."}
+			{AmazonFeedProcessingStatus.AwaitingAsyncReply, "The request is being processed, but is waiting for external information before it can complete."},
+			{AmazonFeedProcessingStatus.InProgress, "The request is being processed."},
+			{AmazonFeedProcessingStatus.InSafetyNet, "The request is being processed, but the system has determined that there is a potential error with the feed (for example, the request will remove all inventory from a seller's account.) An Amazon seller support associate will contact the seller to confirm whether the feed should be processed."},
+			{AmazonFeedProcessingStatus.Submitted, "The request has been received, but has not yet started processing."},
+			{AmazonFeedProcessingStatus.Unconfirmed, "The request is pending."}
 		};
 
 		internal FeedSubmissionProcessor(AmazonRegion region, string merchantId, IMarketplaceWebServiceClient marketplaceWebServiceClient, IEasyMwsLogger logger, EasyMwsOptions options)
@@ -187,12 +187,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 			foreach (var feedSubmissionInfo in feedProcessingStatuses)
 			{
 				var feedSubmissionEntry = feedSubmissionService.FirstOrDefault(fsc => fsc.FeedSubmissionId == feedSubmissionInfo.FeedSubmissionId);
-				if(feedSubmissionEntry == null) continue;
+                if (feedSubmissionEntry == null) continue;
 				feedSubmissionEntry.IsLocked = false;
 
-				var genericProcessingInfo = $"ProcessingStatus returned by Amazon for {feedSubmissionEntry.RegionAndTypeComputed} is '{feedSubmissionInfo.FeedProcessingStatus}'.";
+                feedSubmissionEntry.LastAmazonFeedProcessingStatus = feedSubmissionInfo.FeedProcessingStatus;
 
-				if (feedSubmissionInfo.FeedProcessingStatus == "_DONE_")
+                var genericProcessingInfo = $"ProcessingStatus returned by Amazon for {feedSubmissionEntry.RegionAndTypeComputed} is '{feedSubmissionInfo.FeedProcessingStatus}'.";
+
+				if (feedSubmissionInfo.FeedProcessingStatus == AmazonFeedProcessingStatus.Done)
 				{
 					feedSubmissionEntry.IsProcessingComplete = true;
 					feedSubmissionEntry.FeedProcessingRetryCount = 0;
@@ -204,7 +206,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 					feedSubmissionEntry.FeedProcessingRetryCount = 0;
 					_logger.Info($"{genericProcessingInfo} {specificProcessingInfo} The feed processing status will be checked again at the next poll request.");
 				}
-				else if (feedSubmissionInfo.FeedProcessingStatus == "_CANCELLED_")
+				else if (feedSubmissionInfo.FeedProcessingStatus == AmazonFeedProcessingStatus.Cancelled)
 				{
 					feedSubmissionEntry.FeedProcessingRetryCount++;
 					feedSubmissionEntry.FeedSubmissionId = null;
