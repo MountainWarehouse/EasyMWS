@@ -27,7 +27,8 @@ namespace MountainWarehouse.EasyMWS.Data
 	    public int ReportDownloadRetryCount { get; set; }
 	    public int InvokeCallbackRetryCount { get; set; }
 		public DateTime LastSubmitted { get; set; }
-	    public DateTime DateCreated { get; set; }
+        public string LastAmazonFeedProcessingStatus { get; set; }
+        public DateTime DateCreated { get; set; }
 
 		#region Serialized callback data necessary to invoke a method with it's argument values.
 		public string TypeName { get; set; }
@@ -70,7 +71,8 @@ namespace MountainWarehouse.EasyMWS.Data
 		    Data = callback?.Data;
 		    DataTypeName = callback?.DataTypeName;
 		    FeedSubmissionData = feedSubmissionData;
-	    }
+            LastAmazonFeedProcessingStatus = null;
+        }
 	}
 
 	internal static class FeedSubmissionCallbackExtensions
