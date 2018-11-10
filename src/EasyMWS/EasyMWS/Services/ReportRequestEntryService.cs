@@ -118,7 +118,7 @@ namespace MountainWarehouse.EasyMWS.Services
 		public IEnumerable<ReportRequestEntry> GetAllFromQueueOfReportsReadyForCallback(string merchantId, AmazonRegion region, bool markEntriesAsLocked = true)
 		{
 			var entries = Where(rre => rre.AmazonRegion == region && rre.MerchantId == merchantId
-							  && rre.Details != null
+							  && (rre.Details != null || rre.LastAmazonReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData)
 							  && RetryIntervalHelper.IsRetryPeriodAwaited(rre.LastAmazonRequestDate, rre.InvokeCallbackRetryCount,
 							   _options.InvokeCallbackRetryInterval, _options.InvokeCallbackRetryInterval,
 							   _options.InvokeCallbackRetryPeriodType) && rre.IsLocked == false).ToList();
