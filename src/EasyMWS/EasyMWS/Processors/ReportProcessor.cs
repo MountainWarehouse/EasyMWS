@@ -77,12 +77,28 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				try
 				{
-					_logger.Info($"Attempting to perform method callback for the next downloaded report in queue : {reportEntry.RegionAndTypeComputed}.");
-					var callback = new Callback(reportEntry.TypeName, reportEntry.MethodName, reportEntry.Data, reportEntry.DataTypeName);
-					var unzippedReport = ZipHelper.ExtractArchivedSingleFileToStream(reportEntry.Details?.ReportContent);
-					_callbackActivator.CallMethod(callback, unzippedReport);
-					reportRequestService.Delete(reportEntry);
-				}
+                    var callback = new Callback(reportEntry.TypeName, reportEntry.MethodName, reportEntry.Data, reportEntry.DataTypeName);
+                    MemoryStream report;
+
+                    if (reportEntry.Details == null && reportEntry.LastAmazonReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData && !_options.InvokeCallbackForReportStatusDoneNoData)
+                    {
+                        _logger.Info($"An attempt will not be made to invoke a method callback for the following report in queue : {reportEntry.RegionAndTypeComputed}, because AmazonProcessingStatus for this report is _DONE_NO_DATA_ but InvokeCallbackForReportStatusDoneNoData EasyMwsOption is FALSE.");
+                    }
+                    else if (reportEntry.Details == null && reportEntry.LastAmazonReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData && _options.InvokeCallbackForReportStatusDoneNoData)
+                    {
+                        _logger.Info($"Attempting to perform method callback for the following report in queue : {reportEntry.RegionAndTypeComputed}, but the AmazonProcessingStatus for this report is _DONE_NO_DATA_ therefore the Stream argument will be null at invocation time.");
+                        report = null;
+                        _callbackActivator.CallMethod(callback, report);
+                    }
+                    else
+                    {
+                        _logger.Info($"Attempting to perform method callback for the next downloaded report in queue : {reportEntry.RegionAndTypeComputed}.");
+                        report = ZipHelper.ExtractArchivedSingleFileToStream(reportEntry.Details?.ReportContent);
+                        _callbackActivator.CallMethod(callback, report);
+                    }
+
+                    reportRequestService.Delete(reportEntry);
+                }
 				catch(SqlException e)
 				{
 					_logger.Error($"Method callback failed for {reportEntry.RegionAndTypeComputed} due to an internal error '{e.Message}'. The callback will be retried at the next poll request.", e);

@@ -26,6 +26,7 @@ namespace MountainWarehouse.EasyMWS.Data
 		public int InvokeCallbackRetryCount { get; set; }
 		public int ReportProcessRetryCount { get; set; }
 		public DateTime LastAmazonRequestDate { get; set; }
+        public string LastAmazonReportProcessingStatus { get; set; }
 		public DateTime DateCreated { get; set; }
 
 		#region Serialized callback data necessary to invoke a method with it's argument values.
@@ -76,7 +77,9 @@ namespace MountainWarehouse.EasyMWS.Data
 			Data = callback?.Data;
 			DataTypeName = callback?.DataTypeName;
 			ReportRequestData = reportRequestData;
-		}
+            LastAmazonReportProcessingStatus = null;
+
+        }
 	}
 
 	internal static class ReportRequestCallbackExtensions

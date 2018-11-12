@@ -408,7 +408,73 @@ namespace EasyMWS.Tests.Processors
 			Assert.IsNull(result.First(x => x.ReportRequestId == "Report2").GeneratedReportId);
 		}
 
-		[Test]
+        [Test]
+        public void QueueReportsAccordingToProcessingStatus_InvokeCallbackForReportStatusDoneNoDataTrue_DoesNotDeleteEntry()
+        {
+            _easyMwsOptions.InvokeCallbackForReportStatusDoneNoData = true;
+            var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+            var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+            var data = new List<ReportRequestEntry>
+            {
+                new ReportRequestEntry
+                {
+                    AmazonRegion = AmazonRegion.Europe,
+                    Id = 2,
+                    RequestReportId = "Report2",
+                    GeneratedReportId = null,
+                    ReportRequestData = serializedReportRequestData
+                }
+            };
+
+            _reportRequestCallbacks.AddRange(data);
+
+            var dataResult = new List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)>
+            {
+                ("Report2", "GeneratedId2", "_DONE_NO_DATA_")
+            };
+
+            _requestReportProcessor.QueueReportsAccordingToProcessingStatus(_reportRequestServiceMock.Object, dataResult);
+
+            Assert.IsNull(_reportRequestCallbacks.First(x => x.RequestReportId == "Report2").GeneratedReportId);
+
+            Assert.IsNull(_reportRequestCallbacks.First(x => x.Id == 2).GeneratedReportId);
+            Assert.AreEqual(0, _reportRequestCallbacks.First(x => x.Id == 2).ReportProcessRetryCount);
+            _reportRequestServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
+            _reportRequestServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Never);
+        }
+
+        [Test]
+        public void QueueReportsAccordingToProcessingStatus_InvokeCallbackForReportStatusDoneNoDataFalse_DeletesEntry()
+        {
+            _easyMwsOptions.InvokeCallbackForReportStatusDoneNoData = false;
+            var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+            var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+            var data = new List<ReportRequestEntry>
+            {
+                new ReportRequestEntry
+                {
+                    AmazonRegion = AmazonRegion.Europe,
+                    Id = 2,
+                    RequestReportId = "Report2",
+                    GeneratedReportId = null,
+                    ReportRequestData = serializedReportRequestData
+                }
+            };
+
+            _reportRequestCallbacks.AddRange(data);
+
+            var dataResult = new List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)>
+            {
+                ("Report2", "GeneratedId2", "_DONE_NO_DATA_")
+            };
+
+            _requestReportProcessor.QueueReportsAccordingToProcessingStatus(_reportRequestServiceMock.Object, dataResult);
+
+            _reportRequestServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestEntry>()), Times.Never);
+            _reportRequestServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
+        }
+
+        [Test]
 		public void QueueReportsAccordingToProcessingStatus_UpdateGeneratedRequestId()
 		{
 			// Arrange
@@ -495,7 +561,7 @@ namespace EasyMWS.Tests.Processors
 			Assert.IsNull(_reportRequestCallbacks.First(x => x.Id == 6).GeneratedReportId);
 			Assert.IsNull(_reportRequestCallbacks.First(x => x.Id == 6).RequestReportId);
 			Assert.AreEqual(1, _reportRequestCallbacks.First(x => x.Id == 6).ReportProcessRetryCount);
-			_reportRequestServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestEntry>()), Times.Exactly(3));
+			_reportRequestServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestEntry>()), Times.Exactly(5));
 			_reportRequestServiceMock.Verify(x => x.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
 		}
 
@@ -517,6 +583,7 @@ namespace EasyMWS.Tests.Processors
 
 			Assert.IsNull(_reportRequestCallbacks.First().RequestReportId);
 			Assert.IsTrue(_reportRequestCallbacks.First().ReportProcessRetryCount > 0);
+            Assert.AreEqual("_CANCELLED_", _reportRequestCallbacks.First().LastAmazonReportProcessingStatus);
 			_reportRequestServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
 		}
 

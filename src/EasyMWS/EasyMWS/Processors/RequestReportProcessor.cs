@@ -186,29 +186,41 @@ namespace MountainWarehouse.EasyMWS.Processors
 			foreach (var reportGenerationInfo in reportGenerationStatuses)
 			{
 				var reportRequestEntry = reportRequestService.FirstOrDefault(rrc => rrc.RequestReportId == reportGenerationInfo.ReportRequestId && rrc.GeneratedReportId == null);
-				if (reportRequestEntry == null) continue;
+                if (reportRequestEntry == null) continue;
 				reportRequestEntry.IsLocked = false;
 
-				var genericProcessingInfo = $"ProcessingStatus returned by Amazon for {reportRequestEntry.RegionAndTypeComputed} is '{reportGenerationInfo.ReportProcessingStatus}'.";
+                reportRequestEntry.LastAmazonReportProcessingStatus = reportGenerationInfo.ReportProcessingStatus;
 
-				if (reportGenerationInfo.ReportProcessingStatus == "_DONE_")
+                var genericProcessingInfo = $"ProcessingStatus returned by Amazon for {reportRequestEntry.RegionAndTypeComputed} is '{reportGenerationInfo.ReportProcessingStatus}'.";
+
+				if (reportGenerationInfo.ReportProcessingStatus == AmazonReportProcessingStatus.Done)
 				{
 					reportRequestEntry.GeneratedReportId = reportGenerationInfo.GeneratedReportId;
 					reportRequestEntry.ReportProcessRetryCount = 0;
 					reportRequestService.Update(reportRequestEntry);
 					_logger.Info($"{genericProcessingInfo}. The report is now ready for download.");
 				}
-				else if (reportGenerationInfo.ReportProcessingStatus == "_DONE_NO_DATA_")
+				else if (reportGenerationInfo.ReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData)
 				{
-					reportRequestService.Delete(reportRequestEntry);
-					_logger.Warn($"{genericProcessingInfo}. The Report request entry will now be removed from queue.");
+                    if (_options.InvokeCallbackForReportStatusDoneNoData)
+                    {
+                        reportRequestEntry.ReportProcessRetryCount = 0;
+                        reportRequestService.Update(reportRequestEntry);
+                        _logger.Warn($"{genericProcessingInfo}. The Report was successfully processed by Amazon, but it contains no data. An callback invocation will be done with a null stream argument.");
+                    }
+                    else
+                    {
+                        reportRequestService.Delete(reportRequestEntry);
+                        _logger.Warn($"{genericProcessingInfo}. The Report request entry will now be removed from queue.");
+                    }
 				}
-				else if (reportGenerationInfo.ReportProcessingStatus == "_SUBMITTED_" 
-					  || reportGenerationInfo.ReportProcessingStatus == "_IN_PROGRESS_")
+				else if (reportGenerationInfo.ReportProcessingStatus == AmazonReportProcessingStatus.Submitted 
+					  || reportGenerationInfo.ReportProcessingStatus == AmazonReportProcessingStatus.InProgress)
 				{
-					_logger.Info($"{genericProcessingInfo}. The report processing status will be checked again at the next poll request.");
+                    reportRequestService.Update(reportRequestEntry);
+                    _logger.Info($"{genericProcessingInfo}. The report processing status will be checked again at the next poll request.");
 				}
-				else if (reportGenerationInfo.ReportProcessingStatus == "_CANCELLED_")
+				else if (reportGenerationInfo.ReportProcessingStatus == AmazonReportProcessingStatus.Cancelled)
 				{
 					reportRequestEntry.RequestReportId = null;
 					reportRequestEntry.GeneratedReportId = null;

@@ -108,36 +108,38 @@ namespace MountainWarehouse.EasyMWS.Model
 	    /// </summary>
 	    public TimeSpan FeedSubmissionRequestEntryExpirationPeriod { get; set; }
 
+        public bool InvokeCallbackForReportStatusDoneNoData { get; set; }
 
-		/// <summary>
-		/// The set of default settings that will be used if no custom settings are specified.<para/>
-		/// InvokeCallbackMaxRetryCount = 5,<para/>
-		/// InvokeCallbackRetryPeriodType = RetryPeriodType.ArithmeticProgression,<para/>
-		/// InvokeCallbackRetryInterval = TimeSpan.FromMinutes(30),<para/>
-		/// <para/>
-		/// ReportRequestMaxRetryCount = 4,<para/>
-		/// ReportRequestRetryType = RetryPeriodType.GeometricProgression,<para/>
-		/// ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(30),<para/>
-		/// ReportRequestRetryInterval = TimeSpan.FromHours(1),<para/>
-		/// <para/>
-		/// ReportDownloadMaxRetryCount = 4,<para/>
-		/// ReportDownloadRetryType = RetryPeriodType.GeometricProgression,<para/>
-		/// ReportDownloadRetryInitialDelay = TimeSpan.FromMinutes(30),<para/>
-		/// ReportDownloadRetryInterval = TimeSpan.FromHours(1),<para/>
-		/// <para/>
-		/// ReportProcessingMaxRetryCount = 3<para/>
-		/// FeedProcessingMaxRetryCount = 3<para/>
-		/// <para/>
-		/// FeedSubmissionMaxRetryCount = 3,<para/>
-		/// FeedSubmissionRetryType = RetryPeriodType.GeometricProgression,<para/>
-		/// FeedSubmissionRetryInitialDelay = TimeSpan.FromMinutes(30),<para/>
-		/// FeedSubmissionRetryInterval = TimeSpan.FromHours(1),<para/>
-		/// <para/>
-		/// ReportDownloadRequestEntryExpirationPeriod = TimeSpan.FromDays(1),<para/>
-		/// FeedSubmissionRequestEntryExpirationPeriod = TimeSpan.FromDays(2)<para/>
-		/// <para/>
-		/// </summary>
-		public static EasyMwsOptions Defaults()
+        /// <summary>
+        /// The set of default settings that will be used if no custom settings are specified.<para/>
+        /// InvokeCallbackMaxRetryCount = 5,<para/>
+        /// InvokeCallbackRetryPeriodType = RetryPeriodType.ArithmeticProgression,<para/>
+        /// InvokeCallbackRetryInterval = TimeSpan.FromMinutes(30),<para/>
+        /// <para/>
+        /// ReportRequestMaxRetryCount = 4,<para/>
+        /// ReportRequestRetryType = RetryPeriodType.GeometricProgression,<para/>
+        /// ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(30),<para/>
+        /// ReportRequestRetryInterval = TimeSpan.FromHours(1),<para/>
+        /// <para/>
+        /// ReportDownloadMaxRetryCount = 4,<para/>
+        /// ReportDownloadRetryType = RetryPeriodType.GeometricProgression,<para/>
+        /// ReportDownloadRetryInitialDelay = TimeSpan.FromMinutes(30),<para/>
+        /// ReportDownloadRetryInterval = TimeSpan.FromHours(1),<para/>
+        /// <para/>
+        /// ReportProcessingMaxRetryCount = 3<para/>
+        /// FeedProcessingMaxRetryCount = 3<para/>
+        /// <para/>
+        /// FeedSubmissionMaxRetryCount = 3,<para/>
+        /// FeedSubmissionRetryType = RetryPeriodType.GeometricProgression,<para/>
+        /// FeedSubmissionRetryInitialDelay = TimeSpan.FromMinutes(30),<para/>
+        /// FeedSubmissionRetryInterval = TimeSpan.FromHours(1),<para/>
+        /// <para/>
+        /// ReportDownloadRequestEntryExpirationPeriod = TimeSpan.FromDays(1),<para/>
+        /// FeedSubmissionRequestEntryExpirationPeriod = TimeSpan.FromDays(2),<para/>
+        /// <para/>
+        /// InvokeCallbackForReportStatusDoneNoData = false<para/>
+        /// </summary>
+        public static EasyMwsOptions Defaults()
 		{
 			const int worstCaseScenarioRetryInitialDelay = 10;
 			const int worstCaseScenarioRetryInterval = 1;
@@ -171,8 +173,10 @@ namespace MountainWarehouse.EasyMWS.Model
 			    FeedSubmissionRetryInterval = TimeSpan.FromHours(worstCaseScenarioRetryInterval),
 
 			    ReportDownloadRequestEntryExpirationPeriod = TimeSpan.FromDays(1),
-				FeedSubmissionRequestEntryExpirationPeriod = TimeSpan.FromDays(2)
-			};
+				FeedSubmissionRequestEntryExpirationPeriod = TimeSpan.FromDays(2),
+
+                InvokeCallbackForReportStatusDoneNoData = false
+            };
 		}
 	}
 
