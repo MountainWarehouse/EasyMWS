@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>MountainWarehouse.EasyMWS</RootNamespace>
     <AssemblyName>MountainWarehouse.EasyMWS</AssemblyName>
-    <Version>3.1.0</Version>
+    <Version>3.1.1</Version>
     <RepositoryUrl>https://github.com/MountainWarehouse/EasyMWS</RepositoryUrl>
     <PackageProjectUrl>https://github.com/MountainWarehouse/EasyMWS</PackageProjectUrl>
     <PackageTags>Amazon MWS MarketplaceWebService</PackageTags>
