@@ -24,7 +24,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// This report is only available in the Germany, Spain, Italy, France, and UK marketplaces.
 		/// </summary>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(EU only) Optional list of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer AmazonVATCalculationReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
@@ -35,10 +35,31 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// This report is only available in the Germany, Spain, Italy, France, and UK marketplaces.
 		/// </summary>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional list of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
+		/// <param name="requestedMarketplacesGroup">(EU only) Optional list of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer AmazonVATTransactionsReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null);
 
+		/// <summary>
+		/// Generate a request object for a MWS report of type : _GET_GST_MTR_B2B_CUSTOM_ <para />
+		/// Tab-delimited flat file report that provides detailed information about sales, refunds, and cancellations from Amazon Business invoices issued within a date range that you specify.<para/>
+		/// This report is only available in the India marketplace.
+		/// </summary>
+		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="requestedMarketplacesGroup"></param>
+		/// <returns></returns>
+		ReportRequestPropertiesContainer OnDemandGSTMerchantTaxReportB2B(DateTime? startDate = null, DateTime? endDate = null);
+
+		/// <summary>
+		/// Generate a request object for a MWS report of type : _GET_GST_MTR_B2C_CUSTOM_ <para />
+		/// Tab-delimited flat file report that provides detailed information about sales, refunds, and cancellations from consumer invoices issued within a date range that you specify.<para/>
+		/// This report is only available in the India marketplace.
+		/// </summary>
+		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="requestedMarketplacesGroup"></param>
+		/// <returns></returns>
+		ReportRequestPropertiesContainer OnDemandGSTMerchantTaxReportB2C(DateTime? startDate = null, DateTime? endDate = null);
 	}
 }
