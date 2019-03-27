@@ -108,6 +108,9 @@ namespace MountainWarehouse.EasyMWS.Model
 	    /// </summary>
 	    public TimeSpan FeedSubmissionRequestEntryExpirationPeriod { get; set; }
 
+		/// <summary>
+		/// Default=false. Invoke the callback method for reports being downloaded from Amazon, even if the report status received from Amazon is DoneNoData, with the report stream argument being null.
+		/// </summary>
         public bool InvokeCallbackForReportStatusDoneNoData { get; set; }
 
         /// <summary>
