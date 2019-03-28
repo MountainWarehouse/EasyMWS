@@ -83,7 +83,7 @@ namespace EasyMWS.Tests.Factories
 				.AddMarketplace(MwsMarketplace.Spain);
 			_fbaReportsFactory = new FbaReportsFactory();
 
-			var reportRequest = _fbaReportsFactory.FbaFeePreviewReport(DateTime.UtcNow,requestedMarketplacesGroup: marketplaceGroup.GetMarketplacesIdList);
+			var reportRequest = _fbaReportsFactory.FbaFeePreviewReport(DateTime.UtcNow,requestedMarketplaces: marketplaceGroup.GetMarketplaces);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -96,7 +96,7 @@ namespace EasyMWS.Tests.Factories
 			    .AddMarketplace(MwsMarketplace.Mexico);
 		    _fbaReportsFactory = new FbaReportsFactory();
 
-		    var reportRequest = _fbaReportsFactory.FbaFeePreviewReport(DateTime.UtcNow, requestedMarketplacesGroup: marketplaceGroup.GetMarketplacesIdList);
+		    var reportRequest = _fbaReportsFactory.FbaFeePreviewReport(DateTime.UtcNow, requestedMarketplaces: marketplaceGroup.GetMarketplaces);
 
 		    Assert.NotNull(reportRequest);
 	    }
@@ -109,7 +109,7 @@ namespace EasyMWS.Tests.Factories
 				.AddMarketplace(MwsMarketplace.Mexico);
 			_fbaReportsFactory = new FbaReportsFactory();
 
-			var reportRequest = _fbaReportsFactory.FbaFeePreviewReport(DateTime.UtcNow, requestedMarketplacesGroup: marketplaceGroup.GetMarketplacesIdList);
+			var reportRequest = _fbaReportsFactory.FbaFeePreviewReport(DateTime.UtcNow, requestedMarketplaces: marketplaceGroup.GetMarketplaces);
 
 			Assert.NotNull(reportRequest);
 		}
@@ -120,7 +120,7 @@ namespace EasyMWS.Tests.Factories
 			var marketplaceGroup = new MwsMarketplaceGroup(MwsMarketplace.Japan);
 			_fbaReportsFactory = new FbaReportsFactory();
 
-			Assert.Throws<ArgumentException>(() => _fbaReportsFactory.FbaFeePreviewReport(DateTime.UtcNow, requestedMarketplacesGroup: marketplaceGroup.GetMarketplacesIdList));
+			Assert.Throws<ArgumentException>(() => _fbaReportsFactory.FbaFeePreviewReport(DateTime.UtcNow, requestedMarketplaces: marketplaceGroup.GetMarketplaces));
 		}
 
 		[Test]

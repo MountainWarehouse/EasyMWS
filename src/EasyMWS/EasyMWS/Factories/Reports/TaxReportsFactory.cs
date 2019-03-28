@@ -13,12 +13,12 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 	/// </summary>
 	public class TaxReportsFactory : ITaxReportsFactory
 	{
-		public ReportRequestPropertiesContainer AmazonVATCalculationReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null)
+		public ReportRequestPropertiesContainer AmazonVATCalculationReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<MwsMarketplace> requestedMarketplacesGroup = null)
 			=> ReportGeneratorHelper.GenerateReportRequest("_SC_VAT_TAX_REPORT_", ContentUpdateFrequency.Unknown,
 				requestedMarketplaces: requestedMarketplacesGroup,
 				startDate: startDate, endDate: endDate);
 
-		public ReportRequestPropertiesContainer AmazonVATTransactionsReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null)
+		public ReportRequestPropertiesContainer AmazonVATTransactionsReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<MwsMarketplace> requestedMarketplacesGroup = null)
 			=> ReportGeneratorHelper.GenerateReportRequest("_GET_VAT_TRANSACTION_DATA_", ContentUpdateFrequency.Unknown,
 				requestedMarketplaces: requestedMarketplacesGroup,
 				startDate: startDate, endDate: endDate);
@@ -33,7 +33,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 				requestedMarketplaces: (List<string>)null,
 				startDate: startDate, endDate: endDate);
 
-		public ReportRequestPropertiesContainer SalesTaxReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null)
+		public ReportRequestPropertiesContainer SalesTaxReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<MwsMarketplace> requestedMarketplacesGroup = null)
 		{
 			throw new NotImplementedException("This report cannot be requested or scheduled. You must generate the report from the Tax Document Library in Seller Central. After the report has been generated, you can download the report using the GetReportList and GetReport operations.");
 		}

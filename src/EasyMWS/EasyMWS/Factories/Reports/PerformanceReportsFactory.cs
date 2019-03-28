@@ -10,12 +10,12 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 	/// </summary>
 	public class PerformanceReportsFactory : IPerformanceReportsFactory
 	{
-		public ReportRequestPropertiesContainer FlatFileFeedbackReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null)
+		public ReportRequestPropertiesContainer FlatFileFeedbackReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<MwsMarketplace> requestedMarketplacesGroup = null)
 		{
 			throw new NotImplementedException();
 		}
 
-		public ReportRequestPropertiesContainer XMLCustomerMetricsReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null)
+		public ReportRequestPropertiesContainer XMLCustomerMetricsReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<MwsMarketplace> requestedMarketplacesGroup = null)
 		{
 			throw new NotImplementedException();
 		}

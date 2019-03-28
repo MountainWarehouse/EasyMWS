@@ -13,9 +13,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 	public class InventoryReportsFactory : IInventoryReportsFactory
 	{
 		public ReportRequestPropertiesContainer AllListingsReport(DateTime? startDate = null, DateTime? endDate = null,
-			IEnumerable<string> requestedMarketplacesGroup = null, bool custom = false)
+			IEnumerable<MwsMarketplace> requestedMarketplaces = null, bool custom = false)
 		{
-			if (custom && requestedMarketplacesGroup != null)
+			if (custom && requestedMarketplaces != null)
 			{
 				var acceptedMarketplaceIdsForCustomOption = new List<string>
 				{
@@ -24,7 +24,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 					MwsMarketplace.UK.Id,
 					MwsMarketplace.India.Id
 				};
-				var nonAcceptedMarketplaceIds = requestedMarketplacesGroup.Except(acceptedMarketplaceIdsForCustomOption).ToList();
+				var nonAcceptedMarketplaceIds = requestedMarketplaces.Select(m=>m.Id).Except(acceptedMarketplaceIdsForCustomOption).ToList();
 
 				if (nonAcceptedMarketplaceIds.Any())
 				{
@@ -37,72 +37,72 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 			reportOptions.AddBooleanOption("custom", custom);
 
 			return ReportGeneratorHelper.GenerateReportRequest("_GET_MERCHANT_LISTINGS_ALL_DATA_", ContentUpdateFrequency.Unknown,
-				requestedMarketplaces: requestedMarketplacesGroup, 
+				requestedMarketplaces: requestedMarketplaces, 
 				reportOptions: reportOptions, startDate: startDate, endDate: endDate);
 		}
 
 		public ReportRequestPropertiesContainer InventoryReport(DateTime? startDate = null, DateTime? endDate = null,
-			IEnumerable<string> requestedMarketplacesGroup = null, bool custom = false)
+			IEnumerable<MwsMarketplace> requestedMarketplaces = null, bool custom = false)
 		{
 			throw new NotImplementedException();
 		}
 
 		public ReportRequestPropertiesContainer ActiveListingsReport(DateTime? startDate = null, DateTime? endDate = null,
-			IEnumerable<string> requestedMarketplacesGroup = null)
+			IEnumerable<MwsMarketplace> requestedMarketplaces = null)
 		{
 			throw new NotImplementedException();
 		}
 
 		public ReportRequestPropertiesContainer InactiveListingsReport(DateTime? startDate = null, DateTime? endDate = null,
-			IEnumerable<string> requestedMarketplacesGroup = null)
+			IEnumerable<MwsMarketplace> requestedMarketplaces = null)
 		{
 			throw new NotImplementedException();
 		}
 
 		public ReportRequestPropertiesContainer OpenListingsReport(DateTime? startDate = null, DateTime? endDate = null,
-			IEnumerable<string> requestedMarketplacesGroup = null, bool custom = false)
+			IEnumerable<MwsMarketplace> requestedMarketplaces = null, bool custom = false)
 		{
 			throw new NotImplementedException();
 		}
 
 		public ReportRequestPropertiesContainer OpenListingsLiteReport(DateTime? startDate = null, DateTime? endDate = null,
-			IEnumerable<string> requestedMarketplacesGroup = null)
+			IEnumerable<MwsMarketplace> requestedMarketplaces = null)
 		{
 			throw new NotImplementedException();
 		}
 
 		public ReportRequestPropertiesContainer OpenListingsLiterReport(DateTime? startDate = null, DateTime? endDate = null,
-			IEnumerable<string> requestedMarketplacesGroup = null)
+			IEnumerable<MwsMarketplace> requestedMarketplaces = null)
 		{
 			throw new NotImplementedException();
 		}
 
 		public ReportRequestPropertiesContainer CanceledListingsReport(DateTime? startDate = null, DateTime? endDate = null,
-			IEnumerable<string> requestedMarketplacesGroup = null, bool custom = false)
+			IEnumerable<MwsMarketplace> requestedMarketplaces = null, bool custom = false)
 		{
 			throw new NotImplementedException();
 		}
 
 		public ReportRequestPropertiesContainer SoldListingsReport(DateTime? startDate = null, DateTime? endDate = null,
-			IEnumerable<string> requestedMarketplacesGroup = null)
+			IEnumerable<MwsMarketplace> requestedMarketplaces = null)
 		{
 			throw new NotImplementedException();
 		}
 
 		public ReportRequestPropertiesContainer ListingQualityAndSuppressedListingReport(DateTime? startDate = null,
-			DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null)
+			DateTime? endDate = null, IEnumerable<MwsMarketplace> requestedMarketplaces = null)
 		{
 			throw new NotImplementedException();
 		}
 
 		public ReportRequestPropertiesContainer PanEuropeanEligibilityFbaASINs(DateTime? startDate = null, DateTime? endDate = null,
-			IEnumerable<string> requestedMarketplacesGroup = null)
+			IEnumerable<MwsMarketplace> requestedMarketplaces = null)
 		{
 			throw new NotImplementedException();
 		}
 
 		public ReportRequestPropertiesContainer PanEuropeanEligibilitySelfFulfilledASINs(DateTime? startDate = null,
-			DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null)
+			DateTime? endDate = null, IEnumerable<MwsMarketplace> requestedMarketplaces = null)
 		{
 			throw new NotImplementedException();
 		}

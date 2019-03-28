@@ -14,7 +14,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 	public class OrderReportsFactory : IOrderReportsFactory
 	{
 		public ReportRequestPropertiesContainer UnshippedOrdersReport(DateTime? startDate = null, DateTime? endDate = null,
-			IEnumerable<string> requestedMarketplacesGroup = null, bool showSalesChannel = false)
+			IEnumerable<MwsMarketplace> requestedMarketplacesGroup = null, bool showSalesChannel = false)
 		{
 			var reportOptions = new ReportOptions();
 			reportOptions.AddBooleanOption("showSalesChannel", showSalesChannel);
@@ -26,13 +26,13 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 
 
 		public ReportRequestPropertiesContainer ScheduledXMLOrderReport(DateTime? startDate = null, DateTime? endDate = null,
-			IEnumerable<string> requestedMarketplacesGroup = null)
+			IEnumerable<MwsMarketplace> requestedMarketplacesGroup = null)
 			=> ReportGeneratorHelper.GenerateReportRequest("_GET_ORDERS_DATA_", ContentUpdateFrequency.Unknown,
 				requestedMarketplaces: requestedMarketplacesGroup,
 				startDate: startDate, endDate: endDate);
 
 		public ReportRequestPropertiesContainer RequestedOrScheduledFlatFileOrderReport(DateTime? startDate = null,
-			DateTime? endDate = null, IEnumerable<string> requestedMarketplacesGroup = null, bool showSalesChannel = false)
+			DateTime? endDate = null, IEnumerable<MwsMarketplace> requestedMarketplacesGroup = null, bool showSalesChannel = false)
 		{
 			var reportOptions = new ReportOptions();
 			reportOptions.AddBooleanOption("showSalesChannel", showSalesChannel);
@@ -43,7 +43,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		}
 
 		public ReportRequestPropertiesContainer FlatFileOrderReport(DateTime? startDate = null, DateTime? endDate = null,
-			IEnumerable<string> requestedMarketplacesGroup = null, bool showSalesChannel = false)
+			IEnumerable<MwsMarketplace> requestedMarketplacesGroup = null, bool showSalesChannel = false)
 		{
 			var reportOptions = new ReportOptions();
 			reportOptions.AddBooleanOption("showSalesChannel", showSalesChannel);
