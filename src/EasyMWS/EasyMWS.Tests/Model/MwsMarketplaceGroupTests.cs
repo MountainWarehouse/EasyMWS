@@ -285,7 +285,7 @@ namespace EasyMWS.Tests.Model
 		[TestCase("A39IBJ37TRP1C6")]    // Australia marketplace id
 		public void AmazonGlobal_Returns_ListContainingExpectedMarketplaceID(string marketplaceId)
 		{
-			var amazonGlobalMarketplaceIds = MwsMarketplaceGroup.AmazonGlobal();
+			var amazonGlobalMarketplaceIds = MwsMarketplaceGroup.AmazonGlobal().Select(m => m.Id);
 
 			CollectionAssert.Contains(amazonGlobalMarketplaceIds, marketplaceId);
 		}
@@ -307,7 +307,7 @@ namespace EasyMWS.Tests.Model
 		[TestCase("APJ6JRA9NG5V4")]     // Italy marketplace id
 		public void AmazonEurope_Returns_ListContainingExpectedMarketplaceID(string marketplaceId)
 		{
-			var amazonGlobalMarketplaceIds = MwsMarketplaceGroup.AmazonEurope();
+			var amazonGlobalMarketplaceIds = MwsMarketplaceGroup.AmazonEurope().Select(m=>m.Id);
 
 			CollectionAssert.Contains(amazonGlobalMarketplaceIds, marketplaceId);
 		}
@@ -341,7 +341,7 @@ namespace EasyMWS.Tests.Model
 		[TestCase("A1AM78C64UM0Y8")]    // Mexico marketplace id
 		public void AmazonNorthAmerica_Returns_ListContainingExpectedMarketplaceID(string marketplaceId)
 		{
-			var amazonGlobalMarketplaceIds = MwsMarketplaceGroup.AmazonNorthAmerica();
+			var amazonGlobalMarketplaceIds = MwsMarketplaceGroup.AmazonNorthAmerica().Select(m => m.Id);
 
 			CollectionAssert.Contains(amazonGlobalMarketplaceIds, marketplaceId);
 		}
@@ -379,7 +379,7 @@ namespace EasyMWS.Tests.Model
 		[TestCase("A39IBJ37TRP1C6")]    // Australia marketplace id
 		public void AmazonOther_Returns_ListContainingExpectedMarketplaceID(string marketplaceId)
 		{
-			var amazonGlobalMarketplaceIds = MwsMarketplaceGroup.AmazonOther();
+			var amazonGlobalMarketplaceIds = MwsMarketplaceGroup.AmazonOther().Select(m => m.Id);
 
 			CollectionAssert.Contains(amazonGlobalMarketplaceIds, marketplaceId);
 		}

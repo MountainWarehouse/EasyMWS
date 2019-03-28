@@ -30,23 +30,6 @@ namespace MountainWarehouse.EasyMWS.Model
 	    private MwsMarketplace(string name, string countryCode, string id, MwsEndpoint mwsEndpoint)
 		    => (Name, CountryCode, Id, MwsEndpoint) = (name, countryCode, id, mwsEndpoint);
 
-	    public static List<string> operator +(MwsMarketplace mp1, MwsMarketplace mp2)
-	    {
-		    return new List<string> { mp1.Id, mp2.Id };
-	    }
-
-	    public static List<string> operator +(List<string> list, MwsMarketplace mp)
-	    {
-		    list.Add(mp.Id);
-		    return list;
-	    }
-
-	    public static List<string> operator +(MwsMarketplace mp, List<string> list)
-	    {
-		    list.Add(mp.Id);
-		    return list;
-	    }
-
 	    public static string GetMarketplaceCountryCode(string marketplaceId)
 	    {
 		    var mwsMarketplaces = new List<MwsMarketplace>{Australia, Brazil, Canada, China, France, Germany, India, Italy, Japan, Mexico, Spain, UK, US};

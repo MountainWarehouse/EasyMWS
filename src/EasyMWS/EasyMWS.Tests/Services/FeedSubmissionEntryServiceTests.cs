@@ -26,7 +26,7 @@ namespace EasyMWS.Tests.Services
 	    {
 		    _options = EasyMwsOptions.Defaults();
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType", false,
-			    new List<string>(MwsMarketplaceGroup.AmazonEurope()));
+			    new List<string>(MwsMarketplaceGroup.AmazonEurope().Select(m=>m.Id)));
 		    var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 
 			_feedSubmissionEntries = new List<FeedSubmissionEntry>
@@ -62,7 +62,7 @@ namespace EasyMWS.Tests.Services
 		    Assert.AreEqual("testTypeName", feedSubmissionEntry.TypeName);
 		    Assert.AreEqual("testDataTypeName", feedSubmissionEntry.DataTypeName);
 		    Assert.AreEqual("testFeedType", feedSubmissionEntry.FeedType);
-			CollectionAssert.AreEquivalent(new List<string>(MwsMarketplaceGroup.AmazonEurope()), feedSubmissionData.MarketplaceIdList);
+			CollectionAssert.AreEquivalent(new List<string>(MwsMarketplaceGroup.AmazonEurope().Select(m=>m.Id)), feedSubmissionData.MarketplaceIdList);
 		}
 
 	    [Test]

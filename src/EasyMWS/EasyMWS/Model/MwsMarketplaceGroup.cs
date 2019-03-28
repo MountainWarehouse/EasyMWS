@@ -11,7 +11,7 @@ namespace MountainWarehouse.EasyMWS.Model
 	/// The MWS endpoint of a marketplaces group is set to the value of the one found on the Marketplace used to initialize the group, and cannot be changed afterward.<para /></summary>
 	public sealed class MwsMarketplaceGroup
     {
-		private readonly List<string> _marketplacesIdList;
+		private readonly List<MwsMarketplace> _mwsMarketplaces;
 
 	    /// <summary>
 	    /// The MWS access endpoint identifying this group. This value is set when initializing the object with the MWS endpoint of the marketplace provided to the ctor.
@@ -25,18 +25,20 @@ namespace MountainWarehouse.EasyMWS.Model
 	    {
 		    MwsEndpoint = marketplace.MwsEndpoint ?? throw new InvalidOperationException(
 			                     $"Cannot initialize marketplace group because the MWS access endpoint is not set on for the provided marketplace.");
-		    _marketplacesIdList = new List<string>() { marketplace.Id };
+			_mwsMarketplaces = new List<MwsMarketplace> { marketplace };
 	    }
 
-	    /// <summary>
-	    /// The readonly list of marketplaces that belong to this group. To add more marketplaces to this group please use the TryAddMarketplace method.
-	    /// </summary>
-	    public IEnumerable<string> GetMarketplacesIdList => _marketplacesIdList.AsEnumerable();
+		/// <summary>
+		/// The readonly list of marketplaces that belong to this group. To add more marketplaces to this group please use the TryAddMarketplace method.
+		/// </summary>
+		public IEnumerable<string> GetMarketplacesIdList => _mwsMarketplaces.Select(m => m.Id);
+
+		public IEnumerable<MwsMarketplace> GetMarketplaces => _mwsMarketplaces.AsEnumerable();
 
 		/// <summary>
 		/// The readonly list of marketplace country codes that belong to this group. To add more marketplaces to this group please use the TryAddMarketplace method.
 		/// </summary>
-		public IEnumerable<string> GetMarketplacesCountryCodes => _marketplacesIdList.Select(MwsMarketplace.GetMarketplaceCountryCode);
+		public IEnumerable<string> GetMarketplacesCountryCodes => _mwsMarketplaces.Select(m => m.CountryCode);
 
 		/// <summary>
 		/// Tries to add a marketplace to the current group. <para />
@@ -56,57 +58,62 @@ Because it belongs to a different MwsEndpoint:'{marketplace.MwsEndpoint}'.
 In order to request reports for marketplaces belonging to different MwsEndpoints 
 you must perform a separate request for each different MwsEndpoint.");
 		    }
-		    if (_marketplacesIdList.Contains(marketplace.Id))
+		    if (GetMarketplacesIdList.Contains(marketplace.Id))
 		    {
 			    throw new InvalidOperationException(
 				    $@"Cannot add marketplace:'{marketplace.Name}' to group with MwsEndpoint:'{MwsEndpoint}',
 Because it the group already contains this marketplace. A marketplace cannot be added twice to the same group.");
 		    }
 
-		    _marketplacesIdList.Add(marketplace.Id);
+			_mwsMarketplaces.Add(marketplace);
 	    }
 
-	    /// <summary>
-	    /// Marketplaces group that contains all amazon marketplaces supported by amazon MWS.<para />
-	    /// Contains the following marketplaces : Canada, US, Mexico, Spain, UK, France, Germany, Italy, Brazil, India, China, Japan, Australia.
-	    /// </summary>
-	    /// <returns></returns>
-	    public static List<string> AmazonGlobal()
-	    {
-		    return MwsMarketplace.Canada + MwsMarketplace.US + MwsMarketplace.Mexico +
-		           MwsMarketplace.Spain + MwsMarketplace.UK + MwsMarketplace.France + MwsMarketplace.Germany + MwsMarketplace.Italy +
-		           MwsMarketplace.Brazil + MwsMarketplace.India + MwsMarketplace.China + MwsMarketplace.Japan + MwsMarketplace.Australia;
-	    }
+		/// <summary>
+		/// Marketplaces group that contains all amazon marketplaces supported by amazon MWS.<para />
+		/// Contains the following marketplaces : Canada, US, Mexico, Spain, UK, France, Germany, Italy, Brazil, India, China, Japan, Australia.
+		/// </summary>
+		/// <returns></returns>
+		public static List<MwsMarketplace> AmazonGlobal()
+			=> new List<MwsMarketplace>
+			{
+				MwsMarketplace.Canada ,MwsMarketplace.US , MwsMarketplace.Mexico ,
+				MwsMarketplace.Spain ,MwsMarketplace.UK , MwsMarketplace.France , MwsMarketplace.Germany , MwsMarketplace.Italy ,
+				MwsMarketplace.Brazil , MwsMarketplace.India , MwsMarketplace.China , MwsMarketplace.Japan , MwsMarketplace.Australia
+			};
 
-	    /// <summary>
-	    /// Marketplaces group that contains amazon marketplaces from North America.<para />
-	    /// Contains the following marketplaces : Canada, US, Mexico.
-	    /// </summary>
-	    /// <returns></returns>
-	    public static List<string> AmazonNorthAmerica()
-	    {
-		    return MwsMarketplace.Canada + MwsMarketplace.US + MwsMarketplace.Mexico;
-	    }
 
-	    /// <summary>
-	    /// Marketplaces group that contains amazon marketplaces from Europe.<para />
-	    /// Contains the following marketplaces : Spain, UK, France, Germany, Italy.
-	    /// </summary>
-	    /// <returns></returns>
-	    public static List<string> AmazonEurope()
-	    {
-		    return MwsMarketplace.Spain + MwsMarketplace.UK + MwsMarketplace.France + MwsMarketplace.Germany + MwsMarketplace.Italy;
-	    }
+		/// <summary>
+		/// Marketplaces group that contains amazon marketplaces from North America.<para />
+		/// Contains the following marketplaces : Canada, US, Mexico.
+		/// </summary>
+		/// <returns></returns>
+		public static List<MwsMarketplace> AmazonNorthAmerica()
+			=> new List<MwsMarketplace>
+			{
+				MwsMarketplace.Canada , MwsMarketplace.US , MwsMarketplace.Mexico
+			};
 
-	    /// <summary>
-	    /// Marketplaces group that contains amazon marketplaces that don't belong to the North American or European regions.<para />
-	    /// Contains the following marketplaces : Brazil, India, China, Japan, Australia.
-	    /// </summary>
-	    /// <returns></returns>
-	    public static List<string> AmazonOther()
-	    {
-		    return MwsMarketplace.Brazil + MwsMarketplace.India + MwsMarketplace.China + MwsMarketplace.Japan + MwsMarketplace.Australia;
-	    }
+		/// <summary>
+		/// Marketplaces group that contains amazon marketplaces from Europe.<para />
+		/// Contains the following marketplaces : Spain, UK, France, Germany, Italy.
+		/// </summary>
+		/// <returns></returns>
+		public static List<MwsMarketplace> AmazonEurope()
+			=> new List<MwsMarketplace>
+			{
+				MwsMarketplace.Spain , MwsMarketplace.UK , MwsMarketplace.France , MwsMarketplace.Germany, MwsMarketplace.Italy
+			};
+
+		/// <summary>
+		/// Marketplaces group that contains amazon marketplaces that don't belong to the North American or European regions.<para />
+		/// Contains the following marketplaces : Brazil, India, China, Japan, Australia.
+		/// </summary>
+		/// <returns></returns>
+		public static List<MwsMarketplace> AmazonOther()
+			=> new List<MwsMarketplace>
+			{
+				MwsMarketplace.Brazil, MwsMarketplace.India, MwsMarketplace.China, MwsMarketplace.Japan, MwsMarketplace.Australia
+			};
 	}
 
 	/// <summary>

@@ -17,10 +17,10 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
+		/// <param name="requestedMarketplaces">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer FlatFileOrdersByLastUpdateReport(DateTime? startDate = null, DateTime? endDate = null,
-		    IEnumerable<string> requestedMarketplacesGroup = null);
+		    IEnumerable<MwsMarketplace> requestedMarketplaces = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FLAT_FILE_ALL_ORDERS_DATA_BY_ORDER_DATE_ <para />
@@ -28,10 +28,10 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
+		/// <param name="requestedMarketplaces">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer FlatFileOrdersByOrderDateReport(DateTime? startDate = null, DateTime? endDate = null,
-		    IEnumerable<string> requestedMarketplacesGroup = null);
+		    IEnumerable<MwsMarketplace> requestedMarketplaces = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FLAT_FILE_ARCHIVED_ORDERS_DATA_BY_ORDER_DATE_ <para />
@@ -39,10 +39,10 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
+		/// <param name="requestedMarketplaces">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer FlatFileArchivedOrdersReport(DateTime? startDate = null, DateTime? endDate = null,
-		    IEnumerable<string> requestedMarketplacesGroup = null);
+		    IEnumerable<MwsMarketplace> requestedMarketplaces = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_XML_ALL_ORDERS_DATA_BY_LAST_UPDATE_ <para />
@@ -50,10 +50,10 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
+		/// <param name="requestedMarketplaces">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer XMLOrdersByLastUpdateReport(DateTime? startDate = null, DateTime? endDate = null,
-		    IEnumerable<string> requestedMarketplacesGroup = null);
+		    IEnumerable<MwsMarketplace> requestedMarketplaces = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_XML_ALL_ORDERS_DATA_BY_ORDER_DATE_ <para />
@@ -61,9 +61,9 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
+		/// <param name="requestedMarketplaces">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer XMLOrdersByOrderDateReport(DateTime? startDate = null, DateTime? endDate = null,
-		    IEnumerable<string> requestedMarketplacesGroup = null);
+		    IEnumerable<MwsMarketplace> requestedMarketplaces = null);
 	}
 }
