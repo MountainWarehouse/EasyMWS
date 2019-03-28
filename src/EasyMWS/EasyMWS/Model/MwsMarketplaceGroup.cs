@@ -68,47 +68,52 @@ Because it the group already contains this marketplace. A marketplace cannot be 
 			_mwsMarketplaces.Add(marketplace);
 	    }
 
-	    /// <summary>
-	    /// Marketplaces group that contains all amazon marketplaces supported by amazon MWS.<para />
-	    /// Contains the following marketplaces : Canada, US, Mexico, Spain, UK, France, Germany, Italy, Brazil, India, China, Japan, Australia.
-	    /// </summary>
-	    /// <returns></returns>
-	    public static List<string> AmazonGlobal()
-	    {
-		    return MwsMarketplace.Canada + MwsMarketplace.US + MwsMarketplace.Mexico +
-		           MwsMarketplace.Spain + MwsMarketplace.UK + MwsMarketplace.France + MwsMarketplace.Germany + MwsMarketplace.Italy +
-		           MwsMarketplace.Brazil + MwsMarketplace.India + MwsMarketplace.China + MwsMarketplace.Japan + MwsMarketplace.Australia;
-	    }
+		/// <summary>
+		/// Marketplaces group that contains all amazon marketplaces supported by amazon MWS.<para />
+		/// Contains the following marketplaces : Canada, US, Mexico, Spain, UK, France, Germany, Italy, Brazil, India, China, Japan, Australia.
+		/// </summary>
+		/// <returns></returns>
+		public static List<MwsMarketplace> AmazonGlobal()
+			=> new List<MwsMarketplace>
+			{
+				MwsMarketplace.Canada ,MwsMarketplace.US , MwsMarketplace.Mexico ,
+				MwsMarketplace.Spain ,MwsMarketplace.UK , MwsMarketplace.France , MwsMarketplace.Germany , MwsMarketplace.Italy ,
+				MwsMarketplace.Brazil , MwsMarketplace.India , MwsMarketplace.China , MwsMarketplace.Japan , MwsMarketplace.Australia
+			};
 
-	    /// <summary>
-	    /// Marketplaces group that contains amazon marketplaces from North America.<para />
-	    /// Contains the following marketplaces : Canada, US, Mexico.
-	    /// </summary>
-	    /// <returns></returns>
-	    public static List<string> AmazonNorthAmerica()
-	    {
-		    return MwsMarketplace.Canada + MwsMarketplace.US + MwsMarketplace.Mexico;
-	    }
 
-	    /// <summary>
-	    /// Marketplaces group that contains amazon marketplaces from Europe.<para />
-	    /// Contains the following marketplaces : Spain, UK, France, Germany, Italy.
-	    /// </summary>
-	    /// <returns></returns>
-	    public static List<string> AmazonEurope()
-	    {
-		    return MwsMarketplace.Spain + MwsMarketplace.UK + MwsMarketplace.France + MwsMarketplace.Germany + MwsMarketplace.Italy;
-	    }
+		/// <summary>
+		/// Marketplaces group that contains amazon marketplaces from North America.<para />
+		/// Contains the following marketplaces : Canada, US, Mexico.
+		/// </summary>
+		/// <returns></returns>
+		public static List<MwsMarketplace> AmazonNorthAmerica()
+			=> new List<MwsMarketplace>
+			{
+				MwsMarketplace.Canada , MwsMarketplace.US , MwsMarketplace.Mexico
+			};
 
-	    /// <summary>
-	    /// Marketplaces group that contains amazon marketplaces that don't belong to the North American or European regions.<para />
-	    /// Contains the following marketplaces : Brazil, India, China, Japan, Australia.
-	    /// </summary>
-	    /// <returns></returns>
-	    public static List<string> AmazonOther()
-	    {
-		    return MwsMarketplace.Brazil + MwsMarketplace.India + MwsMarketplace.China + MwsMarketplace.Japan + MwsMarketplace.Australia;
-	    }
+		/// <summary>
+		/// Marketplaces group that contains amazon marketplaces from Europe.<para />
+		/// Contains the following marketplaces : Spain, UK, France, Germany, Italy.
+		/// </summary>
+		/// <returns></returns>
+		public static List<MwsMarketplace> AmazonEurope()
+			=> new List<MwsMarketplace>
+			{
+				MwsMarketplace.Spain , MwsMarketplace.UK , MwsMarketplace.France , MwsMarketplace.Germany, MwsMarketplace.Italy
+			};
+
+		/// <summary>
+		/// Marketplaces group that contains amazon marketplaces that don't belong to the North American or European regions.<para />
+		/// Contains the following marketplaces : Brazil, India, China, Japan, Australia.
+		/// </summary>
+		/// <returns></returns>
+		public static List<MwsMarketplace> AmazonOther()
+			=> new List<MwsMarketplace>
+			{
+				MwsMarketplace.Brazil, MwsMarketplace.India, MwsMarketplace.China, MwsMarketplace.Japan, MwsMarketplace.Australia
+			};
 	}
 
 	/// <summary>

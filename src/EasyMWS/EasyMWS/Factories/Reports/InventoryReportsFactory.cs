@@ -34,7 +34,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 			reportOptions.AddBooleanOption("custom", custom);
 
 			return ReportGeneratorHelper.GenerateReportRequest("_GET_MERCHANT_LISTINGS_ALL_DATA_", ContentUpdateFrequency.Unknown,
-				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(), 
+				permittedMarketplacesIds: MwsMarketplaceGroup.AmazonGlobal().Select(m => m.Id), 
 				requestedMarketplaces: requestedMarketplacesGroup, 
 				reportOptions: reportOptions, startDate: startDate, endDate: endDate);
 		}

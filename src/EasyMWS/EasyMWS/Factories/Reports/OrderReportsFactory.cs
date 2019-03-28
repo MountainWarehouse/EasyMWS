@@ -17,7 +17,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 			reportOptions.AddBooleanOption("showSalesChannel", showSalesChannel);
 
 			return ReportGeneratorHelper.GenerateReportRequest("_GET_FLAT_FILE_ACTIONABLE_ORDER_DATA_", ContentUpdateFrequency.Unknown,
-				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
+				permittedMarketplacesIds: MwsMarketplaceGroup.AmazonGlobal().Select(m=>m.Id),
 				requestedMarketplaces: requestedMarketplacesGroup,
 				reportOptions: reportOptions, startDate: startDate, endDate: endDate);
 		}
@@ -26,7 +26,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		public ReportRequestPropertiesContainer ScheduledXMLOrderReport(DateTime? startDate = null, DateTime? endDate = null,
 			IEnumerable<string> requestedMarketplacesGroup = null)
 			=> ReportGeneratorHelper.GenerateReportRequest("_GET_ORDERS_DATA_", ContentUpdateFrequency.Unknown,
-				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
+				permittedMarketplacesIds: MwsMarketplaceGroup.AmazonGlobal().Select(m => m.Id),
 				requestedMarketplaces: requestedMarketplacesGroup,
 				startDate: startDate, endDate: endDate);
 
@@ -37,7 +37,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 			reportOptions.AddBooleanOption("showSalesChannel", showSalesChannel);
 
 			return ReportGeneratorHelper.GenerateReportRequest("_GET_FLAT_FILE_ORDERS_DATA_", ContentUpdateFrequency.Unknown,
-				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
+				permittedMarketplacesIds: MwsMarketplaceGroup.AmazonGlobal().Select(m => m.Id),
 				requestedMarketplaces: requestedMarketplacesGroup,
 				reportOptions: reportOptions, startDate: startDate, endDate: endDate);
 		}
@@ -49,7 +49,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 			reportOptions.AddBooleanOption("showSalesChannel", showSalesChannel);
 
 			return ReportGeneratorHelper.GenerateReportRequest("_GET_CONVERGED_FLAT_FILE_ORDER_REPORT_DATA_", ContentUpdateFrequency.Unknown,
-				permittedMarketplaces: MwsMarketplaceGroup.AmazonGlobal(),
+				permittedMarketplacesIds: MwsMarketplaceGroup.AmazonGlobal().Select(m => m.Id),
 				requestedMarketplaces: requestedMarketplacesGroup,
 				reportOptions: reportOptions, startDate: startDate, endDate: endDate);
 		}
