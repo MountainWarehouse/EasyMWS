@@ -8,7 +8,10 @@ using MountainWarehouse.EasyMWS.Model;
 
 namespace MountainWarehouse.EasyMWS.Factories.Reports
 {
-    public class OrderReportsFactory : IOrderReportsFactory
+	/// <summary>
+	/// When adding support for a new report type, ReportsPermittedMarketplacesMapper map also has to be updated to include the permitted marketplaces for that report.
+	/// </summary>
+	public class OrderReportsFactory : IOrderReportsFactory
 	{
 		public ReportRequestPropertiesContainer UnshippedOrdersReport(DateTime? startDate = null, DateTime? endDate = null,
 			IEnumerable<string> requestedMarketplacesGroup = null, bool showSalesChannel = false)

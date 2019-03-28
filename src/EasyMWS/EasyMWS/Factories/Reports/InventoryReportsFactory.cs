@@ -7,6 +7,9 @@ using MountainWarehouse.EasyMWS.Model;
 
 namespace MountainWarehouse.EasyMWS.Factories.Reports
 {
+	/// <summary>
+	/// When adding support for a new report type, ReportsPermittedMarketplacesMapper map also has to be updated to include the permitted marketplaces for that report.
+	/// </summary>
 	public class InventoryReportsFactory : IInventoryReportsFactory
 	{
 		public ReportRequestPropertiesContainer AllListingsReport(DateTime? startDate = null, DateTime? endDate = null,
