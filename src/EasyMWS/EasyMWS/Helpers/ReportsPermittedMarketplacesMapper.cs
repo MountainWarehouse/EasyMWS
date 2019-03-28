@@ -7,6 +7,10 @@ namespace MountainWarehouse.EasyMWS.Helpers
 {
     public static class ReportsPermittedMarketplacesMapper
     {
+		/// <summary>
+		/// A mapping between Report type and the collection of marketplaces for which that report can be requested from amazon, 
+		/// as defined here : https://docs.developer.amazonservices.com/en_US/reports/Reports_ReportType.html
+		/// </summary>
 		private static Dictionary<string, IEnumerable<MwsMarketplace>> _reportsMarketplaces = new Dictionary<string, IEnumerable<MwsMarketplace>>
 		{
 			// FbaReports
