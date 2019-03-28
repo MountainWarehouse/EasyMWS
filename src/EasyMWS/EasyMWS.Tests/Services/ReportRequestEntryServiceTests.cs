@@ -29,7 +29,7 @@ namespace EasyMWS.Tests.Services
 		[SetUp]
 	    public void SetUp()
 	    {
-		    var reportRequestPropertiesContainer = new ReportRequestPropertiesContainer("_Report_Type_", ContentUpdateFrequency.NearRealTime, new List<string>(MwsMarketplaceGroup.AmazonEurope()));
+		    var reportRequestPropertiesContainer = new ReportRequestPropertiesContainer("_Report_Type_", ContentUpdateFrequency.NearRealTime, new List<string>(MwsMarketplaceGroup.AmazonEurope().Select(m=>m.Id)));
 
 		    _reportRequestEntries = new List<ReportRequestEntry>
 		    {
@@ -68,7 +68,7 @@ namespace EasyMWS.Tests.Services
 			Assert.AreEqual("testDataTypeName", reportRequestCallback.DataTypeName);
 			Assert.AreEqual("_Report_Type_", reportRequestCallback.ReportType);
 			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequestData.UpdateFrequency);
-			CollectionAssert.AreEquivalent(new List<string>(MwsMarketplaceGroup.AmazonEurope()), reportRequestData.MarketplaceIdList);
+			CollectionAssert.AreEquivalent(new List<string>(MwsMarketplaceGroup.AmazonEurope().Select(m=>m.Id)), reportRequestData.MarketplaceIdList);
 		}
 
 	    [Test]

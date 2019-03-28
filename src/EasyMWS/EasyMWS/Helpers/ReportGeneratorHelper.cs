@@ -8,29 +8,34 @@ namespace MountainWarehouse.EasyMWS.Helpers
 {
 	internal static class ReportGeneratorHelper
 	{
-
 		public static ReportRequestPropertiesContainer GenerateReportRequest(string reportType,
-			ContentUpdateFrequency reportUpdateFrequency,
-			IEnumerable<string> permittedMarketplaces, IEnumerable<string> requestedMarketplaces = null, DateTime? startDate = null,
+			ContentUpdateFrequency reportUpdateFrequency, IEnumerable<string> requestedMarketplaces = null, DateTime? startDate = null,
 			DateTime? endDate = null, ReportOptions reportOptions = null)
 		{
-			ValidateMarketplaceCompatibility(reportType, permittedMarketplaces, requestedMarketplaces);
+			ValidateMarketplaceCompatibility(reportType, requestedMarketplaces);
 			return new ReportRequestPropertiesContainer(reportType, reportUpdateFrequency, requestedMarketplaces, startDate,
 				endDate, reportOptions?.GetOptionsString());
 		}
 
-		private static void ValidateMarketplaceCompatibility(string reportType, IEnumerable<string> permittedMarketplaces,
-			IEnumerable<string> requestedMarketplaces = null)
-		{
-			if (requestedMarketplaces == null) return;
+		public static ReportRequestPropertiesContainer GenerateReportRequest(string reportType, ContentUpdateFrequency reportUpdateFrequency,
+			IEnumerable<MwsMarketplace> requestedMarketplaces = null, 
+			DateTime? startDate = null, DateTime? endDate = null, ReportOptions reportOptions = null)
+			=> GenerateReportRequest(reportType, reportUpdateFrequency, requestedMarketplaces?.Select(m => m.Id), 
+				startDate, endDate, reportOptions);
 
-			foreach (var requestedMarketplace in requestedMarketplaces)
+		private static void ValidateMarketplaceCompatibility(string reportType, IEnumerable<string> requestedMarketplacesIds = null)
+		{
+			if (requestedMarketplacesIds == null) return;
+
+			var permittedMarketplacesIds = ReportsPermittedMarketplacesMapper.GetMarketplaces(reportType)?.Select(m => m.Id) ?? MwsMarketplaceGroup.AmazonGlobal().Select(m => m.Id);
+
+			foreach (var requestedMarketplace in requestedMarketplacesIds)
 			{
-				if (!permittedMarketplaces.Contains(requestedMarketplace))
+				if (!permittedMarketplacesIds.Contains(requestedMarketplace))
 				{
 					throw new ArgumentException(
 						$@"The report request for type:'{reportType}', is only available to the following marketplaces:'{
-								MwsMarketplace.GetMarketplaceCountryCodesAsCommaSeparatedString(permittedMarketplaces)
+								MwsMarketplace.GetMarketplaceCountryCodesAsCommaSeparatedString(permittedMarketplacesIds)
 							}'.
 The requested marketplace:'{
 								MwsMarketplace.GetMarketplaceCountryCode(requestedMarketplace)

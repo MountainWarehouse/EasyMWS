@@ -17,11 +17,11 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
+		/// <param name="requestedMarketplaces">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <param name="showSalesChannel">A Boolean value that indicates whether an additional column is added to the report that shows the sales channel. Default: false.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer UnshippedOrdersReport(DateTime? startDate = null, DateTime? endDate = null,
-		    IEnumerable<string> requestedMarketplacesGroup = null, bool showSalesChannel = false);
+		    IEnumerable<MwsMarketplace> requestedMarketplaces = null, bool showSalesChannel = false);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_ORDERS_DATA_ <para />
@@ -30,10 +30,10 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
+		/// <param name="requestedMarketplaces">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer ScheduledXMLOrderReport(DateTime? startDate = null, DateTime? endDate = null,
-		    IEnumerable<string> requestedMarketplacesGroup = null);
+		    IEnumerable<MwsMarketplace> requestedMarketplaces = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FLAT_FILE_ORDERS_DATA_ <para />
@@ -45,11 +45,11 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
+		/// <param name="requestedMarketplaces">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <param name="showSalesChannel">A Boolean value that indicates whether an additional column is added to the report that shows the sales channel. Default: false.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer RequestedOrScheduledFlatFileOrderReport(DateTime? startDate = null, DateTime? endDate = null,
-		    IEnumerable<string> requestedMarketplacesGroup = null, bool showSalesChannel = false);
+		    IEnumerable<MwsMarketplace> requestedMarketplaces = null, bool showSalesChannel = false);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_CONVERGED_FLAT_FILE_ORDER_REPORT_DATA_ <para />
@@ -60,10 +60,10 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplacesGroup">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
+		/// <param name="requestedMarketplaces">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
 		/// <param name="showSalesChannel">A Boolean value that indicates whether an additional column is added to the report that shows the sales channel. Default: false.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer FlatFileOrderReport(DateTime? startDate = null, DateTime? endDate = null,
-		    IEnumerable<string> requestedMarketplacesGroup = null, bool showSalesChannel = false);
+		    IEnumerable<MwsMarketplace> requestedMarketplaces = null, bool showSalesChannel = false);
 	}
 }
