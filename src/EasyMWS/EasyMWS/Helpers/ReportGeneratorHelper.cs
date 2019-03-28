@@ -20,7 +20,7 @@ namespace MountainWarehouse.EasyMWS.Helpers
 		public static ReportRequestPropertiesContainer GenerateReportRequest(string reportType, ContentUpdateFrequency reportUpdateFrequency,
 			IEnumerable<MwsMarketplace> requestedMarketplaces = null, 
 			DateTime? startDate = null, DateTime? endDate = null, ReportOptions reportOptions = null)
-			=> GenerateReportRequest(reportType, reportUpdateFrequency, requestedMarketplaces.Select(m => m.Id), 
+			=> GenerateReportRequest(reportType, reportUpdateFrequency, requestedMarketplaces?.Select(m => m.Id), 
 				startDate, endDate, reportOptions);
 
 		private static void ValidateMarketplaceCompatibility(string reportType, IEnumerable<string> requestedMarketplacesIds = null)
