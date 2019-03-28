@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MountainWarehouse.EasyMWS.Helpers
 {
-    public static class ReportsPermittedMarketplaces
+    public static class ReportsPermittedMarketplacesMapper
     {
 		private static Dictionary<string, IEnumerable<MwsMarketplace>> _reportsMarketplaces = new Dictionary<string, IEnumerable<MwsMarketplace>>
 		{
@@ -63,10 +63,10 @@ namespace MountainWarehouse.EasyMWS.Helpers
 		};
 
 		/// <summary>
-		/// Gets the MwsMarketplace object corresponding to a specified ReportType if there is one. If no corresponding marketplace is found return null.<para/>
+		/// Gets the list of permitted marketplaces corresponding to the specified ReportType. If no result is found then this returns Null.<para/>
 		/// </summary>
 		/// <param name="reportType">Report type e.g. _GET_AMAZON_FULFILLED_SHIPMENTS_DATA_</param>
 		/// <returns></returns>
-		public static IEnumerable<MwsMarketplace> GetMarketplace(string reportType) => _reportsMarketplaces.ContainsKey(reportType) ? _reportsMarketplaces[reportType] : null;
+		public static IEnumerable<MwsMarketplace> GetMarketplaces(string reportType) => _reportsMarketplaces.ContainsKey(reportType) ? _reportsMarketplaces[reportType] : null;
     }
 }
