@@ -13,12 +13,15 @@ namespace MountainWarehouse.EasyMWS.Helpers
 		/// </summary>
 		private static Dictionary<string, IEnumerable<MwsMarketplace>> _reportsMarketplaces = new Dictionary<string, IEnumerable<MwsMarketplace>>
 		{
+            // OrderTrackingReports
+            { "_GET_FLAT_FILE_ALL_ORDERS_DATA_BY_LAST_UPDATE_", new List<MwsMarketplace> { MwsMarketplace.US, MwsMarketplace.Canada, MwsMarketplace.Mexico, MwsMarketplace.Spain , MwsMarketplace.UK , MwsMarketplace.France , MwsMarketplace.Germany, MwsMarketplace.Italy} },
+            { "_GET_FLAT_FILE_ALL_ORDERS_DATA_BY_ORDER_DATE_", new List<MwsMarketplace> { MwsMarketplace.US, MwsMarketplace.Canada, MwsMarketplace.Mexico, MwsMarketplace.Spain , MwsMarketplace.UK , MwsMarketplace.France , MwsMarketplace.Germany, MwsMarketplace.Italy} },
+            { "_GET_FLAT_FILE_ARCHIVED_ORDERS_DATA_BY_ORDER_DATE_", new List<MwsMarketplace> { MwsMarketplace.US, MwsMarketplace.Canada, MwsMarketplace.Mexico, MwsMarketplace.Spain , MwsMarketplace.UK , MwsMarketplace.France , MwsMarketplace.Germany, MwsMarketplace.Italy} },
+            { "_GET_XML_ALL_ORDERS_DATA_BY_LAST_UPDATE_", new List<MwsMarketplace> { MwsMarketplace.US, MwsMarketplace.Canada, MwsMarketplace.Mexico, MwsMarketplace.Spain , MwsMarketplace.UK , MwsMarketplace.France , MwsMarketplace.Germany, MwsMarketplace.Italy} },
+            { "_GET_XML_ALL_ORDERS_DATA_BY_ORDER_DATE_", new List<MwsMarketplace> { MwsMarketplace.US, MwsMarketplace.Canada, MwsMarketplace.Mexico, MwsMarketplace.Spain , MwsMarketplace.UK , MwsMarketplace.France , MwsMarketplace.Germany, MwsMarketplace.Italy} },
+
 			// FbaReports
 			{ "_GET_AMAZON_FULFILLED_SHIPMENTS_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
-			{ "_GET_FLAT_FILE_ALL_ORDERS_DATA_BY_LAST_UPDATE_",  MwsMarketplaceGroup.AmazonGlobal() },
-			{ "_GET_FLAT_FILE_ALL_ORDERS_DATA_BY_ORDER_DATE_",  MwsMarketplaceGroup.AmazonGlobal() },
-			{ "_GET_XML_ALL_ORDERS_DATA_BY_LAST_UPDATE_",  MwsMarketplaceGroup.AmazonGlobal() },
-			{ "_GET_XML_ALL_ORDERS_DATA_BY_ORDER_DATE_",  MwsMarketplaceGroup.AmazonGlobal() },
 			{ "_GET_FBA_FULFILLMENT_CUSTOMER_SHIPMENT_SALES_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 			{ "_GET_FBA_FULFILLMENT_CUSTOMER_SHIPMENT_PROMOTION_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 			{ "_GET_FBA_FULFILLMENT_CUSTOMER_TAXES_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
