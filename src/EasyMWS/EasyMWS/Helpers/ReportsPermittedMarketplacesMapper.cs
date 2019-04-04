@@ -68,7 +68,7 @@ namespace MountainWarehouse.EasyMWS.Helpers
 			// OrderReports
 			{ "_GET_FLAT_FILE_ACTIONABLE_ORDER_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 			{ "_GET_ORDERS_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
-			{ "_GET_FLAT_FILE_ORDERS_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
+			{ "_GET_FLAT_FILE_ORDER_REPORT_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 			{ "_GET_CONVERGED_FLAT_FILE_ORDER_REPORT_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 
 			// TaxReports
