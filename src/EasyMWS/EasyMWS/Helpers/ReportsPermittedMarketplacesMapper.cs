@@ -96,8 +96,9 @@ namespace MountainWarehouse.EasyMWS.Helpers
 			{ "_SC_VAT_TAX_REPORT_",  MwsMarketplaceGroup.AmazonEurope() },
 			{ "_GET_VAT_TRANSACTION_DATA_",  MwsMarketplaceGroup.AmazonEurope() },
 			{ "_GET_GST_MTR_B2B_CUSTOM_",  new List<MwsMarketplace> { MwsMarketplace.India } },
-			{ "_GET_GST_MTR_B2C_CUSTOM_",  new List<MwsMarketplace> { MwsMarketplace.India } }
-		};
+			{ "_GET_GST_MTR_B2C_CUSTOM_",  new List<MwsMarketplace> { MwsMarketplace.India } },
+            { "_GET_FLAT_FILE_SALES_TAX_DATA_",  null }
+        };
 
 		/// <summary>
 		/// Gets the list of permitted marketplaces corresponding to the specified ReportType. If no result is found then this returns Null.<para/>
