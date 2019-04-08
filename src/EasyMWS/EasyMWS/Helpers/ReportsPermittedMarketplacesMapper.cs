@@ -1,7 +1,5 @@
 ﻿using MountainWarehouse.EasyMWS.Model;
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace MountainWarehouse.EasyMWS.Helpers
 {
@@ -13,6 +11,14 @@ namespace MountainWarehouse.EasyMWS.Helpers
 		/// </summary>
 		private static Dictionary<string, IEnumerable<MwsMarketplace>> _reportsMarketplaces = new Dictionary<string, IEnumerable<MwsMarketplace>>
 		{
+            // Returns Reports
+            { "_GET_CSV_MFN_PRIME_RETURNS_REPORT_",  MwsMarketplaceGroup.AmazonGlobal() },
+            { "_GET_FLAT_FILE_MFN_SKU_RETURN_ATTRIBUTES_REPORT_",  MwsMarketplaceGroup.AmazonGlobal() },
+            { "_GET_FLAT_FILE_RETURNS_DATA_BY_RETURN_DATE_",  MwsMarketplaceGroup.AmazonGlobal() },
+            { "_GET_XML_MFN_PRIME_RETURNS_REPORT_",  MwsMarketplaceGroup.AmazonGlobal() },
+            { "_GET_XML_MFN_SKU_RETURN_ATTRIBUTES_REPORT_",  MwsMarketplaceGroup.AmazonGlobal() },
+            { "_GET_XML_RETURNS_DATA_BY_RETURN_DATE_",  MwsMarketplaceGroup.AmazonGlobal() },
+
             // Pending Order Reports
             { "_GET_CONVERGED_FLAT_FILE_PENDING_ORDERS_DATA_", new List<MwsMarketplace> { MwsMarketplace.Japan, MwsMarketplace.China } },
             { "_GET_FLAT_FILE_PENDING_ORDERS_DATA_", new List<MwsMarketplace> { MwsMarketplace.Japan, MwsMarketplace.China } },
