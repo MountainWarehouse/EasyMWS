@@ -99,6 +99,8 @@ namespace MountainWarehouse.EasyMWS.Helpers
 			{ "_GET_GST_MTR_B2C_CUSTOM_",  new List<MwsMarketplace> { MwsMarketplace.India } },
             { "_GET_FLAT_FILE_SALES_TAX_DATA_",  null },
 
+            { "_GET_XML_BROWSE_TREE_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
+
             { "_GET_EASYSHIP_DOCUMENTS_",  new List<MwsMarketplace> { MwsMarketplace.India } },
 
             { "_RFQD_BULK_DOWNLOAD_",  new List<MwsMarketplace> { MwsMarketplace.US, MwsMarketplace.UK, MwsMarketplace.Germany, MwsMarketplace.India, MwsMarketplace.Japan }  },
