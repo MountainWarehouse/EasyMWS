@@ -28,10 +28,10 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
                     throw new ArgumentException(
                         $"The 'Custom' option is not available for the following marketplace(s) : {MwsMarketplace.GetMarketplaceCountryCodesAsCommaSeparatedString(nonAcceptedMarketplaceIds)}");
                 }
-
-                if(reportOptions == null) reportOptions = new ReportOptions();
-                reportOptions.AddBooleanOption("custom", custom);
             }
+
+            if (reportOptions == null) reportOptions = new ReportOptions();
+            reportOptions.AddBooleanOption("custom", custom);
 
             return reportOptions;
         }
