@@ -11,6 +11,10 @@ namespace MountainWarehouse.EasyMWS.Helpers
 		/// </summary>
 		private static Dictionary<string, IEnumerable<MwsMarketplace>> _reportsMarketplaces = new Dictionary<string, IEnumerable<MwsMarketplace>>
 		{
+            // Performance Reports
+            { "_GET_SELLER_FEEDBACK_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
+            { "_GET_V1_SELLER_PERFORMANCE_REPORT_",  MwsMarketplaceGroup.AmazonGlobal() },
+
             // Returns Reports
             { "_GET_CSV_MFN_PRIME_RETURNS_REPORT_",  MwsMarketplaceGroup.AmazonGlobal() },
             { "_GET_FLAT_FILE_MFN_SKU_RETURN_ATTRIBUTES_REPORT_",  MwsMarketplaceGroup.AmazonGlobal() },
