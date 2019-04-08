@@ -38,7 +38,7 @@ namespace MountainWarehouse.EasyMWS.Helpers
 			// Fba Reports
 			{ "_GET_AMAZON_FULFILLED_SHIPMENTS_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 			{ "_GET_FBA_FULFILLMENT_CUSTOMER_SHIPMENT_SALES_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
-			{ "_GET_FBA_FULFILLMENT_CUSTOMER_SHIPMENT_PROMOTION_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
+			{ "_GET_FBA_FULFILLMENT_CUSTOMER_SHIPMENT_PROMOTION_DATA_",  MwsMarketplaceGroup.AmazonNorthAmerica() },
 			{ "_GET_FBA_FULFILLMENT_CUSTOMER_TAXES_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 			{ "_GET_AFN_INVENTORY_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 			{ "_GET_AFN_INVENTORY_DATA_BY_COUNTRY_",  MwsMarketplaceGroup.AmazonEurope() },
