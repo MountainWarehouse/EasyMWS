@@ -243,6 +243,16 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 				requestedMarketplaces: requestedMarketplaces,
 				startDate: startDate, endDate: endDate);
 
-		#endregion
-	}
+        public ReportRequestPropertiesContainer FbaStorageFeesReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<MwsMarketplace> requestedMarketplaces = null)
+       => ReportGeneratorHelper.GenerateReportRequest("_GET_FBA_STORAGE_FEE_CHARGES_DATA_", ContentUpdateFrequency.Unknown,
+                requestedMarketplaces: requestedMarketplaces,
+                startDate: startDate, endDate: endDate);
+
+        public ReportRequestPropertiesContainer SmallAndLightInventoryReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<MwsMarketplace> requestedMarketplaces = null)
+        => ReportGeneratorHelper.GenerateReportRequest("_GET_FBA_UNO_INVENTORY_DATA_", ContentUpdateFrequency.Unknown,
+                requestedMarketplaces: requestedMarketplaces,
+                startDate: startDate, endDate: endDate);
+
+        #endregion
+    }
 }

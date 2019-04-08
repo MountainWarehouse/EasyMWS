@@ -58,15 +58,18 @@ namespace MountainWarehouse.EasyMWS.Helpers
 			{ "_GET_RESTOCK_INVENTORY_RECOMMENDATIONS_REPORT_",  new List<MwsMarketplace> {MwsMarketplace.US} },
 			{ "_GET_STRANDED_INVENTORY_LOADER_DATA_",  MwsMarketplaceGroup.AmazonUSAndIndiaAndJapan() },
 			{ "_GET_STRANDED_INVENTORY_UI_DATA_", MwsMarketplaceGroup.AmazonUSAndIndiaAndJapan() },
+            { "_GET_FBA_STORAGE_FEE_CHARGES_DATA_", MwsMarketplaceGroup.AmazonGlobal() },
 
-			{ "_GET_FBA_ESTIMATED_FBA_FEES_TXT_DATA_",  MwsMarketplaceGroup.AmazonNorthAmericaAndEurope() },
+            { "_GET_FBA_ESTIMATED_FBA_FEES_TXT_DATA_",  MwsMarketplaceGroup.AmazonNorthAmericaAndEurope() },
 			{ "_GET_FBA_REIMBURSEMENTS_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 
 			{ "_GET_FBA_FULFILLMENT_CUSTOMER_RETURNS_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
-			{ "_GET_FBA_FULFILLMENT_CUSTOMER_SHIPMENT_REPLACEMENT_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
-			{ "_GET_FBA_RECOMMENDED_REMOVAL_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
+			{ "_GET_FBA_FULFILLMENT_CUSTOMER_SHIPMENT_REPLACEMENT_DATA_", new List<MwsMarketplace> { MwsMarketplace.US, MwsMarketplace.China } },
+
+            { "_GET_FBA_RECOMMENDED_REMOVAL_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 			{ "_GET_FBA_FULFILLMENT_REMOVAL_ORDER_DETAIL_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 			{ "_GET_FBA_FULFILLMENT_REMOVAL_SHIPMENT_DETAIL_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
+            { "_GET_FBA_UNO_INVENTORY_DATA_",  new List<MwsMarketplace> { MwsMarketplace.Germany, MwsMarketplace.Japan, MwsMarketplace.UK, MwsMarketplace.US } },
 
 			// Inventory Reports
 			{ "_GET_MERCHANT_LISTINGS_ALL_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
