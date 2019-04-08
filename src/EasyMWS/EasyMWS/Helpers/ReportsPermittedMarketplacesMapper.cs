@@ -14,11 +14,11 @@ namespace MountainWarehouse.EasyMWS.Helpers
 		private static Dictionary<string, IEnumerable<MwsMarketplace>> _reportsMarketplaces = new Dictionary<string, IEnumerable<MwsMarketplace>>
 		{
             // OrderTrackingReports
-            { "_GET_FLAT_FILE_ALL_ORDERS_DATA_BY_LAST_UPDATE_", new List<MwsMarketplace> { MwsMarketplace.US, MwsMarketplace.Canada, MwsMarketplace.Mexico, MwsMarketplace.Spain , MwsMarketplace.UK , MwsMarketplace.France , MwsMarketplace.Germany, MwsMarketplace.Italy} },
-            { "_GET_FLAT_FILE_ALL_ORDERS_DATA_BY_ORDER_DATE_", new List<MwsMarketplace> { MwsMarketplace.US, MwsMarketplace.Canada, MwsMarketplace.Mexico, MwsMarketplace.Spain , MwsMarketplace.UK , MwsMarketplace.France , MwsMarketplace.Germany, MwsMarketplace.Italy} },
-            { "_GET_FLAT_FILE_ARCHIVED_ORDERS_DATA_BY_ORDER_DATE_", new List<MwsMarketplace> { MwsMarketplace.US, MwsMarketplace.Canada, MwsMarketplace.Mexico, MwsMarketplace.Spain , MwsMarketplace.UK , MwsMarketplace.France , MwsMarketplace.Germany, MwsMarketplace.Italy} },
-            { "_GET_XML_ALL_ORDERS_DATA_BY_LAST_UPDATE_", new List<MwsMarketplace> { MwsMarketplace.US, MwsMarketplace.Canada, MwsMarketplace.Mexico, MwsMarketplace.Spain , MwsMarketplace.UK , MwsMarketplace.France , MwsMarketplace.Germany, MwsMarketplace.Italy} },
-            { "_GET_XML_ALL_ORDERS_DATA_BY_ORDER_DATE_", new List<MwsMarketplace> { MwsMarketplace.US, MwsMarketplace.Canada, MwsMarketplace.Mexico, MwsMarketplace.Spain , MwsMarketplace.UK , MwsMarketplace.France , MwsMarketplace.Germany, MwsMarketplace.Italy} },
+            { "_GET_FLAT_FILE_ALL_ORDERS_DATA_BY_LAST_UPDATE_", MwsMarketplaceGroup.AmazonNorthAmericaAndEurope() },
+            { "_GET_FLAT_FILE_ALL_ORDERS_DATA_BY_ORDER_DATE_", MwsMarketplaceGroup.AmazonNorthAmericaAndEurope() },
+            { "_GET_FLAT_FILE_ARCHIVED_ORDERS_DATA_BY_ORDER_DATE_", MwsMarketplaceGroup.AmazonNorthAmericaAndEurope() },
+            { "_GET_XML_ALL_ORDERS_DATA_BY_LAST_UPDATE_", MwsMarketplaceGroup.AmazonNorthAmericaAndEurope() },
+            { "_GET_XML_ALL_ORDERS_DATA_BY_ORDER_DATE_", MwsMarketplaceGroup.AmazonNorthAmericaAndEurope() },
 
 			// FbaReports
 			{ "_GET_AMAZON_FULFILLED_SHIPMENTS_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
@@ -27,7 +27,7 @@ namespace MountainWarehouse.EasyMWS.Helpers
 			{ "_GET_FBA_FULFILLMENT_CUSTOMER_TAXES_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 			{ "_GET_AFN_INVENTORY_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 			{ "_GET_AFN_INVENTORY_DATA_BY_COUNTRY_",  MwsMarketplaceGroup.AmazonEurope() },
-			{ "_GET_EXCESS_INVENTORY_DATA_",  new List<MwsMarketplace> { MwsMarketplace.US, MwsMarketplace.India, MwsMarketplace.Japan } },
+			{ "_GET_EXCESS_INVENTORY_DATA_",  MwsMarketplaceGroup.AmazonUSAndIndiaAndJapan() },
 			{ "_GET_FBA_FULFILLMENT_CROSS_BORDER_INVENTORY_MOVEMENT_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 			{ "_GET_FBA_FULFILLMENT_CURRENT_INVENTORY_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 			{ "_GET_FBA_FULFILLMENT_INBOUND_NONCOMPLIANCE_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
@@ -36,15 +36,15 @@ namespace MountainWarehouse.EasyMWS.Helpers
 			{ "_GET_FBA_FULFILLMENT_INVENTORY_RECEIPTS_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 			{ "_GET_FBA_FULFILLMENT_INVENTORY_SUMMARY_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 			{ "_GET_FBA_FULFILLMENT_MONTHLY_INVENTORY_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
-			{ "_GET_FBA_INVENTORY_AGED_DATA_",  new List<MwsMarketplace> { MwsMarketplace.US, MwsMarketplace.India, MwsMarketplace.Japan } },
+			{ "_GET_FBA_INVENTORY_AGED_DATA_",  MwsMarketplaceGroup.AmazonUSAndIndiaAndJapan() },
 			{ "_GET_FBA_MYI_ALL_INVENTORY_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 			{ "_GET_FBA_MYI_UNSUPPRESSED_INVENTORY_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 			{ "_GET_RESERVED_INVENTORY_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 			{ "_GET_RESTOCK_INVENTORY_RECOMMENDATIONS_REPORT_",  new List<MwsMarketplace> {MwsMarketplace.US} },
-			{ "_GET_STRANDED_INVENTORY_LOADER_DATA_",  new List<MwsMarketplace> { MwsMarketplace.US,MwsMarketplace.India, MwsMarketplace.Japan } },
-			{ "_GET_STRANDED_INVENTORY_UI_DATA_",  new List<MwsMarketplace> { MwsMarketplace.US,MwsMarketplace.India, MwsMarketplace.Japan } },
+			{ "_GET_STRANDED_INVENTORY_LOADER_DATA_",  MwsMarketplaceGroup.AmazonUSAndIndiaAndJapan() },
+			{ "_GET_STRANDED_INVENTORY_UI_DATA_", MwsMarketplaceGroup.AmazonUSAndIndiaAndJapan() },
 
-			{ "_GET_FBA_ESTIMATED_FBA_FEES_TXT_DATA_",  new List<MwsMarketplace> { MwsMarketplace.US, MwsMarketplace.Canada, MwsMarketplace.Mexico, MwsMarketplace.Spain , MwsMarketplace.UK , MwsMarketplace.France , MwsMarketplace.Germany, MwsMarketplace.Italy} },
+			{ "_GET_FBA_ESTIMATED_FBA_FEES_TXT_DATA_",  MwsMarketplaceGroup.AmazonNorthAmericaAndEurope() },
 			{ "_GET_FBA_REIMBURSEMENTS_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 
 			{ "_GET_FBA_FULFILLMENT_CUSTOMER_RETURNS_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
