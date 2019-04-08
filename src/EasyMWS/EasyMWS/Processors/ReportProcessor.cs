@@ -101,7 +101,7 @@ namespace MountainWarehouse.EasyMWS.Processors
                 }
 				catch(SqlException e)
 				{
-					_logger.Error($"Method callback failed for {reportEntry.RegionAndTypeComputed} due to an internal error '{e.Message}'. The callback will be retried at the next poll request.", e);
+					_logger.Error($"Method callback failed for {reportEntry.RegionAndTypeComputed} due to an internal error '{e.Message}'. The callback will be retried at the next poll request", e);
 					reportEntry.IsLocked = false;
 					reportRequestService.Update(reportEntry);
 				}
@@ -123,7 +123,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				if (callbackMethod == null)
 				{
-					throw new ArgumentNullException(nameof(callbackMethod),"The callback method cannot be null, as it has to be invoked once the report has been downloaded, in order to provide access to the report content.");
+					throw new ArgumentNullException(nameof(callbackMethod),"The callback method cannot be null, as it has to be invoked once the report has been downloaded, in order to provide access to the report content");
 				}
 
 				if (propertiesContainer == null) throw new ArgumentNullException();

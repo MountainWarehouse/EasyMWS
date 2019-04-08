@@ -25,7 +25,7 @@ namespace MountainWarehouse.EasyMWS.Model
         public MwsMarketplaceGroup(MwsMarketplace marketplace)
         {
             MwsEndpoint = marketplace.MwsEndpoint ?? throw new InvalidOperationException(
-                                 $"Cannot initialize marketplace group because the MWS access endpoint is not set on for the provided marketplace.");
+                                 $"Cannot initialize marketplace group because the MWS access endpoint is not set on for the provided marketplace");
             _mwsMarketplaces = new List<MwsMarketplace> { marketplace };
         }
 
@@ -57,13 +57,13 @@ namespace MountainWarehouse.EasyMWS.Model
                     $@"Cannot add marketplace:'{marketplace.Name}' to group with MwsEndpoint:'{MwsEndpoint}',
 Because it belongs to a different MwsEndpoint:'{marketplace.MwsEndpoint}'.
 In order to request reports for marketplaces belonging to different MwsEndpoints 
-you must perform a separate request for each different MwsEndpoint.");
+you must perform a separate request for each different MwsEndpoint");
             }
             if (GetMarketplacesIdList.Contains(marketplace.Id))
             {
                 throw new InvalidOperationException(
                     $@"Cannot add marketplace:'{marketplace.Name}' to group with MwsEndpoint:'{MwsEndpoint}',
-Because it the group already contains this marketplace. A marketplace cannot be added twice to the same group.");
+Because it the group already contains this marketplace. A marketplace cannot be added twice to the same group");
             }
 
             _mwsMarketplaces.Add(marketplace);

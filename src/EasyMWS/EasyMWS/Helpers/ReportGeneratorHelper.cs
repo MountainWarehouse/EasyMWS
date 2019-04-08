@@ -39,7 +39,7 @@ namespace MountainWarehouse.EasyMWS.Helpers
 							}'.
 The requested marketplace:'{
 								MwsMarketplace.GetMarketplaceCountryCode(requestedMarketplace)
-							}' is not supported by Amazon MWS for the specified report type.");
+							}' is not supported by Amazon MWS for the specified report type");
 				}
 			}
 		}

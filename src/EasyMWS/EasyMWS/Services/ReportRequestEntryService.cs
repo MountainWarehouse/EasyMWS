@@ -36,7 +36,7 @@ namespace MountainWarehouse.EasyMWS.Services
 			catch (Exception e)
 			{
 				_logger.Error(!_reportRequestEntryRepository.GetAll().Where(rr => rr.Id == entry.Id).Select(r => r.Id).Any()
-						? $"Delete ReportRequestCallback entity with ID: {entry.Id} failed. It is likely the entity has already been deleted."
+						? $"Delete ReportRequestCallback entity with ID: {entry.Id} failed. It is likely the entity has already been deleted"
 						: $"Delete ReportRequestCallback entity with ID: {entry.Id} failed. See exception info for more details", e);
 			}
 

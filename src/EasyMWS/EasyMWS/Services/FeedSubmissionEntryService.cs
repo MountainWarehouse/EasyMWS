@@ -36,7 +36,7 @@ namespace MountainWarehouse.EasyMWS.Services
 			{
 				if (!_feedRepo.GetAll().Where(fs => fs.Id == entry.Id).Select(f => f.Id).Any())
 				{
-					_logger.Error($"Delete FeedSubmissionCallback entity with ID: {entry.Id} failed. It is likely the entity has already been deleted.", e);
+					_logger.Error($"Delete FeedSubmissionCallback entity with ID: {entry.Id} failed. It is likely the entity has already been deleted", e);
 				}
 				else
 				{
