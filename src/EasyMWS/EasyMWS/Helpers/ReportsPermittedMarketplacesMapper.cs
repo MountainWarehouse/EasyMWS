@@ -13,14 +13,19 @@ namespace MountainWarehouse.EasyMWS.Helpers
 		/// </summary>
 		private static Dictionary<string, IEnumerable<MwsMarketplace>> _reportsMarketplaces = new Dictionary<string, IEnumerable<MwsMarketplace>>
 		{
-            // OrderTrackingReports
+            // Pending Order Reports
+            { "_GET_CONVERGED_FLAT_FILE_PENDING_ORDERS_DATA_", new List<MwsMarketplace> { MwsMarketplace.Japan, MwsMarketplace.China } },
+            { "_GET_FLAT_FILE_PENDING_ORDERS_DATA_", new List<MwsMarketplace> { MwsMarketplace.Japan, MwsMarketplace.China } },
+            { "_GET_PENDING_ORDERS_DATA_", new List<MwsMarketplace> { MwsMarketplace.Japan, MwsMarketplace.China } },
+
+            // Order Tracking Reports
             { "_GET_FLAT_FILE_ALL_ORDERS_DATA_BY_LAST_UPDATE_", MwsMarketplaceGroup.AmazonNorthAmericaAndEurope() },
             { "_GET_FLAT_FILE_ALL_ORDERS_DATA_BY_ORDER_DATE_", MwsMarketplaceGroup.AmazonNorthAmericaAndEurope() },
             { "_GET_FLAT_FILE_ARCHIVED_ORDERS_DATA_BY_ORDER_DATE_", MwsMarketplaceGroup.AmazonNorthAmericaAndEurope() },
             { "_GET_XML_ALL_ORDERS_DATA_BY_LAST_UPDATE_", MwsMarketplaceGroup.AmazonNorthAmericaAndEurope() },
             { "_GET_XML_ALL_ORDERS_DATA_BY_ORDER_DATE_", MwsMarketplaceGroup.AmazonNorthAmericaAndEurope() },
 
-			// FbaReports
+			// Fba Reports
 			{ "_GET_AMAZON_FULFILLED_SHIPMENTS_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 			{ "_GET_FBA_FULFILLMENT_CUSTOMER_SHIPMENT_SALES_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 			{ "_GET_FBA_FULFILLMENT_CUSTOMER_SHIPMENT_PROMOTION_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
@@ -53,7 +58,7 @@ namespace MountainWarehouse.EasyMWS.Helpers
 			{ "_GET_FBA_FULFILLMENT_REMOVAL_ORDER_DETAIL_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 			{ "_GET_FBA_FULFILLMENT_REMOVAL_SHIPMENT_DETAIL_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 
-			// InventoryReports
+			// Inventory Reports
 			{ "_GET_MERCHANT_LISTINGS_ALL_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
             { "_GET_FLAT_FILE_OPEN_LISTINGS_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
             { "_GET_MERCHANT_LISTINGS_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
@@ -68,13 +73,13 @@ namespace MountainWarehouse.EasyMWS.Helpers
             { "_GET_MFN_PAN_EU_OFFER_STATUS_",  MwsMarketplaceGroup.AmazonEurope() },
             { "_GET_FLAT_FILE_GEO_OPPORTUNITIES_",  new List<MwsMarketplace> { MwsMarketplace.US } },
 
-			// OrderReports
+			// Order Reports
 			{ "_GET_FLAT_FILE_ACTIONABLE_ORDER_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 			{ "_GET_ORDERS_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 			{ "_GET_FLAT_FILE_ORDER_REPORT_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 			{ "_GET_CONVERGED_FLAT_FILE_ORDER_REPORT_DATA_",  MwsMarketplaceGroup.AmazonGlobal() },
 
-			// TaxReports
+			// Tax Reports
 			{ "_SC_VAT_TAX_REPORT_",  MwsMarketplaceGroup.AmazonEurope() },
 			{ "_GET_VAT_TRANSACTION_DATA_",  MwsMarketplaceGroup.AmazonEurope() },
 			{ "_GET_GST_MTR_B2B_CUSTOM_",  new List<MwsMarketplace> { MwsMarketplace.India } },
