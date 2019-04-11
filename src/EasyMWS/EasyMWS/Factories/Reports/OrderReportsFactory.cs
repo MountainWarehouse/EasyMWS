@@ -35,7 +35,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 			var reportOptions = new ReportOptions();
 			reportOptions.AddBooleanOption("showSalesChannel", showSalesChannel);
 
-			return ReportGeneratorHelper.GenerateReportRequest("_GET_FLAT_FILE_ORDERS_DATA_", ContentUpdateFrequency.Unknown,
+			return ReportGeneratorHelper.GenerateReportRequest("_GET_FLAT_FILE_ORDER_REPORT_DATA_", ContentUpdateFrequency.Unknown,
 				requestedMarketplaces: requestedMarketplacesGroup,
 				reportOptions: reportOptions, startDate: startDate, endDate: endDate);
 		}
