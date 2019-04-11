@@ -24,7 +24,7 @@ namespace EasyMWS.Tests.Services
 		[SetUp]
 	    public void Setup()
 	    {
-		    _options = EasyMwsOptions.Defaults();
+		    _options = new EasyMwsOptions();
 			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType", false,
 			    new List<string>(MwsMarketplaceGroup.AmazonEurope().Select(m=>m.Id)));
 		    var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);

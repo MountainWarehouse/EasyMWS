@@ -156,5 +156,17 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// <returns></returns>
 		ReportRequestPropertiesContainer PanEuropeanEligibilitySelfFulfilledASINs(DateTime? startDate = null, DateTime? endDate = null,
 		    IEnumerable<MwsMarketplace> requestedMarketplaces = null);
-	}
+
+        /// <summary>
+        /// Generate a request object for a MWS report of type : _GET_FLAT_FILE_GEO_OPPORTUNITIES_ <para />
+		/// Tab-delimited flat file report that contains products that a seller lists which have a high sales potential in other Amazon marketplaces. <para/>
+        /// This report is only available in the US marketplace.<para/>
+		/// </summary>
+		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="requestedMarketplaces">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
+		/// <returns></returns>
+		ReportRequestPropertiesContainer GlobalExpansionOpportunitiesReport(DateTime? startDate = null, DateTime? endDate = null,
+            IEnumerable<MwsMarketplace> requestedMarketplaces = null);
+    }
 }

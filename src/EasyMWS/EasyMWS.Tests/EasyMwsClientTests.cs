@@ -29,7 +29,7 @@ namespace EasyMWS.Tests
 			_reportProcessorMock = new Mock<IReportQueueingProcessor>();
 			_loggerMock = new Mock<IEasyMwsLogger>();
 			_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", "test", "test", _reportProcessorMock.Object,
-				_feedProcessorMock.Object, _loggerMock.Object, EasyMwsOptions.Defaults());
+				_feedProcessorMock.Object, _loggerMock.Object, new EasyMwsOptions());
 		}
 
 		// feed processor tests
@@ -41,14 +41,14 @@ namespace EasyMWS.Tests
 		{
 			Assert.Throws<ArgumentNullException>(() =>
 				_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, null, "test", "test", _reportProcessorMock.Object,
-					_feedProcessorMock.Object, _loggerMock.Object, EasyMwsOptions.Defaults()));
+					_feedProcessorMock.Object, _loggerMock.Object, new EasyMwsOptions()));
 		}
 		[Test]
 		public void InitializingClient_WithEmptyMerchant_ThrowsArgumentNullException()
 		{
 			Assert.Throws<ArgumentNullException>(() =>
 				_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, string.Empty, "test", "test", _reportProcessorMock.Object,
-					_feedProcessorMock.Object, _loggerMock.Object, EasyMwsOptions.Defaults()));
+					_feedProcessorMock.Object, _loggerMock.Object, new EasyMwsOptions()));
 		}
 
 		[Test]
@@ -56,7 +56,7 @@ namespace EasyMWS.Tests
 		{
 			Assert.Throws<ArgumentNullException>(() =>
 				_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", null, "test", _reportProcessorMock.Object,
-					_feedProcessorMock.Object, _loggerMock.Object, EasyMwsOptions.Defaults()));
+					_feedProcessorMock.Object, _loggerMock.Object, new EasyMwsOptions()));
 		}
 
 		[Test]
@@ -64,7 +64,7 @@ namespace EasyMWS.Tests
 		{
 			Assert.Throws<ArgumentNullException>(() =>
 				_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", string.Empty, "test", _reportProcessorMock.Object,
-					_feedProcessorMock.Object, _loggerMock.Object, EasyMwsOptions.Defaults()));
+					_feedProcessorMock.Object, _loggerMock.Object, new EasyMwsOptions()));
 		}
 
 		[Test]
@@ -72,14 +72,14 @@ namespace EasyMWS.Tests
 		{
 			Assert.Throws<ArgumentNullException>(() =>
 				_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", "test", null, _reportProcessorMock.Object,
-					_feedProcessorMock.Object, _loggerMock.Object, EasyMwsOptions.Defaults()));
+					_feedProcessorMock.Object, _loggerMock.Object, new EasyMwsOptions()));
 		}
 		[Test]
 		public void InitializingClient_WithEmptyMwsSecretAccessKey_ThrowsArgumentNullException()
 		{
 			Assert.Throws<ArgumentNullException>(() =>
 				_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", "test", string.Empty, _reportProcessorMock.Object,
-					_feedProcessorMock.Object, _loggerMock.Object, EasyMwsOptions.Defaults()));
+					_feedProcessorMock.Object, _loggerMock.Object, new EasyMwsOptions()));
 		}
 
 		[Test]

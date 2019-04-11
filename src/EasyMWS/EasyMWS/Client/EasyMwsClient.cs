@@ -43,11 +43,11 @@ namespace MountainWarehouse.EasyMWS.Client
 			if (string.IsNullOrEmpty(merchantId) || string.IsNullOrEmpty(accessKeyId) ||
 			    string.IsNullOrEmpty(mwsSecretAccessKey))
 				throw new ArgumentNullException(
-					"One or more required parameters provided to initialize the EasyMwsClient were null or empty.");
+					"One or more required parameters provided to initialize the EasyMwsClient were null or empty");
 
 			_amazonRegion = region;
 			_merchantId = merchantId;
-			_options = options ?? EasyMwsOptions.Defaults();
+			_options = options ?? new EasyMwsOptions();
 
 			_easyMwsLogger = easyMwsLogger ?? new EasyMwsLogger(isEnabled: false);
 			var mwsClient = new MarketplaceWebServiceClient(accessKeyId, mwsSecretAccessKey, CreateConfig(_amazonRegion));

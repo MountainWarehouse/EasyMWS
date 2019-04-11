@@ -67,18 +67,18 @@ namespace MountainWarehouse.EasyMWS.Processors
 			void HandleFatalException(Exception e)
 			{
 				feedSubmissionService.Delete(feedSubmission);
-				_logger.Error($"AmazonMWS SubmitFeed failed for {feedSubmission.RegionAndTypeComputed}. The entry will now be removed from queue.", e);
+				_logger.Error($"AmazonMWS SubmitFeed failed for {feedSubmission.RegionAndTypeComputed}. The entry will now be removed from queue", e);
 			}
 
 			var missingInformationExceptionMessage = "Cannot submit queued feed to amazon due to missing feed submission information";
 
-			if (feedSubmission == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Feed submission entry is null.");
-			if (feedSubmission.FeedSubmissionData == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Feed submission data is null.");
+			if (feedSubmission == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Feed submission entry is null");
+			if (feedSubmission.FeedSubmissionData == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Feed submission data is null");
 
 			var feedContentZip = feedSubmission.Details?.FeedContent;
-			if (feedContentZip == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Feed content is missing.");
+			if (feedContentZip == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Feed content is missing");
 
-			if (string.IsNullOrEmpty(feedSubmission?.FeedType)) throw new ArgumentException($"{missingInformationExceptionMessage}: Feed type is missing.");
+			if (string.IsNullOrEmpty(feedSubmission?.FeedType)) throw new ArgumentException($"{missingInformationExceptionMessage}: Feed type is missing");
 
 			_logger.Info($"Attempting to submit the next feed in queue to Amazon: {feedSubmission.RegionAndTypeComputed}.");
 			feedSubmission.IsLocked = false;
@@ -228,7 +228,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var missingInformationExceptionMessage = "Cannot download report from amazon due to missing report request information";
 
 			if (feedSubmissionEntry == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Feed submission entry is null.");
-			if (string.IsNullOrEmpty(feedSubmissionEntry.FeedSubmissionId)) throw new ArgumentException($"{missingInformationExceptionMessage}: FeedSubmissionId is missing.");
+			if (string.IsNullOrEmpty(feedSubmissionEntry.FeedSubmissionId)) throw new ArgumentException($"{missingInformationExceptionMessage}: FeedSubmissionId is missing");
 
 			_logger.Info($"Attempting to request the feed submission result for the next feed in queue from Amazon: {feedSubmissionEntry.RegionAndTypeComputed}.");
 			feedSubmissionEntry.IsLocked = false;
@@ -276,7 +276,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			catch (MarketplaceWebServiceException e) when (e.StatusCode == HttpStatusCode.BadRequest && IsAmazonErrorCodeFatal(e.ErrorCode))
 			{
 				feedSubmissionService.Delete(feedSubmissionEntry);
-				_logger.Error($"AmazonMWS feed submission report download failed for {feedSubmissionEntry.RegionAndTypeComputed}! The entry will now be removed from queue.", e);
+				_logger.Error($"AmazonMWS feed submission report download failed for {feedSubmissionEntry.RegionAndTypeComputed}! The entry will now be removed from queue", e);
 			}
 			catch (MarketplaceWebServiceException e) when (IsAmazonErrorCodeNonFatal(e.ErrorCode))
 			{

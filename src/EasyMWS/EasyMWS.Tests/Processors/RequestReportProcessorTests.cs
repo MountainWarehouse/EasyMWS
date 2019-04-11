@@ -37,7 +37,7 @@ namespace EasyMWS.Tests.Processors
 		[SetUp]
 		public void SetUp()
 		{
-			_easyMwsOptions = EasyMwsOptions.Defaults();
+			_easyMwsOptions = new EasyMwsOptions();
 
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_reportRequestServiceMock = new Mock<IReportRequestEntryService>();

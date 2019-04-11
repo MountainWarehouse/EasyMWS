@@ -34,10 +34,10 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void RequestReportFromAmazon(IReportRequestEntryService reportRequestService, ReportRequestEntry reportRequestEntry)
 	    {
-			var missingInformationExceptionMessage = "Cannot request report from amazon due to missing report request information.";
+			var missingInformationExceptionMessage = "Cannot request report from amazon due to missing report request information";
 
-			if (reportRequestEntry?.ReportRequestData == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Report request data is missing.");
-		    if (string.IsNullOrEmpty(reportRequestEntry?.ReportType)) throw new ArgumentException($"{missingInformationExceptionMessage}: Report Type is missing.");
+			if (reportRequestEntry?.ReportRequestData == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Report request data is missing");
+		    if (string.IsNullOrEmpty(reportRequestEntry?.ReportType)) throw new ArgumentException($"{missingInformationExceptionMessage}: Report Type is missing");
 
 			var reportRequestData = reportRequestEntry.GetPropertiesContainer();
 
@@ -82,7 +82,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    catch (MarketplaceWebServiceException e) when (e.StatusCode == HttpStatusCode.BadRequest && IsAmazonErrorCodeFatal(e.ErrorCode))
 		    {
 			    reportRequestService.Delete(reportRequestEntry);
-				_logger.Error($"AmazonMWS RequestReport failed for {reportRequestEntry.RegionAndTypeComputed}. The entry will now be removed from queue.", e);
+				_logger.Error($"AmazonMWS RequestReport failed for {reportRequestEntry.RegionAndTypeComputed}. The entry will now be removed from queue", e);
 			}
 		    catch (MarketplaceWebServiceException e) when (IsAmazonErrorCodeNonFatal(e.ErrorCode))
 		    {
@@ -242,11 +242,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void DownloadGeneratedReportFromAmazon(IReportRequestEntryService reportRequestService, ReportRequestEntry reportRequestEntry)
 	    {
-			var missingInformationExceptionMessage = "Cannot request report from amazon due to missing report request information.";
+			var missingInformationExceptionMessage = "Cannot request report from amazon due to missing report request information";
 			_logger.Info($"Attempting to download the next report in queue from Amazon: {reportRequestEntry.RegionAndTypeComputed}.");
 			reportRequestEntry.IsLocked = false;
 
-			if (string.IsNullOrEmpty(reportRequestEntry?.GeneratedReportId)) throw new ArgumentException($"{missingInformationExceptionMessage}: GeneratedReportId is missing.");
+			if (string.IsNullOrEmpty(reportRequestEntry?.GeneratedReportId)) throw new ArgumentException($"{missingInformationExceptionMessage}: GeneratedReportId is missing");
 
 			var reportResultStream = new MemoryStream();
 		    var getReportRequest = new GetReportRequest
@@ -293,7 +293,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    catch (MarketplaceWebServiceException e) when (e.StatusCode == HttpStatusCode.BadRequest && IsAmazonErrorCodeFatal(e.ErrorCode))
 		    {
 			    reportRequestService.Delete(reportRequestEntry);
-			    _logger.Error($"AmazonMWS report download failed for {reportRequestEntry.RegionAndTypeComputed}! The entry will now be removed from queue.", e);
+			    _logger.Error($"AmazonMWS report download failed for {reportRequestEntry.RegionAndTypeComputed}! The entry will now be removed from queue", e);
 			}
 		    catch (MarketplaceWebServiceException e) when (IsAmazonErrorCodeNonFatal(e.ErrorCode))
 			{

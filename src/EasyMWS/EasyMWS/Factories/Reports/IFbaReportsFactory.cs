@@ -325,22 +325,32 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// <returns></returns>
 		ReportRequestPropertiesContainer FbaStrandedInventoryReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<MwsMarketplace> requestedMarketplaces = null);
 
-		#endregion
-
-		#region FBA Payment Reports
-
-		/// <summary>
-		/// Generate a request object for a MWS report of type : _GET_FBA_ESTIMATED_FBA_FEES_TXT_DATA_ <para />
-		/// Tab-delimited flat file. Contains the estimated Amazon Selling and Fulfillment Fees for your FBA inventory with active offers. <para />
-		/// The content is updated at least once every 72 hours. <para />
-		/// To successfully generate a report, specify the StartDate parameter of a minimum 72 hours prior to NOW and EndDate to NOW.<para />
-		/// For FBA sellers in the NA and EU only. For Marketplace and Seller Central sellers.						<para />																					
-		/// </summary>
-		/// <param name="endDate">To successfully generate a report, specify EndDate to NOW. If endDate is not specified, it is set automatically to NOW.</param>
+        /// <summary>
+        /// Generate a request object for a MWS report of type : _GET_FBA_STORAGE_FEE_CHARGES_DATA_ <para />
+        /// Tab-delimited flat file. Contains estimated monthly inventory storage fees for each ASIN of a seller's inventory in Amazon fulfillment centers. For FBA sellers only.
+        /// </summary>
+        /// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
+		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
 		/// <param name="requestedMarketplaces">(NA, EU only) Optional IEnumerable of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
-		/// <param name="startDate">To successfully generate a report, specify the StartDate parameter to a minimum of 72 hours prior to NOW</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FbaFeePreviewReport(DateTime startDate, DateTime? endDate = null, IEnumerable<MwsMarketplace> requestedMarketplaces = null);
+        ReportRequestPropertiesContainer FbaStorageFeesReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<MwsMarketplace> requestedMarketplaces = null);
+
+        #endregion
+
+        #region FBA Payment Reports
+
+        /// <summary>
+        /// Generate a request object for a MWS report of type : _GET_FBA_ESTIMATED_FBA_FEES_TXT_DATA_ <para />
+        /// Tab-delimited flat file. Contains the estimated Amazon Selling and Fulfillment Fees for your FBA inventory with active offers. <para />
+        /// The content is updated at least once every 72 hours. <para />
+        /// To successfully generate a report, specify the StartDate parameter of a minimum 72 hours prior to NOW and EndDate to NOW.<para />
+        /// For FBA sellers in the NA and EU only. For Marketplace and Seller Central sellers.						<para />																					
+        /// </summary>
+        /// <param name="endDate">To successfully generate a report, specify EndDate to NOW. If endDate is not specified, it is set automatically to NOW.</param>
+        /// <param name="requestedMarketplaces">(NA, EU only) Optional IEnumerable of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
+        /// <param name="startDate">To successfully generate a report, specify the StartDate parameter to a minimum of 72 hours prior to NOW</param>
+        /// <returns></returns>
+        ReportRequestPropertiesContainer FbaFeePreviewReport(DateTime startDate, DateTime? endDate = null, IEnumerable<MwsMarketplace> requestedMarketplaces = null);
 
 		/// <summary>
 		/// Generate a request object for a MWS report of type : _GET_FBA_REIMBURSEMENTS_DATA_ <para />
@@ -415,7 +425,18 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// <returns></returns>
 		ReportRequestPropertiesContainer FbaRemovalShipmentDetailReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<MwsMarketplace> requestedMarketplaces = null);
 
-		#endregion
+        /// <summary>
+        /// Generate a request object for a MWS report of type : _GET_FBA_UNO_INVENTORY_DATA_ <para />
+        /// Tab-delimited flat file. Contains all of your products are enrolled in the Small & Light program and how much inventory you currently have in Small & Light fulfillment centers.<para/>
+        /// The report also shows your current prices and whether any of your products are in unsellable status. This report is only available in the Germany, Japan, UK, and US marketplaces.<para/>
+        /// </summary>
+        /// <param name="startDate"></param>
+        /// <param name="endDate"></param>
+        /// <param name="requestedMarketplaces"></param>
+        /// <returns></returns>
+        ReportRequestPropertiesContainer SmallAndLightInventoryReport(DateTime? startDate = null, DateTime? endDate = null, IEnumerable<MwsMarketplace> requestedMarketplaces = null);
 
-	}
+        #endregion
+
+    }
 }

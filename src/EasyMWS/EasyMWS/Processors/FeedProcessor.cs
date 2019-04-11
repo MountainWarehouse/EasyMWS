@@ -65,7 +65,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				try
 				{
-					_logger.Info($"Attempting to perform method callback for the next submitted feed in queue : {feedSubmissionEntry.RegionAndTypeComputed}.");
+					_logger.Info($"Attempting to perform method callback for the next submitted feed in queue : {feedSubmissionEntry.RegionAndTypeComputed}");
 					var callback = new Callback(feedSubmissionEntry.TypeName, feedSubmissionEntry.MethodName, feedSubmissionEntry.Data, feedSubmissionEntry.DataTypeName);
 					var unzippedFeedSubmissionReport = ZipHelper.ExtractArchivedSingleFileToStream(feedSubmissionEntry.Details.FeedSubmissionReport);
 					_callbackActivator.CallMethod(callback, unzippedFeedSubmissionReport);
@@ -73,7 +73,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				}
 				catch (SqlException e)
 				{
-					_logger.Error($"Method callback failed for {feedSubmissionEntry.RegionAndTypeComputed} due to an internal error '{e.Message}'. The callback will be retried at the next poll request.", e);
+					_logger.Error($"Method callback failed for {feedSubmissionEntry.RegionAndTypeComputed} due to an internal error '{e.Message}'. The callback will be retried at the next poll request", e);
 					feedSubmissionEntry.IsLocked = false;
 					feedSubmissionService.Update(feedSubmissionEntry);
 				}
@@ -95,7 +95,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				if (callbackMethod == null)
 				{
-					throw new ArgumentNullException(nameof(callbackMethod), "The callback method cannot be null, as it has to be invoked once the report has been downloaded, in order to provide access to the report content.");
+					throw new ArgumentNullException(nameof(callbackMethod), "The callback method cannot be null, as it has to be invoked once the report has been downloaded, in order to provide access to the report content");
 				}
 
 				if (propertiesContainer == null) throw new ArgumentNullException();

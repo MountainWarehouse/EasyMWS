@@ -64,7 +64,7 @@ namespace MountainWarehouse.EasyMWS.Data
 	    public FeedSubmissionEntry(string feedSubmissionData, Callback callback = null)
 	    {
 			if( string.IsNullOrEmpty(feedSubmissionData))
-				throw new ArgumentException("Callback data or FeedSubmissionData not provided, but are required.");
+				throw new ArgumentException("Callback data or FeedSubmissionData not provided, but are required");
 
 		    TypeName = callback?.TypeName;
 		    MethodName = callback?.MethodName;

@@ -31,7 +31,7 @@ namespace MountainWarehouse.EasyMWS.Helpers
 		    else
 		    {
 			    throw new NotSupportedException(
-				    $"Amazon region '{region.ToString()}' not supported by EasyMwsClient due to unknown ContentType that should be used to submit a feed to amazon.");
+				    $"Amazon region '{region.ToString()}' not supported by EasyMwsClient due to unknown ContentType that should be used to submit a feed to amazon");
 		    }
 	    }
     }
