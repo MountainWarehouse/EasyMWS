@@ -25,7 +25,7 @@ namespace EasyMWS.Tests.EndToEnd
 		private IEasyMwsClient _easyMwsClient;
 	    private readonly AmazonRegion _region = AmazonRegion.Europe;
 	    private readonly string _merchantId = "testMerchantId";
-	    private EasyMwsOptions _options = EasyMwsOptions.Defaults();
+	    private EasyMwsOptions _options = new EasyMwsOptions();
 
 		private Mock<IEasyMwsLogger> _loggerMock;
 	    private Mock<IMarketplaceWebServiceClient> _mwsClientMock;
@@ -33,7 +33,7 @@ namespace EasyMWS.Tests.EndToEnd
 		[SetUp]
 	    public void SetUp()
 	    {
-		    _options = EasyMwsOptions.Defaults();
+		    _options = new EasyMwsOptions();
 			_dbContext = new EasyMwsContext();
 		    _actualCallbackObject = null;
 		    _actualReportContent = null;

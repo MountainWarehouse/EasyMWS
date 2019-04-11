@@ -114,75 +114,6 @@ namespace MountainWarehouse.EasyMWS.Model
         public bool InvokeCallbackForReportStatusDoneNoData { get; set; }
 
         /// <summary>
-        /// The set of default settings that will be used if no custom settings are specified.<para/>
-        /// InvokeCallbackMaxRetryCount = 5,<para/>
-        /// InvokeCallbackRetryPeriodType = RetryPeriodType.ArithmeticProgression,<para/>
-        /// InvokeCallbackRetryInterval = TimeSpan.FromMinutes(30),<para/>
-        /// <para/>
-        /// ReportRequestMaxRetryCount = 4,<para/>
-        /// ReportRequestRetryType = RetryPeriodType.GeometricProgression,<para/>
-        /// ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(30),<para/>
-        /// ReportRequestRetryInterval = TimeSpan.FromHours(1),<para/>
-        /// <para/>
-        /// ReportDownloadMaxRetryCount = 4,<para/>
-        /// ReportDownloadRetryType = RetryPeriodType.GeometricProgression,<para/>
-        /// ReportDownloadRetryInitialDelay = TimeSpan.FromMinutes(30),<para/>
-        /// ReportDownloadRetryInterval = TimeSpan.FromHours(1),<para/>
-        /// <para/>
-        /// ReportProcessingMaxRetryCount = 3<para/>
-        /// FeedProcessingMaxRetryCount = 3<para/>
-        /// <para/>
-        /// FeedSubmissionMaxRetryCount = 3,<para/>
-        /// FeedSubmissionRetryType = RetryPeriodType.GeometricProgression,<para/>
-        /// FeedSubmissionRetryInitialDelay = TimeSpan.FromMinutes(30),<para/>
-        /// FeedSubmissionRetryInterval = TimeSpan.FromHours(1),<para/>
-        /// <para/>
-        /// ReportDownloadRequestEntryExpirationPeriod = TimeSpan.FromDays(1),<para/>
-        /// FeedSubmissionRequestEntryExpirationPeriod = TimeSpan.FromDays(2),<para/>
-        /// <para/>
-        /// InvokeCallbackForReportStatusDoneNoData = false<para/>
-        /// </summary>
-        public static EasyMwsOptions Defaults()
-		{
-			const int worstCaseScenarioRetryInitialDelay = 10;
-			const int worstCaseScenarioRetryInterval = 1;
-			const RetryPeriodType exponentialRetryPeriodIncrease = RetryPeriodType.GeometricProgression;
-			const RetryPeriodType constantRetryPeriod = RetryPeriodType.ArithmeticProgression;
-			const int amazonServiceRequestRetryCount = 4;
-			const int amazonRequestRequeueLimit = 3;
-
-			return new EasyMwsOptions
-		    {
-			    InvokeCallbackMaxRetryCount = 5,
-			    InvokeCallbackRetryPeriodType = constantRetryPeriod,
-			    InvokeCallbackRetryInterval = TimeSpan.FromMinutes(30),
-
-				ReportRequestMaxRetryCount = amazonServiceRequestRetryCount,
-				ReportRequestRetryType = exponentialRetryPeriodIncrease,
-			    ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(worstCaseScenarioRetryInitialDelay),
-			    ReportRequestRetryInterval = TimeSpan.FromHours(worstCaseScenarioRetryInterval),
-
-			    ReportDownloadMaxRetryCount = amazonServiceRequestRetryCount,
-			    ReportDownloadRetryType = exponentialRetryPeriodIncrease,
-			    ReportDownloadRetryInitialDelay = TimeSpan.FromMinutes(worstCaseScenarioRetryInitialDelay),
-			    ReportDownloadRetryInterval = TimeSpan.FromHours(worstCaseScenarioRetryInterval),
-
-				ReportProcessingMaxRetryCount = amazonRequestRequeueLimit,
-			    FeedProcessingMaxRetryCount = amazonRequestRequeueLimit,
-
-				FeedSubmissionMaxRetryCount = amazonServiceRequestRetryCount,
-			    FeedSubmissionRetryType = exponentialRetryPeriodIncrease,
-			    FeedSubmissionRetryInitialDelay = TimeSpan.FromMinutes(worstCaseScenarioRetryInitialDelay),
-			    FeedSubmissionRetryInterval = TimeSpan.FromHours(worstCaseScenarioRetryInterval),
-
-			    ReportDownloadRequestEntryExpirationPeriod = TimeSpan.FromDays(1),
-				FeedSubmissionRequestEntryExpirationPeriod = TimeSpan.FromDays(2),
-
-                InvokeCallbackForReportStatusDoneNoData = false
-            };
-        }
-
-        /// <summary>
         /// Returns a new instance of EasyMwsOptions populated with the default values. The configuration is identical to that returned by public the Defaults() static method.<para/>
         /// InvokeCallbackMaxRetryCount = 5,<para/>
         /// InvokeCallbackRetryPeriodType = RetryPeriodType.ArithmeticProgression,<para/>
@@ -211,7 +142,46 @@ namespace MountainWarehouse.EasyMWS.Model
         /// <para/>
         /// InvokeCallbackForReportStatusDoneNoData = false<para/>
         /// </summary>
-        public EasyMwsOptions() => Defaults();
+        public EasyMwsOptions(bool useDefaultValues = true)
+        {
+            if (useDefaultValues)
+            {
+                const int worstCaseScenarioRetryInitialDelay = 10;
+                const int worstCaseScenarioRetryInterval = 1;
+                const RetryPeriodType exponentialRetryPeriodIncrease = RetryPeriodType.GeometricProgression;
+                const RetryPeriodType constantRetryPeriod = RetryPeriodType.ArithmeticProgression;
+                const int amazonServiceRequestRetryCount = 4;
+                const int amazonRequestRequeueLimit = 3;
+
+
+                InvokeCallbackMaxRetryCount = 5;
+                InvokeCallbackRetryPeriodType = constantRetryPeriod;
+                InvokeCallbackRetryInterval = TimeSpan.FromMinutes(30);
+
+                ReportRequestMaxRetryCount = amazonServiceRequestRetryCount;
+                ReportRequestRetryType = exponentialRetryPeriodIncrease;
+                ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(worstCaseScenarioRetryInitialDelay);
+                ReportRequestRetryInterval = TimeSpan.FromHours(worstCaseScenarioRetryInterval);
+
+                ReportDownloadMaxRetryCount = amazonServiceRequestRetryCount;
+                ReportDownloadRetryType = exponentialRetryPeriodIncrease;
+                ReportDownloadRetryInitialDelay = TimeSpan.FromMinutes(worstCaseScenarioRetryInitialDelay);
+                ReportDownloadRetryInterval = TimeSpan.FromHours(worstCaseScenarioRetryInterval);
+
+                ReportProcessingMaxRetryCount = amazonRequestRequeueLimit;
+                FeedProcessingMaxRetryCount = amazonRequestRequeueLimit;
+
+                FeedSubmissionMaxRetryCount = amazonServiceRequestRetryCount;
+                FeedSubmissionRetryType = exponentialRetryPeriodIncrease;
+                FeedSubmissionRetryInitialDelay = TimeSpan.FromMinutes(worstCaseScenarioRetryInitialDelay);
+                FeedSubmissionRetryInterval = TimeSpan.FromHours(worstCaseScenarioRetryInterval);
+
+                ReportDownloadRequestEntryExpirationPeriod = TimeSpan.FromDays(1);
+                FeedSubmissionRequestEntryExpirationPeriod = TimeSpan.FromDays(2);
+
+                InvokeCallbackForReportStatusDoneNoData = false;
+            }
+        }
     }
 
 	/// <summary>

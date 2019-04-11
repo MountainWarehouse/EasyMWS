@@ -33,7 +33,7 @@ namespace EasyMWS.Tests.ReportProcessors
 		[SetUp]
 		public void SetUp()
 		{
-			var options = EasyMwsOptions.Defaults();
+			var options = new EasyMwsOptions();
 			_reportRequestServiceMock = new Mock<IReportRequestEntryService>();
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_requestReportProcessor = new Mock<IRequestReportProcessor>();
