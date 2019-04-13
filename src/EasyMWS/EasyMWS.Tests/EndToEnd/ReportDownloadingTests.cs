@@ -11,6 +11,7 @@ using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Logging;
 using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Processors;
+using MountainWarehouse.EasyMWS.Services;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService.Model;
 using NUnit.Framework;
@@ -19,7 +20,7 @@ namespace EasyMWS.Tests.EndToEnd
 {
     public class ReportDownloadingTests
     {
-	    private EasyMwsContext _dbContext;
+	    private ReportRequestEntryService _dbContext;
 	    private const string _testEntriesIdentifier = "TEST";
 
 		private IEasyMwsClient _easyMwsClient;
@@ -34,7 +35,7 @@ namespace EasyMWS.Tests.EndToEnd
 	    public void SetUp()
 	    {
 		    _options = new EasyMwsOptions();
-			_dbContext = new EasyMwsContext();
+			_dbContext = new ReportRequestEntryService();
 		    _actualCallbackObject = null;
 		    _actualReportContent = null;
 
@@ -51,8 +52,8 @@ namespace EasyMWS.Tests.EndToEnd
 		[TearDown]
 	    public void TearDown()
 		{
-			var testReportEntries = _dbContext.ReportRequestEntries.Where(rre => rre.ReportType.StartsWith(_testEntriesIdentifier));
-			_dbContext.ReportRequestEntries.RemoveRange(testReportEntries);
+			var testReportEntries = _dbContext.Where(rre => rre.ReportType.StartsWith(_testEntriesIdentifier));
+			_dbContext.DeleteRange(testReportEntries);
 			_dbContext.SaveChanges();
 
 			_dbContext.Dispose();
@@ -84,7 +85,7 @@ namespace EasyMWS.Tests.EndToEnd
 			// act - queue report
 			_easyMwsClient.QueueReport(reportRequestContainer, ReportDownloadCallback, null);
 
-		    var dbEntry = _dbContext.ReportRequestEntries.Where(rre => rre.ReportType == validReportType);
+		    var dbEntry = _dbContext.Where(rre => rre.ReportType == validReportType);
 
 			// assert - null callback data serialization step does not crash
 			Assert.NotNull(dbEntry);
@@ -136,7 +137,7 @@ namespace EasyMWS.Tests.EndToEnd
 			_mwsClientMock.Verify(mws => mws.GetReportRequestList(It.IsAny<GetReportRequestListRequest>()), Times.Once);
 			_mwsClientMock.Verify(mws => mws.GetReport(It.IsAny<GetReportRequest>()), Times.Once);
 
-			var dbEntry = _dbContext.ReportRequestEntries.FirstOrDefault(rre => rre.ReportType == validReportType);
+			var dbEntry = _dbContext.FirstOrDefault(rre => rre.ReportType == validReportType);
 			Assert.IsNull(dbEntry);
 		}
 
@@ -160,7 +161,7 @@ namespace EasyMWS.Tests.EndToEnd
 		    _easyMwsClient.Poll();
 
 			// assert
-			var dbEntry = _dbContext.ReportRequestEntries.FirstOrDefault(rre => rre.ReportType == invalidReportType);
+			var dbEntry = _dbContext.FirstOrDefault(rre => rre.ReportType == invalidReportType);
 		    Assert.IsNull(dbEntry);
 		}
 
@@ -181,7 +182,7 @@ namespace EasyMWS.Tests.EndToEnd
 		    {
 				_easyMwsClient.Poll();
 
-			    var dbEntry = _dbContext.ReportRequestEntries.Where(rre => rre.ReportType == validReportType);
+			    var dbEntry = _dbContext.Where(rre => rre.ReportType == validReportType);
 			    Assert.NotNull(dbEntry);
 			    Assert.AreEqual(1, dbEntry.Count());
 			    var reportRequestEntry = dbEntry.Single();
@@ -190,7 +191,7 @@ namespace EasyMWS.Tests.EndToEnd
 
 		    _easyMwsClient.Poll();
 
-		    Assert.IsNull(_dbContext.ReportRequestEntries.FirstOrDefault(rre => rre.ReportType == validReportType));
+		    Assert.IsNull(_dbContext.FirstOrDefault(rre => rre.ReportType == validReportType));
 		}
 
 

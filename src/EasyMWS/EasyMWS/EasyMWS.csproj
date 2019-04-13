@@ -56,13 +56,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.1.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="2.1.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.1.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.1.0" />
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
-	  <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.1.0" />
-	  <PackageReference Include="Microsoft.Extensions.Configuration.Xml" Version="2.1.0" />
     <DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="2.0.1" />
   </ItemGroup>
 
@@ -87,6 +80,10 @@
     <EmbeddedResource Include="WebService\MarketplaceWebService\Mock\RequestReportResponse.xml" />
     <EmbeddedResource Include="WebService\MarketplaceWebService\Mock\SubmitFeedResponse.xml" />
     <EmbeddedResource Include="WebService\MarketplaceWebService\Mock\UpdateReportAcknowledgementsResponse.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
   </ItemGroup>
 
 </Project>

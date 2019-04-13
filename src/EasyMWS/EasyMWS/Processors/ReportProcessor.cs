@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using MountainWarehouse.EasyMWS.CallbackLogic;
@@ -99,12 +97,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 
                     reportRequestService.Delete(reportEntry);
                 }
-				catch(SqlException e)
-				{
-					_logger.Error($"Method callback failed for {reportEntry.RegionAndTypeComputed} due to an internal error '{e.Message}'. The callback will be retried at the next poll request", e);
-					reportEntry.IsLocked = false;
-					reportRequestService.Update(reportEntry);
-				}
 				catch (Exception e)
 				{
 					_logger.Error($"Method callback failed for {reportEntry.RegionAndTypeComputed}. Current retry count is :{reportEntry.InvokeCallbackRetryCount}. {e.Message}", e);

@@ -11,6 +11,7 @@ using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Logging;
 using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Processors;
+using MountainWarehouse.EasyMWS.Services;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService.Model;
 using NUnit.Framework;
@@ -19,7 +20,8 @@ namespace EasyMWS.Tests.EndToEnd
 {
     public class FeedSubmissionTests
     {
-	    private EasyMwsContext _dbContext;
+	    private FeedSubmissionEntryService _dbContext;
+	    private ReportRequestEntryService _reportService;
 	    private const string _testEntriesIdentifier = "TEST";
 
 	    private IEasyMwsClient _easyMwsClient;
@@ -42,7 +44,8 @@ namespace EasyMWS.Tests.EndToEnd
 	    public void SetUp()
 	    {
 		    _options = new EasyMwsOptions();
-		    _dbContext = new EasyMwsContext();
+		    _dbContext = new FeedSubmissionEntryService();
+			_reportService = new ReportRequestEntryService();
 		    _actualCallbackObject = null;
 		    _actualFeedSubmissionReportContent = null;
 
@@ -59,8 +62,8 @@ namespace EasyMWS.Tests.EndToEnd
 	    [TearDown]
 	    public void TearDown()
 	    {
-		    var testReportEntries = _dbContext.FeedSubmissionEntries.Where(rre => rre.FeedType.StartsWith(_testEntriesIdentifier));
-		    _dbContext.FeedSubmissionEntries.RemoveRange(testReportEntries);
+		    var testReportEntries = _dbContext.Where(rre => rre.FeedType.StartsWith(_testEntriesIdentifier));
+		    _dbContext.DeleteRange(testReportEntries);
 		    _dbContext.SaveChanges();
 
 		    _dbContext.Dispose();
@@ -110,7 +113,7 @@ namespace EasyMWS.Tests.EndToEnd
 		    _mwsClientMock.Verify(mws => mws.GetFeedSubmissionList(It.IsAny<GetFeedSubmissionListRequest>()), Times.Once);
 		    _mwsClientMock.Verify(mws => mws.GetFeedSubmissionResult(It.IsAny<GetFeedSubmissionResultRequest>()), Times.Once);
 
-		    var dbEntry = _dbContext.ReportRequestEntries.FirstOrDefault(rre => rre.ReportType == validFeedType);
+		    var dbEntry = _reportService.FirstOrDefault(rre => rre.ReportType == validFeedType);
 		    Assert.IsNull(dbEntry);
 	    }
 

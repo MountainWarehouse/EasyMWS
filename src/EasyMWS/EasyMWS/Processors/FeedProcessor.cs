@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -70,12 +69,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 					var unzippedFeedSubmissionReport = ZipHelper.ExtractArchivedSingleFileToStream(feedSubmissionEntry.Details.FeedSubmissionReport);
 					_callbackActivator.CallMethod(callback, unzippedFeedSubmissionReport);
 					feedSubmissionService.Delete(feedSubmissionEntry);
-				}
-				catch (SqlException e)
-				{
-					_logger.Error($"Method callback failed for {feedSubmissionEntry.RegionAndTypeComputed} due to an internal error '{e.Message}'. The callback will be retried at the next poll request", e);
-					feedSubmissionEntry.IsLocked = false;
-					feedSubmissionService.Update(feedSubmissionEntry);
 				}
 				catch (Exception e)
 				{

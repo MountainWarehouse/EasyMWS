@@ -1,6 +1,4 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using MountainWarehouse.EasyMWS.CallbackLogic;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Model;
@@ -11,15 +9,12 @@ namespace MountainWarehouse.EasyMWS.Data
     public class FeedSubmissionEntry
     {
 	    private string _regionAndType;
-
-	    [NotMapped]
 	    public string RegionAndTypeComputed
 	    {
 		    // this field is populated based on ReportRequestData which, once set in the ctor, should never change again for the same entity.
 			get { return _regionAndType = _regionAndType ?? $"(FeedType:{FeedType},Region:{AmazonRegion.ToString()})"; }
 	    }
 
-	    [Key]
 	    public int Id { get; set; }
 		public bool IsLocked { get; set; }
 	    public int FeedSubmissionRetryCount { get; set; }
