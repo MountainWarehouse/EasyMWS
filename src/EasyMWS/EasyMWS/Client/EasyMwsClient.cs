@@ -21,24 +21,25 @@ namespace MountainWarehouse.EasyMWS.Client
 		private readonly IFeedQueueingProcessor _feedProcessor;
 		private readonly IEasyMwsLogger _easyMwsLogger;
 
-		internal EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey,
-			IReportQueueingProcessor reportProcessor,
+		internal EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, string mWSAuthToken,
+            IReportQueueingProcessor reportProcessor,
 			IFeedQueueingProcessor feedProcessor, IEasyMwsLogger easyMwsLogger,
 			EasyMwsOptions options)
-			: this(region, merchantId, accessKeyId, mwsSecretAccessKey, easyMwsLogger, options)
+			: this(region, merchantId, accessKeyId, mwsSecretAccessKey, mWSAuthToken, easyMwsLogger, options)
 		{
 			_reportProcessor = reportProcessor;
 			_feedProcessor = feedProcessor;
 		}
 
-		/// <param name="region">The region of the account</param>
-		/// <param name="merchantId">Seller ID. Required parameter.</param>
-		/// <param name="accessKeyId">Your specific access key. Required parameter.</param>
-		/// <param name="mwsSecretAccessKey">Your specific secret access key. Required parameter.</param>
-		/// <param name="easyMwsLogger">An optional IEasyMwsLogger instance that can provide access to logs. It is strongly recommended to use a logger implementation already existing in the EasyMws package.</param>
-		/// <param name="options">Configuration options for EasyMwsClient</param>
-		public EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey,
-			IEasyMwsLogger easyMwsLogger = null, EasyMwsOptions options = null)
+        /// <param name="region">The region of the account. Required parameter. A finer grained region or country can be specified on a PropertiesContainer by specifying its marketplaceIdList constructor argument.</param>
+        /// <param name="merchantId">Seller ID / Merchant ID. Required parameter.</param>
+        /// <param name="accessKeyId">Amazon account access key. Required parameter. This key can either belong to a seller or to a developer account authorised by a seller. If the key belongs to a developer account authorised by the seller then also make sure to specify the MWSAuthToken argument.</param>
+        /// <param name="mwsSecretAccessKey">Amazon account secret access key. Required parameter. This key can either belong to a seller or to a developer account authorised by a seller. If the key belongs to a developer account authorised by the seller then also make sure to specify the MWSAuthToken argument.</param>
+        /// <param name="mWSAuthToken">MWS Authorisation Token. Optional parameter. If the provided access keys belong to a developer account authorised by a seller, this argument is the MWS Authorization Token provided by the seller to the authorised developer.</param>
+        /// <param name="easyMwsLogger">An optional IEasyMwsLogger instance that can provide access to logs. It is strongly recommended to use a logger implementation already existing in the EasyMws package.</param>
+        /// <param name="options">Configuration options for EasyMwsClient</param>
+        public EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, string mWSAuthToken = null,
+            IEasyMwsLogger easyMwsLogger = null, EasyMwsOptions options = null)
 		{
 			if (string.IsNullOrEmpty(merchantId) || string.IsNullOrEmpty(accessKeyId) ||
 			    string.IsNullOrEmpty(mwsSecretAccessKey))
@@ -51,8 +52,8 @@ namespace MountainWarehouse.EasyMWS.Client
 
 			_easyMwsLogger = easyMwsLogger ?? new EasyMwsLogger(isEnabled: false);
 			var mwsClient = new MarketplaceWebServiceClient(accessKeyId, mwsSecretAccessKey, CreateConfig(_amazonRegion));
-			_reportProcessor = _reportProcessor ?? new ReportProcessor(_amazonRegion, _merchantId, _options, mwsClient, _easyMwsLogger);
-			_feedProcessor = _feedProcessor ?? new FeedProcessor(_amazonRegion, _merchantId, _options, mwsClient, _easyMwsLogger);
+			_reportProcessor = _reportProcessor ?? new ReportProcessor(_amazonRegion, _merchantId, mWSAuthToken, _options, mwsClient, _easyMwsLogger);
+			_feedProcessor = _feedProcessor ?? new FeedProcessor(_amazonRegion, _merchantId, mWSAuthToken, _options, mwsClient, _easyMwsLogger);
 
 		}
 

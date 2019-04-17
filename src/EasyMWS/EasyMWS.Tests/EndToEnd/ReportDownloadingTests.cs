@@ -25,7 +25,8 @@ namespace EasyMWS.Tests.EndToEnd
 		private IEasyMwsClient _easyMwsClient;
 	    private readonly AmazonRegion _region = AmazonRegion.Europe;
 	    private readonly string _merchantId = "testMerchantId";
-	    private EasyMwsOptions _options = new EasyMwsOptions();
+        private readonly string _mwsAuthToken = "testMwsAuthToken";
+        private EasyMwsOptions _options = new EasyMwsOptions();
 
 		private Mock<IEasyMwsLogger> _loggerMock;
 	    private Mock<IMarketplaceWebServiceClient> _mwsClientMock;
@@ -42,9 +43,9 @@ namespace EasyMWS.Tests.EndToEnd
 		    _mwsClientMock = new Mock<IMarketplaceWebServiceClient>();
 		    var feedProcessorMock = new Mock<IFeedQueueingProcessor>();
 
-			var reportProcessor =  new ReportProcessor(_region, _merchantId, _options, _mwsClientMock.Object, _loggerMock.Object);
+			var reportProcessor =  new ReportProcessor(_region, _merchantId, _mwsAuthToken, _options, _mwsClientMock.Object, _loggerMock.Object);
 
-			_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", "test", "test", reportProcessor,
+			_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, _merchantId, _mwsAuthToken, "test", "test", reportProcessor,
 				feedProcessorMock.Object, _loggerMock.Object, _options);
 		}
 

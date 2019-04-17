@@ -21,8 +21,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 		private readonly EasyMwsOptions _options;
 		private readonly AmazonRegion _region;
 		private readonly string _merchantId;
+        private readonly string _mWSAuthToken;
 
-		private readonly Dictionary<string, string> PendingStatusCodesAndMessages = new Dictionary<string, string>()
+        private readonly Dictionary<string, string> PendingStatusCodesAndMessages = new Dictionary<string, string>()
 		{
 			{AmazonFeedProcessingStatus.AwaitingAsyncReply, "The request is being processed, but is waiting for external information before it can complete."},
 			{AmazonFeedProcessingStatus.InProgress, "The request is being processed."},
@@ -31,13 +32,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{AmazonFeedProcessingStatus.Unconfirmed, "The request is pending."}
 		};
 
-		internal FeedSubmissionProcessor(AmazonRegion region, string merchantId, IMarketplaceWebServiceClient marketplaceWebServiceClient, IEasyMwsLogger logger, EasyMwsOptions options)
+		internal FeedSubmissionProcessor(AmazonRegion region, string merchantId, string mWSAuthToken, IMarketplaceWebServiceClient marketplaceWebServiceClient, IEasyMwsLogger logger, EasyMwsOptions options)
 		{
 			_region = region;
 			_merchantId = merchantId;
 			_options = options;
 			_logger = logger;
 			_marketplaceWebServiceClient = marketplaceWebServiceClient;
+            _mWSAuthToken = mWSAuthToken;
 		}
 
 
@@ -94,8 +96,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 					FeedContent = stream,
 					MarketplaceIdList = feedSubmissionData.MarketplaceIdList == null ? null : new IdList {Id = feedSubmissionData.MarketplaceIdList},
 					PurgeAndReplace = feedSubmissionData.PurgeAndReplace ?? false,
-					ContentMD5 = MD5ChecksumHelper.ComputeHashForAmazon(stream)
-				};
+					ContentMD5 = MD5ChecksumHelper.ComputeHashForAmazon(stream),
+                    MWSAuthToken = _mWSAuthToken
+                };
 
 				try
 				{
@@ -147,7 +150,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			_logger.Info($"Attempting to request feed submission statuses for all feeds in queue.");
 
-			var request = new GetFeedSubmissionListRequest() {FeedSubmissionIdList = new IdList(), Merchant = merchant};
+			var request = new GetFeedSubmissionListRequest() { FeedSubmissionIdList = new IdList(), Merchant = merchant, MWSAuthToken = _mWSAuthToken };
 			request.FeedSubmissionIdList.Id.AddRange(feedSubmissionIdList);
 
 			try
@@ -238,8 +241,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				FeedSubmissionId = feedSubmissionEntry.FeedSubmissionId,
 				Merchant = feedSubmissionEntry.MerchantId,
-				FeedSubmissionResult = reportResultStream
-			};
+				FeedSubmissionResult = reportResultStream,
+                MWSAuthToken = _mWSAuthToken
+            };
 
 			try
 			{

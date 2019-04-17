@@ -30,7 +30,8 @@ namespace EasyMWS.Tests.ReportProcessors
 		private static bool _called;
 		private readonly AmazonRegion _amazonRegion = AmazonRegion.Europe;
 		private readonly string _merchantId = "testMerchantId1";
-		private bool MarkEntryAsHandled = true;
+        private readonly string _mwsAuthToken = "testMwsAuthToken";
+        private bool MarkEntryAsHandled = true;
 
 		[SetUp]
 		public void SetUp()
@@ -45,7 +46,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			_callbackActivatorMock.Setup(cam => cam.SerializeCallback(It.IsAny<Action<Stream, object>>(), It.IsAny<object>()))
 				.Returns(new Callback("", "", "", ""));
 
-			_feedProcessor = new FeedProcessor(_amazonRegion, _merchantId, options, _marketplaceWebServiceClientMock.Object,
+			_feedProcessor = new FeedProcessor(_amazonRegion, _merchantId, _mwsAuthToken, options, _marketplaceWebServiceClientMock.Object,
 				_feedSubmissionProcessorMock.Object, _callbackActivatorMock.Object, _loggerMock.Object);
 		}
 

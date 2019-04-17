@@ -25,7 +25,8 @@ namespace EasyMWS.Tests.EndToEnd
 	    private IEasyMwsClient _easyMwsClient;
 	    private readonly AmazonRegion _region = AmazonRegion.Europe;
 	    private readonly string _merchantId = "testMerchantId";
-	    private EasyMwsOptions _options = new EasyMwsOptions();
+        private readonly string _mwsAuthToken = "testMwsAuthToken";
+        private EasyMwsOptions _options = new EasyMwsOptions();
 
 	    private Mock<IEasyMwsLogger> _loggerMock;
 	    private Mock<IMarketplaceWebServiceClient> _mwsClientMock;
@@ -50,10 +51,10 @@ namespace EasyMWS.Tests.EndToEnd
 		    _mwsClientMock = new Mock<IMarketplaceWebServiceClient>();
 		    var reportProcessor = new Mock<IReportQueueingProcessor>();
 
-		    var feedProcessorMock = new FeedProcessor(_region, _merchantId, _options, _mwsClientMock.Object, _loggerMock.Object);
+		    var feedProcessor = new FeedProcessor(_region, _merchantId, _mwsAuthToken, _options, _mwsClientMock.Object, _loggerMock.Object);
 
-		    _easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", "test", "test", reportProcessor.Object,
-			    feedProcessorMock, _loggerMock.Object, _options);
+		    _easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, _merchantId, _mwsAuthToken, "test", "test", reportProcessor.Object,
+			    feedProcessor, _loggerMock.Object, _options);
 	    }
 
 	    [TearDown]
@@ -72,7 +73,7 @@ namespace EasyMWS.Tests.EndToEnd
 		{
 			while (true)
 			{
-				_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", "test", "test", _loggerMock.Object, _options);
+				_easyMwsClient = new EasyMwsClient(AmazonRegion.Europe, "MerchantId", "test", "test", "test", _loggerMock.Object, _options);
 				_easyMwsClient.Poll();
 			}
 		}
