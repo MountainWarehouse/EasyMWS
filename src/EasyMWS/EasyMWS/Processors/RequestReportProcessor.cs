@@ -51,10 +51,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				Merchant = reportRequestEntry.MerchantId,
 				ReportType = reportRequestEntry.ReportType,
-                MWSAuthToken = _mWSAuthToken
             };
 
-		    if (reportRequestData.MarketplaceIdList != null) reportRequest.MarketplaceIdList = new IdList {Id = reportRequestData.MarketplaceIdList.ToList()};
+            if (!string.IsNullOrEmpty(_mWSAuthToken)) reportRequest.MWSAuthToken = _mWSAuthToken;
+
+            if (reportRequestData.MarketplaceIdList != null) reportRequest.MarketplaceIdList = new IdList {Id = reportRequestData.MarketplaceIdList.ToList()};
 			if (reportRequestData.StartDate.HasValue) reportRequest.StartDate = reportRequestData.StartDate.Value;
 		    if (reportRequestData.EndDate.HasValue) reportRequest.EndDate = reportRequestData.EndDate.Value;
 		    if (!string.IsNullOrEmpty(reportRequestData.ReportOptions)) reportRequest.ReportOptions = reportRequestData.ReportOptions;
@@ -112,10 +113,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 	    {
 		    _logger.Info($"Attempting to request report processing statuses for all reports in queue.");
 
-		    var request = new GetReportRequestListRequest() { ReportRequestIdList = new IdList(), Merchant = merchant, MWSAuthToken = _mWSAuthToken };
+		    var request = new GetReportRequestListRequest() { ReportRequestIdList = new IdList(), Merchant = merchant };
 		    request.ReportRequestIdList.Id.AddRange(requestIdList);
 
-		    try
+            if (!string.IsNullOrEmpty(_mWSAuthToken)) request.MWSAuthToken = _mWSAuthToken;
+
+            try
 		    {
 			    var response = _marketplaceWebServiceClient.GetReportRequestList(request);
 			    var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
@@ -258,10 +261,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 			    ReportId = reportRequestEntry.GeneratedReportId,
 			    Report = reportResultStream,
 			    Merchant = reportRequestEntry.MerchantId,
-                MWSAuthToken = _mWSAuthToken
             };
 
-		    try
+            if (!string.IsNullOrEmpty(_mWSAuthToken)) getReportRequest.MWSAuthToken = _mWSAuthToken;
+
+
+            try
 		    {
 			    var response = _marketplaceWebServiceClient.GetReport(getReportRequest);
 			    reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;

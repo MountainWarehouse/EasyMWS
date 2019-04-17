@@ -97,10 +97,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 					MarketplaceIdList = feedSubmissionData.MarketplaceIdList == null ? null : new IdList {Id = feedSubmissionData.MarketplaceIdList},
 					PurgeAndReplace = feedSubmissionData.PurgeAndReplace ?? false,
 					ContentMD5 = MD5ChecksumHelper.ComputeHashForAmazon(stream),
-                    MWSAuthToken = _mWSAuthToken
                 };
 
-				try
+                if (!string.IsNullOrEmpty(_mWSAuthToken)) submitFeedRequest.MWSAuthToken = _mWSAuthToken;
+
+                try
 				{
 					var response = _marketplaceWebServiceClient.SubmitFeed(submitFeedRequest);
 					feedSubmission.LastSubmitted = DateTime.UtcNow;
@@ -150,10 +151,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			_logger.Info($"Attempting to request feed submission statuses for all feeds in queue.");
 
-			var request = new GetFeedSubmissionListRequest() { FeedSubmissionIdList = new IdList(), Merchant = merchant, MWSAuthToken = _mWSAuthToken };
+			var request = new GetFeedSubmissionListRequest() { FeedSubmissionIdList = new IdList(), Merchant = merchant };
 			request.FeedSubmissionIdList.Id.AddRange(feedSubmissionIdList);
 
-			try
+            if (!string.IsNullOrEmpty(_mWSAuthToken)) request.MWSAuthToken = _mWSAuthToken;
+
+            try
 			{
 				var response = _marketplaceWebServiceClient.GetFeedSubmissionList(request);
 
@@ -242,10 +245,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 				FeedSubmissionId = feedSubmissionEntry.FeedSubmissionId,
 				Merchant = feedSubmissionEntry.MerchantId,
 				FeedSubmissionResult = reportResultStream,
-                MWSAuthToken = _mWSAuthToken
             };
 
-			try
+            if (!string.IsNullOrEmpty(_mWSAuthToken)) request.MWSAuthToken = _mWSAuthToken;
+
+            try
 			{
 				var response = _marketplaceWebServiceClient.GetFeedSubmissionResult(request);
 				feedSubmissionEntry.LastSubmitted = DateTime.UtcNow;
