@@ -27,7 +27,8 @@ namespace EasyMWS.Tests.Processors
 	{
 		private AmazonRegion _region = AmazonRegion.Europe;
 		private string _merchantId = "TestMerchantId";
-		private IRequestReportProcessor _requestReportProcessor;
+        private readonly string _mwsAuthToken = "testMwsAuthToken";
+        private IRequestReportProcessor _requestReportProcessor;
 		private Mock<IReportRequestEntryService> _reportRequestServiceMock;
 		private List<ReportRequestEntry> _reportRequestCallbacks;
 		private Mock<IMarketplaceWebServiceClient> _marketplaceWebServiceClientMock;
@@ -42,7 +43,7 @@ namespace EasyMWS.Tests.Processors
 			_marketplaceWebServiceClientMock = new Mock<IMarketplaceWebServiceClient>();
 			_reportRequestServiceMock = new Mock<IReportRequestEntryService>();
 			_loggerMock = new Mock<IEasyMwsLogger>();
-			_requestReportProcessor = new RequestReportProcessor(_region, _merchantId, _marketplaceWebServiceClientMock.Object, _loggerMock.Object, _easyMwsOptions);
+			_requestReportProcessor = new RequestReportProcessor(_region, _merchantId, _mwsAuthToken, _marketplaceWebServiceClientMock.Object, _loggerMock.Object, _easyMwsOptions);
 			
 			_reportRequestCallbacks = new List<ReportRequestEntry>
 			{

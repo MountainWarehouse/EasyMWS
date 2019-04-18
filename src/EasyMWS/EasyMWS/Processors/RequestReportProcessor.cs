@@ -21,14 +21,17 @@ namespace MountainWarehouse.EasyMWS.Processors
 		private readonly EasyMwsOptions _options;
 	    private readonly AmazonRegion _region;
 	    private readonly string _merchantId;
+        private readonly string _mWSAuthToken;
 
-	    internal RequestReportProcessor(AmazonRegion region, string merchantId, IMarketplaceWebServiceClient marketplaceWebServiceClient, IEasyMwsLogger logger, EasyMwsOptions options)
+
+        internal RequestReportProcessor(AmazonRegion region, string merchantId, string mWSAuthToken, IMarketplaceWebServiceClient marketplaceWebServiceClient, IEasyMwsLogger logger, EasyMwsOptions options)
 	    {
 		    _region = region;
 		    _merchantId = merchantId;
 		    _options = options;
 		    _logger = logger;
 			_marketplaceWebServiceClient = marketplaceWebServiceClient;
+            _mWSAuthToken = mWSAuthToken;
 	    }
 
 
@@ -47,10 +50,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var reportRequest = new RequestReportRequest
 			{
 				Merchant = reportRequestEntry.MerchantId,
-				ReportType = reportRequestEntry.ReportType
-			};
+				ReportType = reportRequestEntry.ReportType,
+            };
 
-		    if (reportRequestData.MarketplaceIdList != null) reportRequest.MarketplaceIdList = new IdList {Id = reportRequestData.MarketplaceIdList.ToList()};
+            if (!string.IsNullOrEmpty(_mWSAuthToken)) reportRequest.MWSAuthToken = _mWSAuthToken;
+
+            if (reportRequestData.MarketplaceIdList != null) reportRequest.MarketplaceIdList = new IdList {Id = reportRequestData.MarketplaceIdList.ToList()};
 			if (reportRequestData.StartDate.HasValue) reportRequest.StartDate = reportRequestData.StartDate.Value;
 		    if (reportRequestData.EndDate.HasValue) reportRequest.EndDate = reportRequestData.EndDate.Value;
 		    if (!string.IsNullOrEmpty(reportRequestData.ReportOptions)) reportRequest.ReportOptions = reportRequestData.ReportOptions;
@@ -108,10 +113,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 	    {
 		    _logger.Info($"Attempting to request report processing statuses for all reports in queue.");
 
-		    var request = new GetReportRequestListRequest() {ReportRequestIdList = new IdList(), Merchant = merchant};
+		    var request = new GetReportRequestListRequest() { ReportRequestIdList = new IdList(), Merchant = merchant };
 		    request.ReportRequestIdList.Id.AddRange(requestIdList);
 
-		    try
+            if (!string.IsNullOrEmpty(_mWSAuthToken)) request.MWSAuthToken = _mWSAuthToken;
+
+            try
 		    {
 			    var response = _marketplaceWebServiceClient.GetReportRequestList(request);
 			    var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
@@ -253,10 +260,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    {
 			    ReportId = reportRequestEntry.GeneratedReportId,
 			    Report = reportResultStream,
-			    Merchant = reportRequestEntry.MerchantId
-		    };
+			    Merchant = reportRequestEntry.MerchantId,
+            };
 
-		    try
+            if (!string.IsNullOrEmpty(_mWSAuthToken)) getReportRequest.MWSAuthToken = _mWSAuthToken;
+
+
+            try
 		    {
 			    var response = _marketplaceWebServiceClient.GetReport(getReportRequest);
 			    reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
