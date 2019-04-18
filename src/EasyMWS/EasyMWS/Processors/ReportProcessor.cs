@@ -25,16 +25,16 @@ namespace MountainWarehouse.EasyMWS.Processors
 		private readonly string _merchantId;
 		private readonly EasyMwsOptions _options;
 
-		internal ReportProcessor(AmazonRegion region, string merchantId, EasyMwsOptions options,
+		internal ReportProcessor(AmazonRegion region, string merchantId, string mWSAuthToken, EasyMwsOptions options,
 			IMarketplaceWebServiceClient mwsClient,
 			IRequestReportProcessor requestReportProcessor, ICallbackActivator callbackActivator, IEasyMwsLogger logger)
-			: this(region, merchantId, options, mwsClient, logger)
+			: this(region, merchantId, mWSAuthToken, options, mwsClient, logger)
 		{
 			_requestReportProcessor = requestReportProcessor;
 			_callbackActivator = callbackActivator;
 		}
 
-		internal ReportProcessor(AmazonRegion region, string merchantId, EasyMwsOptions options,
+		internal ReportProcessor(AmazonRegion region, string merchantId, string mWSAuthToken, EasyMwsOptions options,
 			IMarketplaceWebServiceClient mwsClient, IEasyMwsLogger logger)
 		{
 			_region = region;
@@ -43,7 +43,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_logger = logger;
 
 			_callbackActivator = _callbackActivator ?? new CallbackActivator();
-			_requestReportProcessor = _requestReportProcessor ?? new RequestReportProcessor(_region, _merchantId, mwsClient, _logger, _options);
+			_requestReportProcessor = _requestReportProcessor ?? new RequestReportProcessor(_region, _merchantId, mWSAuthToken, mwsClient, _logger, _options);
 		}
 
 		public void PollReports(IReportRequestEntryService reportRequestService)

@@ -43,7 +43,7 @@ namespace EasyMWS.Tests.ReportProcessors
 			_callbackActivatorMock.Setup(cam => cam.SerializeCallback(It.IsAny<Action<Stream, object>>(), It.IsAny<object>()))
 				.Returns(new Callback("", "", "", ""));
 
-			_reportProcessor = new ReportProcessor(AmazonRegion.Europe, "testMerchantId1", options,
+			_reportProcessor = new ReportProcessor(AmazonRegion.Europe, "testMerchantId1", "testMwsAuthToken", options,
 				 _marketplaceWebServiceClientMock.Object, _requestReportProcessor.Object, _callbackActivatorMock.Object, _loggerMock.Object);
 		}
 
