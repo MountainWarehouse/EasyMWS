@@ -8,8 +8,8 @@ using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS.Data
 {
-	public class ReportRequestEntry
-	{
+	public class ReportRequestEntry : IRestrictionableInvocationEntry
+    {
 		private string _regionAndType;
 		[NotMapped]
 		public string RegionAndTypeComputed

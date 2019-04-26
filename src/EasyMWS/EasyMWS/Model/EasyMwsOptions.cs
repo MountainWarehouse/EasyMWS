@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MountainWarehouse.EasyMWS.Helpers;
+using System;
 
 namespace MountainWarehouse.EasyMWS.Model
 {
@@ -97,8 +98,13 @@ namespace MountainWarehouse.EasyMWS.Model
             ForceInvocationByOriginatingInstance = false;
             AllowInvocationByAnyInstanceIfInvocationFailedLimitReached = false;
             CustomInstanceId = null;
-            InvocationFailedLimit = 2;
+            InvocationFailuresLimit = 2;
         }
+
+        /// <summary>
+        /// Get a hashed value for CustomInstanceId if it has been set, or else a hashed value of Environment.MachineName
+        /// </summary>
+        internal string HashedInstanceId => InstanceIdHelper.GetInstanceIdHash(CustomInstanceId);
 
         /// <summary>
         /// Default=null. A custom value identifying an EasyMwsClient instance. <para/>
@@ -115,16 +121,16 @@ namespace MountainWarehouse.EasyMWS.Model
         public bool ForceInvocationByOriginatingInstance { get; set; }
 
         /// <summary>
-        /// Default=false. After a report has been downloaded or after a feed has been submitted, if the callback invocation attempts fails for InvocationFailedLimit times, then allow the invocation to be made from any client instance.<para/>
+        /// Default=false. After a report has been downloaded or after a feed has been submitted, if the callback invocation attempts fails for InvocationFailuresLimit times, then allow the invocation to be made from any client instance.<para/>
         /// This is only being used if ForceInvocationByOriginatingInstance is true.
         /// </summary>
         public bool AllowInvocationByAnyInstanceIfInvocationFailedLimitReached { get; set; }
 
         /// <summary>
-        /// Default=2. Specify the number of callback invocation failures allowed to happen before attempting to invoke a callback from Any instance.<para/>
+        /// Default=2. Specify the inclusive bound for the number of callback invocation failures allowed to happen before attempting to invoke a callback from Any instance.<para/>
         /// This is only being used if AllowInvocationByAnyInstanceIfInvocationFailedLimitReached is true.
         /// </summary>
-        public int InvocationFailedLimit { get; set; }
+        public int InvocationFailuresLimit { get; set; }
     }
 
     /// <summary>

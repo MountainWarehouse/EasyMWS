@@ -145,7 +145,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 					ReportProcessRetryCount = 0,
 					InvokeCallbackRetryCount = 0,
 					ReportType = propertiesContainer.ReportType,
-                    InstanceId = InstanceIdHelper.GetInstanceIdHash(_options),
+                    InstanceId = _options?.CallbackInvocationOptions?.RestrictInvocationToOriginatingInstance?.HashedInstanceId,
                 };
 
 				var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);

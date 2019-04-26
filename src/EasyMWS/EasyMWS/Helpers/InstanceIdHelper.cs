@@ -7,12 +7,15 @@ namespace MountainWarehouse.EasyMWS.Helpers
 {
     internal static class InstanceIdHelper
     {
-        internal static string GetInstanceIdHash(EasyMwsOptions options)
+        /// <summary>
+        /// If customInstanceId is NullOrEmpty then the instanceId will be considered to be Environment.MachineName
+        /// </summary>
+        internal static string GetInstanceIdHash(string customInstanceId)
         {
             string instanceId = null;
             try
             {
-                instanceId = options?.CallbackInvocationOptions?.RestrictInvocationToOriginatingInstance?.CustomInstanceId ?? Environment.MachineName;
+                instanceId = string.IsNullOrEmpty(customInstanceId) ? Environment.MachineName : customInstanceId;
             }
             catch (InvalidOperationException)
             {
@@ -23,6 +26,8 @@ namespace MountainWarehouse.EasyMWS.Helpers
 
         private static string ComputeHash(string source)
         {
+            if (string.IsNullOrEmpty(source)) return null;
+
             using (SHA256 sha256Hash = SHA256.Create())
             {
                 byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(source));

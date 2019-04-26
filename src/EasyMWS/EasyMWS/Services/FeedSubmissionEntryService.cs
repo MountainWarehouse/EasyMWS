@@ -120,7 +120,9 @@ namespace MountainWarehouse.EasyMWS.Services
 			var entries = Where(fse => fse.AmazonRegion == region && fse.MerchantId == merchantId
 						   && fse.Details != null && fse.Details.FeedSubmissionReport != null && fse.IsLocked == false).ToList();
 
-			if(entries.Any() && markEntriesAsLocked)
+            entries = EntryInvocationRestrictionHelper<FeedSubmissionEntry>.RestrictInvocationToOriginatingClientsIfEnabled(entries, _options);
+
+            if(entries.Any() && markEntriesAsLocked)
 			{
 				foreach (var entry in entries)
 				{
@@ -133,7 +135,7 @@ namespace MountainWarehouse.EasyMWS.Services
 			return entries;
 		}
 
-		private bool IsFeedInASubmitFeedQueue(FeedSubmissionEntry feedSubmission)
+        private bool IsFeedInASubmitFeedQueue(FeedSubmissionEntry feedSubmission)
 		{
 			return feedSubmission.FeedSubmissionId == null;
 		}

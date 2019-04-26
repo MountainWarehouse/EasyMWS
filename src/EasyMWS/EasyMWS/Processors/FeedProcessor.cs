@@ -115,7 +115,7 @@ namespace MountainWarehouse.EasyMWS.Processors
                     FeedSubmissionRetryCount = 0,
                     FeedSubmissionId = null,
                     FeedType = propertiesContainer.FeedType,
-                    InstanceId = InstanceIdHelper.GetInstanceIdHash(_options),
+                    InstanceId = _options?.CallbackInvocationOptions?.RestrictInvocationToOriginatingInstance?.HashedInstanceId,
                     Details = new FeedSubmissionDetails
 					{
 						FeedContent = ZipHelper.CreateArchiveFromContent(propertiesContainer.FeedContent)

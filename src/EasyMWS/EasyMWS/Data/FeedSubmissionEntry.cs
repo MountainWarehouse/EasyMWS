@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS.Data
 {
-    public class FeedSubmissionEntry
+    public class FeedSubmissionEntry : IRestrictionableInvocationEntry
     {
 	    private string _regionAndType;
 

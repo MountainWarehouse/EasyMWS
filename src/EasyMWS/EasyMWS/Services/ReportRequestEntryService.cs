@@ -123,7 +123,9 @@ namespace MountainWarehouse.EasyMWS.Services
 							   _options.CallbackInvocationOptions.InvokeCallbackRetryInterval, _options.CallbackInvocationOptions.InvokeCallbackRetryInterval,
 							   _options.CallbackInvocationOptions.InvokeCallbackRetryPeriodType) && rre.IsLocked == false).ToList();
 
-			if (entries.Any() && markEntriesAsLocked)
+            entries = EntryInvocationRestrictionHelper<ReportRequestEntry>.RestrictInvocationToOriginatingClientsIfEnabled(entries, _options);
+
+            if (entries.Any() && markEntriesAsLocked)
 			{
 				foreach (var entry in entries)
 				{
@@ -136,7 +138,7 @@ namespace MountainWarehouse.EasyMWS.Services
 			return entries;
 		}
 
-		public void Dispose()
+        public void Dispose()
 		{
 			_reportRequestEntryRepository.Dispose();
 		}
