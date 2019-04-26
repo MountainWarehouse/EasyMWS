@@ -66,12 +66,16 @@ namespace MountainWarehouse.EasyMWS.Model
         public TimeSpan InvokeCallbackRetryInterval { get; set; }
 
         /// <summary>
-		/// Default=false. Invoke the callback method for reports being downloaded from Amazon, even if the report status received from Amazon is DoneNoData, with the report stream argument being null.
+		/// Default=false. Invoke the callback method after a report has been downloaded or after a feed has been submitted, even if the report status received from Amazon is DoneNoData, with the report stream argument being null.
 		/// </summary>
         public bool InvokeCallbackForReportStatusDoneNoData { get; set; }
 
+        public RestrictInvocationToOriginatingInstance RestrictInvocationToOriginatingInstance { get; set; }
+
         public CallbackInvocationOptions(bool useDefaultValues = true)
         {
+            RestrictInvocationToOriginatingInstance = new RestrictInvocationToOriginatingInstance(useDefaultValues);
+
             if (useDefaultValues)
             {
                 InvokeCallbackMaxRetryCount = 5;
@@ -81,6 +85,46 @@ namespace MountainWarehouse.EasyMWS.Model
                 InvokeCallbackForReportStatusDoneNoData = false;
             }
         }
+    }
+
+    /// <summary>
+    /// Options regarding restricting callback invocations by originating clients only.
+    /// </summary>
+    public class RestrictInvocationToOriginatingInstance
+    {
+        public RestrictInvocationToOriginatingInstance(bool useDefaultValues = true)
+        {
+            ForceInvocationByOriginatingInstance = false;
+            AllowInvocationByAnyInstanceIfInvocationFailedLimitReached = false;
+            CustomInstanceId = null;
+            InvocationFailedLimit = 2;
+        }
+
+        /// <summary>
+        /// Default=null. A custom value identifying an EasyMwsClient instance. <para/>
+        /// If set to true then only a client with a matching CustomInstanceId value will be able to invoke a callback for a request originating from a client with the same CustomInstanceId.<para/>
+        /// If the Default value is set, then the instance id will automatically be set to System.Environment.MachineName.<para/>
+        /// If the same CustomInstanceId value is specified for multiple clients sharing the same persistence location (e.g. database), then any of those clients will be able to invoke callbacks for requests submitted from clients with that CustomInstanceId.
+        /// </summary>
+        public string CustomInstanceId { get; set; }
+
+        /// <summary>
+        /// Default=false. After a report has been downloaded or after a feed has been submitted, try to invoke the callback method but restrict the source of the invocation to the instance from where the initial request originated.<para/>
+        /// If AllowInvocationByAnyInstanceIfInvocationFailedLimitReached is false, then callbacks can always ONLY be invoked by the instance from where the request originated.<para/>
+        /// </summary>
+        public bool ForceInvocationByOriginatingInstance { get; set; }
+
+        /// <summary>
+        /// Default=false. After a report has been downloaded or after a feed has been submitted, if the callback invocation attempts fails for InvocationFailedLimit times, then allow the invocation to be made from any client instance.<para/>
+        /// This is only being used if ForceInvocationByOriginatingInstance is true.
+        /// </summary>
+        public bool AllowInvocationByAnyInstanceIfInvocationFailedLimitReached { get; set; }
+
+        /// <summary>
+        /// Default=2. Specify the number of callback invocation failures allowed to happen before attempting to invoke a callback from Any instance.<para/>
+        /// This is only being used if AllowInvocationByAnyInstanceIfInvocationFailedLimitReached is true.
+        /// </summary>
+        public int InvocationFailedLimit { get; set; }
     }
 
     /// <summary>
