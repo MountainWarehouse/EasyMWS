@@ -130,7 +130,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 				var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 
-				var reportRequest = new ReportRequestEntry(serializedPropertiesContainer)
+                var reportRequest = new ReportRequestEntry(serializedPropertiesContainer)
 				{
 					IsLocked = false,
 					AmazonRegion = _region,
@@ -144,8 +144,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 					ReportDownloadRetryCount = 0,
 					ReportProcessRetryCount = 0,
 					InvokeCallbackRetryCount = 0,
-					ReportType = propertiesContainer.ReportType
-				};
+					ReportType = propertiesContainer.ReportType,
+                    InstanceId = InstanceIdHelper.GetInstanceIdHash(_options),
+                };
 
 				var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
 				reportRequest.Data = serializedCallback.Data;
