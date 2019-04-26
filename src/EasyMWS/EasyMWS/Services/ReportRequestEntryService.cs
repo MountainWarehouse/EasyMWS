@@ -62,8 +62,8 @@ namespace MountainWarehouse.EasyMWS.Services
 			var entry = FirstOrDefault(rre => rre.AmazonRegion == region && rre.MerchantId == merchantId
 											 && rre.RequestReportId == null
 											 && RetryIntervalHelper.IsRetryPeriodAwaited(rre.LastAmazonRequestDate, rre.ReportRequestRetryCount,
-									   _options.ReportRequestRetryInitialDelay, _options.ReportRequestRetryInterval,
-									   _options.ReportRequestRetryType)
+                                       _options.ReportRequestOptions.ReportRequestRetryInitialDelay, _options.ReportRequestOptions.ReportRequestRetryInterval,
+									   _options.ReportRequestOptions.ReportRequestRetryType)
 									   && rre.IsLocked == false);
 
 			if (entry != null && markEntryAsLocked)
@@ -82,8 +82,8 @@ namespace MountainWarehouse.EasyMWS.Services
 			var entry = FirstOrDefault(rre => rre.AmazonRegion == region && rre.MerchantId == merchantId
 							 && rre.RequestReportId != null && rre.GeneratedReportId != null && rre.Details == null && rre.LastAmazonReportProcessingStatus != AmazonReportProcessingStatus.DoneNoData
                              && RetryIntervalHelper.IsRetryPeriodAwaited(rre.LastAmazonRequestDate, rre.ReportDownloadRetryCount,
-									   _options.ReportDownloadRetryInitialDelay, _options.ReportDownloadRetryInterval,
-									   _options.ReportDownloadRetryType)
+									   _options.ReportRequestOptions.ReportDownloadRetryInitialDelay, _options.ReportRequestOptions.ReportDownloadRetryInterval,
+									   _options.ReportRequestOptions.ReportDownloadRetryType)
 									   && rre.IsLocked == false);
 
 			if (entry != null && markEntryAsLocked)
@@ -120,8 +120,8 @@ namespace MountainWarehouse.EasyMWS.Services
 			var entries = Where(rre => rre.AmazonRegion == region && rre.MerchantId == merchantId
 							  && (rre.Details != null || rre.LastAmazonReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData)
 							  && RetryIntervalHelper.IsRetryPeriodAwaited(rre.LastAmazonRequestDate, rre.InvokeCallbackRetryCount,
-							   _options.InvokeCallbackRetryInterval, _options.InvokeCallbackRetryInterval,
-							   _options.InvokeCallbackRetryPeriodType) && rre.IsLocked == false).ToList();
+							   _options.CallbackInvocationOptions.InvokeCallbackRetryInterval, _options.CallbackInvocationOptions.InvokeCallbackRetryInterval,
+							   _options.CallbackInvocationOptions.InvokeCallbackRetryPeriodType) && rre.IsLocked == false).ToList();
 
 			if (entries.Any() && markEntriesAsLocked)
 			{

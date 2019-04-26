@@ -340,13 +340,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 
 		private bool IsMatchForRegionAndMerchantId(FeedSubmissionEntry e) => e.AmazonRegion == _region && e.MerchantId == _merchantId;
-		private bool IsFeedSubmissionRetryCountExceeded(FeedSubmissionEntry e) => e.FeedSubmissionRetryCount > _options.FeedSubmissionMaxRetryCount;
-		private bool IsReportDownloadRetryCountExceeded(FeedSubmissionEntry e) => e.ReportDownloadRetryCount > _options.ReportDownloadMaxRetryCount;
-		private bool IsFeedProcessingRetryCountExceeded(FeedSubmissionEntry e) => e.FeedProcessingRetryCount > _options.FeedProcessingMaxRetryCount;
-		private bool IsCallbackInvocationRetryCountExceeded(FeedSubmissionEntry e) =>e.InvokeCallbackRetryCount > _options.InvokeCallbackMaxRetryCount;
+		private bool IsFeedSubmissionRetryCountExceeded(FeedSubmissionEntry e) => e.FeedSubmissionRetryCount > _options.FeedSubmissionOptions.FeedSubmissionMaxRetryCount;
+		private bool IsReportDownloadRetryCountExceeded(FeedSubmissionEntry e) => e.ReportDownloadRetryCount > _options.ReportRequestOptions.ReportDownloadMaxRetryCount;
+		private bool IsFeedProcessingRetryCountExceeded(FeedSubmissionEntry e) => e.FeedProcessingRetryCount > _options.FeedSubmissionOptions.FeedProcessingMaxRetryCount;
+		private bool IsCallbackInvocationRetryCountExceeded(FeedSubmissionEntry e) =>e.InvokeCallbackRetryCount > _options.CallbackInvocationOptions.InvokeCallbackMaxRetryCount;
 
 		private bool IsExpirationPeriodExceeded(FeedSubmissionEntry feedSubmissionEntry) =>
-			(DateTime.Compare(feedSubmissionEntry.DateCreated, DateTime.UtcNow.Subtract(_options.FeedSubmissionRequestEntryExpirationPeriod)) < 0);
+			(DateTime.Compare(feedSubmissionEntry.DateCreated, DateTime.UtcNow.Subtract(_options.FeedSubmissionOptions.FeedSubmissionRequestEntryExpirationPeriod)) < 0);
 		private bool IsAmazonErrorCodeFatal(string errorCode)
 		{
 			var fatalErrorCodes = new List<string>

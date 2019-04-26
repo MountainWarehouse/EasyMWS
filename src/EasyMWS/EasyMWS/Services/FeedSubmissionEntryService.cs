@@ -62,8 +62,8 @@ namespace MountainWarehouse.EasyMWS.Services
 			var entry = FirstOrDefault(fse => fse.AmazonRegion == region && fse.MerchantId == merchantId
 			                         && IsFeedInASubmitFeedQueue(fse)
 			                         && RetryIntervalHelper.IsRetryPeriodAwaited(fse.LastSubmitted,
-										 fse.FeedSubmissionRetryCount, _options.FeedSubmissionRetryInitialDelay,
-										 _options.FeedSubmissionRetryInterval, _options.FeedSubmissionRetryType)
+										 fse.FeedSubmissionRetryCount, _options.FeedSubmissionOptions.FeedSubmissionRetryInitialDelay,
+										 _options.FeedSubmissionOptions.FeedSubmissionRetryInterval, _options.FeedSubmissionOptions.FeedSubmissionRetryType)
 									&& fse.IsLocked == false);
 
 			if(entry != null && markEntryAsLocked)
@@ -101,8 +101,8 @@ namespace MountainWarehouse.EasyMWS.Services
 			var entry = FirstOrDefault(fse => fse.AmazonRegion == region && fse.MerchantId == merchantId
 						   && fse.FeedSubmissionId != null && fse.IsProcessingComplete == true
 						   && RetryIntervalHelper.IsRetryPeriodAwaited(fse.LastSubmitted,
-										   fse.ReportDownloadRetryCount, _options.ReportDownloadRetryInitialDelay,
-										   _options.ReportDownloadRetryInterval, _options.ReportDownloadRetryType)
+										   fse.ReportDownloadRetryCount, _options.ReportRequestOptions.ReportDownloadRetryInitialDelay,
+										   _options.ReportRequestOptions.ReportDownloadRetryInterval, _options.ReportRequestOptions.ReportDownloadRetryType)
 						   && fse.IsLocked == false);
 
 			if (entry != null && markEntryAsLocked)

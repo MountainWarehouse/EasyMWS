@@ -183,8 +183,8 @@ namespace EasyMWS.Tests.Services
 		{
 			var customOptions = new EasyMwsOptions();
 			var reportRequestWithRequestRetryPeriodIncomplete = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 2, RequestReportId = null, ReportRequestRetryCount = 1, LastAmazonRequestDate = DateTime.UtcNow.AddHours(-1) };
-			customOptions.ReportRequestRetryInitialDelay = TimeSpan.FromHours(2);
-			customOptions.ReportRequestRetryInterval = TimeSpan.FromHours(2);
+			customOptions.ReportRequestOptions.ReportRequestRetryInitialDelay = TimeSpan.FromHours(2);
+			customOptions.ReportRequestOptions.ReportRequestRetryInterval = TimeSpan.FromHours(2);
 			var reportRequestWithNoRequestRetryCount1 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 3, RequestReportId = null, ReportRequestRetryCount = 0, LastAmazonRequestDate = DateTime.MinValue };
 			var reportRequestWithNoRequestRetryCount2 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 4, RequestReportId = null, ReportRequestRetryCount = 0, LastAmazonRequestDate = DateTime.MinValue };
 
@@ -205,8 +205,8 @@ namespace EasyMWS.Tests.Services
 		{
 			var customOptions = new EasyMwsOptions();
 			var reportRequestWithRequestRetryPeriodIncomplete = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 2, RequestReportId = null, ReportRequestRetryCount = 1, LastAmazonRequestDate = DateTime.UtcNow.AddMinutes(-30) };
-			customOptions.ReportRequestRetryInitialDelay = TimeSpan.FromHours(1);
-			customOptions.ReportRequestRetryInterval = TimeSpan.FromHours(1);
+			customOptions.ReportRequestOptions.ReportRequestRetryInitialDelay = TimeSpan.FromHours(1);
+			customOptions.ReportRequestOptions.ReportRequestRetryInterval = TimeSpan.FromHours(1);
 			var reportRequestWithNoRetryPeriodComplete1 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 3, RequestReportId = null, ReportRequestRetryCount = 0, LastAmazonRequestDate = DateTime.UtcNow.AddMinutes(-61) };
 			var reportRequestWithNoRetryPeriodComplete2 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 4, RequestReportId = null, ReportRequestRetryCount = 0, LastAmazonRequestDate = DateTime.UtcNow.AddMinutes(-61) };
 
@@ -227,8 +227,8 @@ namespace EasyMWS.Tests.Services
 		{
 			var customOptions = new EasyMwsOptions();
 			var reportRequestWithRequestRetryPeriodIncomplete = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 2, RequestReportId = null, ReportRequestRetryCount = 1, LastAmazonRequestDate = DateTime.UtcNow.AddMinutes(-59) };
-			customOptions.ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(60);
-			customOptions.ReportRequestRetryInterval = TimeSpan.FromMinutes(1);
+			customOptions.ReportRequestOptions.ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(60);
+			customOptions.ReportRequestOptions.ReportRequestRetryInterval = TimeSpan.FromMinutes(1);
 			var reportRequestWithNoRetryPeriodComplete1 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 3, RequestReportId = null, ReportRequestRetryCount = 1, LastAmazonRequestDate = DateTime.UtcNow.AddMinutes(-61) };
 			var reportRequestWithNoRetryPeriodComplete2 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 4, RequestReportId = null, ReportRequestRetryCount = 1, LastAmazonRequestDate = DateTime.UtcNow.AddMinutes(-61) };
 
@@ -248,9 +248,9 @@ namespace EasyMWS.Tests.Services
 		{
 			var customOptions = new EasyMwsOptions();
 			var reportRequestWithRequestRetryPeriodIncomplete = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 2, RequestReportId = null, ReportRequestRetryCount = 5, LastAmazonRequestDate = DateTime.UtcNow.AddMinutes(-59) };
-			customOptions.ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(1);
-			customOptions.ReportRequestRetryInterval = TimeSpan.FromMinutes(60);
-			customOptions.ReportRequestRetryType = RetryPeriodType.ArithmeticProgression;
+			customOptions.ReportRequestOptions.ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(1);
+			customOptions.ReportRequestOptions.ReportRequestRetryInterval = TimeSpan.FromMinutes(60);
+			customOptions.ReportRequestOptions.ReportRequestRetryType = RetryPeriodType.ArithmeticProgression;
 			var reportRequestWithNoRetryPeriodComplete1 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 3, RequestReportId = null, ReportRequestRetryCount = 5, LastAmazonRequestDate = DateTime.UtcNow.AddMinutes(-61) };
 			var reportRequestWithNoRetryPeriodComplete2 = new ReportRequestEntry { AmazonRegion = AmazonRegion.Europe, MerchantId = _merchantId, Id = 4, RequestReportId = null, ReportRequestRetryCount = 5, LastAmazonRequestDate = DateTime.UtcNow.AddMinutes(-61) };
 
@@ -280,9 +280,9 @@ namespace EasyMWS.Tests.Services
 				ReportRequestRetryCount = testRequestRetryCount,
 				LastAmazonRequestDate = DateTime.UtcNow.AddMinutes(-61)
 			};
-			customOptions.ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(1);
-			customOptions.ReportRequestRetryInterval = TimeSpan.FromMinutes(minutesBetweenRetries);
-			customOptions.ReportRequestRetryType = RetryPeriodType.GeometricProgression;
+			customOptions.ReportRequestOptions.ReportRequestRetryInitialDelay = TimeSpan.FromMinutes(1);
+			customOptions.ReportRequestOptions.ReportRequestRetryInterval = TimeSpan.FromMinutes(minutesBetweenRetries);
+			customOptions.ReportRequestOptions.ReportRequestRetryType = RetryPeriodType.GeometricProgression;
 			var reportRequestWithNoRetryPeriodComplete1 = new ReportRequestEntry
 			{
 				AmazonRegion = AmazonRegion.Europe,

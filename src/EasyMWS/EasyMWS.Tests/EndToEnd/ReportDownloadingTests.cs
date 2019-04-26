@@ -171,12 +171,12 @@ namespace EasyMWS.Tests.EndToEnd
 		    var validReportType = $"{_testEntriesIdentifier}_VALID_REPORT_TYPE_";
 		    Setup_RequestReport_Returns_ReportRequestNotGeneratedYet(validReportType);
 		    var reportRequestContainer = GenerateReportContainer(validReportType);
-			_options.ReportRequestRetryInitialDelay = TimeSpan.Zero;
-			_options.ReportRequestRetryInterval = TimeSpan.Zero;
+			_options.ReportRequestOptions.ReportRequestRetryInitialDelay = TimeSpan.Zero;
+			_options.ReportRequestOptions.ReportRequestRetryInterval = TimeSpan.Zero;
 
 			_easyMwsClient.QueueReport(reportRequestContainer, ReportDownloadCallback, "callbackData");
 
-		    var retryCount = _options.ReportRequestMaxRetryCount;
+		    var retryCount = _options.ReportRequestOptions.ReportRequestMaxRetryCount;
 
 		    for (int i = 0; i <= retryCount; i++)
 		    {
