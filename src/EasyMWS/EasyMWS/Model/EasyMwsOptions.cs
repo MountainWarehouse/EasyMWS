@@ -95,14 +95,17 @@ namespace MountainWarehouse.EasyMWS.Model
     {
         public RestrictInvocationToOriginatingInstance(bool useDefaultValues = true)
         {
-            ForceInvocationByOriginatingInstance = false;
-            AllowInvocationByAnyInstanceIfInvocationFailedLimitReached = false;
-            CustomInstanceId = null;
-            InvocationFailuresLimit = 2;
+            if (useDefaultValues)
+            {
+                ForceInvocationByOriginatingInstance = false;
+                AllowInvocationByAnyInstanceIfInvocationFailedLimitReached = false;
+                CustomInstanceId = null;
+                InvocationFailuresLimit = 2;
+            }
         }
 
         /// <summary>
-        /// Get a hashed value for CustomInstanceId if it has been set, or else a hashed value of Environment.MachineName
+        /// Default=Hash(Environment.MachineName).Get a hashed value for CustomInstanceId if it has been set, or else a hashed value of Environment.MachineName
         /// </summary>
         internal string HashedInstanceId => InstanceIdHelper.GetInstanceIdHash(CustomInstanceId);
 
