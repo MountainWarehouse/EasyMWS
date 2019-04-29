@@ -301,9 +301,9 @@ namespace EasyMWS.Tests.Processors
 			var data = JsonConvert.SerializeObject(propertiesContainer);
 
 			var retryCount =
-				retryCountType == -1 ? _easyMwsOptions.FeedSubmissionMaxRetryCount - 1 :
-				retryCountType == 0 ? _easyMwsOptions.FeedSubmissionMaxRetryCount :
-				retryCountType == 1 ? _easyMwsOptions.FeedSubmissionMaxRetryCount + 1 : 0;
+				retryCountType == -1 ? _easyMwsOptions.FeedSubmissionOptions.FeedSubmissionMaxRetryCount - 1 :
+				retryCountType == 0 ? _easyMwsOptions.FeedSubmissionOptions.FeedSubmissionMaxRetryCount :
+				retryCountType == 1 ? _easyMwsOptions.FeedSubmissionOptions.FeedSubmissionMaxRetryCount + 1 : 0;
 
 			var firstEntryToDelete = new FeedSubmissionEntry
 			{
@@ -337,9 +337,9 @@ namespace EasyMWS.Tests.Processors
 			var data = JsonConvert.SerializeObject(propertiesContainer);
 
 			var retryCount =
-				retryCountType == -1 ? _easyMwsOptions.FeedProcessingMaxRetryCount - 1 :
-				retryCountType == 0 ? _easyMwsOptions.FeedProcessingMaxRetryCount :
-				retryCountType == 1 ? _easyMwsOptions.FeedProcessingMaxRetryCount + 1 : 0;
+				retryCountType == -1 ? _easyMwsOptions.FeedSubmissionOptions.FeedProcessingMaxRetryCount - 1 :
+				retryCountType == 0 ? _easyMwsOptions.FeedSubmissionOptions.FeedProcessingMaxRetryCount :
+				retryCountType == 1 ? _easyMwsOptions.FeedSubmissionOptions.FeedProcessingMaxRetryCount + 1 : 0;
 
 			var firstEntryToDelete = new FeedSubmissionEntry
 			{
@@ -377,9 +377,9 @@ namespace EasyMWS.Tests.Processors
 			var data = JsonConvert.SerializeObject(propertiesContainer);
 
 			var retryCount =
-				retryCountType == -1 ? _easyMwsOptions.ReportDownloadMaxRetryCount - 1 :
-				retryCountType == 0 ? _easyMwsOptions.ReportDownloadMaxRetryCount :
-				retryCountType == 1 ? _easyMwsOptions.ReportDownloadMaxRetryCount + 1 : 0;
+				retryCountType == -1 ? _easyMwsOptions.ReportRequestOptions.ReportDownloadMaxRetryCount - 1 :
+				retryCountType == 0 ? _easyMwsOptions.ReportRequestOptions.ReportDownloadMaxRetryCount :
+				retryCountType == 1 ? _easyMwsOptions.ReportRequestOptions.ReportDownloadMaxRetryCount + 1 : 0;
 
 			var firstEntryToDelete = new FeedSubmissionEntry
 			{
@@ -417,9 +417,9 @@ namespace EasyMWS.Tests.Processors
 			var data = JsonConvert.SerializeObject(propertiesContainer);
 
 			var retryCount =
-				retryCountType == -1 ? _easyMwsOptions.InvokeCallbackMaxRetryCount - 1 :
-				retryCountType == 0 ? _easyMwsOptions.InvokeCallbackMaxRetryCount :
-				retryCountType == 1 ? _easyMwsOptions.InvokeCallbackMaxRetryCount + 1 : 0;
+				retryCountType == -1 ? _easyMwsOptions.CallbackInvocationOptions.InvokeCallbackMaxRetryCount - 1 :
+				retryCountType == 0 ? _easyMwsOptions.CallbackInvocationOptions.InvokeCallbackMaxRetryCount :
+				retryCountType == 1 ? _easyMwsOptions.CallbackInvocationOptions.InvokeCallbackMaxRetryCount + 1 : 0;
 
 			var firstEntryToDelete = new FeedSubmissionEntry
 			{

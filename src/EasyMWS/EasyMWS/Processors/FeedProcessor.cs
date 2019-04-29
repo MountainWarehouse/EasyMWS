@@ -102,20 +102,21 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 				var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 
-				var feedSubmission = new FeedSubmissionEntry(serializedPropertiesContainer)
-				{
-					IsLocked = false,
-					AmazonRegion = _region,
-					MerchantId = _merchantId,
-					LastSubmitted = DateTime.MinValue,
-					DateCreated = DateTime.UtcNow,
-					IsProcessingComplete = false,
-					HasErrors = false,
-					SubmissionErrorData = null,
-					FeedSubmissionRetryCount = 0,
-					FeedSubmissionId = null,
-					FeedType = propertiesContainer.FeedType,
-					Details = new FeedSubmissionDetails
+                var feedSubmission = new FeedSubmissionEntry(serializedPropertiesContainer)
+                {
+                    IsLocked = false,
+                    AmazonRegion = _region,
+                    MerchantId = _merchantId,
+                    LastSubmitted = DateTime.MinValue,
+                    DateCreated = DateTime.UtcNow,
+                    IsProcessingComplete = false,
+                    HasErrors = false,
+                    SubmissionErrorData = null,
+                    FeedSubmissionRetryCount = 0,
+                    FeedSubmissionId = null,
+                    FeedType = propertiesContainer.FeedType,
+                    InstanceId = _options?.CallbackInvocationOptions?.RestrictInvocationToOriginatingInstance?.HashedInstanceId,
+                    Details = new FeedSubmissionDetails
 					{
 						FeedContent = ZipHelper.CreateArchiveFromContent(propertiesContainer.FeedContent)
 					}

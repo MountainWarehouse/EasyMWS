@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS.Data
 {
-    public class FeedSubmissionEntry
+    public class FeedSubmissionEntry : IRestrictionableInvocationEntry
     {
 	    private string _regionAndType;
 
@@ -30,11 +30,12 @@ namespace MountainWarehouse.EasyMWS.Data
         public string LastAmazonFeedProcessingStatus { get; set; }
         public DateTime DateCreated { get; set; }
 
-		#region Serialized callback data necessary to invoke a method with it's argument values.
+		#region Callback data necessary to invoke a method with it's argument values.
 		public string TypeName { get; set; }
 	    public string MethodName { get; set; }
 	    public string Data { get; set; }
 	    public string DataTypeName { get; set; }
+        public string InstanceId { get; set; }
 		#endregion
 
 		#region Data necessary to request a report from amazon.
