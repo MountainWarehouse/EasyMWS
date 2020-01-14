@@ -209,7 +209,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				}
 				else if (reportGenerationInfo.ReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData)
 				{
-                    if (_options.InvokeCallbackForReportStatusDoneNoData)
+                    if (_options.CallbackInvocationOptions.InvokeCallbackForReportStatusDoneNoData)
                     {
                         reportRequestEntry.ReportProcessRetryCount = 0;
                         reportRequestService.Update(reportRequestEntry);
@@ -360,12 +360,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    }
 	    }
 	    private bool IsMatchForRegionAndMerchantId(ReportRequestEntry e) => e.AmazonRegion == _region && e.MerchantId == _merchantId;
-	    private bool IsRequestRetryCountExceeded(ReportRequestEntry e) => e.ReportRequestRetryCount > _options.ReportRequestMaxRetryCount;
-	    private bool IsDownloadRetryCountExceeded(ReportRequestEntry e) => e.ReportDownloadRetryCount > _options.ReportDownloadMaxRetryCount;
-	    private bool IsProcessingRetryCountExceeded(ReportRequestEntry e) => e.ReportProcessRetryCount > _options.ReportProcessingMaxRetryCount;
-	    private bool IsCallbackInvocationRetryCountExceeded(ReportRequestEntry e) => e.InvokeCallbackRetryCount > _options.InvokeCallbackMaxRetryCount;
+	    private bool IsRequestRetryCountExceeded(ReportRequestEntry e) => e.ReportRequestRetryCount > _options.ReportRequestOptions.ReportRequestMaxRetryCount;
+	    private bool IsDownloadRetryCountExceeded(ReportRequestEntry e) => e.ReportDownloadRetryCount > _options.ReportRequestOptions.ReportDownloadMaxRetryCount;
+	    private bool IsProcessingRetryCountExceeded(ReportRequestEntry e) => e.ReportProcessRetryCount > _options.ReportRequestOptions.ReportProcessingMaxRetryCount;
+	    private bool IsCallbackInvocationRetryCountExceeded(ReportRequestEntry e) => e.InvokeCallbackRetryCount > _options.CallbackInvocationOptions.InvokeCallbackMaxRetryCount;
 	    private bool IsExpirationPeriodExceeded(ReportRequestEntry reportRequestEntry) =>
-		    (DateTime.Compare(reportRequestEntry.DateCreated, DateTime.UtcNow.Subtract(_options.ReportDownloadRequestEntryExpirationPeriod)) < 0);
+		    (DateTime.Compare(reportRequestEntry.DateCreated, DateTime.UtcNow.Subtract(_options.ReportRequestOptions.ReportDownloadRequestEntryExpirationPeriod)) < 0);
 
 	    private class EntryToDelete : IEquatable<EntryToDelete>
 	    {

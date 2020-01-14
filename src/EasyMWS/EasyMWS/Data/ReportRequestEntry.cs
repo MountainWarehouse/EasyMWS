@@ -8,8 +8,8 @@ using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS.Data
 {
-	public class ReportRequestEntry
-	{
+	public class ReportRequestEntry : IRestrictionableInvocationEntry
+    {
 		private string _regionAndType;
 		[NotMapped]
 		public string RegionAndTypeComputed
@@ -29,18 +29,19 @@ namespace MountainWarehouse.EasyMWS.Data
         public string LastAmazonReportProcessingStatus { get; set; }
 		public DateTime DateCreated { get; set; }
 
-		#region Serialized callback data necessary to invoke a method with it's argument values.
+		#region Callback data necessary to invoke a method with it's argument values.
 
 		public string TypeName { get; set; }
 		public string MethodName { get; set; }
 		public string Data { get; set; }
 		public string DataTypeName { get; set; }
+        public string InstanceId { get; set; }
 
-		#endregion
+        #endregion
 
-		#region Data necessary to request a report from amazon.
+        #region Data necessary to request a report from amazon.
 
-		public AmazonRegion AmazonRegion { get; set; }
+        public AmazonRegion AmazonRegion { get; set; }
 		public string ReportType { get; set; }
 		public string MerchantId { get; set; }
 		public ContentUpdateFrequency ContentUpdateFrequency { get; set; }
@@ -78,7 +79,6 @@ namespace MountainWarehouse.EasyMWS.Data
 			DataTypeName = callback?.DataTypeName;
 			ReportRequestData = reportRequestData;
             LastAmazonReportProcessingStatus = null;
-
         }
 	}
 

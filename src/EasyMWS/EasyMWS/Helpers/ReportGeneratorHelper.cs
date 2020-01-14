@@ -6,7 +6,7 @@ using MountainWarehouse.EasyMWS.Model;
 
 namespace MountainWarehouse.EasyMWS.Helpers
 {
-	internal static class ReportGeneratorHelper
+	public static class ReportGeneratorHelper
 	{
 		public static ReportRequestPropertiesContainer GenerateReportRequest(string reportType,
 			ContentUpdateFrequency reportUpdateFrequency, IEnumerable<string> requestedMarketplaces = null, DateTime? startDate = null,

@@ -80,11 +80,11 @@ namespace MountainWarehouse.EasyMWS.Processors
                     var callback = new Callback(reportEntry.TypeName, reportEntry.MethodName, reportEntry.Data, reportEntry.DataTypeName);
                     MemoryStream report;
 
-                    if (reportEntry.Details == null && reportEntry.LastAmazonReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData && !_options.InvokeCallbackForReportStatusDoneNoData)
+                    if (reportEntry.Details == null && reportEntry.LastAmazonReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData && !_options.CallbackInvocationOptions.InvokeCallbackForReportStatusDoneNoData)
                     {
                         _logger.Info($"An attempt will not be made to invoke a method callback for the following report in queue : {reportEntry.RegionAndTypeComputed}, because AmazonProcessingStatus for this report is _DONE_NO_DATA_ but InvokeCallbackForReportStatusDoneNoData EasyMwsOption is FALSE.");
                     }
-                    else if (reportEntry.Details == null && reportEntry.LastAmazonReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData && _options.InvokeCallbackForReportStatusDoneNoData)
+                    else if (reportEntry.Details == null && reportEntry.LastAmazonReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData && _options.CallbackInvocationOptions.InvokeCallbackForReportStatusDoneNoData)
                     {
                         _logger.Info($"Attempting to perform method callback for the following report in queue : {reportEntry.RegionAndTypeComputed}, but the AmazonProcessingStatus for this report is _DONE_NO_DATA_ therefore the Stream argument will be null at invocation time.");
                         report = null;
@@ -130,7 +130,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 				var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 
-				var reportRequest = new ReportRequestEntry(serializedPropertiesContainer)
+                var reportRequest = new ReportRequestEntry(serializedPropertiesContainer)
 				{
 					IsLocked = false,
 					AmazonRegion = _region,
@@ -144,8 +144,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 					ReportDownloadRetryCount = 0,
 					ReportProcessRetryCount = 0,
 					InvokeCallbackRetryCount = 0,
-					ReportType = propertiesContainer.ReportType
-				};
+					ReportType = propertiesContainer.ReportType,
+                    InstanceId = _options?.CallbackInvocationOptions?.RestrictInvocationToOriginatingInstance?.HashedInstanceId,
+                };
 
 				var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
 				reportRequest.Data = serializedCallback.Data;

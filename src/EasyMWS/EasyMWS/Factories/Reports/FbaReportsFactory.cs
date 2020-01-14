@@ -168,7 +168,6 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 				requestedMarketplaces: requestedMarketplaces,
 				startDate: startDate, endDate: endDate);
 
-		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		public ReportRequestPropertiesContainer FbaBulkFixStrandedInventoryReport(DateTime? startDate = null,
 			DateTime? endDate = null, IEnumerable<MwsMarketplace> requestedMarketplaces = null)
 			=> ReportGeneratorHelper.GenerateReportRequest("_GET_STRANDED_INVENTORY_LOADER_DATA_",
@@ -176,7 +175,6 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 				requestedMarketplaces: requestedMarketplaces,
 				startDate: startDate, endDate: endDate);
 
-		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		public ReportRequestPropertiesContainer FbaStrandedInventoryReport(DateTime? startDate = null,
 			DateTime? endDate = null, IEnumerable<MwsMarketplace> requestedMarketplaces = null)
 			=> ReportGeneratorHelper.GenerateReportRequest("_GET_STRANDED_INVENTORY_UI_DATA_",
@@ -188,7 +186,6 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 
 		#region FBA Payment Reports
 
-		[Obsolete("Some of the parameters for this report may be missing. Report request not verified yet.")]
 		public ReportRequestPropertiesContainer FbaFeePreviewReport(DateTime startDate,
 			DateTime? endDate, IEnumerable<MwsMarketplace> requestedMarketplaces = null)
 		{
