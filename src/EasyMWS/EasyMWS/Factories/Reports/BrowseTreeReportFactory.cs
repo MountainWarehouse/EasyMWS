@@ -31,10 +31,10 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
             }
             if (!reportOptions.Options.Any()) reportOptions = null;
 
-            var reporContainer = ReportGeneratorHelper.GenerateReportRequest("_GET_XML_BROWSE_TREE_DATA_", ContentUpdateFrequency.Unknown,
+            var reportContainer = ReportGeneratorHelper.GenerateReportRequest("_GET_XML_BROWSE_TREE_DATA_", ContentUpdateFrequency.Unknown,
                 requestedMarketplaces: (List<string>)null, startDate: startDate, endDate: endDate, reportOptions: reportOptions);
 
-            return reporContainer;
+            return reportContainer;
         }
     }
 }
