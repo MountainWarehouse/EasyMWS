@@ -3,7 +3,7 @@ using System.Text;
 
 namespace MountainWarehouse.EasyMWS.Model
 {
-    internal class ReportOptions
+    public class ReportOptions
     {
 
 	    public List<(string Name, string Value)> Options { get; set; } = new List<(string, string)>();
