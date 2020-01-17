@@ -157,7 +157,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 					ReportType = propertiesContainer.ReportType,
                     TargetHandlerId = targetEventId,
                     TargetHandlerArgs = targetEventArgs == null ? null : JsonConvert.SerializeObject(targetEventArgs),
-                    InstanceId = _options?.CallbackInvocationOptions?.RestrictInvocationToOriginatingInstance?.HashedInstanceId,
                 };
 
 				reportRequestService.Create(reportRequest);

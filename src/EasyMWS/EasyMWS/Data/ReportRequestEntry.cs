@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS.Data
 {
-	public class ReportRequestEntry : IRestrictionableInvocationEntry
+	public class ReportRequestEntry
     {
 		private string _regionAndType;
 		[NotMapped]
@@ -33,7 +33,6 @@ namespace MountainWarehouse.EasyMWS.Data
 
         public string TargetHandlerId { get; set; }
         public string TargetHandlerArgs { get; set; }
-        public string InstanceId { get; set; }
 
         #endregion
 

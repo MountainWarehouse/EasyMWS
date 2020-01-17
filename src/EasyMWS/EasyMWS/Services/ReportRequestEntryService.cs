@@ -123,8 +123,6 @@ namespace MountainWarehouse.EasyMWS.Services
 							   _options.CallbackInvocationOptions.InvokeCallbackRetryInterval, _options.CallbackInvocationOptions.InvokeCallbackRetryInterval,
 							   _options.CallbackInvocationOptions.InvokeCallbackRetryPeriodType) && rre.IsLocked == false).ToList();
 
-            entries = EntryInvocationRestrictionHelper<ReportRequestEntry>.RestrictInvocationToOriginatingClientsIfEnabled(entries, _options);
-
             if (entries.Any() && markEntriesAsLocked)
 			{
 				foreach (var entry in entries)

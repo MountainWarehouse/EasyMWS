@@ -131,7 +131,6 @@ namespace MountainWarehouse.EasyMWS.Processors
                     FeedType = propertiesContainer.FeedType,
                     TargetHandlerId = targetEventId,
                     TargetHandlerArgs = targetEventArgs == null ? null : JsonConvert.SerializeObject(targetEventArgs),
-                    InstanceId = _options?.CallbackInvocationOptions?.RestrictInvocationToOriginatingInstance?.HashedInstanceId,
                     Details = new FeedSubmissionDetails
 					{
 						FeedContent = ZipHelper.CreateArchiveFromContent(propertiesContainer.FeedContent)
