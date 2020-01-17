@@ -412,7 +412,7 @@ namespace EasyMWS.Tests.Processors
         [Test]
         public void QueueReportsAccordingToProcessingStatus_InvokeCallbackForReportStatusDoneNoDataTrue_DoesNotDeleteEntry()
         {
-            _easyMwsOptions.CallbackInvocationOptions.InvokeCallbackForReportStatusDoneNoData = true;
+            _easyMwsOptions.EventPublishingOptions.EventPublishingForReportStatusDoneNoData = true;
             var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
             var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
             var data = new List<ReportRequestEntry>
@@ -447,7 +447,7 @@ namespace EasyMWS.Tests.Processors
         [Test]
         public void QueueReportsAccordingToProcessingStatus_InvokeCallbackForReportStatusDoneNoDataFalse_DeletesEntry()
         {
-            _easyMwsOptions.CallbackInvocationOptions.InvokeCallbackForReportStatusDoneNoData = false;
+            _easyMwsOptions.EventPublishingOptions.EventPublishingForReportStatusDoneNoData = false;
             var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
             var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
             var data = new List<ReportRequestEntry>
@@ -961,9 +961,9 @@ namespace EasyMWS.Tests.Processors
 			var data = JsonConvert.SerializeObject(propertiesContainer);
 
 			var retryCount =
-				retryCountType == -1 ? _easyMwsOptions.CallbackInvocationOptions.InvokeCallbackMaxRetryCount - 1 :
-				retryCountType == 0 ? _easyMwsOptions.CallbackInvocationOptions.InvokeCallbackMaxRetryCount :
-				retryCountType == 1 ? _easyMwsOptions.CallbackInvocationOptions.InvokeCallbackMaxRetryCount + 1 : 0;
+				retryCountType == -1 ? _easyMwsOptions.EventPublishingOptions.EventPublishingMaxRetryCount - 1 :
+				retryCountType == 0 ? _easyMwsOptions.EventPublishingOptions.EventPublishingMaxRetryCount :
+				retryCountType == 1 ? _easyMwsOptions.EventPublishingOptions.EventPublishingMaxRetryCount + 1 : 0;
 
 			var firstEntryToDelete = new ReportRequestEntry
 			{

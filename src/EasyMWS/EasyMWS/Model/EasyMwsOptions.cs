@@ -15,7 +15,7 @@ namespace MountainWarehouse.EasyMWS.Model
         internal const int AmazonServiceRequestRetryCount = 4;
         internal const int AmazonRequestRequeueLimit = 2;
 
-        public CallbackInvocationOptions CallbackInvocationOptions { get; set; }
+        public EventPublishingOptions EventPublishingOptions { get; set; }
         public ReportRequestOptions ReportRequestOptions { get; set; }
         public FeedSubmissionOptions FeedSubmissionOptions { get; set; }
 
@@ -31,7 +31,7 @@ namespace MountainWarehouse.EasyMWS.Model
         /// </summary>
         public EasyMwsOptions(bool useDefaultValues = true)
         {
-            CallbackInvocationOptions = new CallbackInvocationOptions(useDefaultValues);
+            EventPublishingOptions = new EventPublishingOptions(useDefaultValues);
             ReportRequestOptions = new ReportRequestOptions(useDefaultValues);
             FeedSubmissionOptions = new FeedSubmissionOptions(useDefaultValues);
 
@@ -43,43 +43,43 @@ namespace MountainWarehouse.EasyMWS.Model
     }
 
     /// <summary>
-    /// InvokeCallbackMaxRetryCount = 5,<para/>
-    /// InvokeCallbackRetryPeriodType = RetryPeriodType.ArithmeticProgression,<para/>
-    /// InvokeCallbackRetryInterval = TimeSpan.FromMinutes(30),<para/>
+    /// EventPublishingMaxRetryCount = 5,<para/>
+    /// EventPublishingRetryPeriodType = RetryPeriodType.ArithmeticProgression,<para/>
+    /// EventPublishingRetryInterval = TimeSpan.FromMinutes(30),<para/>
     /// <para/>
-    /// InvokeCallbackForReportStatusDoneNoData = false<para/>
+    /// EventPublishingForReportStatusDoneNoData = false<para/>
     /// </summary>
-    public class CallbackInvocationOptions
+    public class EventPublishingOptions
     {
         /// <summary>
-        /// Default=5. When attempting to invoke a callback method after a report has been downloaded or after a feed has been submitted, and the callback invocation fails, specify how many times to retry the invocation.
+        /// Default=5. When attempting to publish an event after a report has been downloaded or after a feed has been submitted, and the event publishing fails, specify how many times to retry the invocation.
         /// </summary>
-        public int InvokeCallbackMaxRetryCount { get; set; }
+        public int EventPublishingMaxRetryCount { get; set; }
 
         /// <summary>
-        ///  Default=ArithmeticProgression. When attempting to invoke a callback method after a report has been downloaded or after a feed has been submitted, and the callback invocation fails, specify the time series type for invocation retries.
+        ///  Default=ArithmeticProgression. When attempting to publish an event after a report has been downloaded or after a feed has been submitted, and the event publishing fails, specify the time series type for invocation retries.
         /// </summary>
-        public RetryPeriodType InvokeCallbackRetryPeriodType { get; set; }
+        public RetryPeriodType EventPublishingRetryPeriodType { get; set; }
 
         /// <summary>
-        /// Default=2minutes. When attempting to invoke a callback method after a report has been downloaded or after a feed has been submitted, and the callback invocation fails, specify the interval between retries. 
+        /// Default=2minutes. When attempting to publish an event after a report has been downloaded or after a feed has been submitted, and the event publishing fails, specify the interval between retries. 
         /// </summary>
-        public TimeSpan InvokeCallbackRetryInterval { get; set; }
+        public TimeSpan EventPublishingRetryInterval { get; set; }
 
         /// <summary>
-		/// Default=false. Invoke the callback method after a report has been downloaded or after a feed has been submitted, even if the report status received from Amazon is DoneNoData, with the report stream argument being null.
+		/// Default=false. Publish an event after a report has been downloaded or after a feed has been submitted, even if the report status received from Amazon is DoneNoData, with the report stream argument being null.
 		/// </summary>
-        public bool InvokeCallbackForReportStatusDoneNoData { get; set; }
+        public bool EventPublishingForReportStatusDoneNoData { get; set; }
 
-        public CallbackInvocationOptions(bool useDefaultValues = true)
+        public EventPublishingOptions(bool useDefaultValues = true)
         {
             if (useDefaultValues)
             {
-                InvokeCallbackMaxRetryCount = 5;
-                InvokeCallbackRetryPeriodType = EasyMwsOptions.ConstantRetryPeriod;
-                InvokeCallbackRetryInterval = TimeSpan.FromMinutes(2);
+                EventPublishingMaxRetryCount = 5;
+                EventPublishingRetryPeriodType = EasyMwsOptions.ConstantRetryPeriod;
+                EventPublishingRetryInterval = TimeSpan.FromMinutes(2);
 
-                InvokeCallbackForReportStatusDoneNoData = false;
+                EventPublishingForReportStatusDoneNoData = false;
             }
         }
     }

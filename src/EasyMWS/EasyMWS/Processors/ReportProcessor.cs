@@ -63,7 +63,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			DownloadNextReportInQueueFromAmazon(reportRequestService);
 
-			PerformCallbackForPreviouslyDownloadedReports(reportRequestService);
+			PublishEventsForPreviouslyDownloadedReports(reportRequestService);
 		}
 
 		public void DownloadNextReportInQueueFromAmazon(IReportRequestEntryService reportRequestService)
@@ -80,7 +80,7 @@ namespace MountainWarehouse.EasyMWS.Processors
             handler?.Invoke(this, e);
         }
 
-		private void PerformCallbackForPreviouslyDownloadedReports(IReportRequestEntryService reportRequestService)
+		private void PublishEventsForPreviouslyDownloadedReports(IReportRequestEntryService reportRequestService)
 		{
 			var reportsReadyForCallback = reportRequestService.GetAllFromQueueOfReportsReadyForCallback(_merchantId, _region);
 
@@ -95,19 +95,19 @@ namespace MountainWarehouse.EasyMWS.Processors
                         TargetHandlerArgs = reportEntry.TargetHandlerArgs == null ? null : JsonConvert.DeserializeObject<Dictionary<string, object>>(reportEntry.TargetHandlerArgs)
                     };
 
-                    if (reportEntry.Details == null && reportEntry.LastAmazonReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData && !_options.CallbackInvocationOptions.InvokeCallbackForReportStatusDoneNoData)
+                    if (reportEntry.Details == null && reportEntry.LastAmazonReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData && !_options.EventPublishingOptions.EventPublishingForReportStatusDoneNoData)
                     {
-                        _logger.Info($"An attempt will not be made to invoke a method callback for the following report in queue : {reportEntry.RegionAndTypeComputed}, because AmazonProcessingStatus for this report is _DONE_NO_DATA_ but InvokeCallbackForReportStatusDoneNoData EasyMwsOption is FALSE.");
+                        _logger.Info($"An attempt will not be made to publish event ReportDownloaded for the following report in queue : {reportEntry.RegionAndTypeComputed}, because AmazonProcessingStatus for this report is _DONE_NO_DATA_ but EventPublishingForReportStatusDoneNoData EasyMwsOption is FALSE.");
                     }
-                    else if (reportEntry.Details == null && reportEntry.LastAmazonReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData && _options.CallbackInvocationOptions.InvokeCallbackForReportStatusDoneNoData)
+                    else if (reportEntry.Details == null && reportEntry.LastAmazonReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData && _options.EventPublishingOptions.EventPublishingForReportStatusDoneNoData)
                     {
-                        _logger.Info($"Attempting to perform method callback for the following report in queue : {reportEntry.RegionAndTypeComputed}, but the AmazonProcessingStatus for this report is _DONE_NO_DATA_ therefore the Stream argument will be null at invocation time.");
+                        _logger.Info($"Attempting to publish event ReportDownloaded for the following report in queue : {reportEntry.RegionAndTypeComputed}, but the AmazonProcessingStatus for this report is _DONE_NO_DATA_ therefore the Stream argument will be null at invocation time.");
                         eventArgs.ReportContent = null;
                         OnReportDownloaded(eventArgs);
                     }
                     else
                     {
-                        _logger.Info($"Attempting to perform method callback for the next downloaded report in queue : {reportEntry.RegionAndTypeComputed}.");
+                        _logger.Info($"Attempting to publish event ReportDownloaded for the next downloaded report in queue : {reportEntry.RegionAndTypeComputed}.");
                         eventArgs.ReportContent = ZipHelper.ExtractArchivedSingleFileToStream(reportEntry.Details?.ReportContent);
                         OnReportDownloaded(eventArgs);
                     }
@@ -116,13 +116,13 @@ namespace MountainWarehouse.EasyMWS.Processors
                 }
 				catch(SqlException e)
 				{
-					_logger.Error($"Method callback failed for {reportEntry.RegionAndTypeComputed} due to an internal error '{e.Message}'. The callback will be retried at the next poll request", e);
+					_logger.Error($"ReportDownloaded event publishing failed for {reportEntry.RegionAndTypeComputed} due to an internal error '{e.Message}'. The event publishing will be retried at the next poll request", e);
 					reportEntry.IsLocked = false;
 					reportRequestService.Update(reportEntry);
 				}
 				catch (Exception e)
 				{
-					_logger.Error($"Method callback failed for {reportEntry.RegionAndTypeComputed}. Current retry count is :{reportEntry.InvokeCallbackRetryCount}. {e.Message}", e);
+					_logger.Error($"ReportDownloaded event publishing failed for {reportEntry.RegionAndTypeComputed}. Current retry count is :{reportEntry.InvokeCallbackRetryCount}. {e.Message}", e);
 					reportEntry.InvokeCallbackRetryCount++;
 					reportEntry.IsLocked = false;
 					reportRequestService.Update(reportEntry);

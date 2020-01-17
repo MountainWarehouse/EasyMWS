@@ -209,7 +209,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				}
 				else if (reportGenerationInfo.ReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData)
 				{
-                    if (_options.CallbackInvocationOptions.InvokeCallbackForReportStatusDoneNoData)
+                    if (_options.EventPublishingOptions.EventPublishingForReportStatusDoneNoData)
                     {
                         reportRequestEntry.ReportProcessRetryCount = 0;
                         reportRequestService.Update(reportRequestEntry);
@@ -363,7 +363,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 	    private bool IsRequestRetryCountExceeded(ReportRequestEntry e) => e.ReportRequestRetryCount > _options.ReportRequestOptions.ReportRequestMaxRetryCount;
 	    private bool IsDownloadRetryCountExceeded(ReportRequestEntry e) => e.ReportDownloadRetryCount > _options.ReportRequestOptions.ReportDownloadMaxRetryCount;
 	    private bool IsProcessingRetryCountExceeded(ReportRequestEntry e) => e.ReportProcessRetryCount > _options.ReportRequestOptions.ReportProcessingMaxRetryCount;
-	    private bool IsCallbackInvocationRetryCountExceeded(ReportRequestEntry e) => e.InvokeCallbackRetryCount > _options.CallbackInvocationOptions.InvokeCallbackMaxRetryCount;
+	    private bool IsCallbackInvocationRetryCountExceeded(ReportRequestEntry e) => e.InvokeCallbackRetryCount > _options.EventPublishingOptions.EventPublishingMaxRetryCount;
 	    private bool IsExpirationPeriodExceeded(ReportRequestEntry reportRequestEntry) =>
 		    (DateTime.Compare(reportRequestEntry.DateCreated, DateTime.UtcNow.Subtract(_options.ReportRequestOptions.ReportDownloadRequestEntryExpirationPeriod)) < 0);
 

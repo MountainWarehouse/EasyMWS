@@ -61,7 +61,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			DownloadNextFeedSubmissionResultFromAmazon(feedSubmissionService);
 
-			PerformCallbacksForPreviouslySubmittedFeeds(feedSubmissionService);
+			PublishEventsForPreviouslySubmittedFeeds(feedSubmissionService);
 		}
 
         private void OnFeedUploaded(FeedUploadedEventArgs e)
@@ -70,7 +70,7 @@ namespace MountainWarehouse.EasyMWS.Processors
             handler?.Invoke(this, e);
         }
 
-        private void PerformCallbacksForPreviouslySubmittedFeeds(IFeedSubmissionEntryService feedSubmissionService)
+        private void PublishEventsForPreviouslySubmittedFeeds(IFeedSubmissionEntryService feedSubmissionService)
 		{
 			var previouslySubmittedFeeds = feedSubmissionService.GetAllFromQueueOfFeedsReadyForCallback(_merchantId, _region);
 
@@ -86,19 +86,19 @@ namespace MountainWarehouse.EasyMWS.Processors
                         TargetHandlerArgs = feedSubmissionEntry.TargetHandlerArgs == null ? null : JsonConvert.DeserializeObject<Dictionary<string, object>>(feedSubmissionEntry.TargetHandlerArgs)
                     };
 
-                    _logger.Info($"Attempting to perform method callback for the next submitted feed in queue : {feedSubmissionEntry.RegionAndTypeComputed}");
+                    _logger.Info($"Attempting publish FeedUploaded for the next submitted feed in queue : {feedSubmissionEntry.RegionAndTypeComputed}");
                     OnFeedUploaded(eventArgs);
                     feedSubmissionService.Delete(feedSubmissionEntry);
 				}
 				catch (SqlException e)
 				{
-					_logger.Error($"Method callback failed for {feedSubmissionEntry.RegionAndTypeComputed} due to an internal error '{e.Message}'. The callback will be retried at the next poll request", e);
+					_logger.Error($"Event publishing failed for {feedSubmissionEntry.RegionAndTypeComputed} due to an internal error '{e.Message}'. The event publishing will be retried at the next poll request", e);
 					feedSubmissionEntry.IsLocked = false;
 					feedSubmissionService.Update(feedSubmissionEntry);
 				}
 				catch (Exception e)
 				{
-					_logger.Error($"Method callback failed for {feedSubmissionEntry.RegionAndTypeComputed}. Current retry count is :{feedSubmissionEntry.FeedSubmissionRetryCount}. {e.Message}", e);
+					_logger.Error($"Event publishing failed for {feedSubmissionEntry.RegionAndTypeComputed}. Current retry count is :{feedSubmissionEntry.FeedSubmissionRetryCount}. {e.Message}", e);
 					feedSubmissionEntry.InvokeCallbackRetryCount++;
 					feedSubmissionEntry.IsLocked = false;
 					feedSubmissionService.Update(feedSubmissionEntry);
