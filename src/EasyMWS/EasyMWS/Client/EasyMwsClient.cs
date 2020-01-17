@@ -24,6 +24,7 @@ namespace MountainWarehouse.EasyMWS.Client
         public string MerchantId => _merchantId;
         public EasyMwsOptions Options => _options;
         public event EventHandler<ReportDownloadedEventArgs> ReportDownloaded;
+        public event EventHandler<FeedUploadedEventArgs> FeedUploaded;
 
         /// <summary>
         /// Constructor to be used for UnitTesting/Mocking (in the absence of a dedicated DependencyInjection framework)
@@ -37,8 +38,10 @@ namespace MountainWarehouse.EasyMWS.Client
 			_reportProcessor = reportProcessor;
 			_feedProcessor = feedProcessor;
 
-            _reportProcessor.InternalReportDownloaded -= OnReportDownloaded;
-            _reportProcessor.InternalReportDownloaded += OnReportDownloaded;
+            _reportProcessor.ReportDownloadedInternal -= OnReportDownloaded;
+            _reportProcessor.ReportDownloadedInternal += OnReportDownloaded;
+            _feedProcessor.FeedUploadedInternal -= OnFeedUploaded;
+            _feedProcessor.FeedUploadedInternal += OnFeedUploaded;
         }
 
         /// <param name="region">The region of the account. Required parameter. A finer grained region or country can be specified on a PropertiesContainer by specifying its marketplaceIdList constructor argument.</param>
@@ -65,8 +68,10 @@ namespace MountainWarehouse.EasyMWS.Client
 			_reportProcessor = _reportProcessor ?? new ReportProcessor(_amazonRegion, _merchantId, mwsAuthToken, _options, mwsClient, _easyMwsLogger);
 			_feedProcessor = _feedProcessor ?? new FeedProcessor(_amazonRegion, _merchantId, mwsAuthToken, _options, mwsClient, _easyMwsLogger);
 
-            _reportProcessor.InternalReportDownloaded -= OnReportDownloaded;
-            _reportProcessor.InternalReportDownloaded += OnReportDownloaded;
+            _reportProcessor.ReportDownloadedInternal -= OnReportDownloaded;
+            _reportProcessor.ReportDownloadedInternal += OnReportDownloaded;
+            _feedProcessor.FeedUploadedInternal -= OnFeedUploaded;
+            _feedProcessor.FeedUploadedInternal += OnFeedUploaded;
         }
 
 		public void Poll()
@@ -88,7 +93,7 @@ namespace MountainWarehouse.EasyMWS.Client
 				});
 		}
 
-        public void QueueReport(ReportRequestPropertiesContainer reportRequestContainer, string targetEventId, Dictionary<string, object> targetEventArgs = null)
+        public void QueueReport(ReportRequestPropertiesContainer reportRequestContainer, string targetEventId = null, Dictionary<string, object> targetEventArgs = null)
         {
             using (var reportRequestService = new ReportRequestEntryService(_options, _easyMwsLogger))
             {
@@ -96,12 +101,11 @@ namespace MountainWarehouse.EasyMWS.Client
             }
         }
 
-        public void QueueFeed(FeedSubmissionPropertiesContainer feedSubmissionContainer,
-			Action<Stream, object> callbackMethod, object callbackData)
+        public void QueueFeed(FeedSubmissionPropertiesContainer feedSubmissionContainer, string targetEventId = null, Dictionary<string, object> targetEventArgs = null)
 		{
 			using (var feedSubmissionService = new FeedSubmissionEntryService(_options, _easyMwsLogger))
 			{
-				_feedProcessor.QueueFeed(feedSubmissionService, feedSubmissionContainer, callbackMethod, callbackData);
+				_feedProcessor.QueueFeed(feedSubmissionService, feedSubmissionContainer, targetEventId, targetEventArgs);
 			}
 		}
 
@@ -163,6 +167,7 @@ namespace MountainWarehouse.EasyMWS.Client
 		}
 
         private void OnReportDownloaded(object sender, ReportDownloadedEventArgs e) => ReportDownloaded?.Invoke(this, e);
+        private void OnFeedUploaded(object sender, FeedUploadedEventArgs e) => FeedUploaded?.Invoke(this, e);
 
         #endregion
 

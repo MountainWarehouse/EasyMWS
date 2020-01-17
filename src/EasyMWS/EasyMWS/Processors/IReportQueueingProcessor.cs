@@ -9,10 +9,10 @@ namespace MountainWarehouse.EasyMWS.Processors
     internal interface IReportQueueingProcessor
     {
 	    void PollReports(IReportRequestEntryService reportRequestService);
-	    void QueueReport(IReportRequestEntryService reportRequestService, ReportRequestPropertiesContainer propertiesContainer, string targetEventId, Dictionary<string, object> targetEventArgs);
+	    void QueueReport(IReportRequestEntryService reportRequestService, ReportRequestPropertiesContainer propertiesContainer, string targetEventId = null, Dictionary<string, object> targetEventArgs = null);
 
         void PurgeQueue(IReportRequestEntryService reportRequestService);
 
-        event EventHandler<ReportDownloadedEventArgs> InternalReportDownloaded;
+        event EventHandler<ReportDownloadedEventArgs> ReportDownloadedInternal;
     }
 }

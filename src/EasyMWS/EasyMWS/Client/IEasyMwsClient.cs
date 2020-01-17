@@ -44,21 +44,23 @@ namespace MountainWarehouse.EasyMWS.Client
 
         /// <summary>
         ///  Add a new ReportRequest to a queue of requests that are going to be processed, with the final result of trying to download the respective report from Amazon.<para/>
-        ///  Once the report has been downloaded from amazon, it can be obtained by subscribing to the IEasyMwsClient.ReportDownloaded .net event.<para/>
-        ///  Given that each report might be processed in a different manner, the "targetHandlerId" argument can be specified to target a specific process to handle each report at the time the event handled is invoked.<para/>
+        ///  Once the report has been downloaded from amazon, it can be obtained by subscribing to the IEasyMwsClient.ReportDownloaded event.<para/>
+        ///  Given that each report might be processed in a different manner, the "targetHandlerId" argument can be specified to target a specific process to handle each report at the time the ReportDownloaded event handled is invoked.<para/>
         /// </summary>
         /// <param name="reportRequestContainer">An object that contains the arguments required to request the report from Amazon. This object is meant to be obtained by calling a ReportRequestFactory, ex: IReportRequestFactoryFba.</param>
-        /// <param name="targetHandlerId">Optional. A unique arbitrary ID which can be used to associate the speciffic process calling this method, with its corresponding "ReportDownloaded" .net event handler.<para/>This can be used to differentiate between different processes targetting different report types.</param>
-        /// <param name="targetHandlerArgs">Optional. A dictionary which can be used to specify any data needed at the time the report has been downloaded and is about to be processed, as part of the .net event handler(s) which will be invoked.</param>
+        /// <param name="targetHandlerId">Optional. A unique arbitrary ID which can be used to associate the speciffic process calling this method, with its corresponding "ReportDownloaded" event handler.<para/>This can be used to differentiate between different processes targetting different report types.</param>
+        /// <param name="targetHandlerArgs">Optional. A dictionary which can be used to specify any data needed at the time the report has been downloaded and is about to be processed, as part of the event handler(s) which will be invoked.</param>
         void QueueReport(ReportRequestPropertiesContainer reportRequestContainer, string targetHandlerId = null, Dictionary<string, object> targetHandlerArgs = null);
 
         /// <summary>
-        /// Add a new FeedSubmissionRequest to a queue of feeds to be submitted to amazon, with the final result of obtaining of posting the feed data to amazon and obtaining a response.
+        /// Add a new FeedSubmissionRequest to a queue of feeds to be submitted to amazon, with the final result of obtaining of posting the feed data to amazon and downloading a feed processing response from amazon.<para/>
+        /// Once a feed has been uploaded to amazon, after its corresponding processing report has been downloaded it can be obtained by subscribing to the IEasyMwsClient.FeedUploaded event.<para/>
+        /// Given that each feed processing report might be processed in a different manner, the "targetHandlerId" argument can be specified to target a specific process to handle each report at the time the FeedUploaded event handled is invoked.<para/>
         /// </summary>
         /// <param name="feedSubmissionContainer">An object that contains the arguments required to submit a feed to Amazon.</param>
-        /// <param name="callbackMethod">A delegate for a method that is going to be called once a feed has been submitted to amazon.</param>
-        /// <param name="callbackData">An object that contains any argument(s) needed to invoke the delegate 'callbackMethod'</param>
-        void QueueFeed(FeedSubmissionPropertiesContainer feedSubmissionContainer, Action<Stream, object> callbackMethod, object callbackData);
+        /// <param name="targetEventId">Optional. A unique arbitrary ID which can be used to associate the speciffic process calling this method, with its corresponding "FeedUploaded" event handler.<para/>This can be used to differentiate between different processes targetting different feed processing report types.</param>
+        /// <param name="targetEventArgs">Optional. A dictionary which can be used to specify any data needed at the time the feed processing report has been downloaded and is about to be processed, as part of the event handler(s) which will be invoked.</param>
+        void QueueFeed(FeedSubmissionPropertiesContainer feedSubmissionContainer, string targetEventId = null, Dictionary<string, object> targetEventArgs = null);
 
 		/// <summary>
 		/// Purges the queue of report request entries for the current client instance corresponding to a pair of AmazonRegion and MerchantId
@@ -70,6 +72,24 @@ namespace MountainWarehouse.EasyMWS.Client
 		/// </summary>
 		void PurgeFeedSubmissionEntriesQueue();
 
+        /// <summary>
+        /// Event which is invoked as soon as a Report has been downloaded from Amazon<para/>
+        /// The event provides the following data arguments : <para/>
+        ///     -   ReportContent provides access to the report as a stream, as downloaded from amazon.<para/>
+        ///     -   ReportType and TargetHandlerId, both of which can be used to identify the report type therefore allows processing the report in a speciffic manner. <para/>
+        ///     -   TargetHandlerId can be provided at the time the report is Queued.<para/>
+        ///     -   TargetHandlerArgs contains a dictionary of arbitrary key value pairs which can be provided at the time the report is Queued.
+        /// </summary>
         event EventHandler<ReportDownloadedEventArgs> ReportDownloaded;
+
+        /// <summary>
+        /// Event which is invoked as soon as a Feed has been uploaded to Amazon<para/>
+        /// The event provides the following data arguments : <para/>
+        ///     -   ReportContent provides access to the report as a stream, as downloaded from amazon.<para/>
+        ///     -   ReportType and TargetHandlerId, both of which can be used to identify the report type therefore allows processing the report in a speciffic manner. <para/>
+        ///     -   TargetHandlerId can be provided at the time the report is Queued.<para/>
+        ///     -   TargetHandlerArgs contains a dictionary of arbitrary key value pairs which can be provided at the time the report is Queued.
+        /// </summary>
+        event EventHandler<FeedUploadedEventArgs> FeedUploaded;
     }
 }

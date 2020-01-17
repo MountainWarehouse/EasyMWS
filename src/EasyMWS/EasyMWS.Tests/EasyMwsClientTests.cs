@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using Moq;
 using MountainWarehouse.EasyMWS;
@@ -98,24 +99,20 @@ namespace EasyMWS.Tests
 			_feedProcessorMock.Verify(fpm => fpm.PollFeeds(It.IsAny<IFeedSubmissionEntryService>()), Times.Once);
 		}
 
-		//[Test]
-		//public void QueueReport_CallsReportProcessorQueueMethod_Once()
-		//{
-		//	_easyMwsClient.QueueReport(new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown),
-		//		new Action<Stream, object>((
-		//			(stream, o) => { })), new { });
+        [Test]
+        public void QueueReport_CallsReportProcessorQueueMethod_Once()
+        {
+            _easyMwsClient.QueueReport(new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown));
 
-		//	_reportProcessorMock.Verify(rpm => rpm.QueueReport(It.IsAny<IReportRequestEntryService>(),It.IsAny<ReportRequestPropertiesContainer>(), It.IsAny<Action<Stream, object>>(), It.IsAny<object>()), Times.Once);
-		//}
+            _reportProcessorMock.Verify(rpm => rpm.QueueReport(It.IsAny<IReportRequestEntryService>(), It.IsAny<ReportRequestPropertiesContainer>(), It.IsAny<string>(), It.IsAny<Dictionary<string,object>>()), Times.Once);
+        }
 
-		[Test]
-		public void QueueFeed_CallsFeedProcessorQueueMethod_Once()
-		{
-			_easyMwsClient.QueueFeed(new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType"),
-				new Action<Stream, object>((
-					(stream, o) => { })), new { });
+        [Test]
+        public void QueueFeed_CallsFeedProcessorQueueMethod_Once()
+        {
+            _easyMwsClient.QueueFeed(new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType"));
 
-			_feedProcessorMock.Verify(rpm => rpm.QueueFeed(It.IsAny<IFeedSubmissionEntryService>(), It.IsAny<FeedSubmissionPropertiesContainer>(), It.IsAny<Action<Stream, object>>(), It.IsAny<object>()), Times.Once);
-		}
-	}
+            _feedProcessorMock.Verify(rpm => rpm.QueueFeed(It.IsAny<IFeedSubmissionEntryService>(), It.IsAny<FeedSubmissionPropertiesContainer>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object>>()), Times.Once);
+        }
+    }
 }

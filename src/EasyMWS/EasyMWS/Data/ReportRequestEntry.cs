@@ -69,7 +69,7 @@ namespace MountainWarehouse.EasyMWS.Data
 		public ReportRequestEntry(string reportRequestData)
 		{
 			if(string.IsNullOrEmpty(reportRequestData))
-				throw new ArgumentException("Callback data or ReportRequestData not provided, but are required");
+				throw new ArgumentException("ReportRequestEntry data not provided, but it is required");
 
 			ReportRequestData = reportRequestData;
             LastAmazonReportProcessingStatus = null;

@@ -25,7 +25,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		private readonly string _merchantId;
 		private readonly EasyMwsOptions _options;
 
-        public event EventHandler<ReportDownloadedEventArgs> InternalReportDownloaded;
+        public event EventHandler<ReportDownloadedEventArgs> ReportDownloadedInternal;
 
         /// <summary>
         /// Constructor to be used for UnitTesting/Mocking (in the absence of a dedicated DependencyInjection framework)
@@ -76,7 +76,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
         private void OnReportDownloaded(ReportDownloadedEventArgs e)
         {
-            EventHandler<ReportDownloadedEventArgs> handler = InternalReportDownloaded;
+            EventHandler<ReportDownloadedEventArgs> handler = ReportDownloadedInternal;
             handler?.Invoke(this, e);
         }
 

@@ -21,51 +21,47 @@ namespace EasyMWS.Tests.Services
 	    private readonly AmazonRegion _region = AmazonRegion.Europe;
 	    private EasyMwsOptions _options;
 
-		[SetUp]
-	    public void Setup()
-	    {
-		    _options = new EasyMwsOptions();
-			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType", false,
-			    new List<string>(MwsMarketplaceGroup.AmazonEurope().Select(m=>m.Id)));
-		    var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
+        [SetUp]
+        public void Setup()
+        {
+            _options = new EasyMwsOptions();
+            var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType", false,
+                new List<string>(MwsMarketplaceGroup.AmazonEurope().Select(m => m.Id)));
+            var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
 
-			_feedSubmissionEntries = new List<FeedSubmissionEntry>
-		    {
-				new FeedSubmissionEntry(serializedPropertiesContainer){ Id = 2 },
-				new FeedSubmissionEntry(serializedPropertiesContainer)
-				{
-					Id = 1,
-					AmazonRegion = AmazonRegion.Europe,
-					TypeName = "testTypeName",
-					DataTypeName = "testDataTypeName",
-					MethodName = "testMethodName",
-					Data = "testData",
-					FeedType = propertiesContainer.FeedType,
-					FeedSubmissionData = JsonConvert.SerializeObject(propertiesContainer)
-				}
-			};
+            _feedSubmissionEntries = new List<FeedSubmissionEntry>
+            {
+                new FeedSubmissionEntry(serializedPropertiesContainer){ Id = 2 },
+                new FeedSubmissionEntry(serializedPropertiesContainer)
+                {
+                    Id = 1,
+                    AmazonRegion = AmazonRegion.Europe,
+                    TargetHandlerId = "TargetHandlerId",
+                    TargetHandlerArgs = JsonConvert.SerializeObject(new Dictionary<string, object>{ { "key1", "value1"} }),
+                    FeedType = propertiesContainer.FeedType,
+                    FeedSubmissionData = JsonConvert.SerializeObject(propertiesContainer)
+                }
+            };
 
-		    _feedSubmissionCallbackRepoMock = new Mock<IFeedSubmissionEntryRepository>();
-		    _feedSubmissionCallbackRepoMock.Setup(x => x.GetAll()).Returns(_feedSubmissionEntries.AsQueryable());
-		    _feedSubmissionEntryService = new FeedSubmissionEntryService(_feedSubmissionCallbackRepoMock.Object, _options);
-		}
+            _feedSubmissionCallbackRepoMock = new Mock<IFeedSubmissionEntryRepository>();
+            _feedSubmissionCallbackRepoMock.Setup(x => x.GetAll()).Returns(_feedSubmissionEntries.AsQueryable());
+            _feedSubmissionEntryService = new FeedSubmissionEntryService(_feedSubmissionCallbackRepoMock.Object, _options);
+        }
 
-	    [Test]
-	    public void FirstOrDefault_TwoInQueue_ReturnsFirstObjectPopulatedWithCorrectData()
-	    {
-			var feedSubmissionEntry = _feedSubmissionEntryService.FirstOrDefault();
-		    var feedSubmissionData = JsonConvert.DeserializeObject<FeedSubmissionPropertiesContainer>(feedSubmissionEntry.FeedSubmissionData);
+        [Test]
+        public void FirstOrDefault_TwoInQueue_ReturnsFirstObjectPopulatedWithCorrectData()
+        {
+            var feedSubmissionEntry = _feedSubmissionEntryService.FirstOrDefault();
+            var feedSubmissionData = JsonConvert.DeserializeObject<FeedSubmissionPropertiesContainer>(feedSubmissionEntry.FeedSubmissionData);
 
-		    Assert.AreEqual(AmazonRegion.Europe, feedSubmissionEntry.AmazonRegion);
-		    Assert.AreEqual("testData", feedSubmissionEntry.Data);
-		    Assert.AreEqual("testMethodName", feedSubmissionEntry.MethodName);
-		    Assert.AreEqual("testTypeName", feedSubmissionEntry.TypeName);
-		    Assert.AreEqual("testDataTypeName", feedSubmissionEntry.DataTypeName);
-		    Assert.AreEqual("testFeedType", feedSubmissionEntry.FeedType);
-			CollectionAssert.AreEquivalent(new List<string>(MwsMarketplaceGroup.AmazonEurope().Select(m=>m.Id)), feedSubmissionData.MarketplaceIdList);
-		}
+            Assert.AreEqual(AmazonRegion.Europe, feedSubmissionEntry.AmazonRegion);
+            Assert.AreEqual("TargetHandlerId", feedSubmissionEntry.TargetHandlerId);
+            Assert.AreEqual("{\"key1\":\"value1\"}", feedSubmissionEntry.TargetHandlerArgs);
+            Assert.AreEqual("testFeedType", feedSubmissionEntry.FeedType);
+            CollectionAssert.AreEquivalent(new List<string>(MwsMarketplaceGroup.AmazonEurope().Select(m => m.Id)), feedSubmissionData.MarketplaceIdList);
+        }
 
-	    [Test]
+        [Test]
 	    public void
 		    GetNextFromQueueOfFeedsToSubmit_ReturnsFirstFeedSubmissionFromQueueWithNullFeedSubmissionId_AndSkipsEntriesWithNonNullFeedSubmissionId()
 	    {

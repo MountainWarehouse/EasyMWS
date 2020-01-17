@@ -50,69 +50,67 @@ namespace EasyMWS.Tests.ReportProcessors
 				_feedSubmissionProcessorMock.Object, _callbackActivatorMock.Object, _loggerMock.Object);
 		}
 
-		#region QueueFeed tests 
+        #region QueueFeed tests 
 
-		[Test]
-		public void QueueFeed_WithNullCallbackMethodArgument_NeverCallsLogError()
-		{
-			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
-			var callbackMethod = (Action<Stream, object>) null;
+        [Test]
+        public void QueueFeed_WithNullTargetEventId_SavesFeedEntry_NeverCallsLogError()
+        {
+            var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
+            var callbackMethod = (Action<Stream, object>)null;
 
-			_feedProcessor.QueueFeed(_feedSubmissionServiceMock.Object, propertiesContainer, callbackMethod, new { Foo = "Bar" });
+            _feedProcessor.QueueFeed(_feedSubmissionServiceMock.Object, propertiesContainer, null, new Dictionary<string, object> { { "key", "value"} });
 
-			_feedSubmissionServiceMock.Verify(rrcs => rrcs.Create(It.IsAny<FeedSubmissionEntry>()), Times.Never);
-			_feedSubmissionServiceMock.Verify(rrcs => rrcs.SaveChanges(), Times.Never);
-			_loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<ArgumentNullException>()), Times.Once);
-		}
+            _feedSubmissionServiceMock.Verify(rrcs => rrcs.Create(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+            _feedSubmissionServiceMock.Verify(rrcs => rrcs.SaveChanges(), Times.Once);
+            _loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<ArgumentNullException>()), Times.Never);
+        }
 
-		[Test]
-		public void QueueFeed_WithNullReportRequestPropertiesContainerArgument_ThrowsArgumentNullException()
-		{
-			FeedSubmissionPropertiesContainer propertiesContainer = null;
-			var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
+        [Test]
+        public void QueueFeed_WithNullFeedSubmissionPropertiesContainerArgument_ThrowsArgumentNullException()
+        {
+            FeedSubmissionPropertiesContainer propertiesContainer = null;
+            var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
 
-			_feedProcessor.QueueFeed(_feedSubmissionServiceMock.Object, propertiesContainer, callbackMethod, new { Foo = "Bar" });
+            _feedProcessor.QueueFeed(_feedSubmissionServiceMock.Object, propertiesContainer);
 
-			_loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<Exception>()), Times.Once);
-		}
+            _loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<Exception>()), Times.Once);
+        }
 
-		[Test]
-		public void QueueFeed_WithNonEmptyArguments_CallsFeedSubmissionEntryServiceCreateOnceWithCorrectData()
-		{
-			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
-			var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
-			FeedSubmissionEntry feedSubmissionEntry = null;
-			_feedSubmissionServiceMock.Setup(rrcsm => rrcsm.Create(It.IsAny<FeedSubmissionEntry>()))
-				.Callback<FeedSubmissionEntry>((p) => { feedSubmissionEntry = p; });
+        [Test]
+        public void QueueFeed_WithNonEmptyArguments_CallsFeedSubmissionEntryServiceCreateOnceWithCorrectData()
+        {
+            var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
+            var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
+            FeedSubmissionEntry feedSubmissionEntry = null;
+            _feedSubmissionServiceMock.Setup(rrcsm => rrcsm.Create(It.IsAny<FeedSubmissionEntry>()))
+                .Callback<FeedSubmissionEntry>((p) => { feedSubmissionEntry = p; });
 
-			_feedProcessor.QueueFeed(_feedSubmissionServiceMock.Object, propertiesContainer, callbackMethod, new CallbackActivatorTests.CallbackDataTest {Foo = "Bar"});
+            _feedProcessor.QueueFeed(_feedSubmissionServiceMock.Object, propertiesContainer, "TargetHandlerId", new Dictionary<string, object> { { "k1", "v1"}, { "k2", "v2" } });
 
-			_feedSubmissionServiceMock.Verify(rrcsm => rrcsm.Create(It.IsAny<FeedSubmissionEntry>()), Times.Once);
-			Assert.AreEqual(JsonConvert.SerializeObject(propertiesContainer), feedSubmissionEntry.FeedSubmissionData);
-			Assert.AreEqual(AmazonRegion.Europe, feedSubmissionEntry.AmazonRegion);
-			Assert.NotNull(feedSubmissionEntry.TypeName);
-			Assert.NotNull(feedSubmissionEntry.Data);
-			Assert.NotNull(feedSubmissionEntry.DataTypeName);
-			Assert.NotNull(feedSubmissionEntry.MethodName);
-		}
+            _feedSubmissionServiceMock.Verify(rrcsm => rrcsm.Create(It.IsAny<FeedSubmissionEntry>()), Times.Once);
+            Assert.AreEqual(JsonConvert.SerializeObject(propertiesContainer), feedSubmissionEntry.FeedSubmissionData);
+            Assert.AreEqual(AmazonRegion.Europe, feedSubmissionEntry.AmazonRegion);
+            Assert.AreEqual("TargetHandlerId", feedSubmissionEntry.TargetHandlerId);
+            Assert.AreEqual("{\"k1\":\"v1\",\"k2\":\"v2\"}", feedSubmissionEntry.TargetHandlerArgs);
+        }
 
-		[Test]
-		public void QueueFeed_WithNonEmptyArguments_CallsFeedSubmissionEntryServiceSaveChangesOnce()
-		{
-			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
-			var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
+        //[Test]
+        //public void QueueFeed_WithNonEmptyArguments_CallsFeedSubmissionEntryServiceSaveChangesOnce()
+        //{
+        //	var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
+        //	var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
 
-			_feedProcessor.QueueFeed(_feedSubmissionServiceMock.Object, propertiesContainer, callbackMethod, new CallbackActivatorTests.CallbackDataTest {Foo = "Bar"});
+        //	_feedProcessor.QueueFeed(_feedSubmissionServiceMock.Object, propertiesContainer, callbackMethod, new CallbackActivatorTests.CallbackDataTest {Foo = "Bar"});
 
-			_feedSubmissionServiceMock.Verify(rrcsm => rrcsm.SaveChanges(), Times.Once);
-		}
+        //	_feedSubmissionServiceMock.Verify(rrcsm => rrcsm.SaveChanges(), Times.Once);
+        //}
 
-		#endregion
+        #endregion
 
 
-		#region PollFeeds tests 
+        #region PollFeeds tests 
 
-		[Test]
+        [Test]
 		public void Poll_CallsOnce_GetNextFromQueueOfFeedsToSubmit()
 		{
 			_feedProcessor.PollFeeds(_feedSubmissionServiceMock.Object);
