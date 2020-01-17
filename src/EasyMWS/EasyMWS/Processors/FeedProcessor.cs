@@ -25,6 +25,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 		private readonly string _merchantId;
 		private readonly EasyMwsOptions _options;
 
+        /// <summary>
+        /// Constructor to be used for UnitTesting/Mocking (in the absence of a dedicated DependencyInjection framework)
+        /// </summary>
 		internal FeedProcessor(AmazonRegion region, string merchantId, string mWSAuthToken, EasyMwsOptions options, IMarketplaceWebServiceClient mwsClient, IFeedSubmissionProcessor feedSubmissionProcessor, ICallbackActivator callbackActivator, IEasyMwsLogger logger)
 		  : this(region, merchantId, mWSAuthToken, options, mwsClient, logger)
 		{

@@ -98,15 +98,15 @@ namespace EasyMWS.Tests
 			_feedProcessorMock.Verify(fpm => fpm.PollFeeds(It.IsAny<IFeedSubmissionEntryService>()), Times.Once);
 		}
 
-		[Test]
-		public void QueueReport_CallsReportProcessorQueueMethod_Once()
-		{
-			_easyMwsClient.QueueReport(new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown),
-				new Action<Stream, object>((
-					(stream, o) => { })), new { });
+		//[Test]
+		//public void QueueReport_CallsReportProcessorQueueMethod_Once()
+		//{
+		//	_easyMwsClient.QueueReport(new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown),
+		//		new Action<Stream, object>((
+		//			(stream, o) => { })), new { });
 
-			_reportProcessorMock.Verify(rpm => rpm.QueueReport(It.IsAny<IReportRequestEntryService>(),It.IsAny<ReportRequestPropertiesContainer>(), It.IsAny<Action<Stream, object>>(), It.IsAny<object>()), Times.Once);
-		}
+		//	_reportProcessorMock.Verify(rpm => rpm.QueueReport(It.IsAny<IReportRequestEntryService>(),It.IsAny<ReportRequestPropertiesContainer>(), It.IsAny<Action<Stream, object>>(), It.IsAny<object>()), Times.Once);
+		//}
 
 		[Test]
 		public void QueueFeed_CallsFeedProcessorQueueMethod_Once()

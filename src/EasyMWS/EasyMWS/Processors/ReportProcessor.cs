@@ -4,6 +4,7 @@ using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using MountainWarehouse.EasyMWS.CallbackLogic;
+using MountainWarehouse.EasyMWS.Client;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
@@ -20,12 +21,16 @@ namespace MountainWarehouse.EasyMWS.Processors
 		private readonly IRequestReportProcessor _requestReportProcessor;
 		private readonly ICallbackActivator _callbackActivator;
 		private readonly IEasyMwsLogger _logger;
-
 		private readonly AmazonRegion _region;
 		private readonly string _merchantId;
 		private readonly EasyMwsOptions _options;
 
-		internal ReportProcessor(AmazonRegion region, string merchantId, string mWSAuthToken, EasyMwsOptions options,
+        public event EventHandler<ReportDownloadedEventArgs> InternalReportDownloaded;
+
+        /// <summary>
+        /// Constructor to be used for UnitTesting/Mocking (in the absence of a dedicated DependencyInjection framework)
+        /// </summary>
+        internal ReportProcessor(AmazonRegion region, string merchantId, string mWSAuthToken, EasyMwsOptions options,
 			IMarketplaceWebServiceClient mwsClient,
 			IRequestReportProcessor requestReportProcessor, ICallbackActivator callbackActivator, IEasyMwsLogger logger)
 			: this(region, merchantId, mWSAuthToken, options, mwsClient, logger)
@@ -69,6 +74,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_requestReportProcessor.DownloadGeneratedReportFromAmazon(reportRequestService, reportToDownload);
 		}
 
+        private void OnReportDownloaded(ReportDownloadedEventArgs e)
+        {
+            EventHandler<ReportDownloadedEventArgs> handler = InternalReportDownloaded;
+            handler?.Invoke(this, e);
+        }
+
 		private void PerformCallbackForPreviouslyDownloadedReports(IReportRequestEntryService reportRequestService)
 		{
 			var reportsReadyForCallback = reportRequestService.GetAllFromQueueOfReportsReadyForCallback(_merchantId, _region);
@@ -77,8 +88,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				try
 				{
-                    var callback = new Callback(reportEntry.TypeName, reportEntry.MethodName, reportEntry.Data, reportEntry.DataTypeName);
-                    MemoryStream report;
+                    var eventArgs = new ReportDownloadedEventArgs
+                    {
+                        ReportType = reportEntry.ReportType,
+                        TargetHandlerId = reportEntry.TargetHandlerId,
+                        TargetHandlerArgs = reportEntry.TargetHandlerArgs == null ? null : JsonConvert.DeserializeObject<Dictionary<string, object>>(reportEntry.TargetHandlerArgs)
+                    };
 
                     if (reportEntry.Details == null && reportEntry.LastAmazonReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData && !_options.CallbackInvocationOptions.InvokeCallbackForReportStatusDoneNoData)
                     {
@@ -87,14 +102,14 @@ namespace MountainWarehouse.EasyMWS.Processors
                     else if (reportEntry.Details == null && reportEntry.LastAmazonReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData && _options.CallbackInvocationOptions.InvokeCallbackForReportStatusDoneNoData)
                     {
                         _logger.Info($"Attempting to perform method callback for the following report in queue : {reportEntry.RegionAndTypeComputed}, but the AmazonProcessingStatus for this report is _DONE_NO_DATA_ therefore the Stream argument will be null at invocation time.");
-                        report = null;
-                        _callbackActivator.CallMethod(callback, report);
+                        eventArgs.ReportContent = null;
+                        OnReportDownloaded(eventArgs);
                     }
                     else
                     {
                         _logger.Info($"Attempting to perform method callback for the next downloaded report in queue : {reportEntry.RegionAndTypeComputed}.");
-                        report = ZipHelper.ExtractArchivedSingleFileToStream(reportEntry.Details?.ReportContent);
-                        _callbackActivator.CallMethod(callback, report);
+                        eventArgs.ReportContent = ZipHelper.ExtractArchivedSingleFileToStream(reportEntry.Details?.ReportContent);
+                        OnReportDownloaded(eventArgs);
                     }
 
                     reportRequestService.Delete(reportEntry);
@@ -117,15 +132,10 @@ namespace MountainWarehouse.EasyMWS.Processors
 			reportRequestService.SaveChanges();
 		}
 
-		public void QueueReport(IReportRequestEntryService reportRequestService, ReportRequestPropertiesContainer propertiesContainer, Action<Stream, object> callbackMethod, object callbackData)
+		public void QueueReport(IReportRequestEntryService reportRequestService, ReportRequestPropertiesContainer propertiesContainer, string targetEventId, Dictionary<string, object> targetEventArgs)
 		{
 			try
 			{
-				if (callbackMethod == null)
-				{
-					throw new ArgumentNullException(nameof(callbackMethod),"The callback method cannot be null, as it has to be invoked once the report has been downloaded, in order to provide access to the report content");
-				}
-
 				if (propertiesContainer == null) throw new ArgumentNullException();
 
 				var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
@@ -145,14 +155,10 @@ namespace MountainWarehouse.EasyMWS.Processors
 					ReportProcessRetryCount = 0,
 					InvokeCallbackRetryCount = 0,
 					ReportType = propertiesContainer.ReportType,
+                    TargetHandlerId = targetEventId,
+                    TargetHandlerArgs = targetEventArgs == null ? null : JsonConvert.SerializeObject(targetEventArgs),
                     InstanceId = _options?.CallbackInvocationOptions?.RestrictInvocationToOriginatingInstance?.HashedInstanceId,
                 };
-
-				var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
-				reportRequest.Data = serializedCallback.Data;
-				reportRequest.TypeName = serializedCallback.TypeName;
-				reportRequest.MethodName = serializedCallback.MethodName;
-				reportRequest.DataTypeName = serializedCallback.DataTypeName;
 
 				reportRequestService.Create(reportRequest);
 				reportRequestService.SaveChanges();

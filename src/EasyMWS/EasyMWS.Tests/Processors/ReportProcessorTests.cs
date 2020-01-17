@@ -48,72 +48,57 @@ namespace EasyMWS.Tests.ReportProcessors
 		}
 
 
-		#region QueueReport tests 
+        #region QueueReport tests 
 
-		[Test]
-		public void QueueReport_WithNullCallbackMethodArgument_CatchesNullArgumentExceptionAndDoesNotQueueReport()
-		{
-			var reportRequestContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
-			var callbackMethod = (Action<Stream, object>) null;
+        [Test]
+        public void QueueReport_WithNullTargetEventArgs_QueuesReport()
+        {
+            var reportRequestContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
 
-			_reportProcessor.QueueReport(_reportRequestServiceMock.Object, reportRequestContainer, callbackMethod, new {Foo = "Bar"});
+            _reportProcessor.QueueReport(_reportRequestServiceMock.Object, reportRequestContainer, "targetEventId", null);
 
-			_reportRequestServiceMock.Verify(rrcs => rrcs.Create(It.IsAny<ReportRequestEntry>()), Times.Never);
-			_reportRequestServiceMock.Verify(rrcs => rrcs.SaveChanges(), Times.Never);
-			_loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<ArgumentNullException>()), Times.Once);
-		}
+            _reportRequestServiceMock.Verify(rrcs => rrcs.Create(It.IsAny<ReportRequestEntry>()), Times.Once);
+            _reportRequestServiceMock.Verify(rrcs => rrcs.SaveChanges(), Times.Once);
+            _loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<ArgumentNullException>()), Times.Never);
+        }
 
-		[Test]
-		public void QueueReport_WithNullReportRequestPropertiesContainerArgument_CallsLogErrorOnce()
-		{
-			ReportRequestPropertiesContainer reportRequestContainer = null;
-			var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
+        [Test]
+        public void QueueReport_WithNonEmptyArguments_CallsReportRequestEntryServiceCreateOnceWithCorrectData()
+        {
+            var reportRequestContainer =
+                new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.NearRealTime);
+            var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
+            ReportRequestEntry createReportRequestEntryObject = null;
+            _reportRequestServiceMock.Setup(rrcsm => rrcsm.Create(It.IsAny<ReportRequestEntry>()))
+                .Callback<ReportRequestEntry>((p) => { createReportRequestEntryObject = p; });
+            _reportProcessor.QueueReport(_reportRequestServiceMock.Object, reportRequestContainer, "targetEventId", new Dictionary<string, object> { { "key", "value" } });
 
-			_reportProcessor.QueueReport(_reportRequestServiceMock.Object, reportRequestContainer, callbackMethod, new { Foo = "Bar" });
+            _reportRequestServiceMock.Verify(rrcsm => rrcsm.Create(It.IsAny<ReportRequestEntry>()), Times.Once);
+            Assert.AreEqual(JsonConvert.SerializeObject(reportRequestContainer),
+                createReportRequestEntryObject.ReportRequestData);
+            Assert.AreEqual(AmazonRegion.Europe, createReportRequestEntryObject.AmazonRegion);
+            Assert.AreEqual(ContentUpdateFrequency.NearRealTime, createReportRequestEntryObject.ContentUpdateFrequency);
+            Assert.AreEqual(DateTime.MinValue, createReportRequestEntryObject.LastAmazonRequestDate);
+            Assert.IsNotNull(createReportRequestEntryObject.TargetHandlerArgs);
+        }
 
-			_loggerMock.Verify(lm => lm.Error(It.IsAny<string>(), It.IsAny<Exception>()), Times.Once);
-		}
+        [Test]
+        public void QueueReport_WithNonEmptyArguments_CallsReportRequestEntryServiceSaveChangesOnce()
+        {
+            var reportRequestContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+            var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
 
-		[Test]
-		public void QueueReport_WithNonEmptyArguments_CallsReportRequestEntryServiceCreateOnceWithCorrectData()
-		{
-			var reportRequestContainer =
-				new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.NearRealTime);
-			var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
-			ReportRequestEntry createReportRequestEntryObject = null;
-			_reportRequestServiceMock.Setup(rrcsm => rrcsm.Create(It.IsAny<ReportRequestEntry>()))
-				.Callback<ReportRequestEntry>((p) => { createReportRequestEntryObject = p; });
-			_reportProcessor.QueueReport(_reportRequestServiceMock.Object, reportRequestContainer, callbackMethod, new {Foo = "Bar"});
+            _reportProcessor.QueueReport(_reportRequestServiceMock.Object, reportRequestContainer, "targetEventId", new Dictionary<string, object> { { "key", "value" } });
 
-			_reportRequestServiceMock.Verify(rrcsm => rrcsm.Create(It.IsAny<ReportRequestEntry>()), Times.Once);
-			Assert.AreEqual(JsonConvert.SerializeObject(reportRequestContainer),
-				createReportRequestEntryObject.ReportRequestData);
-			Assert.AreEqual(AmazonRegion.Europe, createReportRequestEntryObject.AmazonRegion);
-			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, createReportRequestEntryObject.ContentUpdateFrequency);
-			Assert.AreEqual(DateTime.MinValue, createReportRequestEntryObject.LastAmazonRequestDate);
-			Assert.NotNull(createReportRequestEntryObject.TypeName);
-			Assert.NotNull(createReportRequestEntryObject.Data);
-			Assert.NotNull(createReportRequestEntryObject.DataTypeName);
-			Assert.NotNull(createReportRequestEntryObject.MethodName);
-		}
+            _reportRequestServiceMock.Verify(rrcsm => rrcsm.SaveChanges(), Times.Once);
+        }
 
-		[Test]
-		public void QueueReport_WithNonEmptyArguments_CallsReportRequestEntryServiceSaveChangesOnce()
-		{
-			var reportRequestContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
-			var callbackMethod = new Action<Stream, object>((stream, o) => { _called = true; });
-
-			_reportProcessor.QueueReport(_reportRequestServiceMock.Object, reportRequestContainer, callbackMethod, new {Foo = "Bar"});
-
-			_reportRequestServiceMock.Verify(rrcsm => rrcsm.SaveChanges(), Times.Once);
-		}
-
-		#endregion
+        #endregion
 
 
-		#region PollReports tests 
+        #region PollReports tests 
 
-		[Test]
+        [Test]
 		public void Poll_IfNoReportIsDownloaded_NoNullPointerExceptionIsLogged()
 		{
 			Exception actualLoggedException = null;

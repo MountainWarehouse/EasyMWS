@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Model;
@@ -41,21 +42,23 @@ namespace MountainWarehouse.EasyMWS.Client
 		/// </summary>
 		void Poll();
 
-	    /// <summary>
-	    /// Add a new ReportRequest to a queue of requests that are going to be processed, with the final result of trying to download the respective report from Amazon.
-	    /// </summary>
-	    /// <param name="reportRequestContainer">An object that contains the arguments required to request the report from Amazon. This object is meant to be obtained by calling a ReportRequestFactory, ex: IReportRequestFactoryFba.</param>
-	    /// <param name="callbackMethod">A delegate for a method that is going to be called once a report has been downloaded from amazon. The 'Stream' argument of that method will contain the actual report content.</param>
-	    /// <param name="callbackData">An object that contains any argument(s) needed to invoke the delegate 'callbackMethod'</param>
-		void QueueReport(ReportRequestPropertiesContainer reportRequestContainer, Action<Stream, object> callbackMethod, object callbackData);
+        /// <summary>
+        ///  Add a new ReportRequest to a queue of requests that are going to be processed, with the final result of trying to download the respective report from Amazon.<para/>
+        ///  Once the report has been downloaded from amazon, it can be obtained by subscribing to the IEasyMwsClient.ReportDownloaded .net event.<para/>
+        ///  Given that each report might be processed in a different manner, the "targetHandlerId" argument can be specified to target a specific process to handle each report at the time the event handled is invoked.<para/>
+        /// </summary>
+        /// <param name="reportRequestContainer">An object that contains the arguments required to request the report from Amazon. This object is meant to be obtained by calling a ReportRequestFactory, ex: IReportRequestFactoryFba.</param>
+        /// <param name="targetHandlerId">Optional. A unique arbitrary ID which can be used to associate the speciffic process calling this method, with its corresponding "ReportDownloaded" .net event handler.<para/>This can be used to differentiate between different processes targetting different report types.</param>
+        /// <param name="targetHandlerArgs">Optional. A dictionary which can be used to specify any data needed at the time the report has been downloaded and is about to be processed, as part of the .net event handler(s) which will be invoked.</param>
+        void QueueReport(ReportRequestPropertiesContainer reportRequestContainer, string targetHandlerId = null, Dictionary<string, object> targetHandlerArgs = null);
 
-	    /// <summary>
-	    /// Add a new FeedSubmissionRequest to a queue of feeds to be submitted to amazon, with the final result of obtaining of posting the feed data to amazon and obtaining a response.
-	    /// </summary>
-	    /// <param name="feedSubmissionContainer">An object that contains the arguments required to submit a feed to Amazon.</param>
-	    /// <param name="callbackMethod">A delegate for a method that is going to be called once a feed has been submitted to amazon.</param>
-	    /// <param name="callbackData">An object that contains any argument(s) needed to invoke the delegate 'callbackMethod'</param>
-		void QueueFeed(FeedSubmissionPropertiesContainer feedSubmissionContainer, Action<Stream, object> callbackMethod, object callbackData);
+        /// <summary>
+        /// Add a new FeedSubmissionRequest to a queue of feeds to be submitted to amazon, with the final result of obtaining of posting the feed data to amazon and obtaining a response.
+        /// </summary>
+        /// <param name="feedSubmissionContainer">An object that contains the arguments required to submit a feed to Amazon.</param>
+        /// <param name="callbackMethod">A delegate for a method that is going to be called once a feed has been submitted to amazon.</param>
+        /// <param name="callbackData">An object that contains any argument(s) needed to invoke the delegate 'callbackMethod'</param>
+        void QueueFeed(FeedSubmissionPropertiesContainer feedSubmissionContainer, Action<Stream, object> callbackMethod, object callbackData);
 
 		/// <summary>
 		/// Purges the queue of report request entries for the current client instance corresponding to a pair of AmazonRegion and MerchantId
@@ -67,5 +70,6 @@ namespace MountainWarehouse.EasyMWS.Client
 		/// </summary>
 		void PurgeFeedSubmissionEntriesQueue();
 
+        event EventHandler<ReportDownloadedEventArgs> ReportDownloaded;
     }
 }
