@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -89,7 +90,7 @@ namespace EasyMWS.Tests.EndToEnd
 		    Setup_GetFeedSubmissionResult_Returns_SubmissionReportContentStream(expectedFeedSubmissionId, expectedSubmissionReportContent);
 		    _actualFeedSubmissionReportContent = null;
             var feedUploadedEventNumberOfInvocations = 0;
-            Dictionary<string, object> targetEventArgs = null;
+            ReadOnlyDictionary<string, object> targetEventArgs = null;
 
             _easyMwsClient.FeedUploaded += (s, e) =>
             {
@@ -108,8 +109,8 @@ namespace EasyMWS.Tests.EndToEnd
             Assert.AreEqual(2, targetEventArgs.Count);
             Assert.IsTrue(targetEventArgs.ContainsKey("key1"));
             Assert.IsTrue(targetEventArgs.ContainsKey("key2"));
-            Assert.IsTrue(targetEventArgs.ContainsValue("value1"));
-            Assert.IsTrue(targetEventArgs.ContainsValue("value2"));
+            Assert.IsNotNull(targetEventArgs.FirstOrDefault(kvp => kvp.Value == "value1"));
+            Assert.IsNotNull(targetEventArgs.FirstOrDefault(kvp => kvp.Value == "value2"));
             Assert.AreEqual(1, feedUploadedEventNumberOfInvocations);
             Assert.AreEqual(expectedSubmissionReportContent, _actualFeedSubmissionReportContent == null ? null : new StreamReader(_actualFeedSubmissionReportContent).ReadToEnd());
 		    _mwsClientMock.Verify(mws => mws.SubmitFeed(It.IsAny<SubmitFeedRequest>()), Times.Once);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
@@ -78,13 +79,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				try
 				{
-                    var eventArgs = new FeedUploadedEventArgs
-                    {
-                        FeedType = feedSubmissionEntry.FeedType,
-                        ProcessingReportContent = ZipHelper.ExtractArchivedSingleFileToStream(feedSubmissionEntry.Details.FeedSubmissionReport),
-                        TargetHandlerId = feedSubmissionEntry.TargetHandlerId,
-                        TargetHandlerArgs = feedSubmissionEntry.TargetHandlerArgs == null ? null : JsonConvert.DeserializeObject<Dictionary<string, object>>(feedSubmissionEntry.TargetHandlerArgs)
-                    };
+                    var processingReportContent = ZipHelper.ExtractArchivedSingleFileToStream(feedSubmissionEntry.Details.FeedSubmissionReport);
+                    var feedType = feedSubmissionEntry.FeedType;
+                    var handlerId = feedSubmissionEntry.TargetHandlerId;
+                    var handledArgs = feedSubmissionEntry.TargetHandlerArgs == null ? null : new ReadOnlyDictionary<string, object>(JsonConvert.DeserializeObject<Dictionary<string, object>>(feedSubmissionEntry.TargetHandlerArgs));
+                    var eventArgs = new FeedUploadedEventArgs(processingReportContent,feedType, handlerId, handledArgs);
 
                     _logger.Info($"Attempting publish FeedUploaded for the next submitted feed in queue : {feedSubmissionEntry.RegionAndTypeComputed}");
                     OnFeedUploaded(eventArgs);

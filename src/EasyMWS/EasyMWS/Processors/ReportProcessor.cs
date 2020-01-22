@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
@@ -88,12 +90,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				try
 				{
-                    var eventArgs = new ReportDownloadedEventArgs
-                    {
-                        ReportType = reportEntry.ReportType,
-                        TargetHandlerId = reportEntry.TargetHandlerId,
-                        TargetHandlerArgs = reportEntry.TargetHandlerArgs == null ? null : JsonConvert.DeserializeObject<Dictionary<string, object>>(reportEntry.TargetHandlerArgs)
-                    };
+                    var reportType = reportEntry.ReportType;
+                    var handledId = reportEntry.TargetHandlerId;
+                    var handlerArgs = (reportEntry.TargetHandlerArgs == null) ? null : new ReadOnlyDictionary<string, object>(JsonConvert.DeserializeObject<Dictionary<string, object>>(reportEntry.TargetHandlerArgs));
 
                     if (reportEntry.Details == null && reportEntry.LastAmazonReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData && !_options.EventPublishingOptions.EventPublishingForReportStatusDoneNoData)
                     {
@@ -102,13 +101,15 @@ namespace MountainWarehouse.EasyMWS.Processors
                     else if (reportEntry.Details == null && reportEntry.LastAmazonReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData && _options.EventPublishingOptions.EventPublishingForReportStatusDoneNoData)
                     {
                         _logger.Info($"Attempting to publish event ReportDownloaded for the following report in queue : {reportEntry.RegionAndTypeComputed}, but the AmazonProcessingStatus for this report is _DONE_NO_DATA_ therefore the Stream argument will be null at invocation time.");
+                        var eventArgs = new ReportDownloadedEventArgs(null, reportType, handledId, handlerArgs);
                         eventArgs.ReportContent = null;
                         OnReportDownloaded(eventArgs);
                     }
                     else
                     {
                         _logger.Info($"Attempting to publish event ReportDownloaded for the next downloaded report in queue : {reportEntry.RegionAndTypeComputed}.");
-                        eventArgs.ReportContent = ZipHelper.ExtractArchivedSingleFileToStream(reportEntry.Details?.ReportContent);
+                        var reportContent = ZipHelper.ExtractArchivedSingleFileToStream(reportEntry.Details?.ReportContent);
+                        var eventArgs = new ReportDownloadedEventArgs(reportContent, reportType, handledId, handlerArgs);
                         OnReportDownloaded(eventArgs);
                     }
 

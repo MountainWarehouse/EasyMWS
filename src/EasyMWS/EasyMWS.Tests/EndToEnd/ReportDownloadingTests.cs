@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -70,7 +71,7 @@ namespace EasyMWS.Tests.EndToEnd
 		    Setup_GetReportRequestList_Returns_ReportsGeneratedSuccessfully(expectedGeneratedReportId, expectedReportProcessingStatus);
 		    Setup_GetReport_Returns_ReportContentStream(expectedGeneratedReportId, "testReportContent");
 		    Stream actualReportContent = null;
-            Dictionary<string, object> targetEventArgs = new Dictionary<string, object>();
+            var targetEventArgs = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>());
             var reportDownloadedEventPublishedCount = 0;
 
             _easyMwsClient.ReportDownloaded += (s, e) => 
@@ -117,7 +118,7 @@ namespace EasyMWS.Tests.EndToEnd
             Setup_GetReportRequestList_Returns_ReportsGeneratedSuccessfully(expectedGeneratedReportId, expectedReportProcessingStatus);
             Setup_GetReport_Returns_ReportContentStream(expectedGeneratedReportId, "testReportContent");
             Stream actualReportContent = null;
-            var targetEventArgs = new Dictionary<string, object>();
+            var targetEventArgs = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>());
             var reportDownloadedEventPublishedCount = 0;
 
             _easyMwsClient.ReportDownloaded += (s, e) =>
@@ -144,8 +145,8 @@ namespace EasyMWS.Tests.EndToEnd
 
             // assert - null callback data deserialization step does not crash, and callback was invoked successfully
             Assert.AreEqual(1, targetEventArgs.Count());
-            Assert.IsTrue(targetEventArgs.ContainsKey("key1"));
-            Assert.IsTrue(targetEventArgs.ContainsValue("value1"));
+            Assert.IsNotNull(targetEventArgs.Where(kvp => kvp.Key == "key1"));
+            Assert.IsNotNull(targetEventArgs.Where(kvp => kvp.Value == "value1"));
             Assert.NotNull(actualReportContent);
             Assert.AreEqual(1, reportDownloadedEventPublishedCount);
             _mwsClientMock.Verify(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()), Times.Once);
