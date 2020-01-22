@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS.Data
 {
-	public class ReportRequestEntry : IRestrictionableInvocationEntry
+	public class ReportRequestEntry
     {
 		private string _regionAndType;
 		[NotMapped]
@@ -31,11 +31,8 @@ namespace MountainWarehouse.EasyMWS.Data
 
 		#region Callback data necessary to invoke a method with it's argument values.
 
-		public string TypeName { get; set; }
-		public string MethodName { get; set; }
-		public string Data { get; set; }
-		public string DataTypeName { get; set; }
-        public string InstanceId { get; set; }
+        public string TargetHandlerId { get; set; }
+        public string TargetHandlerArgs { get; set; }
 
         #endregion
 
@@ -68,15 +65,11 @@ namespace MountainWarehouse.EasyMWS.Data
 		{
 		}
 
-		public ReportRequestEntry(string reportRequestData, Callback callback = null)
+		public ReportRequestEntry(string reportRequestData)
 		{
 			if(string.IsNullOrEmpty(reportRequestData))
-				throw new ArgumentException("Callback data or ReportRequestData not provided, but are required");
+				throw new ArgumentException("ReportRequestEntry data not provided, but it is required");
 
-			TypeName = callback?.TypeName;
-			MethodName = callback?.MethodName;
-			Data = callback?.Data;
-			DataTypeName = callback?.DataTypeName;
 			ReportRequestData = reportRequestData;
             LastAmazonReportProcessingStatus = null;
         }

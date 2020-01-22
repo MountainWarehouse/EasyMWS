@@ -10,7 +10,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 {
     public class BrowseTreeReportFactory : IBrowseTreeReportFactory
     {
-        public ReportRequestPropertiesContainer FlatFileOrdersByLastUpdateReport(DateTime? startDate = null,
+        public ReportRequestPropertiesContainer BrowseTreeReport(DateTime? startDate = null,
             DateTime? endDate = null,
             string marketplaceId = null,
             bool? rootNodesOnly = null,

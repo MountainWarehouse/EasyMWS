@@ -26,52 +26,48 @@ namespace EasyMWS.Tests.Services
 	    private List<ReportRequestEntry> _reportRequestEntries;
 	    private readonly EasyMwsOptions _options = new EasyMwsOptions();
 
-		[SetUp]
-	    public void SetUp()
-	    {
-		    var reportRequestPropertiesContainer = new ReportRequestPropertiesContainer("_Report_Type_", ContentUpdateFrequency.NearRealTime, new List<string>(MwsMarketplaceGroup.AmazonEurope().Select(m=>m.Id)));
+        [SetUp]
+        public void SetUp()
+        {
+            var reportRequestPropertiesContainer = new ReportRequestPropertiesContainer("_Report_Type_", ContentUpdateFrequency.NearRealTime, new List<string>(MwsMarketplaceGroup.AmazonEurope().Select(m => m.Id)));
 
-		    _reportRequestEntries = new List<ReportRequestEntry>
-		    {
-			    new ReportRequestEntry
-				{
-					AmazonRegion = AmazonRegion.Europe,
-					Data = "testData",
-					ReportRequestData = JsonConvert.SerializeObject(reportRequestPropertiesContainer),
-					MethodName = "testMethodName",
-					TypeName = "testTypeName",
-					LastAmazonRequestDate = DateTime.MinValue,
-					DataTypeName = "testDataTypeName",
-					ContentUpdateFrequency = 0,
-					Id = 1,
-					ReportType = reportRequestPropertiesContainer.ReportType
-				},
-				new ReportRequestEntry{Id = 2}
-		    };
+            _reportRequestEntries = new List<ReportRequestEntry>
+            {
+                new ReportRequestEntry
+                {
+                    AmazonRegion = AmazonRegion.Europe,
+                    ReportRequestData = JsonConvert.SerializeObject(reportRequestPropertiesContainer),
+                    LastAmazonRequestDate = DateTime.MinValue,
+                    ContentUpdateFrequency = 0,
+                    Id = 1,
+                    ReportType = reportRequestPropertiesContainer.ReportType,
+                    TargetHandlerId = "TargetHandlerId",
+                    TargetHandlerArgs = JsonConvert.SerializeObject(new Dictionary<string, object>{ { "key1", "value1"}, { "key2", "value2"} })
+                },
+                new ReportRequestEntry{Id = 2}
+            };
 
-			_reportRequestCallbackReportMock = new Mock<IReportRequestEntryRepository>();
-		    _reportRequestCallbackReportMock.Setup(x => x.GetAll()).Returns(_reportRequestEntries.AsQueryable());
-			_reportRequestEntryService = new ReportRequestEntryService(_reportRequestCallbackReportMock.Object, _options);
-	    }
+            _reportRequestCallbackReportMock = new Mock<IReportRequestEntryRepository>();
+            _reportRequestCallbackReportMock.Setup(x => x.GetAll()).Returns(_reportRequestEntries.AsQueryable());
+            _reportRequestEntryService = new ReportRequestEntryService(_reportRequestCallbackReportMock.Object, _options);
+        }
 
 
-		[Test]
-		public void FirstOrDefault_TwoInQueue_ReturnsFirstObjectContainingCorrectData()
-		{
-			var reportRequestCallback = _reportRequestEntryService.FirstOrDefault();
-			var reportRequestData = JsonConvert.DeserializeObject<ReportRequestPropertiesContainer>(reportRequestCallback.ReportRequestData);
+        [Test]
+        public void FirstOrDefault_TwoInQueue_ReturnsFirstObjectContainingCorrectData()
+        {
+            var reportRequestCallback = _reportRequestEntryService.FirstOrDefault();
+            var reportRequestData = JsonConvert.DeserializeObject<ReportRequestPropertiesContainer>(reportRequestCallback.ReportRequestData);
 
-			Assert.AreEqual(AmazonRegion.Europe, reportRequestCallback.AmazonRegion);
-			Assert.AreEqual("testData", reportRequestCallback.Data);
-			Assert.AreEqual("testMethodName", reportRequestCallback.MethodName);
-			Assert.AreEqual("testTypeName", reportRequestCallback.TypeName);
-			Assert.AreEqual("testDataTypeName", reportRequestCallback.DataTypeName);
-			Assert.AreEqual("_Report_Type_", reportRequestCallback.ReportType);
-			Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequestData.UpdateFrequency);
-			CollectionAssert.AreEquivalent(new List<string>(MwsMarketplaceGroup.AmazonEurope().Select(m=>m.Id)), reportRequestData.MarketplaceIdList);
-		}
+            Assert.AreEqual(AmazonRegion.Europe, reportRequestCallback.AmazonRegion);
+            Assert.AreEqual("TargetHandlerId", reportRequestCallback.TargetHandlerId);
+            Assert.AreEqual("{\"key1\":\"value1\",\"key2\":\"value2\"}", reportRequestCallback.TargetHandlerArgs);
+            Assert.AreEqual("_Report_Type_", reportRequestCallback.ReportType);
+            Assert.AreEqual(ContentUpdateFrequency.NearRealTime, reportRequestData.UpdateFrequency);
+            CollectionAssert.AreEquivalent(new List<string>(MwsMarketplaceGroup.AmazonEurope().Select(m => m.Id)), reportRequestData.MarketplaceIdList);
+        }
 
-	    [Test]
+        [Test]
 	    public void GetNextFromQueueOfReportsToDownload_ForGivenRegionAndMerchantId_ReturnCorrectListOfReports()
 	    {
 		    // Arrange

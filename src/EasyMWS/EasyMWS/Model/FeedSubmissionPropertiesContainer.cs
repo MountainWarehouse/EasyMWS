@@ -24,7 +24,7 @@ namespace MountainWarehouse.EasyMWS.Model
 
 		#endregion
 
-		#region Optional properties only used for submitting some feed types tp amazon
+		#region Optional properties only used for submitting some feed types to amazon
 
 		/// <summary>
 		/// A Boolean value that enables the purge and replace functionality. Set to true to purge and replace the existing data; otherwise false. <para />

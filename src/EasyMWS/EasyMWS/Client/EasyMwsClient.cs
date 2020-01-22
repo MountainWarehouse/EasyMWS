@@ -1,9 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using MountainWarehouse.EasyMWS.Enums;
-using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Logging;
 using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Processors;
@@ -12,7 +11,7 @@ using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
 
 namespace MountainWarehouse.EasyMWS.Client
 {
-	public class EasyMwsClient : IEasyMwsClient
+    public class EasyMwsClient : IEasyMwsClient
 	{
 		private readonly EasyMwsOptions _options;
 		private readonly AmazonRegion _amazonRegion;
@@ -21,7 +20,16 @@ namespace MountainWarehouse.EasyMWS.Client
 		private readonly IFeedQueueingProcessor _feedProcessor;
 		private readonly IEasyMwsLogger _easyMwsLogger;
 
-		internal EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, string mWSAuthToken,
+        public AmazonRegion AmazonRegion => _amazonRegion;
+        public string MerchantId => _merchantId;
+        public EasyMwsOptions Options => _options;
+        public event EventHandler<ReportDownloadedEventArgs> ReportDownloaded;
+        public event EventHandler<FeedUploadedEventArgs> FeedUploaded;
+
+        /// <summary>
+        /// Constructor to be used for UnitTesting/Mocking (in the absence of a dedicated DependencyInjection framework)
+        /// </summary>
+        internal EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, string mWSAuthToken,
             IReportQueueingProcessor reportProcessor,
 			IFeedQueueingProcessor feedProcessor, IEasyMwsLogger easyMwsLogger,
 			EasyMwsOptions options)
@@ -29,16 +37,21 @@ namespace MountainWarehouse.EasyMWS.Client
 		{
 			_reportProcessor = reportProcessor;
 			_feedProcessor = feedProcessor;
-		}
+
+            _reportProcessor.ReportDownloadedInternal -= OnReportDownloaded;
+            _reportProcessor.ReportDownloadedInternal += OnReportDownloaded;
+            _feedProcessor.FeedUploadedInternal -= OnFeedUploaded;
+            _feedProcessor.FeedUploadedInternal += OnFeedUploaded;
+        }
 
         /// <param name="region">The region of the account. Required parameter. A finer grained region or country can be specified on a PropertiesContainer by specifying its marketplaceIdList constructor argument.</param>
         /// <param name="merchantId">Seller ID / Merchant ID. Required parameter.</param>
-        /// <param name="accessKeyId">Amazon account access key. Required parameter. This key can either belong to a seller or to a developer account authorised by a seller. If the key belongs to a developer account authorised by the seller then also make sure to specify the MWSAuthToken argument.</param>
-        /// <param name="mwsSecretAccessKey">Amazon account secret access key. Required parameter. This key can either belong to a seller or to a developer account authorised by a seller. If the key belongs to a developer account authorised by the seller then also make sure to specify the MWSAuthToken argument.</param>
-        /// <param name="mWSAuthToken">MWS Authorisation Token. Optional parameter. If the provided access keys belong to a developer account authorised by a seller, this argument is the MWS Authorization Token provided by the seller to the authorised developer.</param>
+        /// <param name="accessKeyId">Amazon account access key. Required parameter. This key can either belong to a seller or to a developer account authorized by a seller. If the key belongs to a developer account authorized by the seller then also make sure to specify the MWSAuthToken argument.</param>
+        /// <param name="mwsSecretAccessKey">Amazon account secret access key. Required parameter. This key can either belong to a seller or to a developer account authorized by a seller. If the key belongs to a developer account authorized by the seller then also make sure to specify the MWSAuthToken argument.</param>
+        /// <param name="mwsAuthToken">MWS Authorization Token. Optional parameter. If the provided access keys belong to a developer account authorized by a seller, this argument is the MWS Authorization Token provided by the seller to the authorized developer.</param>
         /// <param name="easyMwsLogger">An optional IEasyMwsLogger instance that can provide access to logs. It is strongly recommended to use a logger implementation already existing in the EasyMws package.</param>
         /// <param name="options">Configuration options for EasyMwsClient</param>
-        public EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, string mWSAuthToken = null,
+        public EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, string mwsAuthToken = null,
             IEasyMwsLogger easyMwsLogger = null, EasyMwsOptions options = null)
 		{
 			if (string.IsNullOrEmpty(merchantId) || string.IsNullOrEmpty(accessKeyId) ||
@@ -52,25 +65,23 @@ namespace MountainWarehouse.EasyMWS.Client
 
 			_easyMwsLogger = easyMwsLogger ?? new EasyMwsLogger(isEnabled: false);
 			var mwsClient = new MarketplaceWebServiceClient(accessKeyId, mwsSecretAccessKey, CreateConfig(_amazonRegion));
-			_reportProcessor = _reportProcessor ?? new ReportProcessor(_amazonRegion, _merchantId, mWSAuthToken, _options, mwsClient, _easyMwsLogger);
-			_feedProcessor = _feedProcessor ?? new FeedProcessor(_amazonRegion, _merchantId, mWSAuthToken, _options, mwsClient, _easyMwsLogger);
+			_reportProcessor = _reportProcessor ?? new ReportProcessor(_amazonRegion, _merchantId, mwsAuthToken, _options, mwsClient, _easyMwsLogger);
+			_feedProcessor = _feedProcessor ?? new FeedProcessor(_amazonRegion, _merchantId, mwsAuthToken, _options, mwsClient, _easyMwsLogger);
 
-		}
-
-		public AmazonRegion AmazonRegion => _amazonRegion;
-
-		public string MerchantId => _merchantId;
-
-		public EasyMwsOptions Options => _options;
+            _reportProcessor.ReportDownloadedInternal -= OnReportDownloaded;
+            _reportProcessor.ReportDownloadedInternal += OnReportDownloaded;
+            _feedProcessor.FeedUploadedInternal -= OnFeedUploaded;
+            _feedProcessor.FeedUploadedInternal += OnFeedUploaded;
+        }
 
 		public void Poll()
 		{
-			Parallel.Invoke(
+            Parallel.Invoke(
 				() =>
 				{
 					using (var reportRequestService = new ReportRequestEntryService(_options, _easyMwsLogger))
 					{
-						_reportProcessor.PollReports(reportRequestService);
+                        _reportProcessor.PollReports(reportRequestService);
 					}
 				},
 				() =>
@@ -82,22 +93,19 @@ namespace MountainWarehouse.EasyMWS.Client
 				});
 		}
 
+        public void QueueReport(ReportRequestPropertiesContainer reportRequestContainer, string targetEventId = null, Dictionary<string, object> targetEventArgs = null)
+        {
+            using (var reportRequestService = new ReportRequestEntryService(_options, _easyMwsLogger))
+            {
+                _reportProcessor.QueueReport(reportRequestService, reportRequestContainer, targetEventId, targetEventArgs);
+            }
+        }
 
-		public void QueueReport(ReportRequestPropertiesContainer reportRequestContainer,
-			Action<Stream, object> callbackMethod, object callbackData)
-		{
-			using (var reportRequestService = new ReportRequestEntryService(_options, _easyMwsLogger))
-			{
-				_reportProcessor.QueueReport(reportRequestService, reportRequestContainer, callbackMethod, callbackData);
-			}
-		}
-
-		public void QueueFeed(FeedSubmissionPropertiesContainer feedSubmissionContainer,
-			Action<Stream, object> callbackMethod, object callbackData)
+        public void QueueFeed(FeedSubmissionPropertiesContainer feedSubmissionContainer, string targetEventId = null, Dictionary<string, object> targetEventArgs = null)
 		{
 			using (var feedSubmissionService = new FeedSubmissionEntryService(_options, _easyMwsLogger))
 			{
-				_feedProcessor.QueueFeed(feedSubmissionService, feedSubmissionContainer, callbackMethod, callbackData);
+				_feedProcessor.QueueFeed(feedSubmissionService, feedSubmissionContainer, targetEventId, targetEventArgs);
 			}
 		}
 
@@ -149,7 +157,6 @@ namespace MountainWarehouse.EasyMWS.Client
 					throw new ArgumentException($"{region} is unknown - EasyMWS doesn't know the RootURL");
 			}
 
-
 			var config = new MarketplaceWebServiceConfig
 			{
 				ServiceURL = rootUrl
@@ -159,7 +166,10 @@ namespace MountainWarehouse.EasyMWS.Client
 			return config;
 		}
 
-		#endregion
+        private void OnReportDownloaded(object sender, ReportDownloadedEventArgs e) => ReportDownloaded?.Invoke(this, e);
+        private void OnFeedUploaded(object sender, FeedUploadedEventArgs e) => FeedUploaded?.Invoke(this, e);
 
-	}
+        #endregion
+
+    }
 }

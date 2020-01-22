@@ -15,7 +15,7 @@ namespace MountainWarehouse.EasyMWS.Model
         internal const int AmazonServiceRequestRetryCount = 4;
         internal const int AmazonRequestRequeueLimit = 2;
 
-        public CallbackInvocationOptions CallbackInvocationOptions { get; set; }
+        public EventPublishingOptions EventPublishingOptions { get; set; }
         public ReportRequestOptions ReportRequestOptions { get; set; }
         public FeedSubmissionOptions FeedSubmissionOptions { get; set; }
 
@@ -31,7 +31,7 @@ namespace MountainWarehouse.EasyMWS.Model
         /// </summary>
         public EasyMwsOptions(bool useDefaultValues = true)
         {
-            CallbackInvocationOptions = new CallbackInvocationOptions(useDefaultValues);
+            EventPublishingOptions = new EventPublishingOptions(useDefaultValues);
             ReportRequestOptions = new ReportRequestOptions(useDefaultValues);
             FeedSubmissionOptions = new FeedSubmissionOptions(useDefaultValues);
 
@@ -43,97 +43,45 @@ namespace MountainWarehouse.EasyMWS.Model
     }
 
     /// <summary>
-    /// InvokeCallbackMaxRetryCount = 5,<para/>
-    /// InvokeCallbackRetryPeriodType = RetryPeriodType.ArithmeticProgression,<para/>
-    /// InvokeCallbackRetryInterval = TimeSpan.FromMinutes(30),<para/>
+    /// EventPublishingMaxRetryCount = 5,<para/>
+    /// EventPublishingRetryPeriodType = RetryPeriodType.ArithmeticProgression,<para/>
+    /// EventPublishingRetryInterval = TimeSpan.FromMinutes(30),<para/>
     /// <para/>
-    /// InvokeCallbackForReportStatusDoneNoData = false<para/>
+    /// EventPublishingForReportStatusDoneNoData = false<para/>
     /// </summary>
-    public class CallbackInvocationOptions
+    public class EventPublishingOptions
     {
         /// <summary>
-        /// Default=5. When attempting to invoke a callback method after a report has been downloaded or after a feed has been submitted, and the callback invocation fails, specify how many times to retry the invocation.
+        /// Default=5. When attempting to publish an event after a report has been downloaded or after a feed has been submitted, and the event publishing fails, specify how many times to retry the invocation.
         /// </summary>
-        public int InvokeCallbackMaxRetryCount { get; set; }
+        public int EventPublishingMaxRetryCount { get; set; }
 
         /// <summary>
-        ///  Default=ArithmeticProgression. When attempting to invoke a callback method after a report has been downloaded or after a feed has been submitted, and the callback invocation fails, specify the time series type for invocation retries.
+        ///  Default=ArithmeticProgression. When attempting to publish an event after a report has been downloaded or after a feed has been submitted, and the event publishing fails, specify the time series type for invocation retries.
         /// </summary>
-        public RetryPeriodType InvokeCallbackRetryPeriodType { get; set; }
+        public RetryPeriodType EventPublishingRetryPeriodType { get; set; }
 
         /// <summary>
-        /// Default=2minutes. When attempting to invoke a callback method after a report has been downloaded or after a feed has been submitted, and the callback invocation fails, specify the interval between retries. 
+        /// Default=2minutes. When attempting to publish an event after a report has been downloaded or after a feed has been submitted, and the event publishing fails, specify the interval between retries. 
         /// </summary>
-        public TimeSpan InvokeCallbackRetryInterval { get; set; }
+        public TimeSpan EventPublishingRetryInterval { get; set; }
 
         /// <summary>
-		/// Default=false. Invoke the callback method after a report has been downloaded or after a feed has been submitted, even if the report status received from Amazon is DoneNoData, with the report stream argument being null.
+		/// Default=false. Publish an event after a report has been downloaded or after a feed has been submitted, even if the report status received from Amazon is DoneNoData, with the report stream argument being null.
 		/// </summary>
-        public bool InvokeCallbackForReportStatusDoneNoData { get; set; }
+        public bool EventPublishingForReportStatusDoneNoData { get; set; }
 
-        public RestrictInvocationToOriginatingInstance RestrictInvocationToOriginatingInstance { get; set; }
-
-        public CallbackInvocationOptions(bool useDefaultValues = true)
-        {
-            RestrictInvocationToOriginatingInstance = new RestrictInvocationToOriginatingInstance(useDefaultValues);
-
-            if (useDefaultValues)
-            {
-                InvokeCallbackMaxRetryCount = 5;
-                InvokeCallbackRetryPeriodType = EasyMwsOptions.ConstantRetryPeriod;
-                InvokeCallbackRetryInterval = TimeSpan.FromMinutes(2);
-
-                InvokeCallbackForReportStatusDoneNoData = false;
-            }
-        }
-    }
-
-    /// <summary>
-    /// Options regarding restricting callback invocations by originating clients only.
-    /// </summary>
-    public class RestrictInvocationToOriginatingInstance
-    {
-        public RestrictInvocationToOriginatingInstance(bool useDefaultValues = true)
+        public EventPublishingOptions(bool useDefaultValues = true)
         {
             if (useDefaultValues)
             {
-                ForceInvocationByOriginatingInstance = false;
-                AllowInvocationByAnyInstanceIfInvocationFailedLimitReached = false;
-                CustomInstanceId = null;
-                InvocationFailuresLimit = 2;
+                EventPublishingMaxRetryCount = 5;
+                EventPublishingRetryPeriodType = EasyMwsOptions.ConstantRetryPeriod;
+                EventPublishingRetryInterval = TimeSpan.FromMinutes(2);
+
+                EventPublishingForReportStatusDoneNoData = false;
             }
         }
-
-        /// <summary>
-        /// Default=Hash(Environment.MachineName).Get a hashed value for CustomInstanceId if it has been set, or else a hashed value of Environment.MachineName
-        /// </summary>
-        internal string HashedInstanceId => InstanceIdHelper.GetInstanceIdHash(CustomInstanceId);
-
-        /// <summary>
-        /// Default=null. A custom value identifying an EasyMwsClient instance. <para/>
-        /// If set to true then only a client with a matching CustomInstanceId value will be able to invoke a callback for a request originating from a client with the same CustomInstanceId.<para/>
-        /// If the Default value is set, then the instance id will automatically be set to System.Environment.MachineName.<para/>
-        /// If the same CustomInstanceId value is specified for multiple clients sharing the same persistence location (e.g. database), then any of those clients will be able to invoke callbacks for requests submitted from clients with that CustomInstanceId.
-        /// </summary>
-        public string CustomInstanceId { get; set; }
-
-        /// <summary>
-        /// Default=false. After a report has been downloaded or after a feed has been submitted, try to invoke the callback method but restrict the source of the invocation to the instance from where the initial request originated.<para/>
-        /// If AllowInvocationByAnyInstanceIfInvocationFailedLimitReached is false, then callbacks can always ONLY be invoked by the instance from where the request originated.<para/>
-        /// </summary>
-        public bool ForceInvocationByOriginatingInstance { get; set; }
-
-        /// <summary>
-        /// Default=false. After a report has been downloaded or after a feed has been submitted, if the callback invocation attempts fails for InvocationFailuresLimit times, then allow the invocation to be made from any client instance.<para/>
-        /// This is only being used if ForceInvocationByOriginatingInstance is true.
-        /// </summary>
-        public bool AllowInvocationByAnyInstanceIfInvocationFailedLimitReached { get; set; }
-
-        /// <summary>
-        /// Default=2. Specify the inclusive bound for the number of callback invocation failures allowed to happen before attempting to invoke a callback from Any instance.<para/>
-        /// This is only being used if AllowInvocationByAnyInstanceIfInvocationFailedLimitReached is true.
-        /// </summary>
-        public int InvocationFailuresLimit { get; set; }
     }
 
     /// <summary>
