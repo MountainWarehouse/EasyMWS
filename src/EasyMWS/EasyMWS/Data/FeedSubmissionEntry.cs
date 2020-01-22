@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS.Data
 {
-    public class FeedSubmissionEntry : IRestrictionableInvocationEntry
+    public class FeedSubmissionEntry
     {
 	    private string _regionAndType;
 
@@ -30,12 +30,9 @@ namespace MountainWarehouse.EasyMWS.Data
         public string LastAmazonFeedProcessingStatus { get; set; }
         public DateTime DateCreated { get; set; }
 
-		#region Callback data necessary to invoke a method with it's argument values.
-		public string TypeName { get; set; }
-	    public string MethodName { get; set; }
-	    public string Data { get; set; }
-	    public string DataTypeName { get; set; }
-        public string InstanceId { get; set; }
+        #region Callback data necessary to invoke a method with it's argument values.
+        public string TargetHandlerId { get; set; }
+        public string TargetHandlerArgs { get; set; }
 		#endregion
 
 		#region Data necessary to request a report from amazon.
@@ -62,15 +59,11 @@ namespace MountainWarehouse.EasyMWS.Data
 		{
 		}
 
-	    public FeedSubmissionEntry(string feedSubmissionData, Callback callback = null)
+	    public FeedSubmissionEntry(string feedSubmissionData)
 	    {
 			if( string.IsNullOrEmpty(feedSubmissionData))
-				throw new ArgumentException("Callback data or FeedSubmissionData not provided, but are required");
+				throw new ArgumentException("FeedSubmissionEntry data not provided, but it is required");
 
-		    TypeName = callback?.TypeName;
-		    MethodName = callback?.MethodName;
-		    Data = callback?.Data;
-		    DataTypeName = callback?.DataTypeName;
 		    FeedSubmissionData = feedSubmissionData;
             LastAmazonFeedProcessingStatus = null;
         }

@@ -45,7 +45,7 @@ namespace MountainWarehouse.EasyMWS.Model
         /// Tries to add a marketplace to the current group. <para />
         /// When attempting to add a marketplace to a group, please note that a group can only contain marketplaces with the same MWS endpoint as the one setup for the group at initialization.<para />
         /// Failure in following this convention will result in an InvalidOperationException.<para /> 
-        /// Example: A group initialized with an european marketplace cannot also contain a north-american or asian marketplace.<para/>
+        /// Example: A group initialized with an European marketplace cannot also contain a North-American or Asian marketplace.<para/>
         /// If a report has to be requested for marketplaces belonging to different MWS endpoints, then a request object has to be generated for each different MWS endpoint.
         /// </summary>
         /// <param name="marketplace"></param>
@@ -134,7 +134,7 @@ Because it the group already contains this marketplace. A marketplace cannot be 
 		/// Tries to add a marketplace to the current group. <para />
 		/// When attempting to add a marketplace to a group, please note that a group can only contain marketplaces with the same MWS endpoint as the one setup for the group at initialization.<para />
 		/// Failure in following this convention will result in an InvalidOperationException.<para /> 
-		/// Example: A group initialized with an european marketplace cannot also contain a north-american or asian marketplace.<para/>
+		/// Example: A group initialized with an European marketplace cannot also contain a North-American or Asian marketplace.<para/>
 		/// If a report has to be requested for marketplaces belonging to different MWS endpoints, then a request object has to be generated for each different MWS endpoint.
 		/// </summary>
 		/// <returns>The same ReportRequestedMarketplacesGroup object, also containing the newly added marketplace.</returns>

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text;
 using Moq;
 using MountainWarehouse.EasyMWS.Client;
 using MountainWarehouse.EasyMWS.Data;
@@ -36,10 +38,7 @@ namespace EasyMWS.Tests.EndToEnd
 	    {
 		    _options = new EasyMwsOptions();
 			_dbContext = new EasyMwsContext();
-		    _actualCallbackObject = null;
-		    _actualReportContent = null;
-
-			_loggerMock = new Mock<IEasyMwsLogger>();
+            _loggerMock = new Mock<IEasyMwsLogger>();
 		    _mwsClientMock = new Mock<IMarketplaceWebServiceClient>();
 		    var feedProcessorMock = new Mock<IFeedQueueingProcessor>();
 
@@ -59,17 +58,9 @@ namespace EasyMWS.Tests.EndToEnd
 			_dbContext.Dispose();
 		}
 
-		private static object _actualCallbackObject;
-	    private static Stream _actualReportContent;
-	    public static void ReportDownloadCallback(Stream stream, object o)
-	    {
-		    _actualCallbackObject = o;
-		    _actualReportContent = stream;
-	    }
-
-	    [Test]
+        [Test]
 	    public void
-		    GivenQueuingReportAndPolling_WhenCallbackDataIsNull_NullCallbackDataIsSerializedAndDeserializedSuccessfully_AndCallbackIsInvoked()
+            GivenQueuingReportAndPolling_WhenTargetHandlerArgsDataIsNull_NullTargetHandlerArgsIsSerializedAndDeserializedSuccessfully_EventReportDownloadedEventIsPublished()
 	    {
 			// arrange
 		    var validReportType = $"{_testEntriesIdentifier}_VALID_REPORT_TYPE_";
@@ -79,125 +70,161 @@ namespace EasyMWS.Tests.EndToEnd
 			Setup_RequestReport_Returns_ReportRequestWasGenerated(validReportType);
 		    Setup_GetReportRequestList_Returns_ReportsGeneratedSuccessfully(expectedGeneratedReportId, expectedReportProcessingStatus);
 		    Setup_GetReport_Returns_ReportContentStream(expectedGeneratedReportId, "testReportContent");
-		    _actualCallbackObject = new object();
-		    _actualReportContent = null;
+		    Stream actualReportContent = null;
+            var targetEventArgs = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>());
+            var reportDownloadedEventPublishedCount = 0;
+
+            _easyMwsClient.ReportDownloaded += (s, e) => 
+            {
+                reportDownloadedEventPublishedCount++;
+                actualReportContent = e.ReportContent;
+                targetEventArgs = e.TargetHandlerArgs;
+            };
 
 			// act - queue report
-			_easyMwsClient.QueueReport(reportRequestContainer, ReportDownloadCallback, null);
+			_easyMwsClient.QueueReport(reportRequestContainer, "targetHandlerId");
 
-		    var dbEntry = _dbContext.ReportRequestEntries.Where(rre => rre.ReportType == validReportType);
+            var dbEntry = _dbContext.ReportRequestEntries.Where(rre => rre.ReportType == validReportType);
 
-			// assert - null callback data serialization step does not crash
-			Assert.NotNull(dbEntry);
-			Assert.AreEqual(1, dbEntry.Count());
-		    var reportRequestEntry = dbEntry.Single();
+            // assert - null callback data serialization step does not crash
+            Assert.NotNull(dbEntry);
+            Assert.AreEqual(1, dbEntry.Count());
+            var reportRequestEntry = dbEntry.Single();
 
-			Assert.Null(reportRequestEntry.Data);
+            Assert.Null(reportRequestEntry.TargetHandlerArgs);
 
-			// act - Poll report request process, in order for the queuedReport delegate to be invoked.
-			_easyMwsClient.Poll();
+            // act - Poll report request process, in order for the queuedReport delegate to be invoked.
+            _easyMwsClient.Poll();
 
-			// assert - null callback data deserialization step does not crash, and callback was invoked successfully
-			Assert.IsNull(_actualCallbackObject);
-			Assert.NotNull(_actualReportContent);
-		    _mwsClientMock.Verify(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()), Times.Once);
-		    _mwsClientMock.Verify(mws => mws.GetReportRequestList(It.IsAny<GetReportRequestListRequest>()), Times.Once);
-		    _mwsClientMock.Verify(mws => mws.GetReport(It.IsAny<GetReportRequest>()), Times.Once);
-		}
+            // assert - null callback data deserialization step does not crash, and callback was invoked successfully
+            Assert.IsNull(targetEventArgs);
+            Assert.NotNull(actualReportContent);
+            Assert.AreEqual(1, reportDownloadedEventPublishedCount);
+            _mwsClientMock.Verify(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()), Times.Once);
+            _mwsClientMock.Verify(mws => mws.GetReportRequestList(It.IsAny<GetReportRequestListRequest>()), Times.Once);
+            _mwsClientMock.Verify(mws => mws.GetReport(It.IsAny<GetReportRequest>()), Times.Once);
+        }
 
-		[Test]
-		public void
-			GivenQueuingReportAndPolling_WhenAllDataIsValid_TheReportIsDownloaded_AndIsReturnedInTheCallbackMethodAlongWithTheCallbackData()
-		{
-			// arrange
-			var validReportType = $"{_testEntriesIdentifier}_VALID_REPORT_TYPE_";
-			
-			var expectedGeneratedReportId = "test generated report Id";
-			var expectedReportProcessingStatus = "_DONE_";
-			var reportRequestContainer = GenerateReportContainer(validReportType);
-			var expectedCallbackData = ("test", "callback", "data");
-			var expectedReportContent = "testReportContent";
-			Setup_RequestReport_Returns_ReportRequestWasGenerated(validReportType);
-			Setup_GetReportRequestList_Returns_ReportsGeneratedSuccessfully(expectedGeneratedReportId, expectedReportProcessingStatus);
-			Setup_GetReport_Returns_ReportContentStream(expectedGeneratedReportId, expectedReportContent);
-			_actualCallbackObject = null;
-			_actualReportContent = null;
-			
+        [Test]
+        public void
+            GivenQueuingReportAndPolling_WhenTargetHandlerArgsDataIsNotNull_TargetHandlerArgsIsSerializedAndDeserializedSuccessfully_EventReportDownloadedEventIsPublished()
+        {
+            // arrange
+            var validReportType = $"{_testEntriesIdentifier}_VALID_REPORT_TYPE_";
+            var expectedGeneratedReportId = "test generated report Id";
+            var expectedReportProcessingStatus = "_DONE_";
+            var reportRequestContainer = GenerateReportContainer(validReportType);
+            Setup_RequestReport_Returns_ReportRequestWasGenerated(validReportType);
+            Setup_GetReportRequestList_Returns_ReportsGeneratedSuccessfully(expectedGeneratedReportId, expectedReportProcessingStatus);
+            Setup_GetReport_Returns_ReportContentStream(expectedGeneratedReportId, "testReportContent");
+            Stream actualReportContent = null;
+            var targetEventArgs = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>());
+            var reportDownloadedEventPublishedCount = 0;
 
-			// act - queue report
-			_easyMwsClient.QueueReport(reportRequestContainer, ReportDownloadCallback, expectedCallbackData);
+            _easyMwsClient.ReportDownloaded += (s, e) =>
+            {
+                reportDownloadedEventPublishedCount++;
+                actualReportContent = e.ReportContent;
+                targetEventArgs = e.TargetHandlerArgs;
+            };
 
-			// act - Poll report request process, in order for the queuedReport delegate to be invoked.
-			_easyMwsClient.Poll();
+            // act - queue report
+            _easyMwsClient.QueueReport(reportRequestContainer, "targetHandlerId", new Dictionary<string, object> { { "key1", "value1" } });
 
-			// assert - null callback data deserialization step does not crash, and callback was invoked successfully
-			Assert.AreEqual(expectedCallbackData, _actualCallbackObject);
-			Assert.AreEqual(expectedReportContent, _actualReportContent == null ? null : new StreamReader(_actualReportContent).ReadToEnd());
-			_mwsClientMock.Verify(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()), Times.Once);
-			_mwsClientMock.Verify(mws => mws.GetReportRequestList(It.IsAny<GetReportRequestListRequest>()), Times.Once);
-			_mwsClientMock.Verify(mws => mws.GetReport(It.IsAny<GetReportRequest>()), Times.Once);
+            var dbEntry = _dbContext.ReportRequestEntries.Where(rre => rre.ReportType == validReportType);
 
-			var dbEntry = _dbContext.ReportRequestEntries.FirstOrDefault(rre => rre.ReportType == validReportType);
-			Assert.IsNull(dbEntry);
-		}
+            // assert - null callback data serialization step does not crash
+            Assert.NotNull(dbEntry);
+            Assert.AreEqual(1, dbEntry.Count());
+            var reportRequestEntry = dbEntry.Single();
 
-		[Test]
-	    public void GivenQueuingReportAndPolling_WhenReportHasAnInvalidType_AndRequestIsRejectedByAmazon_ThenReportRequestIsDeletedFromQueue()
-	    {
-			// arrange
-		    var invalidReportType = $"{_testEntriesIdentifier}_INVALID_REPORT_TYPE_";
-		    var expectedRequestId = "ExpectedRequestId_999";
-		    var expectedExceptionMessage = "invalid report type";
-		    var expectedExceptionStatusCode = HttpStatusCode.BadRequest;
-		    var expectedExceptionErrorCode = "InvalidReportType";
-		    var expectedExceptionErrorType = "error type";
+            Assert.AreEqual("{\"key1\":\"value1\"}",reportRequestEntry.TargetHandlerArgs);
 
-		    Setup_RequestReport_ThrowsInvalidReportTypeException(invalidReportType, expectedRequestId,
-			    expectedExceptionStatusCode, expectedExceptionMessage, expectedExceptionErrorCode, expectedExceptionErrorType);
-		    var reportRequestContainer = GenerateReportContainer(invalidReportType);
+            // act - Poll report request process, in order for the queuedReport delegate to be invoked.
+            _easyMwsClient.Poll();
 
-			// act
-			_easyMwsClient.QueueReport(reportRequestContainer, ReportDownloadCallback, null);
-		    _easyMwsClient.Poll();
+            // assert - null callback data deserialization step does not crash, and callback was invoked successfully
+            Assert.AreEqual(1, targetEventArgs.Count());
+            Assert.IsNotNull(targetEventArgs.Where(kvp => kvp.Key == "key1"));
+            Assert.IsNotNull(targetEventArgs.Where(kvp => kvp.Value == "value1"));
+            Assert.NotNull(actualReportContent);
+            Assert.AreEqual(1, reportDownloadedEventPublishedCount);
+            _mwsClientMock.Verify(mws => mws.RequestReport(It.IsAny<RequestReportRequest>()), Times.Once);
+            _mwsClientMock.Verify(mws => mws.GetReportRequestList(It.IsAny<GetReportRequestListRequest>()), Times.Once);
+            _mwsClientMock.Verify(mws => mws.GetReport(It.IsAny<GetReportRequest>()), Times.Once);
+        }
 
-			// assert
-			var dbEntry = _dbContext.ReportRequestEntries.FirstOrDefault(rre => rre.ReportType == invalidReportType);
-		    Assert.IsNull(dbEntry);
-		}
+        [Test]
+        public void GivenQueuingReportAndPolling_WhenReportHasAnInvalidType_AndRequestIsRejectedByAmazon_ThenReportRequestIsDeletedFromQueue()
+        {
+            // arrange
+            var invalidReportType = $"{_testEntriesIdentifier}_INVALID_REPORT_TYPE_";
+            var expectedRequestId = "ExpectedRequestId_999";
+            var expectedExceptionMessage = "invalid report type";
+            var expectedExceptionStatusCode = HttpStatusCode.BadRequest;
+            var expectedExceptionErrorCode = "InvalidReportType";
+            var expectedExceptionErrorType = "error type";
 
-		[Test]
-	    public void GivenRequestingAReportFromAmazon_WhenTheRequestFailsMaxRetryCountTimes_TheReportRequestEntryIsRemovedFromQueue()
-	    {
-		    var validReportType = $"{_testEntriesIdentifier}_VALID_REPORT_TYPE_";
-		    Setup_RequestReport_Returns_ReportRequestNotGeneratedYet(validReportType);
-		    var reportRequestContainer = GenerateReportContainer(validReportType);
-			_options.ReportRequestOptions.ReportRequestRetryInitialDelay = TimeSpan.Zero;
-			_options.ReportRequestOptions.ReportRequestRetryInterval = TimeSpan.Zero;
+            Setup_RequestReport_ThrowsInvalidReportTypeException(invalidReportType, expectedRequestId,
+                expectedExceptionStatusCode, expectedExceptionMessage, expectedExceptionErrorCode, expectedExceptionErrorType);
+            var reportRequestContainer = GenerateReportContainer(invalidReportType);
+            var reportDownloadedEventPublishedCount = 0;
 
-			_easyMwsClient.QueueReport(reportRequestContainer, ReportDownloadCallback, "callbackData");
+            _easyMwsClient.ReportDownloaded += (s, e) =>
+            {
+                reportDownloadedEventPublishedCount++;
+            };
 
-		    var retryCount = _options.ReportRequestOptions.ReportRequestMaxRetryCount;
+            // act
+            _easyMwsClient.QueueReport(reportRequestContainer, "targetHandlerId");
+            _easyMwsClient.Poll();
 
-		    for (int i = 0; i <= retryCount; i++)
-		    {
-				_easyMwsClient.Poll();
+            // assert
+            var dbEntry = _dbContext.ReportRequestEntries.FirstOrDefault(rre => rre.ReportType == invalidReportType);
+            Assert.IsNull(dbEntry);
+            Assert.AreEqual(0, reportDownloadedEventPublishedCount);
+        }
 
-			    var dbEntry = _dbContext.ReportRequestEntries.Where(rre => rre.ReportType == validReportType);
-			    Assert.NotNull(dbEntry);
-			    Assert.AreEqual(1, dbEntry.Count());
-			    var reportRequestEntry = dbEntry.Single();
-			    Assert.IsNull(reportRequestEntry.RequestReportId);
-			}
+        [Test]
+        public void GivenRequestingAReportFromAmazon_WhenTheRequestFailsMaxRetryCountTimes_TheReportRequestEntryIsRemovedFromQueue()
+        {
+            var validReportType = $"{_testEntriesIdentifier}_VALID_REPORT_TYPE_";
+            Setup_RequestReport_Returns_ReportRequestNotGeneratedYet(validReportType);
+            var reportRequestContainer = GenerateReportContainer(validReportType);
+            _options.ReportRequestOptions.ReportRequestRetryInitialDelay = TimeSpan.Zero;
+            _options.ReportRequestOptions.ReportRequestRetryInterval = TimeSpan.Zero;
+            var reportDownloadedEventPublishedCount = 0;
 
-		    _easyMwsClient.Poll();
+            _easyMwsClient.ReportDownloaded += (s, e) =>
+            {
+                reportDownloadedEventPublishedCount++;
+            };
 
-		    Assert.IsNull(_dbContext.ReportRequestEntries.FirstOrDefault(rre => rre.ReportType == validReportType));
-		}
+            _easyMwsClient.QueueReport(reportRequestContainer, "targetHandlerId");
+
+            var retryCount = _options.ReportRequestOptions.ReportRequestMaxRetryCount;
+
+            for (int i = 0; i <= retryCount; i++)
+            {
+                _easyMwsClient.Poll();
+
+                var dbEntry = _dbContext.ReportRequestEntries.Where(rre => rre.ReportType == validReportType);
+                Assert.NotNull(dbEntry);
+                Assert.AreEqual(1, dbEntry.Count());
+                var reportRequestEntry = dbEntry.Single();
+                Assert.IsNull(reportRequestEntry.RequestReportId);
+            }
+
+            _easyMwsClient.Poll();
+
+            Assert.IsNull(_dbContext.ReportRequestEntries.FirstOrDefault(rre => rre.ReportType == validReportType));
+            Assert.AreEqual(0, reportDownloadedEventPublishedCount);
+        }
 
 
-	    #region Non testing code
+        #region Non testing code
 
-		private ReportRequestPropertiesContainer GenerateReportContainer(string reportType)
+        private ReportRequestPropertiesContainer GenerateReportContainer(string reportType)
 		{
 			return new ReportRequestPropertiesContainer(reportType, ContentUpdateFrequency.Unknown);
 		}

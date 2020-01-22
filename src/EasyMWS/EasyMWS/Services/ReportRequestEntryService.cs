@@ -120,10 +120,8 @@ namespace MountainWarehouse.EasyMWS.Services
 			var entries = Where(rre => rre.AmazonRegion == region && rre.MerchantId == merchantId
 							  && (rre.Details != null || rre.LastAmazonReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData)
 							  && RetryIntervalHelper.IsRetryPeriodAwaited(rre.LastAmazonRequestDate, rre.InvokeCallbackRetryCount,
-							   _options.CallbackInvocationOptions.InvokeCallbackRetryInterval, _options.CallbackInvocationOptions.InvokeCallbackRetryInterval,
-							   _options.CallbackInvocationOptions.InvokeCallbackRetryPeriodType) && rre.IsLocked == false).ToList();
-
-            entries = EntryInvocationRestrictionHelper<ReportRequestEntry>.RestrictInvocationToOriginatingClientsIfEnabled(entries, _options);
+							   _options.EventPublishingOptions.EventPublishingRetryInterval, _options.EventPublishingOptions.EventPublishingRetryInterval,
+							   _options.EventPublishingOptions.EventPublishingRetryPeriodType) && rre.IsLocked == false).ToList();
 
             if (entries.Any() && markEntriesAsLocked)
 			{

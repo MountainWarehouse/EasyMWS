@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MountainWarehouse.EasyMWS.Data;
 
 namespace MountainWarehouse.EasyMWS.Migrations
 {
     [DbContext(typeof(EasyMwsContext))]
-    partial class EasyMwsContextModelSnapshot : ModelSnapshot
+    [Migration("20200117151343_RemoveFeedCallbackDataAddEventData")]
+    partial class RemoveFeedCallbackDataAddEventData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -53,6 +55,8 @@ namespace MountainWarehouse.EasyMWS.Migrations
                     b.Property<string>("FeedType");
 
                     b.Property<bool>("HasErrors");
+
+                    b.Property<string>("InstanceId");
 
                     b.Property<int>("InvokeCallbackRetryCount");
 
@@ -105,6 +109,8 @@ namespace MountainWarehouse.EasyMWS.Migrations
                     b.Property<DateTime>("DateCreated");
 
                     b.Property<string>("GeneratedReportId");
+
+                    b.Property<string>("InstanceId");
 
                     b.Property<int>("InvokeCallbackRetryCount");
 

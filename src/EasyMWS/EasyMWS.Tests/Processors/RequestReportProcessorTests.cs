@@ -412,7 +412,7 @@ namespace EasyMWS.Tests.Processors
         [Test]
         public void QueueReportsAccordingToProcessingStatus_InvokeCallbackForReportStatusDoneNoDataTrue_DoesNotDeleteEntry()
         {
-            _easyMwsOptions.CallbackInvocationOptions.InvokeCallbackForReportStatusDoneNoData = true;
+            _easyMwsOptions.EventPublishingOptions.EventPublishingForReportStatusDoneNoData = true;
             var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
             var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
             var data = new List<ReportRequestEntry>
@@ -447,7 +447,7 @@ namespace EasyMWS.Tests.Processors
         [Test]
         public void QueueReportsAccordingToProcessingStatus_InvokeCallbackForReportStatusDoneNoDataFalse_DeletesEntry()
         {
-            _easyMwsOptions.CallbackInvocationOptions.InvokeCallbackForReportStatusDoneNoData = false;
+            _easyMwsOptions.EventPublishingOptions.EventPublishingForReportStatusDoneNoData = false;
             var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
             var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
             var data = new List<ReportRequestEntry>
@@ -588,35 +588,34 @@ namespace EasyMWS.Tests.Processors
 			_reportRequestServiceMock.Verify(x => x.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
 		}
 
-		[Test]
-		public void DownloadGeneratedReportFromAmazon_ShouldCallMwsGetReportOnce()
-		{
-			// Arrange
-			var merchantId = "testMerchantId";
-			var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
-			var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
+        [Test]
+        public void DownloadGeneratedReportFromAmazon_ShouldCallMwsGetReportOnce()
+        {
+            // Arrange
+            var merchantId = "testMerchantId";
+            var propertiesContainer = new ReportRequestPropertiesContainer("testReportType", ContentUpdateFrequency.Unknown);
+            var serializedReportRequestData = JsonConvert.SerializeObject(propertiesContainer);
 
-			var reportRequestCallback = new ReportRequestEntry(serializedReportRequestData)
-			{
-				Data = null,
-				AmazonRegion = AmazonRegion.Europe,
-				Id = 4,
-				RequestReportId = "Report3",
-				GeneratedReportId = "GeneratedIdTest1",
-				MerchantId = merchantId
-			};
+            var reportRequestCallback = new ReportRequestEntry(serializedReportRequestData)
+            {
+                AmazonRegion = AmazonRegion.Europe,
+                Id = 4,
+                RequestReportId = "Report3",
+                GeneratedReportId = "GeneratedIdTest1",
+                MerchantId = merchantId
+            };
 
-			_reportRequestCallbacks.Add(reportRequestCallback);
+            _reportRequestCallbacks.Add(reportRequestCallback);
 
-			// Act
-			var testData = _reportRequestCallbacks.Find(x => x.GeneratedReportId == "GeneratedIdTest1");
-			_requestReportProcessor.DownloadGeneratedReportFromAmazon(_reportRequestServiceMock.Object, testData);
+            // Act
+            var testData = _reportRequestCallbacks.Find(x => x.GeneratedReportId == "GeneratedIdTest1");
+            _requestReportProcessor.DownloadGeneratedReportFromAmazon(_reportRequestServiceMock.Object, testData);
 
-			// Assert
-			_marketplaceWebServiceClientMock.Verify(x => x.GetReport(It.IsAny<GetReportRequest>()), Times.Once);
-		}
+            // Assert
+            _marketplaceWebServiceClientMock.Verify(x => x.GetReport(It.IsAny<GetReportRequest>()), Times.Once);
+        }
 
-		[Test]
+        [Test]
 		public void DownloadGeneratedReportFromAmazon_WithDownloadSuccessfulAndValidHash_ReportContentSavedInDbAsZip()
 		{
 			var expectedReportContent = StreamHelper.CreateMemoryStream("This is some test content. Und die Katze läuft auf der Straße.");
@@ -962,9 +961,9 @@ namespace EasyMWS.Tests.Processors
 			var data = JsonConvert.SerializeObject(propertiesContainer);
 
 			var retryCount =
-				retryCountType == -1 ? _easyMwsOptions.CallbackInvocationOptions.InvokeCallbackMaxRetryCount - 1 :
-				retryCountType == 0 ? _easyMwsOptions.CallbackInvocationOptions.InvokeCallbackMaxRetryCount :
-				retryCountType == 1 ? _easyMwsOptions.CallbackInvocationOptions.InvokeCallbackMaxRetryCount + 1 : 0;
+				retryCountType == -1 ? _easyMwsOptions.EventPublishingOptions.EventPublishingMaxRetryCount - 1 :
+				retryCountType == 0 ? _easyMwsOptions.EventPublishingOptions.EventPublishingMaxRetryCount :
+				retryCountType == 1 ? _easyMwsOptions.EventPublishingOptions.EventPublishingMaxRetryCount + 1 : 0;
 
 			var firstEntryToDelete = new ReportRequestEntry
 			{

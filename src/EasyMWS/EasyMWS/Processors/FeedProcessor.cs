@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Net;
 using MountainWarehouse.EasyMWS.CallbackLogic;
+using MountainWarehouse.EasyMWS.Client;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
@@ -25,7 +28,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 		private readonly string _merchantId;
 		private readonly EasyMwsOptions _options;
 
-		internal FeedProcessor(AmazonRegion region, string merchantId, string mWSAuthToken, EasyMwsOptions options, IMarketplaceWebServiceClient mwsClient, IFeedSubmissionProcessor feedSubmissionProcessor, ICallbackActivator callbackActivator, IEasyMwsLogger logger)
+        public event EventHandler<FeedUploadedEventArgs> FeedUploadedInternal;
+
+        /// <summary>
+        /// Constructor to be used for UnitTesting/Mocking (in the absence of a dedicated DependencyInjection framework)
+        /// </summary>
+        internal FeedProcessor(AmazonRegion region, string merchantId, string mWSAuthToken, EasyMwsOptions options, IMarketplaceWebServiceClient mwsClient, IFeedSubmissionProcessor feedSubmissionProcessor, ICallbackActivator callbackActivator, IEasyMwsLogger logger)
 		  : this(region, merchantId, mWSAuthToken, options, mwsClient, logger)
 		{
 			_feedSubmissionProcessor = feedSubmissionProcessor;
@@ -54,10 +62,16 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			DownloadNextFeedSubmissionResultFromAmazon(feedSubmissionService);
 
-			PerformCallbacksForPreviouslySubmittedFeeds(feedSubmissionService);
+			PublishEventsForPreviouslySubmittedFeeds(feedSubmissionService);
 		}
 
-		private void PerformCallbacksForPreviouslySubmittedFeeds(IFeedSubmissionEntryService feedSubmissionService)
+        private void OnFeedUploaded(FeedUploadedEventArgs e)
+        {
+            EventHandler<FeedUploadedEventArgs> handler = FeedUploadedInternal;
+            handler?.Invoke(this, e);
+        }
+
+        private void PublishEventsForPreviouslySubmittedFeeds(IFeedSubmissionEntryService feedSubmissionService)
 		{
 			var previouslySubmittedFeeds = feedSubmissionService.GetAllFromQueueOfFeedsReadyForCallback(_merchantId, _region);
 
@@ -65,21 +79,25 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				try
 				{
-					_logger.Info($"Attempting to perform method callback for the next submitted feed in queue : {feedSubmissionEntry.RegionAndTypeComputed}");
-					var callback = new Callback(feedSubmissionEntry.TypeName, feedSubmissionEntry.MethodName, feedSubmissionEntry.Data, feedSubmissionEntry.DataTypeName);
-					var unzippedFeedSubmissionReport = ZipHelper.ExtractArchivedSingleFileToStream(feedSubmissionEntry.Details.FeedSubmissionReport);
-					_callbackActivator.CallMethod(callback, unzippedFeedSubmissionReport);
-					feedSubmissionService.Delete(feedSubmissionEntry);
+                    var processingReportContent = ZipHelper.ExtractArchivedSingleFileToStream(feedSubmissionEntry.Details.FeedSubmissionReport);
+                    var feedType = feedSubmissionEntry.FeedType;
+                    var handlerId = feedSubmissionEntry.TargetHandlerId;
+                    var handledArgs = feedSubmissionEntry.TargetHandlerArgs == null ? null : new ReadOnlyDictionary<string, object>(JsonConvert.DeserializeObject<Dictionary<string, object>>(feedSubmissionEntry.TargetHandlerArgs));
+                    var eventArgs = new FeedUploadedEventArgs(processingReportContent,feedType, handlerId, handledArgs);
+
+                    _logger.Info($"Attempting publish FeedUploaded for the next submitted feed in queue : {feedSubmissionEntry.RegionAndTypeComputed}");
+                    OnFeedUploaded(eventArgs);
+                    feedSubmissionService.Delete(feedSubmissionEntry);
 				}
 				catch (SqlException e)
 				{
-					_logger.Error($"Method callback failed for {feedSubmissionEntry.RegionAndTypeComputed} due to an internal error '{e.Message}'. The callback will be retried at the next poll request", e);
+					_logger.Error($"Event publishing failed for {feedSubmissionEntry.RegionAndTypeComputed} due to an internal error '{e.Message}'. The event publishing will be retried at the next poll request", e);
 					feedSubmissionEntry.IsLocked = false;
 					feedSubmissionService.Update(feedSubmissionEntry);
 				}
 				catch (Exception e)
 				{
-					_logger.Error($"Method callback failed for {feedSubmissionEntry.RegionAndTypeComputed}. Current retry count is :{feedSubmissionEntry.FeedSubmissionRetryCount}. {e.Message}", e);
+					_logger.Error($"Event publishing failed for {feedSubmissionEntry.RegionAndTypeComputed}. Current retry count is :{feedSubmissionEntry.FeedSubmissionRetryCount}. {e.Message}", e);
 					feedSubmissionEntry.InvokeCallbackRetryCount++;
 					feedSubmissionEntry.IsLocked = false;
 					feedSubmissionService.Update(feedSubmissionEntry);
@@ -89,15 +107,10 @@ namespace MountainWarehouse.EasyMWS.Processors
 			feedSubmissionService.SaveChanges();
 		}
 
-		public void QueueFeed(IFeedSubmissionEntryService feedSubmissionService, FeedSubmissionPropertiesContainer propertiesContainer, Action<Stream, object> callbackMethod, object callbackData)
-		{
+		public void QueueFeed(IFeedSubmissionEntryService feedSubmissionService, FeedSubmissionPropertiesContainer propertiesContainer, string targetEventId = null, Dictionary<string, object> targetEventArgs = null)
+        {
 			try
 			{
-				if (callbackMethod == null)
-				{
-					throw new ArgumentNullException(nameof(callbackMethod), "The callback method cannot be null, as it has to be invoked once the report has been downloaded, in order to provide access to the report content");
-				}
-
 				if (propertiesContainer == null) throw new ArgumentNullException();
 
 				var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
@@ -115,18 +128,15 @@ namespace MountainWarehouse.EasyMWS.Processors
                     FeedSubmissionRetryCount = 0,
                     FeedSubmissionId = null,
                     FeedType = propertiesContainer.FeedType,
-                    InstanceId = _options?.CallbackInvocationOptions?.RestrictInvocationToOriginatingInstance?.HashedInstanceId,
+                    TargetHandlerId = targetEventId,
+                    TargetHandlerArgs = targetEventArgs == null ? null : JsonConvert.SerializeObject(targetEventArgs),
                     Details = new FeedSubmissionDetails
 					{
 						FeedContent = ZipHelper.CreateArchiveFromContent(propertiesContainer.FeedContent)
 					}
 				};
-				
-				var serializedCallback = _callbackActivator.SerializeCallback(callbackMethod, callbackData);
-				feedSubmission.Data = serializedCallback.Data;
-				feedSubmission.TypeName = serializedCallback.TypeName;
-				feedSubmission.MethodName = serializedCallback.MethodName;
-				feedSubmission.DataTypeName = serializedCallback.DataTypeName;
+
+
 
 				feedSubmissionService.Create(feedSubmission);
 				feedSubmissionService.SaveChanges();

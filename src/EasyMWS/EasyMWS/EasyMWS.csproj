@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>MountainWarehouse.EasyMWS</RootNamespace>
     <AssemblyName>MountainWarehouse.EasyMWS</AssemblyName>
-    <Version>3.6.1</Version>
+    <Version>4.0.0</Version>
     <RepositoryUrl>https://github.com/MountainWarehouse/EasyMWS</RepositoryUrl>
     <PackageProjectUrl>https://github.com/MountainWarehouse/EasyMWS</PackageProjectUrl>
     <PackageTags>Amazon MWS MarketplaceWebService</PackageTags>
@@ -14,8 +14,8 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Description>EasyMWS is a .NET library that simplifies the interaction with the Amazon Marketplace Web Services API by abstracting away the request/check/download cycle for downloading reports and submitting feeds. You could consider this a package that replaces AMTU.</Description>
     <PackageLicenseUrl>http://aws.amazon.com/apache2.0</PackageLicenseUrl>
-    <AssemblyVersion>3.6.1.0</AssemblyVersion>
-    <FileVersion>3.6.1.0</FileVersion>
+    <AssemblyVersion>4.0.0.0</AssemblyVersion>
+    <FileVersion>4.0.0.0</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

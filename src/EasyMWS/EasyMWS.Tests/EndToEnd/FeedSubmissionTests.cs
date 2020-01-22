@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -31,20 +32,13 @@ namespace EasyMWS.Tests.EndToEnd
 	    private Mock<IEasyMwsLogger> _loggerMock;
 	    private Mock<IMarketplaceWebServiceClient> _mwsClientMock;
 
-	    private static object _actualCallbackObject;
 	    private static Stream _actualFeedSubmissionReportContent;
-	    public static void FeedSubmittedCallback(Stream stream, object o)
-	    {
-		    _actualCallbackObject = o;
-		    _actualFeedSubmissionReportContent = stream;
-	    }
 
 		[SetUp]
 	    public void SetUp()
 	    {
 		    _options = new EasyMwsOptions();
 		    _dbContext = new EasyMwsContext();
-		    _actualCallbackObject = null;
 		    _actualFeedSubmissionReportContent = null;
 
 		    _loggerMock = new Mock<IEasyMwsLogger>();
@@ -94,19 +88,31 @@ namespace EasyMWS.Tests.EndToEnd
 		    Setup_SubmitFeed_Returns_FeedSubmissionIdWasGenerated(expectedFeedSubmissionId, validFeedType);
 		    Setup_GetFeedSubmissionList_Returns_FeedSubmittedSuccessfully(expectedFeedSubmissionId, expectedFeedProcessingStatus);
 		    Setup_GetFeedSubmissionResult_Returns_SubmissionReportContentStream(expectedFeedSubmissionId, expectedSubmissionReportContent);
-		    _actualCallbackObject = null;
 		    _actualFeedSubmissionReportContent = null;
+            var feedUploadedEventNumberOfInvocations = 0;
+            ReadOnlyDictionary<string, object> targetEventArgs = null;
 
+            _easyMwsClient.FeedUploaded += (s, e) =>
+            {
+                feedUploadedEventNumberOfInvocations++;
+                targetEventArgs = e.TargetHandlerArgs;
+                _actualFeedSubmissionReportContent = e.ProcessingReportContent;
+            };
 
 		    // act - queue report
-		    _easyMwsClient.QueueFeed(feedSubmissionContainer, FeedSubmittedCallback, expectedCallbackData);
+		    _easyMwsClient.QueueFeed(feedSubmissionContainer, "targetEventId", new Dictionary<string, object> { { "key1", "value1" }, { "key2", "value2" } });
 
 		    // act - Poll report request process, in order for the queuedReport delegate to be invoked.
 		    _easyMwsClient.Poll();
 
-		    // assert - callback was invoked successfully with expected content.
-		    Assert.AreEqual(expectedCallbackData, _actualCallbackObject);
-		    Assert.AreEqual(expectedSubmissionReportContent, _actualFeedSubmissionReportContent == null ? null : new StreamReader(_actualFeedSubmissionReportContent).ReadToEnd());
+            // assert - callback was invoked successfully with expected content.
+            Assert.AreEqual(2, targetEventArgs.Count);
+            Assert.IsTrue(targetEventArgs.ContainsKey("key1"));
+            Assert.IsTrue(targetEventArgs.ContainsKey("key2"));
+            Assert.IsNotNull(targetEventArgs.FirstOrDefault(kvp => kvp.Value == "value1"));
+            Assert.IsNotNull(targetEventArgs.FirstOrDefault(kvp => kvp.Value == "value2"));
+            Assert.AreEqual(1, feedUploadedEventNumberOfInvocations);
+            Assert.AreEqual(expectedSubmissionReportContent, _actualFeedSubmissionReportContent == null ? null : new StreamReader(_actualFeedSubmissionReportContent).ReadToEnd());
 		    _mwsClientMock.Verify(mws => mws.SubmitFeed(It.IsAny<SubmitFeedRequest>()), Times.Once);
 		    _mwsClientMock.Verify(mws => mws.GetFeedSubmissionList(It.IsAny<GetFeedSubmissionListRequest>()), Times.Once);
 		    _mwsClientMock.Verify(mws => mws.GetFeedSubmissionResult(It.IsAny<GetFeedSubmissionResultRequest>()), Times.Once);

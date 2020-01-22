@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MountainWarehouse.EasyMWS.Data;
 
 namespace MountainWarehouse.EasyMWS.Migrations
 {
     [DbContext(typeof(EasyMwsContext))]
-    partial class EasyMwsContextModelSnapshot : ModelSnapshot
+    [Migration("20200116193607_RemoveReportCallbackDataAddEventData")]
+    partial class RemoveReportCallbackDataAddEventData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -40,6 +42,10 @@ namespace MountainWarehouse.EasyMWS.Migrations
 
                     b.Property<int>("AmazonRegion");
 
+                    b.Property<string>("Data");
+
+                    b.Property<string>("DataTypeName");
+
                     b.Property<DateTime>("DateCreated");
 
                     b.Property<int>("FeedProcessingRetryCount");
@@ -54,6 +60,8 @@ namespace MountainWarehouse.EasyMWS.Migrations
 
                     b.Property<bool>("HasErrors");
 
+                    b.Property<string>("InstanceId");
+
                     b.Property<int>("InvokeCallbackRetryCount");
 
                     b.Property<bool>("IsLocked");
@@ -66,13 +74,13 @@ namespace MountainWarehouse.EasyMWS.Migrations
 
                     b.Property<string>("MerchantId");
 
+                    b.Property<string>("MethodName");
+
                     b.Property<int>("ReportDownloadRetryCount");
 
                     b.Property<string>("SubmissionErrorData");
 
-                    b.Property<string>("TargetHandlerArgs");
-
-                    b.Property<string>("TargetHandlerId");
+                    b.Property<string>("TypeName");
 
                     b.HasKey("Id");
 
@@ -105,6 +113,8 @@ namespace MountainWarehouse.EasyMWS.Migrations
                     b.Property<DateTime>("DateCreated");
 
                     b.Property<string>("GeneratedReportId");
+
+                    b.Property<string>("InstanceId");
 
                     b.Property<int>("InvokeCallbackRetryCount");
 

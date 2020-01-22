@@ -22,7 +22,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
         /// <param name="rootNodesOnly">Type: xs:boolean. Optional. If true, then the report contains only the root nodes from the marketplace specified using MarketplaceId (or from your default marketplace, if MarketplaceId is not specified).<para/>If false, or if RootNodesOnly is not included in the ReportOptions parameter, then the content of the report depends on the value of BrowseNodeId.</param>
         /// <param name="browseNodeId">Specifies the top node of the browse tree hierarchy in the report. Optional. If BrowseNodeId is not included in the ReportOptions parameter, <para/>and if RootNodesOnly is false or is not included in the ReportOptions parameter, then the report contains the entire browse node hierarchy from the marketplace specified using MarketplaceId (or from your default marketplace, if MarketplaceId is not specified).<para/>Note that if you include an invalid BrowseNodeId in your request, the service returns a report that contains no data.</param>
         /// <returns></returns>
-        ReportRequestPropertiesContainer FlatFileOrdersByLastUpdateReport(
+        ReportRequestPropertiesContainer BrowseTreeReport(
             DateTime? startDate = null, 
             DateTime? endDate = null, 
             string marketplaceId = null,
