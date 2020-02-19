@@ -25,8 +25,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 	    private readonly string _merchantId;
         private readonly string _mWSAuthToken;
 
+		public event EventHandler<ReportRequestFailedEventArgs> ReportEntryWasMarkedForDelete;
 
-        internal RequestReportProcessor(AmazonRegion region, string merchantId, string mWSAuthToken, IMarketplaceWebServiceClient marketplaceWebServiceClient, IEasyMwsLogger logger, EasyMwsOptions options)
+		internal RequestReportProcessor(AmazonRegion region, string merchantId, string mWSAuthToken, IMarketplaceWebServiceClient marketplaceWebServiceClient, IEasyMwsLogger logger, EasyMwsOptions options)
 	    {
 		    _region = region;
 		    _merchantId = merchantId;
@@ -36,6 +37,7 @@ namespace MountainWarehouse.EasyMWS.Processors
             _mWSAuthToken = mWSAuthToken;
 	    }
 
+		private void OnReportEntryWasMarkedForDelete(ReportRequestFailedEventArgs e) => ReportEntryWasMarkedForDelete?.Invoke(null, e);
 
 		public void RequestReportFromAmazon(IReportRequestEntryService reportRequestService, ReportRequestEntry reportRequestEntry)
 	    {
@@ -157,7 +159,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 	    }
 
-		public IEnumerable<ReportRequestFailedEventArgs> CleanupReportRequests(IReportRequestEntryService reportRequestService)
+		public void CleanupReportRequests(IReportRequestEntryService reportRequestService)
 		{
 			_logger.Info("Executing cleanup of report requests queue.");
 			var allEntriesForRegionAndMerchant = reportRequestService.GetAll().Where(rrc => IsMatchForRegionAndMerchantId(rrc));
@@ -186,22 +188,22 @@ namespace MountainWarehouse.EasyMWS.Processors
 			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(rrc => IsCallbackInvocationRetryCountExceeded(rrc))
 				.Select(e => new EntryToDelete { Entry = e, ReportRequestEntryDeleteReason = ReportRequestFailureReasonType.InvokeCallbackMaxRetryCountExceeded }));
 
-			var entriesToDeleteEventArgs = entriesToDelete.Select(etd =>
-				new ReportRequestFailedEventArgs(
-					etd.ReportRequestEntryDeleteReason, 
-					etd.Entry.AmazonRegion, 
-					etd.Entry.LastAmazonRequestDate, 
-					etd.Entry.LastAmazonReportProcessingStatus,
-					etd.Entry.RequestReportId,
-					etd.Entry.GeneratedReportId,
-					etd.Entry.GetPropertiesContainer(),
-					etd.Entry.TargetHandlerId,
-					etd.Entry.TargetHandlerArgs,
-					etd.Entry.ReportType));
+			foreach (var entryToDelete in entriesToDelete)
+			{
+				OnReportEntryWasMarkedForDelete(new ReportRequestFailedEventArgs(
+					entryToDelete.ReportRequestEntryDeleteReason,
+					entryToDelete.Entry.AmazonRegion,
+					entryToDelete.Entry.LastAmazonRequestDate,
+					entryToDelete.Entry.LastAmazonReportProcessingStatus,
+					entryToDelete.Entry.RequestReportId,
+					entryToDelete.Entry.GeneratedReportId,
+					entryToDelete.Entry.GetPropertiesContainer(),
+					entryToDelete.Entry.TargetHandlerId,
+					entryToDelete.Entry.TargetHandlerArgs,
+					entryToDelete.Entry.ReportType));
+			}
 
 			DeleteUniqueEntries(entriesToDelete.Distinct());
-
-			return entriesToDeleteEventArgs;
 		}
 
 		public void QueueReportsAccordingToProcessingStatus(IReportRequestEntryService reportRequestService,

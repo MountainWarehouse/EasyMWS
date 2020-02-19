@@ -46,11 +46,7 @@ namespace MountainWarehouse.EasyMWS.Processors
             _mWSAuthToken = mWSAuthToken;
 		}
 
-		private void OnFeedEntryWasMarkedForDelete(FeedRequestFailedEventArgs e)
-		{
-			EventHandler<FeedRequestFailedEventArgs> handler = FeedEntryWasMarkedForDelete;
-			handler?.Invoke(this, e);
-		}
+		private void OnFeedEntryWasMarkedForDelete(FeedRequestFailedEventArgs e) => FeedEntryWasMarkedForDelete?.Invoke(this, e);
 
 		public void SubmitFeedToAmazon(IFeedSubmissionEntryService feedSubmissionService, FeedSubmissionEntry feedSubmission)
 		{

@@ -40,6 +40,8 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			_requestReportProcessor = requestReportProcessor;
 			_callbackActivator = callbackActivator;
+
+			RegisterEvents();
 		}
 
 		internal ReportProcessor(AmazonRegion region, string merchantId, string mWSAuthToken, EasyMwsOptions options,
@@ -52,14 +54,23 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			_callbackActivator = _callbackActivator ?? new CallbackActivator();
 			_requestReportProcessor = _requestReportProcessor ?? new RequestReportProcessor(_region, _merchantId, mWSAuthToken, mwsClient, _logger, _options);
+
+			RegisterEvents();
 		}
+
+		private void RegisterEvents()
+		{
+			_requestReportProcessor.ReportEntryWasMarkedForDelete -= OnReportRequestFailedInternal;
+			_requestReportProcessor.ReportEntryWasMarkedForDelete += OnReportRequestFailedInternal;
+		}
+
+		private void OnReportRequestFailedInternal(object sender, ReportRequestFailedEventArgs e) => ReportRequestFailedInternal?.Invoke(null, e);
 
 		public void PollReports(IReportRequestEntryService reportRequestService)
 		{
 			_logger.Info("Executing polling action for report requests.");
 
-			var deletedEntries = _requestReportProcessor.CleanupReportRequests(reportRequestService);
-			PublishErrorEvents(deletedEntries);
+			_requestReportProcessor.CleanupReportRequests(reportRequestService);
 
 			RequestNextReportInQueueFromAmazon(reportRequestService);
 
@@ -78,25 +89,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_requestReportProcessor.DownloadGeneratedReportFromAmazon(reportRequestService, reportToDownload);
 		}
 
-		private void PublishErrorEvents(IEnumerable<ReportRequestFailedEventArgs> affectedEntriesEventArgs)
-		{
-			foreach (var affectedEntryEventArgs in affectedEntriesEventArgs)
-			{
-				OnReportRequestFailureEncountered(affectedEntryEventArgs);
-			}
-		}
-
-        private void OnReportDownloaded(ReportDownloadedEventArgs e)
-        {
-            EventHandler<ReportDownloadedEventArgs> handler = ReportDownloadedInternal;
-            handler?.Invoke(this, e);
-        }
-
-		private void OnReportRequestFailureEncountered(ReportRequestFailedEventArgs e)
-		{
-			EventHandler<ReportRequestFailedEventArgs> handler = ReportRequestFailedInternal;
-			handler?.Invoke(this, e);
-		}
+        private void OnReportDownloaded(ReportDownloadedEventArgs e) => ReportDownloadedInternal?.Invoke(this, e);
 
 		private void PublishEventsForPreviouslyDownloadedReports(IReportRequestEntryService reportRequestService)
 		{

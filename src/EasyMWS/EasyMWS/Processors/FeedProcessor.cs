@@ -40,8 +40,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_feedSubmissionProcessor = feedSubmissionProcessor;
 			_callbackActivator = callbackActivator;
 
-			_feedSubmissionProcessor.FeedEntryWasMarkedForDelete -= OnFeedEntryWasMarkedForDelete;
-			_feedSubmissionProcessor.FeedEntryWasMarkedForDelete += OnFeedEntryWasMarkedForDelete;
+			RegisterEvents();
 		}
 
 		internal FeedProcessor(AmazonRegion region, string merchantId, string mWSAuthToken, EasyMwsOptions options, IMarketplaceWebServiceClient mwsClient, IEasyMwsLogger logger)
@@ -55,8 +54,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			_feedSubmissionProcessor = _feedSubmissionProcessor ?? new FeedSubmissionProcessor(_region, _merchantId, mWSAuthToken, mwsClient, _logger, _options);
 
-			_feedSubmissionProcessor.FeedEntryWasMarkedForDelete -= OnFeedEntryWasMarkedForDelete;
-			_feedSubmissionProcessor.FeedEntryWasMarkedForDelete += OnFeedEntryWasMarkedForDelete;
+			RegisterEvents();
+		}
+
+		private void RegisterEvents()
+		{
+			_feedSubmissionProcessor.FeedEntryWasMarkedForDelete -= OnFeedRequestFailedInternal;
+			_feedSubmissionProcessor.FeedEntryWasMarkedForDelete += OnFeedRequestFailedInternal;
 		}
 
 		public void PollFeeds(IFeedSubmissionEntryService feedSubmissionService)
@@ -72,13 +76,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 			PublishEventsForPreviouslySubmittedFeeds(feedSubmissionService);
 		}
 
-		private void OnFeedEntryWasMarkedForDelete(object sender, FeedRequestFailedEventArgs e) => FeedRequestFailedInternal?.Invoke(null, e);
+		private void OnFeedRequestFailedInternal(object sender, FeedRequestFailedEventArgs e) => FeedRequestFailedInternal?.Invoke(null, e);
 
-		private void OnFeedUploaded(FeedUploadedEventArgs e)
-        {
-            EventHandler<FeedUploadedEventArgs> handler = FeedUploadedInternal;
-            handler?.Invoke(this, e);
-        }
+		private void OnFeedUploaded(FeedUploadedEventArgs e) => FeedUploadedInternal?.Invoke(this, e);
 
 		private void PublishEventsForPreviouslySubmittedFeeds(IFeedSubmissionEntryService feedSubmissionService)
 		{

@@ -40,14 +40,7 @@ namespace MountainWarehouse.EasyMWS.Client
 			_reportProcessor = reportProcessor;
 			_feedProcessor = feedProcessor;
 
-            _reportProcessor.ReportDownloadedInternal -= OnReportDownloaded;
-            _reportProcessor.ReportDownloadedInternal += OnReportDownloaded;
-			_reportProcessor.ReportRequestFailedInternal -= OnReportRequestFailed;
-			_reportProcessor.ReportRequestFailedInternal += OnReportRequestFailed;
-			_feedProcessor.FeedUploadedInternal -= OnFeedUploaded;
-            _feedProcessor.FeedUploadedInternal += OnFeedUploaded;
-			_feedProcessor.FeedRequestFailedInternal -= OnFeedRequestFailed;
-			_feedProcessor.FeedRequestFailedInternal += OnFeedRequestFailed;
+			RegisterEvents();
 		}
 
         /// <param name="region">The region of the account. Required parameter. A finer grained region or country can be specified on a PropertiesContainer by specifying its marketplaceIdList constructor argument.</param>
@@ -74,12 +67,17 @@ namespace MountainWarehouse.EasyMWS.Client
 			_reportProcessor = _reportProcessor ?? new ReportProcessor(_amazonRegion, _merchantId, mwsAuthToken, _options, mwsClient, _easyMwsLogger);
 			_feedProcessor = _feedProcessor ?? new FeedProcessor(_amazonRegion, _merchantId, mwsAuthToken, _options, mwsClient, _easyMwsLogger);
 
-            _reportProcessor.ReportDownloadedInternal -= OnReportDownloaded;
-            _reportProcessor.ReportDownloadedInternal += OnReportDownloaded;
+			RegisterEvents();
+		}
+
+		private void RegisterEvents()
+		{
+			_reportProcessor.ReportDownloadedInternal -= OnReportDownloaded;
+			_reportProcessor.ReportDownloadedInternal += OnReportDownloaded;
 			_reportProcessor.ReportRequestFailedInternal -= OnReportRequestFailed;
 			_reportProcessor.ReportRequestFailedInternal += OnReportRequestFailed;
 			_feedProcessor.FeedUploadedInternal -= OnFeedUploaded;
-            _feedProcessor.FeedUploadedInternal += OnFeedUploaded;
+			_feedProcessor.FeedUploadedInternal += OnFeedUploaded;
 			_feedProcessor.FeedRequestFailedInternal -= OnFeedRequestFailed;
 			_feedProcessor.FeedRequestFailedInternal += OnFeedRequestFailed;
 		}
