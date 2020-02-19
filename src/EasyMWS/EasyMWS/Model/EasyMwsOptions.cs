@@ -183,7 +183,7 @@ namespace MountainWarehouse.EasyMWS.Model
     public class FeedSubmissionOptions
     {
         /// <summary>
-        /// Default=3. When receiving a _CANCELLED_ or unhandled processing status from amazon for a feed submitted for processing, specify how many times to retry submitting the same feed.
+        /// Default=2. When receiving a _CANCELLED_ or unhandled processing status from amazon for a feed submitted for processing, specify how many times to retry submitting the same feed.
         /// </summary>
         public int FeedProcessingMaxRetryCount { get; set; }
 

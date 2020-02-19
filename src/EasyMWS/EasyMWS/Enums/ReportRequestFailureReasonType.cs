@@ -1,7 +1,7 @@
 ﻿namespace MountainWarehouse.EasyMWS.Enums
 {
 	/// <summary>
-	/// The reason for which a request to download a report from amazon has failed, and for which the request is being deleted from the EasyMws internal queue.<br/>
+	/// The reason for which a request to download a report from amazon has failed, and for which reason the request is being deleted from the EasyMws internal queue.<br/>
 	/// Consult the EasyMws logs for more details about the actual cause (to access the EasyMws logs, pass in an instance of IEasyMwsLogger when initializing the EasyMwsClient, subscribe to the IEasyMwsLogger.LogAvailable event, and in the eventHandler redirect the logs to an actual logger e.g. Log4net)
 	/// </summary>
 	public enum ReportRequestFailureReasonType
@@ -17,7 +17,7 @@
 		ReportDownloadMaxRetryCountExceeded,
 
 		/// <summary>
-		/// Calling the GetReportList MWS API endpoint results in a processing status being assigned to the current report which is NOT one of the following: Done, DoneNoData, Submitted, InProgress; and this has happened more than [EasyMwsOptions.ReportRequestOptions.ReportProcessingMaxRetryCount] times. (Default 2 times)
+		/// Calling the GetReportList MWS API endpoint results in a report processing status being assigned to the current report which is NOT one of the following: Done, DoneNoData, Submitted, InProgress; and this has happened more than [EasyMwsOptions.ReportRequestOptions.ReportProcessingMaxRetryCount] times. (Default 2 times)
 		/// </summary>
 		ReportProcessingMaxRetryCountExceeded,
 

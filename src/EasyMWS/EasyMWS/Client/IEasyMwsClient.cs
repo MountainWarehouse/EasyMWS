@@ -98,23 +98,35 @@ namespace MountainWarehouse.EasyMWS.Client
         event EventHandler<FeedUploadedEventArgs> FeedUploaded;
 
         /// <summary>
-        /// Event which is invoked as soon as a previously queued report request encounters a problem which will cause it to be deleted from the internal EasyMws queue.<br/>
+        /// Event which is invoked as soon as a previously queued report download request encounters a problem which will cause it to be deleted from the internal EasyMws queue.<br/>
         /// The ReportRequestFailedEventArgs event parameter provides access to the following data :<br/>
         ///     -   RequestFailureReason : the reason for which the report request has failed. For example the maximum retry limit might has been reached while trying to perform a certain step from the lifecycle of getting the report from amazon.<br/>
-        ///     -   LastAmazonStatus : the last report processing status received from amazon.<br/>
-        ///     -   LastAmazonRequestTimestamp : the timestamp associated to the last request of any kind to the Amazon MWS API.<para/>
+        ///     -   LastAmazonStatus : the last report processing status received from amazon regarding the failed request.<br/>
+        ///     -   LastAmazonRequestTimestamp : the timestamp associated to the last request of any kind to the Amazon MWS API regarding the failed request.<para/>
         ///     -   AmazonRegion : the amazon region associated to the EasyMws client instance used to queue the report (this can be used to re-queue the report if necessary).<br/>
         ///     -   ReportType : The report type associated to the affected report download request entry<br/> https://docs.developer.amazonservices.com/en_US/reports/Reports_ReportType.html
-        ///     -   ReportRequestPropertiesContainer : the properties container parameter used to queue the report (this can be used to re-queue the report if necessary).<br/>
+        ///     -   ReportRequestPropertiesContainer : the properties container parameter used to queue the report.<br/>
         ///     -   TargetHandlerId and TargetHandlerArgs : parameters that might have potentially been used to queue the report (these can be used to re-queue the report if necessary).<para/>
-        ///     -   ReportRequestId and GeneratedReportId : parameters related to the report request from amazon; These could be manually used in the amazon scratchpad or an external tool to query the status of the report request.<br/>
+        ///     -   ReportRequestId and GeneratedReportId : parameters related to the report request from amazon; These could be used in the amazon scratchpad or an external tool to query the status of the report request.<br/>
         ///     -   Amazon scratchpad url : https://mws.amazonservices.co.uk/scratchpad/index.html<br/>
         ///     -   More information about the amazon report request lifecycle : https://docs.developer.amazonservices.com/en_US/reports/Reports_Overview.html<br/>
         /// </summary>
         event EventHandler<ReportRequestFailedEventArgs> ReportRequestFailed;
 
         /// <summary>
-        /// 
+        /// Event which is invoked as soon as a previously queued feed upload request encounters a problem which will cause it to be deleted from the internal EasyMws queue.<br/>
+        /// The FeedRequestFailedEventArgs event parameter provides access to the following data :<br/>
+        ///     -   RequestFailureReason : the reason for which the feed request has failed. For example the maximum retry limit might has been reached while trying to perform a certain step from the lifecycle of uploading a feed to amazon and getting its submission report from amazon.<br/>
+        ///     -   LastAmazonStatus : the last report processing status received from amazon regarding the failed request.<br/>
+        ///     -   LastAmazonRequestTimestamp : the timestamp associated to the last request of any kind to the Amazon MWS API regarding the failed request.<para/>
+        ///     -   AmazonRegion : the amazon region associated to the EasyMws client instance used to queue the feed (this can be used to re-queue the feed if necessary).<br/>
+        ///     -   FeedType : The feed type associated to the affected feed upload request entry<br/> https://docs.developer.amazonservices.com/en_US/feeds/Feeds_FeedType.html
+        ///     -   FeedContent :  The feed content associated to the affected feed upload request entry.
+        ///     -   FeedSubmissionPropertiesContainer : the properties container parameter used to queue the feed.
+        ///     -   TargetHandlerId and TargetHandlerArgs : parameters that might have potentially been used to queue the feed (these can be used to re-queue the feed if necessary).<para/>
+        ///     -   FeedSubmissionId : parameter related to the report request from amazon; This could be manually used in the amazon scratchpad or an external tool to query the status of the feed submission.<br/>
+        ///     -   Amazon scratchpad url : https://mws.amazonservices.co.uk/scratchpad/index.html<br/>
+        ///     -   More information about the amazon report request lifecycle : https://docs.developer.amazonservices.com/en_US/feeds/Feeds_Overview.html<br/>
         /// </summary>
         event EventHandler<FeedRequestFailedEventArgs> FeedRequestFailed;
     }
