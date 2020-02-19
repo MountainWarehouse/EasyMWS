@@ -26,6 +26,7 @@ namespace MountainWarehouse.EasyMWS.Client
         public event EventHandler<ReportDownloadedEventArgs> ReportDownloaded;
         public event EventHandler<FeedUploadedEventArgs> FeedUploaded;
 		public event EventHandler<ReportRequestFailedEventArgs> ReportRequestFailed;
+		public event EventHandler<FeedRequestFailedEventArgs> FeedRequestFailed;
 
 		/// <summary>
 		/// Constructor to be used for UnitTesting/Mocking (in the absence of a dedicated DependencyInjection framework)
@@ -45,7 +46,9 @@ namespace MountainWarehouse.EasyMWS.Client
 			_reportProcessor.ReportRequestFailedInternal += OnReportRequestFailed;
 			_feedProcessor.FeedUploadedInternal -= OnFeedUploaded;
             _feedProcessor.FeedUploadedInternal += OnFeedUploaded;
-        }
+			_feedProcessor.FeedRequestFailedInternal -= OnFeedRequestFailed;
+			_feedProcessor.FeedRequestFailedInternal += OnFeedRequestFailed;
+		}
 
         /// <param name="region">The region of the account. Required parameter. A finer grained region or country can be specified on a PropertiesContainer by specifying its marketplaceIdList constructor argument.</param>
         /// <param name="merchantId">Seller ID / Merchant ID. Required parameter.</param>
@@ -73,9 +76,13 @@ namespace MountainWarehouse.EasyMWS.Client
 
             _reportProcessor.ReportDownloadedInternal -= OnReportDownloaded;
             _reportProcessor.ReportDownloadedInternal += OnReportDownloaded;
-            _feedProcessor.FeedUploadedInternal -= OnFeedUploaded;
+			_reportProcessor.ReportRequestFailedInternal -= OnReportRequestFailed;
+			_reportProcessor.ReportRequestFailedInternal += OnReportRequestFailed;
+			_feedProcessor.FeedUploadedInternal -= OnFeedUploaded;
             _feedProcessor.FeedUploadedInternal += OnFeedUploaded;
-        }
+			_feedProcessor.FeedRequestFailedInternal -= OnFeedRequestFailed;
+			_feedProcessor.FeedRequestFailedInternal += OnFeedRequestFailed;
+		}
 
 		public void Poll()
 		{
@@ -172,7 +179,8 @@ namespace MountainWarehouse.EasyMWS.Client
         private void OnReportDownloaded(object sender, ReportDownloadedEventArgs e) => ReportDownloaded?.Invoke(null, e);
         private void OnFeedUploaded(object sender, FeedUploadedEventArgs e) => FeedUploaded?.Invoke(null, e);
 		private void OnReportRequestFailed(object sender, ReportRequestFailedEventArgs e) => ReportRequestFailed?.Invoke(null, e);
-
+		private void OnFeedRequestFailed(object sender, FeedRequestFailedEventArgs e) => FeedRequestFailed?.Invoke(null, e);
+		
 		#endregion
 
 	}

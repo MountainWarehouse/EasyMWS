@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using MountainWarehouse.EasyMWS.Client;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Services;
@@ -15,5 +17,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			List<(string FeedSubmissionId, string FeedProcessingStatus)> feedProcessingStatuses);
 		void DownloadFeedSubmissionResultFromAmazon(IFeedSubmissionEntryService feedSubmissionService, FeedSubmissionEntry feedSubmissionEntry);
 		void CleanUpFeedSubmissionQueue(IFeedSubmissionEntryService feedSubmissionService);
+
+		event EventHandler<FeedRequestFailedEventArgs> FeedEntryWasMarkedForDelete;
 	}
 }

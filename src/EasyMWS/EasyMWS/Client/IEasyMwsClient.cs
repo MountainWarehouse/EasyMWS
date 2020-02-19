@@ -104,6 +104,7 @@ namespace MountainWarehouse.EasyMWS.Client
         ///     -   LastAmazonStatus : the last report processing status received from amazon.<br/>
         ///     -   LastAmazonRequestTimestamp : the timestamp associated to the last request of any kind to the Amazon MWS API.<para/>
         ///     -   AmazonRegion : the amazon region associated to the EasyMws client instance used to queue the report (this can be used to re-queue the report if necessary).<br/>
+        ///     -   ReportType : The report type associated to the affected report download request entry<br/> https://docs.developer.amazonservices.com/en_US/reports/Reports_ReportType.html
         ///     -   ReportRequestPropertiesContainer : the properties container parameter used to queue the report (this can be used to re-queue the report if necessary).<br/>
         ///     -   TargetHandlerId and TargetHandlerArgs : parameters that might have potentially been used to queue the report (these can be used to re-queue the report if necessary).<para/>
         ///     -   ReportRequestId and GeneratedReportId : parameters related to the report request from amazon; These could be manually used in the amazon scratchpad or an external tool to query the status of the report request.<br/>
@@ -111,5 +112,10 @@ namespace MountainWarehouse.EasyMWS.Client
         ///     -   More information about the amazon report request lifecycle : https://docs.developer.amazonservices.com/en_US/reports/Reports_Overview.html<br/>
         /// </summary>
         event EventHandler<ReportRequestFailedEventArgs> ReportRequestFailed;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        event EventHandler<FeedRequestFailedEventArgs> FeedRequestFailed;
     }
 }

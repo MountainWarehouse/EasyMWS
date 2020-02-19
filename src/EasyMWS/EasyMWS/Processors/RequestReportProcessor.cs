@@ -194,9 +194,10 @@ namespace MountainWarehouse.EasyMWS.Processors
 					etd.Entry.LastAmazonReportProcessingStatus,
 					etd.Entry.RequestReportId,
 					etd.Entry.GeneratedReportId,
-					JsonConvert.DeserializeObject<ReportRequestPropertiesContainer>(etd.Entry.ReportRequestData),
+					etd.Entry.GetPropertiesContainer(),
 					etd.Entry.TargetHandlerId,
-					etd.Entry.TargetHandlerArgs));
+					etd.Entry.TargetHandlerArgs,
+					etd.Entry.ReportType));
 
 			DeleteUniqueEntries(entriesToDelete.Distinct());
 

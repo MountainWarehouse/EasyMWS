@@ -29,15 +29,19 @@ namespace MountainWarehouse.EasyMWS.Processors
 		private readonly EasyMwsOptions _options;
 
         public event EventHandler<FeedUploadedEventArgs> FeedUploadedInternal;
+		public event EventHandler<FeedRequestFailedEventArgs> FeedRequestFailedInternal;
 
-        /// <summary>
-        /// Constructor to be used for UnitTesting/Mocking (in the absence of a dedicated DependencyInjection framework)
-        /// </summary>
-        internal FeedProcessor(AmazonRegion region, string merchantId, string mWSAuthToken, EasyMwsOptions options, IMarketplaceWebServiceClient mwsClient, IFeedSubmissionProcessor feedSubmissionProcessor, ICallbackActivator callbackActivator, IEasyMwsLogger logger)
+		/// <summary>
+		/// Constructor to be used for UnitTesting/Mocking (in the absence of a dedicated DependencyInjection framework)
+		/// </summary>
+		internal FeedProcessor(AmazonRegion region, string merchantId, string mWSAuthToken, EasyMwsOptions options, IMarketplaceWebServiceClient mwsClient, IFeedSubmissionProcessor feedSubmissionProcessor, ICallbackActivator callbackActivator, IEasyMwsLogger logger)
 		  : this(region, merchantId, mWSAuthToken, options, mwsClient, logger)
 		{
 			_feedSubmissionProcessor = feedSubmissionProcessor;
 			_callbackActivator = callbackActivator;
+
+			_feedSubmissionProcessor.FeedEntryWasMarkedForDelete -= OnFeedEntryWasMarkedForDelete;
+			_feedSubmissionProcessor.FeedEntryWasMarkedForDelete += OnFeedEntryWasMarkedForDelete;
 		}
 
 		internal FeedProcessor(AmazonRegion region, string merchantId, string mWSAuthToken, EasyMwsOptions options, IMarketplaceWebServiceClient mwsClient, IEasyMwsLogger logger)
@@ -50,6 +54,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_callbackActivator = _callbackActivator ?? new CallbackActivator();
 
 			_feedSubmissionProcessor = _feedSubmissionProcessor ?? new FeedSubmissionProcessor(_region, _merchantId, mWSAuthToken, mwsClient, _logger, _options);
+
+			_feedSubmissionProcessor.FeedEntryWasMarkedForDelete -= OnFeedEntryWasMarkedForDelete;
+			_feedSubmissionProcessor.FeedEntryWasMarkedForDelete += OnFeedEntryWasMarkedForDelete;
 		}
 
 		public void PollFeeds(IFeedSubmissionEntryService feedSubmissionService)
@@ -65,13 +72,15 @@ namespace MountainWarehouse.EasyMWS.Processors
 			PublishEventsForPreviouslySubmittedFeeds(feedSubmissionService);
 		}
 
-        private void OnFeedUploaded(FeedUploadedEventArgs e)
+		private void OnFeedEntryWasMarkedForDelete(object sender, FeedRequestFailedEventArgs e) => FeedRequestFailedInternal?.Invoke(null, e);
+
+		private void OnFeedUploaded(FeedUploadedEventArgs e)
         {
             EventHandler<FeedUploadedEventArgs> handler = FeedUploadedInternal;
             handler?.Invoke(this, e);
         }
 
-        private void PublishEventsForPreviouslySubmittedFeeds(IFeedSubmissionEntryService feedSubmissionService)
+		private void PublishEventsForPreviouslySubmittedFeeds(IFeedSubmissionEntryService feedSubmissionService)
 		{
 			var previouslySubmittedFeeds = feedSubmissionService.GetAllFromQueueOfFeedsReadyForCallback(_merchantId, _region);
 
