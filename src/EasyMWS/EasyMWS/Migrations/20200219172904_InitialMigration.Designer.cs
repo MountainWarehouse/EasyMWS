@@ -10,8 +10,8 @@ using MountainWarehouse.EasyMWS.Data;
 namespace MountainWarehouse.EasyMWS.Migrations
 {
     [DbContext(typeof(EasyMwsContext))]
-    [Migration("20180608102853_FeedContentColumnAsByteArray")]
-    partial class FeedContentColumnAsByteArray
+    [Migration("20200219172904_InitialMigration")]
+    partial class InitialMigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -42,33 +42,41 @@ namespace MountainWarehouse.EasyMWS.Migrations
 
                     b.Property<int>("AmazonRegion");
 
-                    b.Property<string>("Data");
-
-                    b.Property<string>("DataTypeName");
-
                     b.Property<DateTime>("DateCreated");
+
+                    b.Property<int>("FeedProcessingRetryCount");
 
                     b.Property<string>("FeedSubmissionData");
 
                     b.Property<string>("FeedSubmissionId");
 
+                    b.Property<int>("FeedSubmissionRetryCount");
+
                     b.Property<string>("FeedType");
 
                     b.Property<bool>("HasErrors");
 
+                    b.Property<string>("InstanceId");
+
+                    b.Property<int>("InvokeCallbackRetryCount");
+
+                    b.Property<bool>("IsLocked");
+
                     b.Property<bool>("IsProcessingComplete");
+
+                    b.Property<string>("LastAmazonFeedProcessingStatus");
 
                     b.Property<DateTime>("LastSubmitted");
 
                     b.Property<string>("MerchantId");
 
-                    b.Property<string>("MethodName");
+                    b.Property<int>("ReportDownloadRetryCount");
 
                     b.Property<string>("SubmissionErrorData");
 
-                    b.Property<int>("SubmissionRetryCount");
+                    b.Property<string>("TargetHandlerArgs");
 
-                    b.Property<string>("TypeName");
+                    b.Property<string>("TargetHandlerId");
 
                     b.HasKey("Id");
 
@@ -98,29 +106,37 @@ namespace MountainWarehouse.EasyMWS.Migrations
 
                     b.Property<int>("ContentUpdateFrequency");
 
-                    b.Property<string>("Data");
-
-                    b.Property<string>("DataTypeName");
-
                     b.Property<DateTime>("DateCreated");
 
                     b.Property<string>("GeneratedReportId");
 
-                    b.Property<DateTime>("LastRequested");
+                    b.Property<string>("InstanceId");
+
+                    b.Property<int>("InvokeCallbackRetryCount");
+
+                    b.Property<bool>("IsLocked");
+
+                    b.Property<string>("LastAmazonReportProcessingStatus");
+
+                    b.Property<DateTime>("LastAmazonRequestDate");
 
                     b.Property<string>("MerchantId");
 
-                    b.Property<string>("MethodName");
+                    b.Property<int>("ReportDownloadRetryCount");
+
+                    b.Property<int>("ReportProcessRetryCount");
 
                     b.Property<string>("ReportRequestData");
+
+                    b.Property<int>("ReportRequestRetryCount");
 
                     b.Property<string>("ReportType");
 
                     b.Property<string>("RequestReportId");
 
-                    b.Property<int>("RequestRetryCount");
+                    b.Property<string>("TargetHandlerArgs");
 
-                    b.Property<string>("TypeName");
+                    b.Property<string>("TargetHandlerId");
 
                     b.HasKey("Id");
 
