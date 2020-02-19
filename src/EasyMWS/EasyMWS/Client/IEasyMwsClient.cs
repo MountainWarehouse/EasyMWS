@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using MountainWarehouse.EasyMWS.Enums;
@@ -91,5 +91,20 @@ namespace MountainWarehouse.EasyMWS.Client
         ///     -   TargetHandlerArgs contains a dictionary of arbitrary key value pairs which can be provided at the time the report is Queued.
         /// </summary>
         event EventHandler<FeedUploadedEventArgs> FeedUploaded;
+
+        /// <summary>
+        /// Event which is invoked as soon as a previously queued report request encounters a problem which will cause it to be deleted from the internal EasyMws queue.<br/>
+        /// The ReportRequestFailedEventArgs event parameter provides access to the following data :<br/>
+        ///     -   RequestFailureReason : the reason for which the report request has failed. For example the maximum retry limit might has been reached while trying to perform a certain step from the lifecycle of getting the report from amazon.<br/>
+        ///     -   LastAmazonStatus : the last report processing status received from amazon.<br/>
+        ///     -   LastAmazonRequestTimestamp : the timestamp associated to the last request of any kind to the Amazon MWS API.<para/>
+        ///     -   AmazonRegion : the amazon region associated to the EasyMws client instance used to queue the report (this can be used to re-queue the report if necessary).<br/>
+        ///     -   ReportRequestPropertiesContainer : the properties container parameter used to queue the report (this can be used to re-queue the report if necessary).<br/>
+        ///     -   TargetHandlerId and TargetHandlerArgs : parameters that might have potentially been used to queue the report (these can be used to re-queue the report if necessary).<para/>
+        ///     -   ReportRequestId and GeneratedReportId : parameters related to the report request from amazon; These could be manually used in the amazon scratchpad or an external tool to query the status of the report request.<br/>
+        ///     -   Amazon scratchpad url : https://mws.amazonservices.co.uk/scratchpad/index.html<br/>
+        ///     -   More information about the amazon report request lifecycle : https://docs.developer.amazonservices.com/en_US/reports/Reports_Overview.html<br/>
+        /// </summary>
+        event EventHandler<ReportRequestFailedEventArgs> ReportRequestFailed;
     }
 }

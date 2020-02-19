@@ -9,9 +9,14 @@ namespace MountainWarehouse.EasyMWS.Client
             => (ReportContent, ReportType, TargetHandlerId, TargetHandlerArgs)
             = (reportContent, reportType, targetHandlerId, targetHandlerArgs);
 
-        public MemoryStream ReportContent { get; set; } = null;
-        public string ReportType { get; set; } = null;
-        public string TargetHandlerId { get; set; } = null;
-        public ReadOnlyDictionary<string, object> TargetHandlerArgs { get; set; }
+        public MemoryStream ReportContent { get; private set; } = null;
+        public string ReportType { get; } = null;
+        public string TargetHandlerId { get; } = null;
+        public ReadOnlyDictionary<string, object> TargetHandlerArgs { get; }
+
+        internal void SetReportContent(MemoryStream reportContent)
+        {
+            this.ReportContent = reportContent;
+        }
     }
 }

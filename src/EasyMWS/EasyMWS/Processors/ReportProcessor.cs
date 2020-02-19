@@ -28,11 +28,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 		private readonly EasyMwsOptions _options;
 
         public event EventHandler<ReportDownloadedEventArgs> ReportDownloadedInternal;
+		public event EventHandler<ReportRequestFailedEventArgs> ReportRequestFailedInternal;
 
-        /// <summary>
-        /// Constructor to be used for UnitTesting/Mocking (in the absence of a dedicated DependencyInjection framework)
-        /// </summary>
-        internal ReportProcessor(AmazonRegion region, string merchantId, string mWSAuthToken, EasyMwsOptions options,
+		/// <summary>
+		/// Constructor to be used for UnitTesting/Mocking (in the absence of a dedicated DependencyInjection framework)
+		/// </summary>
+		internal ReportProcessor(AmazonRegion region, string merchantId, string mWSAuthToken, EasyMwsOptions options,
 			IMarketplaceWebServiceClient mwsClient,
 			IRequestReportProcessor requestReportProcessor, ICallbackActivator callbackActivator, IEasyMwsLogger logger)
 			: this(region, merchantId, mWSAuthToken, options, mwsClient, logger)
@@ -57,7 +58,8 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			_logger.Info("Executing polling action for report requests.");
 
-			_requestReportProcessor.CleanupReportRequests(reportRequestService);
+			var deletedEntries = _requestReportProcessor.CleanupReportRequests(reportRequestService);
+			PublishErrorEvents(deletedEntries);
 
 			RequestNextReportInQueueFromAmazon(reportRequestService);
 
@@ -76,11 +78,25 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_requestReportProcessor.DownloadGeneratedReportFromAmazon(reportRequestService, reportToDownload);
 		}
 
+		private void PublishErrorEvents(IEnumerable<ReportRequestFailedEventArgs> affectedEntriesEventArgs)
+		{
+			foreach (var affectedEntryEventArgs in affectedEntriesEventArgs)
+			{
+				OnReportRequestFailureEncountered(affectedEntryEventArgs);
+			}
+		}
+
         private void OnReportDownloaded(ReportDownloadedEventArgs e)
         {
             EventHandler<ReportDownloadedEventArgs> handler = ReportDownloadedInternal;
             handler?.Invoke(this, e);
         }
+
+		private void OnReportRequestFailureEncountered(ReportRequestFailedEventArgs e)
+		{
+			EventHandler<ReportRequestFailedEventArgs> handler = ReportRequestFailedInternal;
+			handler?.Invoke(this, e);
+		}
 
 		private void PublishEventsForPreviouslyDownloadedReports(IReportRequestEntryService reportRequestService)
 		{
@@ -102,7 +118,7 @@ namespace MountainWarehouse.EasyMWS.Processors
                     {
                         _logger.Info($"Attempting to publish event ReportDownloaded for the following report in queue : {reportEntry.RegionAndTypeComputed}, but the AmazonProcessingStatus for this report is _DONE_NO_DATA_ therefore the Stream argument will be null at invocation time.");
                         var eventArgs = new ReportDownloadedEventArgs(null, reportType, handledId, handlerArgs);
-                        eventArgs.ReportContent = null;
+                        eventArgs.SetReportContent(null);
                         OnReportDownloaded(eventArgs);
                     }
                     else

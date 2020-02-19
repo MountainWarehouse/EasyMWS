@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using MountainWarehouse.EasyMWS.Client;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Services;
 
@@ -11,7 +12,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		void QueueReportsAccordingToProcessingStatus(IReportRequestEntryService reportRequestService,
 			List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> reportGenerationStatuses);
 		void DownloadGeneratedReportFromAmazon(IReportRequestEntryService reportRequestService, ReportRequestEntry reportRequestEntry);
-		void CleanupReportRequests(IReportRequestEntryService reportRequestService);
+		IEnumerable<ReportRequestFailedEventArgs> CleanupReportRequests(IReportRequestEntryService reportRequestService);
 	}
 }
 		

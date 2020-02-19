@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using MountainWarehouse.EasyMWS.Client;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
@@ -11,6 +12,7 @@ using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Services;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService.Model;
+using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS.Processors
 {
@@ -155,7 +157,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 	    }
 
-		public void CleanupReportRequests(IReportRequestEntryService reportRequestService)
+		public IEnumerable<ReportRequestFailedEventArgs> CleanupReportRequests(IReportRequestEntryService reportRequestService)
 		{
 			_logger.Info("Executing cleanup of report requests queue.");
 			var allEntriesForRegionAndMerchant = reportRequestService.GetAll().Where(rrc => IsMatchForRegionAndMerchantId(rrc));
@@ -169,22 +171,36 @@ namespace MountainWarehouse.EasyMWS.Processors
 					reportRequestService.Delete(entryToDelete.Entry);
 					reportRequestService.SaveChanges();
 
-					_logger.Warn($"Report request entry {entryToDelete.Entry.RegionAndTypeComputed} deleted from queue. {entryToDelete.DeleteReason.ToString()} exceeded");
+					_logger.Warn($"Report request entry {entryToDelete.Entry.RegionAndTypeComputed} deleted from queue. {entryToDelete.ReportRequestEntryDeleteReason.ToString()} exceeded");
 				}
 			}
 			
 			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(rrc => IsRequestRetryCountExceeded(rrc))
-				.Select(e => new EntryToDelete { Entry = e, DeleteReason = DeleteReasonType.ReportRequestMaxRetryCount }));
+				.Select(e => new EntryToDelete { Entry = e, ReportRequestEntryDeleteReason = ReportRequestFailureReasonType.ReportRequestMaxRetryCountExceeded }));
 			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(rrc => IsDownloadRetryCountExceeded(rrc))
-				.Select(e => new EntryToDelete { Entry = e, DeleteReason = DeleteReasonType.ReportDownloadMaxRetryCount }));
+				.Select(e => new EntryToDelete { Entry = e, ReportRequestEntryDeleteReason = ReportRequestFailureReasonType.ReportDownloadMaxRetryCountExceeded }));
 			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(rrc => IsProcessingRetryCountExceeded(rrc))
-				.Select(e => new EntryToDelete { Entry = e, DeleteReason = DeleteReasonType.ReportProcessingMaxRetryCount }));
+				.Select(e => new EntryToDelete { Entry = e, ReportRequestEntryDeleteReason = ReportRequestFailureReasonType.ReportProcessingMaxRetryCountExceeded }));
 			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(rrc => IsExpirationPeriodExceeded(rrc))
-				.Select(e => new EntryToDelete { Entry = e, DeleteReason = DeleteReasonType.ReportDownloadRequestEntryExpirationPeriod }));
+				.Select(e => new EntryToDelete { Entry = e, ReportRequestEntryDeleteReason = ReportRequestFailureReasonType.ReportRequestEntryExpirationPeriodExceeded }));
 			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(rrc => IsCallbackInvocationRetryCountExceeded(rrc))
-				.Select(e => new EntryToDelete { Entry = e, DeleteReason = DeleteReasonType.InvokeCallbackMaxRetryCount }));
+				.Select(e => new EntryToDelete { Entry = e, ReportRequestEntryDeleteReason = ReportRequestFailureReasonType.InvokeCallbackMaxRetryCountExceeded }));
+
+			var entriesToDeleteEventArgs = entriesToDelete.Select(etd =>
+				new ReportRequestFailedEventArgs(
+					etd.ReportRequestEntryDeleteReason, 
+					etd.Entry.AmazonRegion, 
+					etd.Entry.LastAmazonRequestDate, 
+					etd.Entry.LastAmazonReportProcessingStatus,
+					etd.Entry.RequestReportId,
+					etd.Entry.GeneratedReportId,
+					JsonConvert.DeserializeObject<ReportRequestPropertiesContainer>(etd.Entry.ReportRequestData),
+					etd.Entry.TargetHandlerId,
+					etd.Entry.TargetHandlerArgs));
 
 			DeleteUniqueEntries(entriesToDelete.Distinct());
+
+			return entriesToDeleteEventArgs;
 		}
 
 		public void QueueReportsAccordingToProcessingStatus(IReportRequestEntryService reportRequestService,
@@ -370,7 +386,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 	    private class EntryToDelete : IEquatable<EntryToDelete>
 	    {
 		    public ReportRequestEntry Entry { get; set; }
-		    public DeleteReasonType DeleteReason { get; set; }
+		    public ReportRequestFailureReasonType ReportRequestEntryDeleteReason { get; set; }
 
 		    public bool Equals(EntryToDelete other)
 		    {
@@ -384,15 +400,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 				    return Entry.Id;
 			    }
 		    }
-	    }
-
-	    private enum DeleteReasonType
-	    {
-		    ReportRequestMaxRetryCount,
-		    ReportDownloadMaxRetryCount,
-		    ReportProcessingMaxRetryCount,
-		    InvokeCallbackMaxRetryCount,
-		    ReportDownloadRequestEntryExpirationPeriod
 	    }
 	}
 }

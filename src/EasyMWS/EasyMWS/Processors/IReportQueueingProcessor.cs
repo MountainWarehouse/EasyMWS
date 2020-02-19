@@ -14,5 +14,6 @@ namespace MountainWarehouse.EasyMWS.Processors
         void PurgeQueue(IReportRequestEntryService reportRequestService);
 
         event EventHandler<ReportDownloadedEventArgs> ReportDownloadedInternal;
+        event EventHandler<ReportRequestFailedEventArgs> ReportRequestFailedInternal;
     }
 }
