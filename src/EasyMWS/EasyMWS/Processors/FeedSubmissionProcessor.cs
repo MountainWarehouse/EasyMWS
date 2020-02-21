@@ -329,15 +329,15 @@ namespace MountainWarehouse.EasyMWS.Processors
 				}
 			}
 
-			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(fse => IsFeedSubmissionRetryCountExceeded(fse))
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(IsFeedSubmissionRetryCountExceeded)
 				.Select(e => new EntryToDelete { Entry = e, DeleteReason = FeedRequestFailureReasonType.FeedSubmissionMaxRetryCountExceeded }));
-			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(fse => IsReportDownloadRetryCountExceeded(fse))
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(IsReportDownloadRetryCountExceeded)
 				.Select(e => new EntryToDelete { Entry = e, DeleteReason = FeedRequestFailureReasonType.ProcessingReportDownloadMaxRetryCountExceeded }));
-			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(fse => IsExpirationPeriodExceeded(fse))
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(IsExpirationPeriodExceeded)
 				.Select(e => new EntryToDelete { Entry = e, DeleteReason = FeedRequestFailureReasonType.FeedSubmissionEntryExpirationPeriodExceeded }));
-			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(fse => IsFeedProcessingRetryCountExceeded(fse))
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(IsFeedProcessingRetryCountExceeded)
 				.Select(e => new EntryToDelete { Entry = e, DeleteReason = FeedRequestFailureReasonType.FeedProcessingMaxRetryCountExceeded }));
-			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(fse => IsCallbackInvocationRetryCountExceeded(fse))
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(IsCallbackInvocationRetryCountExceeded)
 				.Select(e => new EntryToDelete { Entry = e, DeleteReason = FeedRequestFailureReasonType.InvokeCallbackMaxRetryCountExceeded }));
 
 			foreach (var entryToDelete in entriesToDelete)

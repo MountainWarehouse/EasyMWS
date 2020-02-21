@@ -13,10 +13,5 @@ namespace MountainWarehouse.EasyMWS.Client
         public string ReportType { get; } = null;
         public string TargetHandlerId { get; } = null;
         public ReadOnlyDictionary<string, object> TargetHandlerArgs { get; }
-
-        internal void SetReportContent(MemoryStream reportContent)
-        {
-            this.ReportContent = reportContent;
-        }
     }
 }

@@ -111,7 +111,6 @@ namespace MountainWarehouse.EasyMWS.Processors
                     {
                         _logger.Info($"Attempting to publish event ReportDownloaded for the following report in queue : {reportEntry.RegionAndTypeComputed}, but the AmazonProcessingStatus for this report is _DONE_NO_DATA_ therefore the Stream argument will be null at invocation time.");
                         var eventArgs = new ReportDownloadedEventArgs(null, reportType, handledId, handlerArgs);
-                        eventArgs.SetReportContent(null);
                         OnReportDownloaded(eventArgs);
                     }
                     else

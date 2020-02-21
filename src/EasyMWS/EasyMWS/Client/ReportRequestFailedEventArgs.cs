@@ -21,12 +21,12 @@ namespace MountainWarehouse.EasyMWS.Client
         }
 
         /// <summary>
-        /// The reason for which the report request has failed. For example the maximum retry limit might has been reached while trying to perform a certain step from the lifecycle of getting the report from amazon.<br/>
+        /// The reason for which the report request has failed. For example the maximum retry limit might has been reached while trying to perform a certain step from the lifecycle of getting the report from Amazon.<br/>
         /// </summary>
         public ReportRequestFailureReasonType RequestFailureReason { get; }
 
         /// <summary>
-        /// The amazon region associated to the EasyMws client instance used to queue the report (this can be used to re-queue the report if necessary).<br/>
+        /// The Amazon region associated to the EasyMws client instance used to queue the report (this can be used to re-queue the report if necessary).<br/>
         /// </summary>
         public AmazonRegion AmazonRegion { get; }
 
@@ -36,26 +36,26 @@ namespace MountainWarehouse.EasyMWS.Client
         public DateTime LastAmazonRequestTimestamp { get; }
 
         /// <summary>
-        /// The last report processing status received from amazon for this specific report download request entry.<br/>
+        /// The last report processing status received from Amazon for this specific report download request entry.<br/>
         /// </summary>
         public string LastAmazonStatus { get; }
 
         /// <summary>
-        /// Parameter related to the report request from amazon; This could be manually used in the amazon scratchpad or an external tool to query the status of the report request.<br/>
+        /// Parameter related to the report request from Amazon; This could be manually used in the Amazon scratchpad or an external tool to query the status of the report request.<br/>
         /// Amazon scratchpad url : https://mws.amazonservices.co.uk/scratchpad/index.html<br/>
-        /// More information about the amazon report request lifecycle : https://docs.developer.amazonservices.com/en_US/reports/Reports_Overview.html<br/>
+        /// More information about the Amazon report request lifecycle : https://docs.developer.amazonservices.com/en_US/reports/Reports_Overview.html<br/>
         /// </summary>
         public string ReportRequestId { get; }
 
         /// <summary>
-        /// Parameter related to the report request from amazon; This could be manually used in the amazon scratchpad or an external tool to query the status of the generated report.<br/>
+        /// Parameter related to the report request from Amazon; This could be manually used in the Amazon scratchpad or an external tool to query the status of the generated report.<br/>
         /// Amazon scratchpad url : https://mws.amazonservices.co.uk/scratchpad/index.html<br/>
         /// More information about the amazon report request lifecycle : https://docs.developer.amazonservices.com/en_US/reports/Reports_Overview.html<br/>
         /// </summary>
         public string GeneratedReportId { get; }
 
         /// <summary>
-        /// A container of properties partially describing a report download request
+        /// A container of properties containing data necessary to queue a request to download a report from Amazon<br/>
         /// </summary>
         public ReportRequestPropertiesContainer ReportRequestPropertiesContainer { get; }
 

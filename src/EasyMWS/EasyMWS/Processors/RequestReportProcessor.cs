@@ -177,15 +177,15 @@ namespace MountainWarehouse.EasyMWS.Processors
 				}
 			}
 			
-			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(rrc => IsRequestRetryCountExceeded(rrc))
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(IsRequestRetryCountExceeded)
 				.Select(e => new EntryToDelete { Entry = e, ReportRequestEntryDeleteReason = ReportRequestFailureReasonType.ReportRequestMaxRetryCountExceeded }));
-			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(rrc => IsDownloadRetryCountExceeded(rrc))
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(IsDownloadRetryCountExceeded)
 				.Select(e => new EntryToDelete { Entry = e, ReportRequestEntryDeleteReason = ReportRequestFailureReasonType.ReportDownloadMaxRetryCountExceeded }));
-			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(rrc => IsProcessingRetryCountExceeded(rrc))
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(IsProcessingRetryCountExceeded)
 				.Select(e => new EntryToDelete { Entry = e, ReportRequestEntryDeleteReason = ReportRequestFailureReasonType.ReportProcessingMaxRetryCountExceeded }));
-			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(rrc => IsExpirationPeriodExceeded(rrc))
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(IsExpirationPeriodExceeded)
 				.Select(e => new EntryToDelete { Entry = e, ReportRequestEntryDeleteReason = ReportRequestFailureReasonType.ReportRequestEntryExpirationPeriodExceeded }));
-			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(rrc => IsCallbackInvocationRetryCountExceeded(rrc))
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(IsCallbackInvocationRetryCountExceeded)
 				.Select(e => new EntryToDelete { Entry = e, ReportRequestEntryDeleteReason = ReportRequestFailureReasonType.InvokeCallbackMaxRetryCountExceeded }));
 
 			foreach (var entryToDelete in entriesToDelete)
