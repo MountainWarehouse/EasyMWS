@@ -54,6 +54,8 @@ namespace MountainWarehouse.EasyMWS.Migrations
 
                     b.Property<bool>("HasErrors");
 
+                    b.Property<string>("InstanceId");
+
                     b.Property<int>("InvokeCallbackRetryCount");
 
                     b.Property<bool>("IsLocked");
@@ -105,6 +107,8 @@ namespace MountainWarehouse.EasyMWS.Migrations
                     b.Property<DateTime>("DateCreated");
 
                     b.Property<string>("GeneratedReportId");
+
+                    b.Property<string>("InstanceId");
 
                     b.Property<int>("InvokeCallbackRetryCount");
 

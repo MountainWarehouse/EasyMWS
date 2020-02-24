@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using MountainWarehouse.EasyMWS.Client;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
@@ -11,6 +12,7 @@ using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Services;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
 using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService.Model;
+using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS.Processors
 {
@@ -23,7 +25,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 		private readonly string _merchantId;
         private readonly string _mWSAuthToken;
 
-        private readonly Dictionary<string, string> PendingStatusCodesAndMessages = new Dictionary<string, string>()
+		public event EventHandler<FeedRequestFailedEventArgs> FeedEntryWasMarkedForDelete;
+
+		private readonly Dictionary<string, string> PendingStatusCodesAndMessages = new Dictionary<string, string>()
 		{
 			{AmazonFeedProcessingStatus.AwaitingAsyncReply, "The request is being processed, but is waiting for external information before it can complete."},
 			{AmazonFeedProcessingStatus.InProgress, "The request is being processed."},
@@ -42,6 +46,7 @@ namespace MountainWarehouse.EasyMWS.Processors
             _mWSAuthToken = mWSAuthToken;
 		}
 
+		private void OnFeedEntryWasMarkedForDelete(FeedRequestFailedEventArgs e) => FeedEntryWasMarkedForDelete?.Invoke(this, e);
 
 		public void SubmitFeedToAmazon(IFeedSubmissionEntryService feedSubmissionService, FeedSubmissionEntry feedSubmission)
 		{
@@ -324,20 +329,38 @@ namespace MountainWarehouse.EasyMWS.Processors
 				}
 			}
 
-			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(fse => IsFeedSubmissionRetryCountExceeded(fse))
-				.Select(e => new EntryToDelete { Entry = e, DeleteReason = DeleteReasonType.FeedSubmissionMaxRetryCount }));
-			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(fse => IsReportDownloadRetryCountExceeded(fse))
-				.Select(e => new EntryToDelete { Entry = e, DeleteReason = DeleteReasonType.ReportDownloadMaxRetryCount }));
-			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(fse => IsExpirationPeriodExceeded(fse))
-				.Select(e => new EntryToDelete { Entry = e, DeleteReason = DeleteReasonType.FeedSubmissionRequestEntryExpirationPeriod }));
-			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(fse => IsFeedProcessingRetryCountExceeded(fse))
-				.Select(e => new EntryToDelete { Entry = e, DeleteReason = DeleteReasonType.FeedProcessingMaxRetryCount }));
-			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(fse => IsCallbackInvocationRetryCountExceeded(fse))
-				.Select(e => new EntryToDelete { Entry = e, DeleteReason = DeleteReasonType.InvokeCallbackMaxRetryCount }));
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(IsFeedSubmissionRetryCountExceeded)
+				.Select(e => new EntryToDelete { Entry = e, DeleteReason = FeedRequestFailureReasonType.FeedSubmissionMaxRetryCountExceeded }));
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(IsReportDownloadRetryCountExceeded)
+				.Select(e => new EntryToDelete { Entry = e, DeleteReason = FeedRequestFailureReasonType.ProcessingReportDownloadMaxRetryCountExceeded }));
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(IsExpirationPeriodExceeded)
+				.Select(e => new EntryToDelete { Entry = e, DeleteReason = FeedRequestFailureReasonType.FeedSubmissionEntryExpirationPeriodExceeded }));
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(IsFeedProcessingRetryCountExceeded)
+				.Select(e => new EntryToDelete { Entry = e, DeleteReason = FeedRequestFailureReasonType.FeedProcessingMaxRetryCountExceeded }));
+			entriesToDelete.AddRange(allEntriesForRegionAndMerchant.Where(IsCallbackInvocationRetryCountExceeded)
+				.Select(e => new EntryToDelete { Entry = e, DeleteReason = FeedRequestFailureReasonType.InvokeCallbackMaxRetryCountExceeded }));
+
+			foreach (var entryToDelete in entriesToDelete)
+			{
+				using (var feedStream = ZipHelper.ExtractArchivedSingleFileToStream(entryToDelete.Entry.Details?.FeedContent))
+				using (var streamReader = feedStream == null ? null : new StreamReader(feedStream))
+				{
+					OnFeedEntryWasMarkedForDelete(new FeedRequestFailedEventArgs(
+							entryToDelete.DeleteReason,
+							entryToDelete.Entry.AmazonRegion,
+							entryToDelete.Entry.LastSubmitted,
+							entryToDelete.Entry.LastAmazonFeedProcessingStatus,
+							entryToDelete.Entry.FeedSubmissionId,
+							entryToDelete.Entry.GetPropertiesContainer(),
+							entryToDelete.Entry.TargetHandlerId,
+							entryToDelete.Entry.TargetHandlerArgs,
+							streamReader?.ReadToEnd(),
+							entryToDelete.Entry.FeedType));
+				}
+			}
 
 			DeleteUniqueEntries(entriesToDelete.Distinct());
 		}
-
 
 		private bool IsMatchForRegionAndMerchantId(FeedSubmissionEntry e) => e.AmazonRegion == _region && e.MerchantId == _merchantId;
 		private bool IsFeedSubmissionRetryCountExceeded(FeedSubmissionEntry e) => e.FeedSubmissionRetryCount > _options.FeedSubmissionOptions.FeedSubmissionMaxRetryCount;
@@ -377,7 +400,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		 private class EntryToDelete : IEquatable<EntryToDelete>
 	    {
 		    public FeedSubmissionEntry Entry { get; set; }
-		    public DeleteReasonType DeleteReason { get; set; }
+		    public FeedRequestFailureReasonType DeleteReason { get; set; }
 
 		    public bool Equals(EntryToDelete other)
 		    {
@@ -392,14 +415,5 @@ namespace MountainWarehouse.EasyMWS.Processors
 			    }
 		    }
 	    }
-
-	    private enum DeleteReasonType
-	    {
-		    FeedSubmissionMaxRetryCount,
-		    ReportDownloadMaxRetryCount,
-		    FeedSubmissionRequestEntryExpirationPeriod,
-		    FeedProcessingMaxRetryCount,
-			InvokeCallbackMaxRetryCount
-		}
 	}
 }

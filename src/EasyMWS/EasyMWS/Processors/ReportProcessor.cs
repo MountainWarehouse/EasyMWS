@@ -28,17 +28,20 @@ namespace MountainWarehouse.EasyMWS.Processors
 		private readonly EasyMwsOptions _options;
 
         public event EventHandler<ReportDownloadedEventArgs> ReportDownloadedInternal;
+		public event EventHandler<ReportRequestFailedEventArgs> ReportRequestFailedInternal;
 
-        /// <summary>
-        /// Constructor to be used for UnitTesting/Mocking (in the absence of a dedicated DependencyInjection framework)
-        /// </summary>
-        internal ReportProcessor(AmazonRegion region, string merchantId, string mWSAuthToken, EasyMwsOptions options,
+		/// <summary>
+		/// Constructor to be used for UnitTesting/Mocking (in the absence of a dedicated DependencyInjection framework)
+		/// </summary>
+		internal ReportProcessor(AmazonRegion region, string merchantId, string mWSAuthToken, EasyMwsOptions options,
 			IMarketplaceWebServiceClient mwsClient,
 			IRequestReportProcessor requestReportProcessor, ICallbackActivator callbackActivator, IEasyMwsLogger logger)
 			: this(region, merchantId, mWSAuthToken, options, mwsClient, logger)
 		{
 			_requestReportProcessor = requestReportProcessor;
 			_callbackActivator = callbackActivator;
+
+			RegisterEvents();
 		}
 
 		internal ReportProcessor(AmazonRegion region, string merchantId, string mWSAuthToken, EasyMwsOptions options,
@@ -51,7 +54,17 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			_callbackActivator = _callbackActivator ?? new CallbackActivator();
 			_requestReportProcessor = _requestReportProcessor ?? new RequestReportProcessor(_region, _merchantId, mWSAuthToken, mwsClient, _logger, _options);
+
+			RegisterEvents();
 		}
+
+		private void RegisterEvents()
+		{
+			_requestReportProcessor.ReportEntryWasMarkedForDelete -= OnReportRequestFailedInternal;
+			_requestReportProcessor.ReportEntryWasMarkedForDelete += OnReportRequestFailedInternal;
+		}
+
+		private void OnReportRequestFailedInternal(object sender, ReportRequestFailedEventArgs e) => ReportRequestFailedInternal?.Invoke(null, e);
 
 		public void PollReports(IReportRequestEntryService reportRequestService)
 		{
@@ -76,11 +89,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_requestReportProcessor.DownloadGeneratedReportFromAmazon(reportRequestService, reportToDownload);
 		}
 
-        private void OnReportDownloaded(ReportDownloadedEventArgs e)
-        {
-            EventHandler<ReportDownloadedEventArgs> handler = ReportDownloadedInternal;
-            handler?.Invoke(this, e);
-        }
+        private void OnReportDownloaded(ReportDownloadedEventArgs e) => ReportDownloadedInternal?.Invoke(this, e);
 
 		private void PublishEventsForPreviouslyDownloadedReports(IReportRequestEntryService reportRequestService)
 		{
@@ -102,7 +111,6 @@ namespace MountainWarehouse.EasyMWS.Processors
                     {
                         _logger.Info($"Attempting to publish event ReportDownloaded for the following report in queue : {reportEntry.RegionAndTypeComputed}, but the AmazonProcessingStatus for this report is _DONE_NO_DATA_ therefore the Stream argument will be null at invocation time.");
                         var eventArgs = new ReportDownloadedEventArgs(null, reportType, handledId, handlerArgs);
-                        eventArgs.ReportContent = null;
                         OnReportDownloaded(eventArgs);
                     }
                     else
@@ -158,6 +166,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 					ReportType = propertiesContainer.ReportType,
                     TargetHandlerId = targetEventId,
                     TargetHandlerArgs = targetEventArgs == null ? null : JsonConvert.SerializeObject(targetEventArgs),
+                    InstanceId = _options?.EventPublishingOptions?.RestrictInvocationToOriginatingInstance?.HashedInstanceId,
                 };
 
 				reportRequestService.Create(reportRequest);

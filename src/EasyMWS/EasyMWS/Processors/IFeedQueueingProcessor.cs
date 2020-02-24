@@ -15,5 +15,6 @@ namespace MountainWarehouse.EasyMWS.Processors
         void PurgeQueue(IFeedSubmissionEntryService feedSubmissionService);
 
         event EventHandler<FeedUploadedEventArgs> FeedUploadedInternal;
+        event EventHandler<FeedRequestFailedEventArgs> FeedRequestFailedInternal;
     }
 }

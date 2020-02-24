@@ -29,15 +29,18 @@ namespace MountainWarehouse.EasyMWS.Processors
 		private readonly EasyMwsOptions _options;
 
         public event EventHandler<FeedUploadedEventArgs> FeedUploadedInternal;
+		public event EventHandler<FeedRequestFailedEventArgs> FeedRequestFailedInternal;
 
-        /// <summary>
-        /// Constructor to be used for UnitTesting/Mocking (in the absence of a dedicated DependencyInjection framework)
-        /// </summary>
-        internal FeedProcessor(AmazonRegion region, string merchantId, string mWSAuthToken, EasyMwsOptions options, IMarketplaceWebServiceClient mwsClient, IFeedSubmissionProcessor feedSubmissionProcessor, ICallbackActivator callbackActivator, IEasyMwsLogger logger)
+		/// <summary>
+		/// Constructor to be used for UnitTesting/Mocking (in the absence of a dedicated DependencyInjection framework)
+		/// </summary>
+		internal FeedProcessor(AmazonRegion region, string merchantId, string mWSAuthToken, EasyMwsOptions options, IMarketplaceWebServiceClient mwsClient, IFeedSubmissionProcessor feedSubmissionProcessor, ICallbackActivator callbackActivator, IEasyMwsLogger logger)
 		  : this(region, merchantId, mWSAuthToken, options, mwsClient, logger)
 		{
 			_feedSubmissionProcessor = feedSubmissionProcessor;
 			_callbackActivator = callbackActivator;
+
+			RegisterEvents();
 		}
 
 		internal FeedProcessor(AmazonRegion region, string merchantId, string mWSAuthToken, EasyMwsOptions options, IMarketplaceWebServiceClient mwsClient, IEasyMwsLogger logger)
@@ -50,6 +53,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_callbackActivator = _callbackActivator ?? new CallbackActivator();
 
 			_feedSubmissionProcessor = _feedSubmissionProcessor ?? new FeedSubmissionProcessor(_region, _merchantId, mWSAuthToken, mwsClient, _logger, _options);
+
+			RegisterEvents();
+		}
+
+		private void RegisterEvents()
+		{
+			_feedSubmissionProcessor.FeedEntryWasMarkedForDelete -= OnFeedRequestFailedInternal;
+			_feedSubmissionProcessor.FeedEntryWasMarkedForDelete += OnFeedRequestFailedInternal;
 		}
 
 		public void PollFeeds(IFeedSubmissionEntryService feedSubmissionService)
@@ -65,13 +76,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 			PublishEventsForPreviouslySubmittedFeeds(feedSubmissionService);
 		}
 
-        private void OnFeedUploaded(FeedUploadedEventArgs e)
-        {
-            EventHandler<FeedUploadedEventArgs> handler = FeedUploadedInternal;
-            handler?.Invoke(this, e);
-        }
+		private void OnFeedRequestFailedInternal(object sender, FeedRequestFailedEventArgs e) => FeedRequestFailedInternal?.Invoke(null, e);
 
-        private void PublishEventsForPreviouslySubmittedFeeds(IFeedSubmissionEntryService feedSubmissionService)
+		private void OnFeedUploaded(FeedUploadedEventArgs e) => FeedUploadedInternal?.Invoke(this, e);
+
+		private void PublishEventsForPreviouslySubmittedFeeds(IFeedSubmissionEntryService feedSubmissionService)
 		{
 			var previouslySubmittedFeeds = feedSubmissionService.GetAllFromQueueOfFeedsReadyForCallback(_merchantId, _region);
 
@@ -130,6 +139,7 @@ namespace MountainWarehouse.EasyMWS.Processors
                     FeedType = propertiesContainer.FeedType,
                     TargetHandlerId = targetEventId,
                     TargetHandlerArgs = targetEventArgs == null ? null : JsonConvert.SerializeObject(targetEventArgs),
+                    InstanceId = _options?.EventPublishingOptions?.RestrictInvocationToOriginatingInstance?.HashedInstanceId,
                     Details = new FeedSubmissionDetails
 					{
 						FeedContent = ZipHelper.CreateArchiveFromContent(propertiesContainer.FeedContent)

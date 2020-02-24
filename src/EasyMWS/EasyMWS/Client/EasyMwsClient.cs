@@ -25,11 +25,13 @@ namespace MountainWarehouse.EasyMWS.Client
         public EasyMwsOptions Options => _options;
         public event EventHandler<ReportDownloadedEventArgs> ReportDownloaded;
         public event EventHandler<FeedUploadedEventArgs> FeedUploaded;
+		public event EventHandler<ReportRequestFailedEventArgs> ReportRequestFailed;
+		public event EventHandler<FeedRequestFailedEventArgs> FeedRequestFailed;
 
-        /// <summary>
-        /// Constructor to be used for UnitTesting/Mocking (in the absence of a dedicated DependencyInjection framework)
-        /// </summary>
-        internal EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, string mWSAuthToken,
+		/// <summary>
+		/// Constructor to be used for UnitTesting/Mocking (in the absence of a dedicated DependencyInjection framework)
+		/// </summary>
+		internal EasyMwsClient(AmazonRegion region, string merchantId, string accessKeyId, string mwsSecretAccessKey, string mWSAuthToken,
             IReportQueueingProcessor reportProcessor,
 			IFeedQueueingProcessor feedProcessor, IEasyMwsLogger easyMwsLogger,
 			EasyMwsOptions options)
@@ -38,11 +40,8 @@ namespace MountainWarehouse.EasyMWS.Client
 			_reportProcessor = reportProcessor;
 			_feedProcessor = feedProcessor;
 
-            _reportProcessor.ReportDownloadedInternal -= OnReportDownloaded;
-            _reportProcessor.ReportDownloadedInternal += OnReportDownloaded;
-            _feedProcessor.FeedUploadedInternal -= OnFeedUploaded;
-            _feedProcessor.FeedUploadedInternal += OnFeedUploaded;
-        }
+			RegisterEvents();
+		}
 
         /// <param name="region">The region of the account. Required parameter. A finer grained region or country can be specified on a PropertiesContainer by specifying its marketplaceIdList constructor argument.</param>
         /// <param name="merchantId">Seller ID / Merchant ID. Required parameter.</param>
@@ -68,11 +67,20 @@ namespace MountainWarehouse.EasyMWS.Client
 			_reportProcessor = _reportProcessor ?? new ReportProcessor(_amazonRegion, _merchantId, mwsAuthToken, _options, mwsClient, _easyMwsLogger);
 			_feedProcessor = _feedProcessor ?? new FeedProcessor(_amazonRegion, _merchantId, mwsAuthToken, _options, mwsClient, _easyMwsLogger);
 
-            _reportProcessor.ReportDownloadedInternal -= OnReportDownloaded;
-            _reportProcessor.ReportDownloadedInternal += OnReportDownloaded;
-            _feedProcessor.FeedUploadedInternal -= OnFeedUploaded;
-            _feedProcessor.FeedUploadedInternal += OnFeedUploaded;
-        }
+			RegisterEvents();
+		}
+
+		private void RegisterEvents()
+		{
+			_reportProcessor.ReportDownloadedInternal -= OnReportDownloaded;
+			_reportProcessor.ReportDownloadedInternal += OnReportDownloaded;
+			_reportProcessor.ReportRequestFailedInternal -= OnReportRequestFailed;
+			_reportProcessor.ReportRequestFailedInternal += OnReportRequestFailed;
+			_feedProcessor.FeedUploadedInternal -= OnFeedUploaded;
+			_feedProcessor.FeedUploadedInternal += OnFeedUploaded;
+			_feedProcessor.FeedRequestFailedInternal -= OnFeedRequestFailed;
+			_feedProcessor.FeedRequestFailedInternal += OnFeedRequestFailed;
+		}
 
 		public void Poll()
 		{
@@ -166,10 +174,12 @@ namespace MountainWarehouse.EasyMWS.Client
 			return config;
 		}
 
-        private void OnReportDownloaded(object sender, ReportDownloadedEventArgs e) => ReportDownloaded?.Invoke(this, e);
-        private void OnFeedUploaded(object sender, FeedUploadedEventArgs e) => FeedUploaded?.Invoke(this, e);
+        private void OnReportDownloaded(object sender, ReportDownloadedEventArgs e) => ReportDownloaded?.Invoke(null, e);
+        private void OnFeedUploaded(object sender, FeedUploadedEventArgs e) => FeedUploaded?.Invoke(null, e);
+		private void OnReportRequestFailed(object sender, ReportRequestFailedEventArgs e) => ReportRequestFailed?.Invoke(null, e);
+		private void OnFeedRequestFailed(object sender, FeedRequestFailedEventArgs e) => FeedRequestFailed?.Invoke(null, e);
+		
+		#endregion
 
-        #endregion
-
-    }
+	}
 }

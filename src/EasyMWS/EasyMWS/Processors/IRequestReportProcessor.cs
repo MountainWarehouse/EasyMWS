@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using MountainWarehouse.EasyMWS.Client;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Services;
 
@@ -12,6 +14,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 			List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> reportGenerationStatuses);
 		void DownloadGeneratedReportFromAmazon(IReportRequestEntryService reportRequestService, ReportRequestEntry reportRequestEntry);
 		void CleanupReportRequests(IReportRequestEntryService reportRequestService);
+
+
+		event EventHandler<ReportRequestFailedEventArgs> ReportEntryWasMarkedForDelete;
 	}
 }
 		

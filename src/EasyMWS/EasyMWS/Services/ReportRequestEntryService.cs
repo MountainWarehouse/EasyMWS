@@ -123,6 +123,8 @@ namespace MountainWarehouse.EasyMWS.Services
 							   _options.EventPublishingOptions.EventPublishingRetryInterval, _options.EventPublishingOptions.EventPublishingRetryInterval,
 							   _options.EventPublishingOptions.EventPublishingRetryPeriodType) && rre.IsLocked == false).ToList();
 
+            entries = EntryInvocationRestrictionHelper<ReportRequestEntry>.RestrictInvocationToOriginatingClientsIfEnabled(entries, _options);
+
             if (entries.Any() && markEntriesAsLocked)
 			{
 				foreach (var entry in entries)
