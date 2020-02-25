@@ -14,7 +14,7 @@ namespace MountainWarehouse.EasyMWS.Model
 		/// A value of the ReportType that indicates the type of report to request.
 		/// </summary>
 		[IgnoreDataMember]
-		internal string ReportType { get; set; }
+		public readonly string ReportType;
 
 		#endregion
 

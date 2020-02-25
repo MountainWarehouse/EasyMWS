@@ -14,13 +14,13 @@ namespace MountainWarehouse.EasyMWS.Model
 		/// The actual content of the feed itself, in XML or flat file format.
 		/// </summary>
 		[IgnoreDataMember]
-		internal string FeedContent { get; set; }
+		public readonly string FeedContent;
 
 		/// <summary>
 		/// A FeedType value indicating how the data should be processed.
 		/// </summary>
 		[IgnoreDataMember]
-		internal string FeedType { get; set; }
+		public readonly string FeedType;
 
 		#endregion
 
