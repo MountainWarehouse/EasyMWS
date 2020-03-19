@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
 using MountainWarehouse.EasyMWS.Client;
 using MountainWarehouse.EasyMWS.Data;
+using MountainWarehouse.EasyMWS.DTO;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Logging;
@@ -344,8 +347,87 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    }
 		}
 
+		public async Task<IEnumerable<SettlementReportDetails>> ListSettlementReports(List<string> reportsToQuery, DateTime? availableFromDate = null, DateTime? availableToDate = null, bool? isAcknowledged = null)
+		{
+			_logger.Info($"Attempting to request settlement report list from Amazon for region: {_region}.");
 
-	    private bool IsAmazonErrorCodeFatal(string errorCode)
+			var listReportsThrottlingQuotaRestoreRate = TimeSpan.FromMinutes(1);
+			var settlementReports = new List<SettlementReportDetails>();
+
+			var getReportListRequest = new GetReportListRequest
+			{
+				ReportTypeList = new TypeList { Type = reportsToQuery },
+				Merchant = _merchantId
+			};
+			if (isAcknowledged == true) getReportListRequest.Acknowledged = isAcknowledged.Value;
+			if (availableFromDate != null) getReportListRequest.AvailableFromDate = availableFromDate.Value;
+			if (availableToDate != null) getReportListRequest.AvailableToDate = availableToDate.Value;
+
+			var response = await Task.Run(() => _marketplaceWebServiceClient.GetReportList(getReportListRequest));
+
+			var requestInfo = new RequestInfo(response?.ResponseHeaderMetadata?.Timestamp ?? "unknown", response?.ResponseHeaderMetadata?.RequestId ?? "unknown");
+			_logger.Info($"The settlement report list was successfully requested from Amazon for region: {_region}.", requestInfo);
+
+			if (response?.GetReportListResult == null)
+			{
+				var errorMessage = $"The response returned by the GetReportList amazon operation was null when requesting the settlement report list from Amazon for region: {_region}.";
+				_logger.Warn(errorMessage, requestInfo);
+				return new List<SettlementReportDetails>();
+			}
+
+			if (response.GetReportListResult.ReportInfo?.Any() == false)
+			{
+				_logger.Warn("No reports were found for the specified query parameters.", requestInfo);
+				return new List<SettlementReportDetails>();
+			}
+
+			_logger.Info($"{response.GetReportListResult.ReportInfo.Count} settlement reports were found for the specified query parameters.");
+
+			settlementReports.AddRange(
+				response.GetReportListResult.ReportInfo.Select(
+					rInfo => new SettlementReportDetails(rInfo.ReportType, rInfo.ReportId, rInfo.Acknowledged, rInfo.AvailableDate)));
+
+			if (!response.GetReportListResult.HasNext) return settlementReports;
+			
+			string nextToken = response.GetReportListResult.NextToken;
+
+			await Task.Delay(listReportsThrottlingQuotaRestoreRate);
+
+			while (nextToken != null)
+			{
+				var nextRequest = new GetReportListByNextTokenRequest
+				{
+					NextToken = nextToken,
+					Merchant = _merchantId
+				};
+
+				_logger.Info($"More settlement reports are available from Amazon for region: {_region}...");
+
+				var nextResponse = await Task.Run(() => _marketplaceWebServiceClient.GetReportListByNextToken(nextRequest));
+
+				requestInfo = new RequestInfo(nextResponse?.ResponseHeaderMetadata?.Timestamp ?? "unknown", nextResponse?.ResponseHeaderMetadata?.RequestId ?? "unknown");
+				_logger.Info($"The next settlement report list was successfully requested from Amazon for region: {_region}.", requestInfo);
+
+				if (nextResponse?.GetReportListByNextTokenResult?.ReportInfo?.Any() == true)
+				{
+					_logger.Info($"{nextResponse.GetReportListByNextTokenResult.ReportInfo.Count} additional settlement reports were found for the specified query parameters.");
+
+					settlementReports.AddRange(
+						nextResponse.GetReportListByNextTokenResult.ReportInfo.Select(
+							rInfo => new SettlementReportDetails(rInfo.ReportType, rInfo.ReportId, rInfo.Acknowledged, rInfo.AvailableDate)));
+				}
+
+				if (!nextResponse.GetReportListByNextTokenResult.HasNext) break;
+
+				nextToken = nextResponse.GetReportListByNextTokenResult.NextToken;
+
+				await Task.Delay(listReportsThrottlingQuotaRestoreRate);
+			}
+
+			return settlementReports;
+		}
+
+		private bool IsAmazonErrorCodeFatal(string errorCode)
 	    {
 		    var fatalErrorCodes = new List<string>
 		    {
@@ -386,7 +468,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 	    private bool IsExpirationPeriodExceeded(ReportRequestEntry reportRequestEntry) =>
 		    (DateTime.Compare(reportRequestEntry.DateCreated, DateTime.UtcNow.Subtract(_options.ReportRequestOptions.ReportDownloadRequestEntryExpirationPeriod)) < 0);
 
-	    private class EntryToDelete : IEquatable<EntryToDelete>
+		private class EntryToDelete : IEquatable<EntryToDelete>
 	    {
 		    public ReportRequestEntry Entry { get; set; }
 		    public ReportRequestFailureReasonType ReportRequestEntryDeleteReason { get; set; }

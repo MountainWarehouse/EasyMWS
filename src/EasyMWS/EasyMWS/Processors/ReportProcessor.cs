@@ -5,9 +5,11 @@ using System.Collections.ObjectModel;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using MountainWarehouse.EasyMWS.CallbackLogic;
 using MountainWarehouse.EasyMWS.Client;
 using MountainWarehouse.EasyMWS.Data;
+using MountainWarehouse.EasyMWS.DTO;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Logging;
@@ -210,5 +212,8 @@ namespace MountainWarehouse.EasyMWS.Processors
 				_requestReportProcessor.QueueReportsAccordingToProcessingStatus(reportRequestService, reportRequestStatuses);
 			}
 		}
+
+		public async Task<IEnumerable<SettlementReportDetails>> ListSettlementReports(List<string> reportsToQuery, DateTime? availableFromDate = null, DateTime? availableToDate = null, bool? isAcknowledged = null)
+			=> await _requestReportProcessor.ListSettlementReports(reportsToQuery, availableFromDate, availableToDate, isAcknowledged);
 	}
 }
