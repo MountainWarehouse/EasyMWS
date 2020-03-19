@@ -21,6 +21,6 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// </summary>
 		/// <param name="reportId">The ReportId of the settlement report to download.<br/>This id can be obtained by using IEasyMwsClient.ListSettlementReports or amazon scratchpad : https://mws.amazonservices.co.uk/scratchpad/index.html</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FlatFileSettlementReport(string reportId);
+		ReportRequestPropertiesContainer SettlementReport(string reportId);
 	}
 }

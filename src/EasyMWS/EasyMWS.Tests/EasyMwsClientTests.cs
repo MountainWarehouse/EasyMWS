@@ -5,6 +5,7 @@ using Moq;
 using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.Client;
 using MountainWarehouse.EasyMWS.Enums;
+using MountainWarehouse.EasyMWS.Factories.Reports;
 using MountainWarehouse.EasyMWS.Helpers;
 using MountainWarehouse.EasyMWS.Logging;
 using MountainWarehouse.EasyMWS.Model;
@@ -107,7 +108,29 @@ namespace EasyMWS.Tests
             _reportProcessorMock.Verify(rpm => rpm.QueueReport(It.IsAny<IReportRequestEntryService>(), It.IsAny<ReportRequestPropertiesContainer>(), It.IsAny<string>(), It.IsAny<Dictionary<string,object>>()), Times.Once);
         }
 
-        [Test]
+		[Test]
+		public void QueueReport_GivenContainerObtainedThroughSettlementReportFactory_CallsReportProcessorQueueSettlementReport_Once()
+		{
+			var settlementReportRequest = new SettlementReportsFactory().SettlementReport("testReportId");
+
+			_easyMwsClient.QueueReport(settlementReportRequest);
+
+			_reportProcessorMock.Verify(rpm => rpm.QueueReport(It.IsAny<IReportRequestEntryService>(), It.IsAny<ReportRequestPropertiesContainer>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object>>()), Times.Never);
+			_reportProcessorMock.Verify(rpm => rpm.QueueSettlementReport(It.IsAny<IReportRequestEntryService>(), It.IsAny<ReportRequestPropertiesContainer>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object>>()), Times.Once);
+		}
+
+		[Test]
+		public void QueueReport_GivenContainerInitialisedUsingSettlementReportSpecificCtr_CallsReportProcessorQueueSettlementReport_Once()
+		{
+			var settlementReportRequest = new ReportRequestPropertiesContainer("testSettlementReportId");
+
+			_easyMwsClient.QueueReport(settlementReportRequest);
+
+			_reportProcessorMock.Verify(rpm => rpm.QueueReport(It.IsAny<IReportRequestEntryService>(), It.IsAny<ReportRequestPropertiesContainer>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object>>()), Times.Never);
+			_reportProcessorMock.Verify(rpm => rpm.QueueSettlementReport(It.IsAny<IReportRequestEntryService>(), It.IsAny<ReportRequestPropertiesContainer>(), It.IsAny<string>(), It.IsAny<Dictionary<string, object>>()), Times.Once);
+		}
+
+		[Test]
         public void QueueFeed_CallsFeedProcessorQueueMethod_Once()
         {
             _easyMwsClient.QueueFeed(new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType"));

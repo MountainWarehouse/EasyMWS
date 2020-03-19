@@ -4,7 +4,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 {
     public class SettlementReportsFactory : ISettlementReportsFactory
     {
-        public ReportRequestPropertiesContainer FlatFileSettlementReport(string reportId)
+        public ReportRequestPropertiesContainer SettlementReport(string reportId)
             => new ReportRequestPropertiesContainer(reportId);
     }
 }

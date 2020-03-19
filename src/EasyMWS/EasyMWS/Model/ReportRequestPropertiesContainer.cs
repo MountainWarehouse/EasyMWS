@@ -73,7 +73,7 @@ namespace MountainWarehouse.EasyMWS.Model
 		/// This constructor should only be used to initialize settlement reports.<br/>
 		/// An alternative for getting an instance of this class for a settlement report is to use the ISettlementReportsFactory<br/>
 		/// </summary>
-		/// <param name="settlementReportId"></param>
+		/// <param name="settlementReportId">The ReportId of the settlement report to download.<br/>This id can be obtained by using IEasyMwsClient.ListSettlementReports or amazon scratchpad : https://mws.amazonservices.co.uk/scratchpad/index.html</param>
 		public ReportRequestPropertiesContainer(string settlementReportId) 
 			=> (ReportType, IsSettlementReport, ReportId) = ("_GET_V2_SETTLEMENT_REPORT_DATA_", true, settlementReportId);
 	}
