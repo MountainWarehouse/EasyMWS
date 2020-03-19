@@ -143,6 +143,45 @@ namespace MountainWarehouse.EasyMWS.Processors
 			reportRequestService.SaveChanges();
 		}
 
+		public void QueueSettlementReport(IReportRequestEntryService reportRequestService, ReportRequestPropertiesContainer propertiesContainer, string targetEventId = null, Dictionary<string, object> targetEventArgs = null)
+		{
+			try
+			{
+				if (propertiesContainer == null) throw new ArgumentNullException();
+
+				var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
+
+				var reportRequest = new ReportRequestEntry(serializedPropertiesContainer)
+				{
+					IsLocked = false,
+					AmazonRegion = _region,
+					MerchantId = _merchantId,
+					LastAmazonRequestDate = DateTime.MinValue,
+					DateCreated = DateTime.UtcNow,
+					ContentUpdateFrequency = propertiesContainer.UpdateFrequency,
+					RequestReportId = "0",
+					GeneratedReportId = propertiesContainer.ReportId,
+					ReportRequestRetryCount = 0,
+					ReportDownloadRetryCount = 0,
+					ReportProcessRetryCount = 0,
+					InvokeCallbackRetryCount = 0,
+					ReportType = propertiesContainer.ReportType,
+					TargetHandlerId = targetEventId,
+					TargetHandlerArgs = targetEventArgs == null ? null : JsonConvert.SerializeObject(targetEventArgs),
+					InstanceId = _options?.EventPublishingOptions?.RestrictInvocationToOriginatingInstance?.HashedInstanceId,
+				};
+
+				reportRequestService.Create(reportRequest);
+				reportRequestService.SaveChanges();
+
+				_logger.Info($"The following settlement report was queued for download from Amazon {reportRequest.RegionAndTypeComputed}.");
+			}
+			catch (Exception e)
+			{
+				_logger.Error(e.Message, e);
+			}
+		}
+
 		public void QueueReport(IReportRequestEntryService reportRequestService, ReportRequestPropertiesContainer propertiesContainer, string targetEventId, Dictionary<string, object> targetEventArgs)
 		{
 			try

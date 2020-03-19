@@ -12,6 +12,8 @@ namespace MountainWarehouse.EasyMWS.Processors
     {
 	    void PollReports(IReportRequestEntryService reportRequestService);
 	    void QueueReport(IReportRequestEntryService reportRequestService, ReportRequestPropertiesContainer propertiesContainer, string targetEventId = null, Dictionary<string, object> targetEventArgs = null);
+        void QueueSettlementReport(IReportRequestEntryService reportRequestService, ReportRequestPropertiesContainer propertiesContainer, string targetEventId = null, Dictionary<string, object> targetEventArgs = null);
+
         Task<IEnumerable<SettlementReportDetails>> ListSettlementReports(List<string> reportsToQuery, DateTime? availableFromDate = null, DateTime? availableToDate = null, bool? isAcknowledged = null);
 
         void PurgeQueue(IReportRequestEntryService reportRequestService);

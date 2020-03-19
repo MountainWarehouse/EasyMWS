@@ -106,7 +106,14 @@ namespace MountainWarehouse.EasyMWS.Client
         {
             using (var reportRequestService = new ReportRequestEntryService(_options, _easyMwsLogger))
             {
-                _reportProcessor.QueueReport(reportRequestService, reportRequestContainer, targetEventId, targetEventArgs);
+				if (reportRequestContainer.IsSettlementReport)
+				{
+					_reportProcessor.QueueSettlementReport(reportRequestService, reportRequestContainer, targetEventId, targetEventArgs);
+				}
+				else
+				{
+					_reportProcessor.QueueReport(reportRequestService, reportRequestContainer, targetEventId, targetEventArgs);
+				}
             }
         }
 
