@@ -44,7 +44,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void RequestReportFromAmazon(IReportRequestEntryService reportRequestService, ReportRequestEntry reportRequestEntry)
 	    {
-			var missingInformationExceptionMessage = "Cannot request report from amazon due to missing report request information";
+			var missingInformationExceptionMessage = "Cannot request report from Amazon due to missing report request information";
 
 			if (reportRequestEntry?.ReportRequestData == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Report request data is missing");
 		    if (string.IsNullOrEmpty(reportRequestEntry?.ReportType)) throw new ArgumentException($"{missingInformationExceptionMessage}: Report Type is missing");
@@ -347,7 +347,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    }
 		}
 
-		public async Task<IEnumerable<SettlementReportDetails>> ListSettlementReports(List<string> reportsToQuery, DateTime? availableFromDate = null, DateTime? availableToDate = null, bool? isAcknowledged = null)
+		public async Task<IEnumerable<SettlementReportDetails>> ListSettlementReportsAsync(List<string> reportsToQuery, DateTime? availableFromDate = null, DateTime? availableToDate = null, bool? isAcknowledged = null)
 		{
 			_logger.Info($"Attempting to request settlement report list from Amazon for region: {_region}.");
 
@@ -363,19 +363,19 @@ namespace MountainWarehouse.EasyMWS.Processors
 			if (availableFromDate != null) getReportListRequest.AvailableFromDate = availableFromDate.Value;
 			if (availableToDate != null) getReportListRequest.AvailableToDate = availableToDate.Value;
 
-			var response = await Task.Run(() => _marketplaceWebServiceClient.GetReportList(getReportListRequest));
+			var response = await Task.Run(() => _marketplaceWebServiceClient.GetReportList(getReportListRequest)).ConfigureAwait(false);
 
 			var requestInfo = new RequestInfo(response?.ResponseHeaderMetadata?.Timestamp ?? "unknown", response?.ResponseHeaderMetadata?.RequestId ?? "unknown");
 			_logger.Info($"The settlement report list was successfully requested from Amazon for region: {_region}.", requestInfo);
 
 			if (response?.GetReportListResult == null)
 			{
-				var errorMessage = $"The response returned by the GetReportList amazon operation was null when requesting the settlement report list from Amazon for region: {_region}.";
+				var errorMessage = $"The response returned by the GetReportList Amazon operation was null when requesting the settlement report list from Amazon for region: {_region}.";
 				_logger.Warn(errorMessage, requestInfo);
 				return new List<SettlementReportDetails>();
 			}
 
-			if (response.GetReportListResult.ReportInfo?.Any() == false)
+			if (response.GetReportListResult.ReportInfo?.Any() != true)
 			{
 				_logger.Warn("No reports were found for the specified query parameters.", requestInfo);
 				return new List<SettlementReportDetails>();
@@ -391,7 +391,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			
 			string nextToken = response.GetReportListResult.NextToken;
 
-			await Task.Delay(listReportsThrottlingQuotaRestoreRate);
+			await Task.Delay(listReportsThrottlingQuotaRestoreRate).ConfigureAwait(false);
 
 			while (nextToken != null)
 			{
@@ -403,7 +403,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 				_logger.Info($"More settlement reports are available from Amazon for region: {_region}...");
 
-				var nextResponse = await Task.Run(() => _marketplaceWebServiceClient.GetReportListByNextToken(nextRequest));
+				var nextResponse = await Task.Run(() => _marketplaceWebServiceClient.GetReportListByNextToken(nextRequest)).ConfigureAwait(false);
 
 				requestInfo = new RequestInfo(nextResponse?.ResponseHeaderMetadata?.Timestamp ?? "unknown", nextResponse?.ResponseHeaderMetadata?.RequestId ?? "unknown");
 				_logger.Info($"The next settlement report list was successfully requested from Amazon for region: {_region}.", requestInfo);
@@ -417,11 +417,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 							rInfo => new SettlementReportDetails(rInfo.ReportType, rInfo.ReportId, rInfo.Acknowledged, rInfo.AvailableDate)));
 				}
 
-				if (!nextResponse.GetReportListByNextTokenResult.HasNext) break;
+				if (nextResponse?.GetReportListByNextTokenResult?.HasNext != true) break;
 
 				nextToken = nextResponse.GetReportListByNextTokenResult.NextToken;
 
-				await Task.Delay(listReportsThrottlingQuotaRestoreRate);
+				await Task.Delay(listReportsThrottlingQuotaRestoreRate).ConfigureAwait(false);
 			}
 
 			return settlementReports;

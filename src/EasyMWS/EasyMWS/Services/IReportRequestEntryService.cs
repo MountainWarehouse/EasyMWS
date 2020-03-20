@@ -1,23 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
-using MountainWarehouse.EasyMWS.Model;
 
 namespace MountainWarehouse.EasyMWS.Services
 {
 	internal interface IReportRequestEntryService
 	{
 		void Create(ReportRequestEntry entry);
-		Task CreateAsync(ReportRequestEntry entry);
 		void Update(ReportRequestEntry entry);
 		void Delete(ReportRequestEntry entry);
 		void DeleteRange(IEnumerable<ReportRequestEntry> entries);
 		void SaveChanges();
-		Task SaveChangesAsync();
 		IEnumerable<ReportRequestEntry> GetAll();
 		IEnumerable<ReportRequestEntry> Where(Func<ReportRequestEntry, bool> predicate);
 		ReportRequestEntry First();

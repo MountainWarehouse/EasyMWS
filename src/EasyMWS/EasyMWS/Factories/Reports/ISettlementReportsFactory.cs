@@ -19,7 +19,7 @@ namespace MountainWarehouse.EasyMWS.Factories.Reports
 		/// XML file settlement report that is automatically scheduled by Amazon; it cannot be requested through RequestReport. For Seller Central sellers only.
 		/// <para/>
 		/// </summary>
-		/// <param name="reportId">The ReportId of the settlement report to download.<br/>This id can be obtained by using IEasyMwsClient.ListSettlementReports or amazon scratchpad : https://mws.amazonservices.co.uk/scratchpad/index.html</param>
+		/// <param name="reportId">A unique identifier of the settlement report to download.<br/>This id can be obtained by using IEasyMwsClient.ListSettlementReports or amazon scratchpad : https://mws.amazonservices.co.uk/scratchpad/index.html <br/>For sellers in India getting Amazon Easy Ship documents, this identifier is returned in the ReportReferenceId element of the processing report of the Easy Ship Feed.</param>
 		/// <returns></returns>
 		ReportRequestPropertiesContainer SettlementReport(string reportId);
 	}

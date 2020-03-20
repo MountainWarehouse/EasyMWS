@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 using MountainWarehouse.EasyMWS.DTO;
 using MountainWarehouse.EasyMWS.Enums;
@@ -12,7 +11,7 @@ using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
 
 namespace MountainWarehouse.EasyMWS.Client
 {
-    public class EasyMwsClient : IEasyMwsClient
+	public class EasyMwsClient : IEasyMwsClient
 	{
 		private readonly EasyMwsOptions _options;
 		private readonly AmazonRegion _amazonRegion;
@@ -126,10 +125,10 @@ namespace MountainWarehouse.EasyMWS.Client
 		}
 
 		public async Task<IEnumerable<SettlementReportDetails>> ListSettlementReportsAsync(List<string> reportsToQuery, DateTime? availableFromDate = null, DateTime? availableToDate = null, bool? isAcknowledged = null)
-			=> await _reportProcessor.ListSettlementReports(reportsToQuery, availableFromDate, availableToDate, isAcknowledged);
+			=> await _reportProcessor.ListSettlementReportsAsync(reportsToQuery, availableFromDate, availableToDate, isAcknowledged).ConfigureAwait(false);
 
 		public IEnumerable<SettlementReportDetails> ListSettlementReports(List<string> reportsToQuery, DateTime? availableFromDate = null, DateTime? availableToDate = null, bool? isAcknowledged = null)
-			=> _reportProcessor.ListSettlementReports(reportsToQuery, availableFromDate, availableToDate, isAcknowledged).Result;
+			=> (_reportProcessor.ListSettlementReportsAsync(reportsToQuery, availableFromDate, availableToDate, isAcknowledged).ConfigureAwait(false)).GetAwaiter().GetResult();
 
 		public void PurgeReportRequestEntriesQueue()
 		{

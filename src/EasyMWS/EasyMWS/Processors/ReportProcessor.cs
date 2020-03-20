@@ -174,7 +174,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				reportRequestService.Create(reportRequest);
 				reportRequestService.SaveChanges();
 
-				_logger.Info($"The following settlement report was queued for download from Amazon {reportRequest.RegionAndTypeComputed}.");
+				_logger.Info($"The following settlement report was queued for download from Amazon: {reportRequest.RegionAndTypeComputed}.");
 			}
 			catch (Exception e)
 			{
@@ -252,7 +252,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public async Task<IEnumerable<SettlementReportDetails>> ListSettlementReports(List<string> reportsToQuery, DateTime? availableFromDate = null, DateTime? availableToDate = null, bool? isAcknowledged = null)
-			=> await _requestReportProcessor.ListSettlementReports(reportsToQuery, availableFromDate, availableToDate, isAcknowledged);
+		public async Task<IEnumerable<SettlementReportDetails>> ListSettlementReportsAsync(List<string> reportsToQuery, DateTime? availableFromDate = null, DateTime? availableToDate = null, bool? isAcknowledged = null)
+			=> await _requestReportProcessor.ListSettlementReportsAsync(reportsToQuery, availableFromDate, availableToDate, isAcknowledged).ConfigureAwait(false);
 	}
 }
