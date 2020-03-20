@@ -40,6 +40,9 @@ namespace MountainWarehouse.EasyMWS.Model
 		/// </summary>
 		public ContentUpdateFrequency UpdateFrequency;
 
+		public bool IsSettlementReport { get; set; } = false;
+		public string ReportId { get; set; } = null;
+
 		/// <summary>
 		/// Prevent clients from bypassing setting required properties as defined by the public constructor
 		/// </summary>
@@ -48,7 +51,9 @@ namespace MountainWarehouse.EasyMWS.Model
 		}
 
 		/// <summary>
-		/// Creates a new RequestReportRequest wrapper object that also contains additional information regarding the request object.
+		/// Initializes a wrapper containing part of the information needed to request a settlement report from Amazon.<br/>
+		/// This constructor should be used to initialize reports of any type except for settlement reports.<br/>
+		/// An alternative for getting an instance of this class is to use one of the factories available under namespace MountainWarehouse.EasyMWS.Factories.Reports<br/>
 		/// </summary>
 		/// <param name="reportType"></param>
 		/// <param name="marketplaceIdList"></param>
@@ -62,6 +67,14 @@ namespace MountainWarehouse.EasyMWS.Model
 			EndDate = endDate;
 			ReportOptions = reportOptions;
 		}
+
+		/// <summary>
+		/// Initializes a wrapper containing part of the information needed to request a settlement report from Amazon.<br/>
+		/// This constructor should only be used to initialize settlement reports.<br/>
+		/// An alternative for getting an instance of this class for a settlement report is to use the ISettlementReportsFactory<br/>
+		/// </summary>
+		/// <param name="settlementReportId">The ReportId of the settlement report to download.<br/>This id can be obtained by using IEasyMwsClient.ListSettlementReports or amazon scratchpad : https://mws.amazonservices.co.uk/scratchpad/index.html</param>
+		public ReportRequestPropertiesContainer(string settlementReportId) 
+			=> (ReportType, IsSettlementReport, ReportId) = ("_GET_V2_SETTLEMENT_REPORT_DATA_", true, settlementReportId);
 	}
 }
-

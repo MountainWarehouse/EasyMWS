@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
@@ -25,7 +23,6 @@ namespace MountainWarehouse.EasyMWS.Services
 			(_reportRequestEntryRepository ?? new ReportRequestEntryRepository(options?.LocalDbConnectionStringOverride), logger, options);
 
 		public void Create(ReportRequestEntry entry) => _reportRequestEntryRepository.Create(entry);
-		public async Task CreateAsync(ReportRequestEntry entry) => await _reportRequestEntryRepository.CreateAsync(entry);
 		public void Update(ReportRequestEntry entry) => _reportRequestEntryRepository.Update(entry);
 		public void Delete(ReportRequestEntry entry)
 		{
@@ -48,7 +45,6 @@ namespace MountainWarehouse.EasyMWS.Services
 		}
 
 		public void SaveChanges() => _reportRequestEntryRepository.SaveChanges();
-		public async Task SaveChangesAsync() => await _reportRequestEntryRepository.SaveChangesAsync();
 		public IEnumerable<ReportRequestEntry> GetAll() => _reportRequestEntryRepository.GetAll().OrderBy(x => x.Id);
 
 		public IEnumerable<ReportRequestEntry> Where(Func<ReportRequestEntry, bool> predicate) => _reportRequestEntryRepository.GetAll().OrderBy(x => x.Id).Where(predicate);

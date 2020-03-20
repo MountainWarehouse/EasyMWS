@@ -1,45 +1,26 @@
 ﻿using MountainWarehouse.EasyMWS.Model;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace MountainWarehouse.EasyMWS.Factories.Reports
 {
-    public interface ISettlementReportsFactory
+	public interface ISettlementReportsFactory
     {
 		/// <summary>
-		/// Generate a request object for a MWS report of type : _GET_V2_SETTLEMENT_REPORT_DATA_FLAT_FILE_ <para />
-		/// Tab-delimited flat file settlement report that is automatically scheduled by Amazon; it cannot be requested through RequestReport. For all sellers.<para/>
+		/// Generate a request object for a MWS report of type : _GET_V2_SETTLEMENT_REPORT_DATA_XML_ or _GET_V2_SETTLEMENT_REPORT_DATA_FLAT_FILE_ or _GET_V2_SETTLEMENT_REPORT_DATA_FLAT_FILE_V2_ ,<br/>
+		/// depending on the value provided for the 'reportId' parameter.
+		/// <para/>
+		/// _GET_V2_SETTLEMENT_REPORT_DATA_FLAT_FILE_<br/>
+		/// Tab-delimited flat file settlement report that is automatically scheduled by Amazon; it cannot be requested through RequestReport. For all sellers.
+		/// <para/>
+		/// _GET_V2_SETTLEMENT_REPORT_DATA_FLAT_FILE_V2_<br/>
+		/// Tab-delimited flat file alternate version of the Flat File Settlement Report that is automatically scheduled by Amazon; it cannot be requested through RequestReport.<br/>
+		/// Price columns are condensed into three general purpose columns: amounttype, amountdescription, and amount. For Seller Central sellers only.
+		/// <para/>
+		/// _GET_V2_SETTLEMENT_REPORT_DATA_XML_<br/>
+		/// XML file settlement report that is automatically scheduled by Amazon; it cannot be requested through RequestReport. For Seller Central sellers only.
+		/// <para/>
 		/// </summary>
-		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplaces">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
+		/// <param name="reportId">A unique identifier of the settlement report to download.<br/>This id can be obtained by using IEasyMwsClient.ListSettlementReports or amazon scratchpad : https://mws.amazonservices.co.uk/scratchpad/index.html <br/>For sellers in India getting Amazon Easy Ship documents, this identifier is returned in the ReportReferenceId element of the processing report of the Easy Ship Feed.</param>
 		/// <returns></returns>
-		ReportRequestPropertiesContainer FlatFileSettlementReport(DateTime? startDate = null, DateTime? endDate = null,
-			IEnumerable<MwsMarketplace> requestedMarketplaces = null);
-
-		/// <summary>
-		/// Generate a request object for a MWS report of type : _GET_V2_SETTLEMENT_REPORT_DATA_XML_ <para />
-		/// XML file settlement report that is automatically scheduled by Amazon; it cannot be requested through RequestReport. For Seller Central sellers only.<para/>
-		/// </summary>
-		/// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-		/// <param name="requestedMarketplaces">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
-		/// <returns></returns>
-		ReportRequestPropertiesContainer XmlSettlementReport(DateTime? startDate = null, DateTime? endDate = null,
-			IEnumerable<MwsMarketplace> requestedMarketplaces = null);
-
-        /// <summary>
-        /// Generate a request object for a MWS report of type : _GET_V2_SETTLEMENT_REPORT_DATA_FLAT_FILE_V2_ <para />
-        /// Tab-delimited flat file alternate version of the Flat File Settlement Report that is automatically scheduled by Amazon; it cannot be requested through RequestReport.<para/>
-        /// Price columns are condensed into three general purpose columns: amounttype, amountdescription, and amount. For Seller Central sellers only.<para/>
-        /// </summary>
-        /// <param name="startDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-        /// <param name="endDate">Optional argument that can help specify an interval of time for which the report is generated.</param>
-        /// <param name="requestedMarketplaces">(NA, EU only) Optional group of marketplaces used when submitting a report request. For more info see MwsMarketplaceGroup class summary.</param>
-        /// <returns></returns>
-        ReportRequestPropertiesContainer FlatFileV2SettlementReport(DateTime? startDate = null, DateTime? endDate = null,
-			IEnumerable<MwsMarketplace> requestedMarketplaces = null);
-
+		ReportRequestPropertiesContainer SettlementReport(string reportId);
 	}
 }

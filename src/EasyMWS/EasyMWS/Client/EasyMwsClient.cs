@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
+using MountainWarehouse.EasyMWS.DTO;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Logging;
 using MountainWarehouse.EasyMWS.Model;
@@ -11,7 +11,7 @@ using MountainWarehouse.EasyMWS.WebService.MarketplaceWebService;
 
 namespace MountainWarehouse.EasyMWS.Client
 {
-    public class EasyMwsClient : IEasyMwsClient
+	public class EasyMwsClient : IEasyMwsClient
 	{
 		private readonly EasyMwsOptions _options;
 		private readonly AmazonRegion _amazonRegion;
@@ -105,7 +105,14 @@ namespace MountainWarehouse.EasyMWS.Client
         {
             using (var reportRequestService = new ReportRequestEntryService(_options, _easyMwsLogger))
             {
-                _reportProcessor.QueueReport(reportRequestService, reportRequestContainer, targetEventId, targetEventArgs);
+				if (reportRequestContainer.IsSettlementReport)
+				{
+					_reportProcessor.QueueSettlementReport(reportRequestService, reportRequestContainer, targetEventId, targetEventArgs);
+				}
+				else
+				{
+					_reportProcessor.QueueReport(reportRequestService, reportRequestContainer, targetEventId, targetEventArgs);
+				}
             }
         }
 
@@ -116,6 +123,12 @@ namespace MountainWarehouse.EasyMWS.Client
 				_feedProcessor.QueueFeed(feedSubmissionService, feedSubmissionContainer, targetEventId, targetEventArgs);
 			}
 		}
+
+		public async Task<IEnumerable<SettlementReportDetails>> ListSettlementReportsAsync(List<string> reportsToQuery, DateTime? availableFromDate = null, DateTime? availableToDate = null, bool? isAcknowledged = null)
+			=> await _reportProcessor.ListSettlementReportsAsync(reportsToQuery, availableFromDate, availableToDate, isAcknowledged).ConfigureAwait(false);
+
+		public IEnumerable<SettlementReportDetails> ListSettlementReports(List<string> reportsToQuery, DateTime? availableFromDate = null, DateTime? availableToDate = null, bool? isAcknowledged = null)
+			=> (_reportProcessor.ListSettlementReportsAsync(reportsToQuery, availableFromDate, availableToDate, isAcknowledged).ConfigureAwait(false)).GetAwaiter().GetResult();
 
 		public void PurgeReportRequestEntriesQueue()
 		{
@@ -178,7 +191,7 @@ namespace MountainWarehouse.EasyMWS.Client
         private void OnFeedUploaded(object sender, FeedUploadedEventArgs e) => FeedUploaded?.Invoke(null, e);
 		private void OnReportRequestFailed(object sender, ReportRequestFailedEventArgs e) => ReportRequestFailed?.Invoke(null, e);
 		private void OnFeedRequestFailed(object sender, FeedRequestFailedEventArgs e) => FeedRequestFailed?.Invoke(null, e);
-		
+
 		#endregion
 
 	}
