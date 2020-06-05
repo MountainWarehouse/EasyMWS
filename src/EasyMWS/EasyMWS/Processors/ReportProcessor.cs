@@ -203,7 +203,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			if (!pendingReportsRequestIds.Any()) return;
 
 			var reportRequestStatuses =
-				_requestReportProcessor.GetReportProcessingStatusesFromAmazon(pendingReportsRequestIds, _merchantId);
+				_requestReportProcessor.GetReportProcessingStatusesFromAmazon(reportRequestService, pendingReportsRequestIds, _merchantId);
 
 			if (reportRequestStatuses != null)
 			{

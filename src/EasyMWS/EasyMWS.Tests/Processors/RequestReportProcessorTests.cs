@@ -401,7 +401,7 @@ namespace EasyMWS.Tests.Processors
 		{
 			var testRequestIdList = new List<string>{ "Report1", "Report2", "Report3" };
 
-			var result = _requestReportProcessor.GetReportProcessingStatusesFromAmazon(testRequestIdList, "");
+			var result = _requestReportProcessor.GetReportProcessingStatusesFromAmazon(_reportRequestServiceMock.Object, testRequestIdList, "");
 
 			Assert.AreEqual("testGeneratedReportId", result.First(x => x.ReportRequestId == "Report1").GeneratedReportId);
 			Assert.AreEqual("_DONE_", result.First(x => x.ReportRequestId == "Report1").ReportProcessingStatus);
@@ -409,7 +409,61 @@ namespace EasyMWS.Tests.Processors
 			Assert.IsNull(result.First(x => x.ReportRequestId == "Report2").GeneratedReportId);
 		}
 
-        [Test]
+		[Test]
+		public void QueueReportsAccordingToProcessingStatus_WhenApiRequestThrowsException_ThenUnlockAllEntries()
+		{
+			var testRequestIdList = new List<string> { "reportId1", "reportId2", "reportId3" };
+			_marketplaceWebServiceClientMock.Setup(x => x.GetReportRequestList(It.IsAny<GetReportRequestListRequest>()))
+				.Throws(new Exception());
+			_reportRequestServiceMock
+				.SetupSequence(fssm => fssm.FirstOrDefault(It.IsAny<Func<ReportRequestEntry, bool>>()))
+				.Returns(new ReportRequestEntry() { RequestReportId = "reportId1", IsLocked = true })
+				.Returns(new ReportRequestEntry() { RequestReportId = "reportId2", IsLocked = true })
+				.Returns(new ReportRequestEntry() { RequestReportId = "reportId3", IsLocked = true });
+
+			var entriesBeingUpdated = new List<ReportRequestEntry>();
+			_reportRequestServiceMock
+				.Setup(fssm => fssm.Update(It.IsAny<ReportRequestEntry>()))
+				.Callback<ReportRequestEntry>((entryBeingUpdated) =>
+				{
+					entriesBeingUpdated.Add(entryBeingUpdated);
+				});
+
+			var result = _requestReportProcessor.GetReportProcessingStatusesFromAmazon(_reportRequestServiceMock.Object, testRequestIdList, "");
+
+			_reportRequestServiceMock.Verify(fssm => fssm.Update(It.IsAny<ReportRequestEntry>()), Times.Exactly(3));
+			Assert.IsTrue(entriesBeingUpdated.All(e => e.IsLocked == false));
+			_reportRequestServiceMock.Verify(fssm => fssm.SaveChanges(), Times.Once);
+		}
+
+		[Test]
+		public void QueueReportsAccordingToProcessingStatus_WhenApiRequestThrowsMarketplaceWebServiceException_ThenUnlockAllEntries()
+		{
+			var testRequestIdList = new List<string> { "reportId1", "reportId2", "reportId3" };
+			_marketplaceWebServiceClientMock.Setup(x => x.GetReportRequestList(It.IsAny<GetReportRequestListRequest>()))
+				.Throws(new MarketplaceWebServiceException(new Exception()));
+			_reportRequestServiceMock
+				.SetupSequence(fssm => fssm.FirstOrDefault(It.IsAny<Func<ReportRequestEntry, bool>>()))
+				.Returns(new ReportRequestEntry() { RequestReportId = "reportId1", IsLocked = true })
+				.Returns(new ReportRequestEntry() { RequestReportId = "reportId2", IsLocked = true })
+				.Returns(new ReportRequestEntry() { RequestReportId = "reportId3", IsLocked = true });
+
+			var entriesBeingUpdated = new List<ReportRequestEntry>();
+			_reportRequestServiceMock
+				.Setup(fssm => fssm.Update(It.IsAny<ReportRequestEntry>()))
+				.Callback<ReportRequestEntry>((entryBeingUpdated) =>
+				{
+					entriesBeingUpdated.Add(entryBeingUpdated);
+				});
+
+			var result = _requestReportProcessor.GetReportProcessingStatusesFromAmazon(_reportRequestServiceMock.Object, testRequestIdList, "");
+
+			_reportRequestServiceMock.Verify(fssm => fssm.Update(It.IsAny<ReportRequestEntry>()), Times.Exactly(3));
+			Assert.IsTrue(entriesBeingUpdated.All(e => e.IsLocked == false));
+			_reportRequestServiceMock.Verify(fssm => fssm.SaveChanges(), Times.Once);
+		}
+
+		[Test]
         public void QueueReportsAccordingToProcessingStatus_InvokeCallbackForReportStatusDoneNoDataTrue_DoesNotDeleteEntry()
         {
             _easyMwsOptions.EventPublishingOptions.EventPublishingForReportStatusDoneNoData = true;
