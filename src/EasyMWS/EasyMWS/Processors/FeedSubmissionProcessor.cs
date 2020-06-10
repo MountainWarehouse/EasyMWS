@@ -142,8 +142,22 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public List<(string FeedSubmissionId, string FeedProcessingStatus)> RequestFeedSubmissionStatusesFromAmazon(IEnumerable<string> feedSubmissionIdList, string merchant)
+		public List<(string FeedSubmissionId, string FeedProcessingStatus)> RequestFeedSubmissionStatusesFromAmazon(IFeedSubmissionEntryService feedSubmissionService, IEnumerable<string> feedSubmissionIdList, string merchant)
 		{
+			void UnlockFeedSubmissionEntries(IEnumerable<string> feedSubmissionIds)
+			{
+				foreach (var submissionId in feedSubmissionIds)
+				{
+					var feedSubmissionEntry = feedSubmissionService.FirstOrDefault(fsc => fsc.FeedSubmissionId == submissionId);
+					if (feedSubmissionEntry != null)
+					{
+						feedSubmissionEntry.IsLocked = false;
+						feedSubmissionService.Update(feedSubmissionEntry);
+					}
+				}
+				feedSubmissionService.SaveChanges();
+			}
+
 			List<(string FeedSubmissionId, string IsProcessingComplete)> GetProcessingStatusesPerSubmissionIdFromResponse(GetFeedSubmissionListResponse response)
 			{
 				var responseInfo = new List<(string FeedSubmissionId, string IsProcessingComplete)>();
@@ -182,11 +196,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 			catch (MarketplaceWebServiceException e)
 			{
 				_logger.Warn($"AmazonMWS GetFeedSubmissionList failed! The operation will be executed again at the next poll request.");
+				UnlockFeedSubmissionEntries(feedSubmissionIdList);
 				return null;
 			}
 			catch (Exception e)
 			{
 				_logger.Warn($"AmazonMWS GetFeedSubmissionList failed! The operation will be executed again at the next poll request.");
+				UnlockFeedSubmissionEntries(feedSubmissionIdList);
 				return null;
 			}
 		}

@@ -113,9 +113,24 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 	    }
 
-	    public List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> GetReportProcessingStatusesFromAmazon(IEnumerable<string> requestIdList, string merchant)
+	    public List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> GetReportProcessingStatusesFromAmazon(
+			IReportRequestEntryService reportRequestService, IEnumerable<string> requestIdList, string merchant)
 	    {
-		    _logger.Info($"Attempting to request report processing statuses for all reports in queue.");
+			void UnlockReportRequestEntries(IEnumerable<string> reportRequestIds)
+			{
+				foreach (var reportRequestId in reportRequestIds)
+				{
+					var reportRequestEntry = reportRequestService.FirstOrDefault(fsc => fsc.RequestReportId == reportRequestId);
+					if (reportRequestEntry != null)
+					{
+						reportRequestEntry.IsLocked = false;
+						reportRequestService.Update(reportRequestEntry);
+					}
+				}
+				reportRequestService.SaveChanges();
+			}
+
+			_logger.Info($"Attempting to request report processing statuses for all reports in queue.");
 
 		    var request = new GetReportRequestListRequest() { ReportRequestIdList = new IdList(), Merchant = merchant };
 		    request.ReportRequestIdList.Id.AddRange(requestIdList);
@@ -150,12 +165,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    catch (MarketplaceWebServiceException e)
 		    {
 				_logger.Warn($"AmazonMWS GetReportRequestList failed! The operation will be executed again at the next poll request.");
-			    return null;
+				UnlockReportRequestEntries(requestIdList);
+				return null;
 			}
 			catch (Exception e)
 		    {
 				_logger.Warn($"AmazonMWS GetReportRequestList failed! The operation will be executed again at the next poll request.");
-			    return null;
+				UnlockReportRequestEntries(requestIdList);
+				return null;
 			}
 	    }
 
