@@ -49,7 +49,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var reportRequestData = reportRequestEntry.GetPropertiesContainer();
 
 			_logger.Info($"Attempting to request the next report in queue from Amazon: {reportRequestEntry.EntryIdentityDescription}.");
-			reportRequestEntry.IsLocked = false;
+			reportRequestService.Unlock(reportRequestEntry);
 
 			var reportRequest = new RequestReportRequest
 			{
@@ -123,7 +123,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 					var reportRequestEntry = reportRequestService.FirstOrDefault(fsc => fsc.RequestReportId == reportRequestId);
 					if (reportRequestEntry != null)
 					{
-						reportRequestEntry.IsLocked = false;
+						reportRequestService.Unlock(reportRequestEntry);
 						reportRequestService.Update(reportRequestEntry);
 					}
 				}
@@ -230,9 +230,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				var reportRequestEntry = reportRequestService.FirstOrDefault(rrc => rrc.RequestReportId == reportGenerationInfo.ReportRequestId && rrc.GeneratedReportId == null);
                 if (reportRequestEntry == null) continue;
-				reportRequestEntry.IsLocked = false;
+				reportRequestService.Unlock(reportRequestEntry);
 
-                reportRequestEntry.LastAmazonReportProcessingStatus = reportGenerationInfo.ReportProcessingStatus;
+				reportRequestEntry.LastAmazonReportProcessingStatus = reportGenerationInfo.ReportProcessingStatus;
 
                 var genericProcessingInfo = $"ProcessingStatus returned by Amazon for {reportRequestEntry.EntryIdentityDescription} is '{reportGenerationInfo.ReportProcessingStatus}'.";
 
@@ -287,7 +287,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 	    {
 			var missingInformationExceptionMessage = "Cannot request report from amazon due to missing report request information";
 			_logger.Info($"Attempting to download the next report in queue from Amazon: {reportRequestEntry.EntryIdentityDescription}.");
-			reportRequestEntry.IsLocked = false;
+			reportRequestService.Unlock(reportRequestEntry);
 
 			if (string.IsNullOrEmpty(reportRequestEntry?.GeneratedReportId)) throw new ArgumentException($"{missingInformationExceptionMessage}: GeneratedReportId is missing");
 

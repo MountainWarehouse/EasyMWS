@@ -7,6 +7,7 @@ using MountainWarehouse.EasyMWS;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Helpers;
+using MountainWarehouse.EasyMWS.Logging;
 using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Processors;
 using MountainWarehouse.EasyMWS.Repositories;
@@ -25,8 +26,10 @@ namespace EasyMWS.Tests.Services
 	    private readonly AmazonRegion _amazonRegion = AmazonRegion.Europe;
 	    private List<ReportRequestEntry> _reportRequestEntries;
 	    private readonly EasyMwsOptions _options = new EasyMwsOptions();
+		private Mock<IEasyMwsLogger> _loggerMock;
 
-        [SetUp]
+
+		[SetUp]
         public void SetUp()
         {
             var reportRequestPropertiesContainer = new ReportRequestPropertiesContainer("_Report_Type_", ContentUpdateFrequency.NearRealTime, new List<string>(MwsMarketplaceGroup.AmazonEurope().Select(m => m.Id)));
@@ -47,9 +50,10 @@ namespace EasyMWS.Tests.Services
                 new ReportRequestEntry{Id = 2}
             };
 
-            _reportRequestCallbackReportMock = new Mock<IReportRequestEntryRepository>();
+			_loggerMock = new Mock<IEasyMwsLogger>();
+			_reportRequestCallbackReportMock = new Mock<IReportRequestEntryRepository>();
             _reportRequestCallbackReportMock.Setup(x => x.GetAll()).Returns(_reportRequestEntries.AsQueryable());
-            _reportRequestEntryService = new ReportRequestEntryService(_reportRequestCallbackReportMock.Object, _options);
+            _reportRequestEntryService = new ReportRequestEntryService(_reportRequestCallbackReportMock.Object, _options, _loggerMock.Object);
         }
 
 
@@ -188,7 +192,7 @@ namespace EasyMWS.Tests.Services
 			_reportRequestEntries.Add(reportRequestWithNoRequestRetryCount1);
 			_reportRequestEntries.Add(reportRequestWithNoRequestRetryCount2);
 
-			_reportRequestEntryService = new ReportRequestEntryService(_reportRequestCallbackReportMock.Object, customOptions);
+			_reportRequestEntryService = new ReportRequestEntryService(_reportRequestCallbackReportMock.Object, customOptions, _loggerMock.Object);
 
 			var reportRequestCallback =
 				_reportRequestEntryService.GetNextFromQueueOfReportsToRequest(_merchantId, _amazonRegion);
@@ -210,7 +214,7 @@ namespace EasyMWS.Tests.Services
 			_reportRequestEntries.Add(reportRequestWithNoRetryPeriodComplete1);
 			_reportRequestEntries.Add(reportRequestWithNoRetryPeriodComplete2);
 
-			_reportRequestEntryService = new ReportRequestEntryService(_reportRequestCallbackReportMock.Object, customOptions);
+			_reportRequestEntryService = new ReportRequestEntryService(_reportRequestCallbackReportMock.Object, customOptions, _loggerMock.Object);
 
 			var reportRequestCallback =
 				_reportRequestEntryService.GetNextFromQueueOfReportsToRequest(_merchantId, _amazonRegion);
@@ -232,7 +236,7 @@ namespace EasyMWS.Tests.Services
 			_reportRequestEntries.Add(reportRequestWithNoRetryPeriodComplete1);
 			_reportRequestEntries.Add(reportRequestWithNoRetryPeriodComplete2);
 
-			_reportRequestEntryService = new ReportRequestEntryService(_reportRequestCallbackReportMock.Object, customOptions);
+			_reportRequestEntryService = new ReportRequestEntryService(_reportRequestCallbackReportMock.Object, customOptions, _loggerMock.Object);
 
 			var reportRequestCallback = _reportRequestEntryService.GetNextFromQueueOfReportsToRequest(_merchantId, _amazonRegion);
 
@@ -254,7 +258,7 @@ namespace EasyMWS.Tests.Services
 			_reportRequestEntries.Add(reportRequestWithNoRetryPeriodComplete1);
 			_reportRequestEntries.Add(reportRequestWithNoRetryPeriodComplete2);
 
-			_reportRequestEntryService = new ReportRequestEntryService(_reportRequestCallbackReportMock.Object, customOptions);
+			_reportRequestEntryService = new ReportRequestEntryService(_reportRequestCallbackReportMock.Object, customOptions, _loggerMock.Object);
 
 			var reportRequestCallback = _reportRequestEntryService.GetNextFromQueueOfReportsToRequest(_merchantId, _amazonRegion);
 
@@ -312,7 +316,7 @@ namespace EasyMWS.Tests.Services
 			_reportRequestEntries.Add(reportRequestWithNoRetryPeriodComplete2);
 			_reportRequestEntries.Add(reportRequestWithNoRetryPeriodComplete3);
 
-			_reportRequestEntryService = new ReportRequestEntryService(_reportRequestCallbackReportMock.Object, customOptions);
+			_reportRequestEntryService = new ReportRequestEntryService(_reportRequestCallbackReportMock.Object, customOptions, _loggerMock.Object);
 
 			var reportRequestCallback = _reportRequestEntryService.GetNextFromQueueOfReportsToRequest(_merchantId, _amazonRegion);
 

@@ -126,14 +126,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 				catch(SqlException e)
 				{
 					_logger.Error($"ReportDownloaded event publishing failed for {reportEntry.EntryIdentityDescription} due to an internal error '{e.Message}'. The event publishing will be retried at the next poll request", e);
-					reportEntry.IsLocked = false;
+					reportRequestService.Unlock(reportEntry);
 					reportRequestService.Update(reportEntry);
 				}
 				catch (Exception e)
 				{
 					_logger.Error($"ReportDownloaded event publishing failed for {reportEntry.EntryIdentityDescription}. Current retry count is :{reportEntry.InvokeCallbackRetryCount}. {e.Message}", e);
 					reportEntry.InvokeCallbackRetryCount++;
-					reportEntry.IsLocked = false;
+					reportRequestService.Unlock(reportEntry);
 					reportRequestService.Update(reportEntry);
 				}
 			}
@@ -151,7 +151,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 
                 var reportRequest = new ReportRequestEntry(serializedPropertiesContainer)
 				{
-					IsLocked = false,
 					AmazonRegion = _region,
 					MerchantId = _merchantId,
 					LastAmazonRequestDate = DateTime.MinValue,
@@ -169,6 +168,7 @@ namespace MountainWarehouse.EasyMWS.Processors
                     InstanceId = _options?.EventPublishingOptions?.RestrictInvocationToOriginatingInstance?.HashedInstanceId,
                 };
 
+				reportRequestService.Unlock(reportRequest);
 				reportRequestService.Create(reportRequest);
 				reportRequestService.SaveChanges();
 

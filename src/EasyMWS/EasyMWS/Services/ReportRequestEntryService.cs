@@ -24,6 +24,32 @@ namespace MountainWarehouse.EasyMWS.Services
 		internal ReportRequestEntryService(EasyMwsOptions options = null, IEasyMwsLogger logger = null) => (_reportRequestEntryRepository, _logger, _options) =
 			(_reportRequestEntryRepository ?? new ReportRequestEntryRepository(options?.LocalDbConnectionStringOverride), logger, options);
 
+		public void Lock(ReportRequestEntry entry)
+		{
+			if (entry.IsLocked)
+			{
+				_logger.Debug($"An attempt was made to lock entry {entry.EntryIdentityDescription}, but it is already locked.");
+			}
+			else
+			{
+				entry.IsLocked = true;
+				_logger.Debug($"The following entry is marked as locked: {entry.EntryIdentityDescription}.");
+			}
+		}
+
+		public void Unlock(ReportRequestEntry entry)
+		{
+			if (!entry.IsLocked)
+			{
+				_logger.Debug($"An attempt was made to unlock entry {entry.EntryIdentityDescription}, but it is already unlocked.");
+			}
+			else
+			{
+				entry.IsLocked = false;
+				_logger.Debug($"The following entry is now marked as unlocked: {entry.EntryIdentityDescription}.");
+			}
+		}
+
 		public void Create(ReportRequestEntry entry) => _reportRequestEntryRepository.Create(entry);
 		public async Task CreateAsync(ReportRequestEntry entry) => await _reportRequestEntryRepository.CreateAsync(entry);
 		public void Update(ReportRequestEntry entry) => _reportRequestEntryRepository.Update(entry);
@@ -68,7 +94,7 @@ namespace MountainWarehouse.EasyMWS.Services
 
 			if (entry != null && markEntryAsLocked)
 			{
-				entry.IsLocked = true;
+				Lock(entry);
 				Update(entry);
 				SaveChanges();
 			}
@@ -88,7 +114,7 @@ namespace MountainWarehouse.EasyMWS.Services
 
 			if (entry != null && markEntryAsLocked)
 			{
-				entry.IsLocked = true;
+				Lock(entry);
 				Update(entry);
 				SaveChanges();
 			}
@@ -106,7 +132,7 @@ namespace MountainWarehouse.EasyMWS.Services
 			{
 				foreach (var entry in entries)
 				{
-					entry.IsLocked = true;
+					Lock(entry);
 					Update(entry);
 				}
 				SaveChanges();
@@ -129,7 +155,7 @@ namespace MountainWarehouse.EasyMWS.Services
 			{
 				foreach (var entry in entries)
 				{
-					entry.IsLocked = true;
+					Lock(entry);
 					Update(entry);
 				}
 				SaveChanges();
