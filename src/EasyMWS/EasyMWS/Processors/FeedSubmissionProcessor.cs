@@ -88,7 +88,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			if (string.IsNullOrEmpty(feedSubmission?.FeedType)) throw new ArgumentException($"{missingInformationExceptionMessage}: Feed type is missing");
 
 			_logger.Info($"Attempting to submit the next feed in queue to Amazon: {feedSubmission.EntryIdentityDescription}.");
-			feedSubmission.IsLocked = false;
+			feedSubmissionService.Unlock(feedSubmission);
 
 			var feedSubmissionData = feedSubmission.GetPropertiesContainer();
 
@@ -151,7 +151,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 					var feedSubmissionEntry = feedSubmissionService.FirstOrDefault(fsc => fsc.FeedSubmissionId == submissionId);
 					if (feedSubmissionEntry != null)
 					{
-						feedSubmissionEntry.IsLocked = false;
+						feedSubmissionService.Unlock(feedSubmissionEntry);
 						feedSubmissionService.Update(feedSubmissionEntry);
 					}
 				}
@@ -215,9 +215,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				var feedSubmissionEntry = feedSubmissionService.FirstOrDefault(fsc => fsc.FeedSubmissionId == feedSubmissionInfo.FeedSubmissionId);
                 if (feedSubmissionEntry == null) continue;
-				feedSubmissionEntry.IsLocked = false;
+				feedSubmissionService.Unlock(feedSubmissionEntry);
 
-                feedSubmissionEntry.LastAmazonFeedProcessingStatus = feedSubmissionInfo.FeedProcessingStatus;
+				feedSubmissionEntry.LastAmazonFeedProcessingStatus = feedSubmissionInfo.FeedProcessingStatus;
 
                 var genericProcessingInfo = $"ProcessingStatus returned by Amazon for {feedSubmissionEntry.EntryIdentityDescription} is '{feedSubmissionInfo.FeedProcessingStatus}'.";
 
@@ -258,7 +258,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			if (string.IsNullOrEmpty(feedSubmissionEntry.FeedSubmissionId)) throw new ArgumentException($"{missingInformationExceptionMessage}: FeedSubmissionId is missing");
 
 			_logger.Info($"Attempting to request the feed submission result for the next feed in queue from Amazon: {feedSubmissionEntry.EntryIdentityDescription}.");
-			feedSubmissionEntry.IsLocked = false;
+			feedSubmissionService.Unlock(feedSubmissionEntry);
 
 			var reportResultStream = new MemoryStream();
 			var request = new GetFeedSubmissionResultRequest

@@ -101,14 +101,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 				catch (SqlException e)
 				{
 					_logger.Error($"Event publishing failed for {feedSubmissionEntry.EntryIdentityDescription} due to an internal error '{e.Message}'. The event publishing will be retried at the next poll request", e);
-					feedSubmissionEntry.IsLocked = false;
+					feedSubmissionService.Unlock(feedSubmissionEntry);
 					feedSubmissionService.Update(feedSubmissionEntry);
 				}
 				catch (Exception e)
 				{
 					_logger.Error($"Event publishing failed for {feedSubmissionEntry.EntryIdentityDescription}. Current retry count is :{feedSubmissionEntry.FeedSubmissionRetryCount}. {e.Message}", e);
 					feedSubmissionEntry.InvokeCallbackRetryCount++;
-					feedSubmissionEntry.IsLocked = false;
+					feedSubmissionService.Unlock(feedSubmissionEntry);
 					feedSubmissionService.Update(feedSubmissionEntry);
 				}
 			}
@@ -126,7 +126,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 
                 var feedSubmission = new FeedSubmissionEntry(serializedPropertiesContainer)
                 {
-                    IsLocked = false,
                     AmazonRegion = _region,
                     MerchantId = _merchantId,
                     LastSubmitted = DateTime.MinValue,
@@ -146,8 +145,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 					}
 				};
 
-
-
+				feedSubmissionService.Unlock(feedSubmission);
 				feedSubmissionService.Create(feedSubmission);
 				feedSubmissionService.SaveChanges();
 
