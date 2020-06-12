@@ -33,6 +33,7 @@ namespace MountainWarehouse.EasyMWS.Services
 			else
 			{
 				entry.IsLocked = true;
+				Update(entry);
 				_logger.Debug($"The following entry is marked as locked: {entry.EntryIdentityDescription}.");
 			}
 		}
@@ -46,6 +47,7 @@ namespace MountainWarehouse.EasyMWS.Services
 			else
 			{
 				entry.IsLocked = false;
+				Update(entry);
 				_logger.Debug($"The following entry is now marked as unlocked: {entry.EntryIdentityDescription}.");
 			}
 		}
