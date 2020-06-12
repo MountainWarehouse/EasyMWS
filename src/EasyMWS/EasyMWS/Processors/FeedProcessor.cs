@@ -65,6 +65,8 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void PollFeeds(IFeedSubmissionEntryService feedSubmissionService)
 		{
+			_logger.Debug("Executing polling action for feed requests.");
+
 			_feedSubmissionProcessor.CleanUpFeedSubmissionQueue(feedSubmissionService);
 
 			SubmitNextFeedInQueueToAmazon(feedSubmissionService);
@@ -94,9 +96,10 @@ namespace MountainWarehouse.EasyMWS.Processors
                     var handledArgs = feedSubmissionEntry.TargetHandlerArgs == null ? null : new ReadOnlyDictionary<string, object>(JsonConvert.DeserializeObject<Dictionary<string, object>>(feedSubmissionEntry.TargetHandlerArgs));
                     var eventArgs = new FeedUploadedEventArgs(processingReportContent,feedType, handlerId, handledArgs);
 
-                    _logger.Info($"Attempting publish FeedUploaded for the next submitted feed in queue : {feedSubmissionEntry.EntryIdentityDescription}");
+                    _logger.Debug($"Attempting publish FeedUploaded for the next submitted feed in queue : {feedSubmissionEntry.EntryIdentityDescription}");
                     OnFeedUploaded(eventArgs);
                     feedSubmissionService.Delete(feedSubmissionEntry);
+					_logger.Info($"Event publishing has succeeded for {feedSubmissionEntry.EntryIdentityDescription}.");
 				}
 				catch (SqlException e)
 				{
@@ -149,7 +152,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				feedSubmissionService.Create(feedSubmission);
 				feedSubmissionService.SaveChanges();
 
-				_logger.Info($"The following feed was queued for submission to Amazon {feedSubmission.EntryIdentityDescription}.");
+				_logger.Debug($"The following feed was queued for submission to Amazon {feedSubmission.EntryIdentityDescription}.");
 			}
 			catch (Exception e)
 			{

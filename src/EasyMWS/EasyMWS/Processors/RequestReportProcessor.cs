@@ -48,7 +48,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			var reportRequestData = reportRequestEntry.GetPropertiesContainer();
 
-			_logger.Info($"Attempting to request the next report in queue from Amazon: {reportRequestEntry.EntryIdentityDescription}.");
+			_logger.Debug($"Attempting to request the next report in queue from Amazon: {reportRequestEntry.EntryIdentityDescription}.");
 			reportRequestService.Unlock(reportRequestEntry);
 
 			var reportRequest = new RequestReportRequest
@@ -130,7 +130,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				reportRequestService.SaveChanges();
 			}
 
-			_logger.Info($"Attempting to request report processing statuses for all reports in queue.");
+			_logger.Debug($"Attempting to request report processing statuses for all reports in queue.");
 
 		    var request = new GetReportRequestListRequest() { ReportRequestIdList = new IdList(), Merchant = merchant };
 		    request.ReportRequestIdList.Id.AddRange(requestIdList);
@@ -142,7 +142,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			    var response = _marketplaceWebServiceClient.GetReportRequestList(request);
 			    var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
 			    var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
-			    _logger.Info($"Request to MWS.GetReportRequestList was successful!", new RequestInfo(timestamp, requestId));
+			    _logger.Debug($"Request to MWS.GetReportRequestList was successful!", new RequestInfo(timestamp, requestId));
 
 			    var responseInformation =
 				    new List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)>();
@@ -178,7 +178,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void CleanupReportRequests(IReportRequestEntryService reportRequestService)
 		{
-			_logger.Info("Executing cleanup of report requests queue.");
+			_logger.Debug("Executing cleanup of report requests queue.");
 			var allEntriesForRegionAndMerchant = reportRequestService.GetAll().Where(rrc => IsMatchForRegionAndMerchantId(rrc));
 			var entriesToDelete = new List<EntryToDelete>();
 
@@ -241,7 +241,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 					reportRequestEntry.GeneratedReportId = reportGenerationInfo.GeneratedReportId;
 					reportRequestEntry.ReportProcessRetryCount = 0;
 					reportRequestService.Update(reportRequestEntry);
-					_logger.Info($"{genericProcessingInfo}. The report is now ready for download.");
+					_logger.Info($"The following report is now ready for download : {genericProcessingInfo}");
 				}
 				else if (reportGenerationInfo.ReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData)
 				{
@@ -261,7 +261,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 					  || reportGenerationInfo.ReportProcessingStatus == AmazonReportProcessingStatus.InProgress)
 				{
                     reportRequestService.Update(reportRequestEntry);
-                    _logger.Info($"{genericProcessingInfo}. The report processing status will be checked again at the next poll request.");
+                    _logger.Debug($"{genericProcessingInfo}. The report processing status will be checked again at the next poll request.");
 				}
 				else if (reportGenerationInfo.ReportProcessingStatus == AmazonReportProcessingStatus.Cancelled)
 				{
@@ -286,7 +286,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		public void DownloadGeneratedReportFromAmazon(IReportRequestEntryService reportRequestService, ReportRequestEntry reportRequestEntry)
 	    {
 			var missingInformationExceptionMessage = "Cannot request report from amazon due to missing report request information";
-			_logger.Info($"Attempting to download the next report in queue from Amazon: {reportRequestEntry.EntryIdentityDescription}.");
+			_logger.Debug($"Attempting to download the next report in queue from Amazon: {reportRequestEntry.EntryIdentityDescription}.");
 			reportRequestService.Unlock(reportRequestEntry);
 
 			if (string.IsNullOrEmpty(reportRequestEntry?.GeneratedReportId)) throw new ArgumentException($"{missingInformationExceptionMessage}: GeneratedReportId is missing");
@@ -311,7 +311,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
 			    var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
 			    _logger.Info(
-				    $"Report download from Amazon has succeeded for {reportRequestEntry.EntryIdentityDescription}.",
+				    $"The following report was downloaded from Amazon : {reportRequestEntry.EntryIdentityDescription}.",
 				    new RequestInfo(timestamp, requestId));
 			    reportResultStream.Position = 0;
 
@@ -319,7 +319,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				var hasValidHash = MD5ChecksumHelper.IsChecksumCorrect(reportResultStream, md5Hash);
 			    if (hasValidHash)
 			    {
-				    _logger.Info($"Checksum verification succeeded for report {reportRequestEntry.EntryIdentityDescription}");
+				    _logger.Debug($"Checksum verification succeeded for report {reportRequestEntry.EntryIdentityDescription}");
 				    reportRequestEntry.ReportDownloadRetryCount = 0;
 
 					using (var streamReader = new StreamReader(reportResultStream))

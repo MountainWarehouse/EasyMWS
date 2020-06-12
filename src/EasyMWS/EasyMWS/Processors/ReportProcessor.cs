@@ -68,7 +68,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		public void PollReports(IReportRequestEntryService reportRequestService)
 		{
-			_logger.Info("Executing polling action for report requests.");
+			_logger.Debug("Executing polling action for report requests.");
 
 			_requestReportProcessor.CleanupReportRequests(reportRequestService);
 
@@ -105,24 +105,25 @@ namespace MountainWarehouse.EasyMWS.Processors
 
                     if (reportEntry.Details == null && reportEntry.LastAmazonReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData && !_options.EventPublishingOptions.EventPublishingForReportStatusDoneNoData)
                     {
-                        _logger.Info($"An attempt will not be made to publish event ReportDownloaded for the following report in queue : {reportEntry.EntryIdentityDescription}, because AmazonProcessingStatus for this report is _DONE_NO_DATA_ but EventPublishingForReportStatusDoneNoData EasyMwsOption is FALSE.");
+                        _logger.Debug($"An attempt will not be made to publish event ReportDownloaded for the following report in queue : {reportEntry.EntryIdentityDescription}, because AmazonProcessingStatus for this report is _DONE_NO_DATA_ but EventPublishingForReportStatusDoneNoData EasyMwsOption is FALSE.");
                     }
                     else if (reportEntry.Details == null && reportEntry.LastAmazonReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData && _options.EventPublishingOptions.EventPublishingForReportStatusDoneNoData)
                     {
-                        _logger.Info($"Attempting to publish event ReportDownloaded for the following report in queue : {reportEntry.EntryIdentityDescription}, but the AmazonProcessingStatus for this report is _DONE_NO_DATA_ therefore the Stream argument will be null at invocation time.");
+                        _logger.Warn($"Attempting to publish event ReportDownloaded for the following report in queue : {reportEntry.EntryIdentityDescription}, but the AmazonProcessingStatus for this report is _DONE_NO_DATA_ therefore the Stream argument will be null at invocation time.");
                         var eventArgs = new ReportDownloadedEventArgs(null, reportType, handledId, handlerArgs);
                         OnReportDownloaded(eventArgs);
                     }
                     else
                     {
-                        _logger.Info($"Attempting to publish event ReportDownloaded for the next downloaded report in queue : {reportEntry.EntryIdentityDescription}.");
+                        _logger.Debug($"Attempting to publish event ReportDownloaded for the next downloaded report in queue : {reportEntry.EntryIdentityDescription}.");
                         var reportContent = ZipHelper.ExtractArchivedSingleFileToStream(reportEntry.Details?.ReportContent);
                         var eventArgs = new ReportDownloadedEventArgs(reportContent, reportType, handledId, handlerArgs);
                         OnReportDownloaded(eventArgs);
                     }
 
                     reportRequestService.Delete(reportEntry);
-                }
+					_logger.Info($"Event publishing has succeeded for {reportEntry.EntryIdentityDescription}.");
+				}
 				catch(SqlException e)
 				{
 					_logger.Error($"ReportDownloaded event publishing failed for {reportEntry.EntryIdentityDescription} due to an internal error '{e.Message}'. The event publishing will be retried at the next poll request", e);
