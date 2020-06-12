@@ -105,17 +105,17 @@ namespace MountainWarehouse.EasyMWS.Processors
 
                     if (reportEntry.Details == null && reportEntry.LastAmazonReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData && !_options.EventPublishingOptions.EventPublishingForReportStatusDoneNoData)
                     {
-                        _logger.Info($"An attempt will not be made to publish event ReportDownloaded for the following report in queue : {reportEntry.RegionAndTypeComputed}, because AmazonProcessingStatus for this report is _DONE_NO_DATA_ but EventPublishingForReportStatusDoneNoData EasyMwsOption is FALSE.");
+                        _logger.Info($"An attempt will not be made to publish event ReportDownloaded for the following report in queue : {reportEntry.EntryIdentityDescription}, because AmazonProcessingStatus for this report is _DONE_NO_DATA_ but EventPublishingForReportStatusDoneNoData EasyMwsOption is FALSE.");
                     }
                     else if (reportEntry.Details == null && reportEntry.LastAmazonReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData && _options.EventPublishingOptions.EventPublishingForReportStatusDoneNoData)
                     {
-                        _logger.Info($"Attempting to publish event ReportDownloaded for the following report in queue : {reportEntry.RegionAndTypeComputed}, but the AmazonProcessingStatus for this report is _DONE_NO_DATA_ therefore the Stream argument will be null at invocation time.");
+                        _logger.Info($"Attempting to publish event ReportDownloaded for the following report in queue : {reportEntry.EntryIdentityDescription}, but the AmazonProcessingStatus for this report is _DONE_NO_DATA_ therefore the Stream argument will be null at invocation time.");
                         var eventArgs = new ReportDownloadedEventArgs(null, reportType, handledId, handlerArgs);
                         OnReportDownloaded(eventArgs);
                     }
                     else
                     {
-                        _logger.Info($"Attempting to publish event ReportDownloaded for the next downloaded report in queue : {reportEntry.RegionAndTypeComputed}.");
+                        _logger.Info($"Attempting to publish event ReportDownloaded for the next downloaded report in queue : {reportEntry.EntryIdentityDescription}.");
                         var reportContent = ZipHelper.ExtractArchivedSingleFileToStream(reportEntry.Details?.ReportContent);
                         var eventArgs = new ReportDownloadedEventArgs(reportContent, reportType, handledId, handlerArgs);
                         OnReportDownloaded(eventArgs);
@@ -125,13 +125,13 @@ namespace MountainWarehouse.EasyMWS.Processors
                 }
 				catch(SqlException e)
 				{
-					_logger.Error($"ReportDownloaded event publishing failed for {reportEntry.RegionAndTypeComputed} due to an internal error '{e.Message}'. The event publishing will be retried at the next poll request", e);
+					_logger.Error($"ReportDownloaded event publishing failed for {reportEntry.EntryIdentityDescription} due to an internal error '{e.Message}'. The event publishing will be retried at the next poll request", e);
 					reportEntry.IsLocked = false;
 					reportRequestService.Update(reportEntry);
 				}
 				catch (Exception e)
 				{
-					_logger.Error($"ReportDownloaded event publishing failed for {reportEntry.RegionAndTypeComputed}. Current retry count is :{reportEntry.InvokeCallbackRetryCount}. {e.Message}", e);
+					_logger.Error($"ReportDownloaded event publishing failed for {reportEntry.EntryIdentityDescription}. Current retry count is :{reportEntry.InvokeCallbackRetryCount}. {e.Message}", e);
 					reportEntry.InvokeCallbackRetryCount++;
 					reportEntry.IsLocked = false;
 					reportRequestService.Update(reportEntry);
@@ -172,7 +172,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				reportRequestService.Create(reportRequest);
 				reportRequestService.SaveChanges();
 
-				_logger.Info($"The following report was queued for download from Amazon {reportRequest.RegionAndTypeComputed}.");
+				_logger.Info($"The following report was queued for download from Amazon {reportRequest.EntryIdentityDescription}.");
 			}
 			catch (Exception e)
 			{

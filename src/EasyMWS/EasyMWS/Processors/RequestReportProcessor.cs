@@ -48,7 +48,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			var reportRequestData = reportRequestEntry.GetPropertiesContainer();
 
-			_logger.Info($"Attempting to request the next report in queue from Amazon: {reportRequestEntry.RegionAndTypeComputed}.");
+			_logger.Info($"Attempting to request the next report in queue from Amazon: {reportRequestEntry.EntryIdentityDescription}.");
 			reportRequestEntry.IsLocked = false;
 
 			var reportRequest = new RequestReportRequest
@@ -76,13 +76,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 				if (string.IsNullOrEmpty(reportRequestEntry.RequestReportId))
 			    {
 					reportRequestEntry.ReportRequestRetryCount++;
-					_logger.Warn($"RequestReport did not generate a ReportRequestId for {reportRequestEntry.RegionAndTypeComputed}. Report request will be retried. ReportRequestRetryCount is now : {reportRequestEntry.ReportRequestRetryCount}.",
+					_logger.Warn($"RequestReport did not generate a ReportRequestId for {reportRequestEntry.EntryIdentityDescription}. Report request will be retried. ReportRequestRetryCount is now : {reportRequestEntry.ReportRequestRetryCount}.",
 						new RequestInfo(timestamp, requestId));
 				}
 			    else
 			    {
 				    reportRequestEntry.ReportRequestRetryCount = 0;
-					_logger.Info($"AmazonMWS RequestReport succeeded for {reportRequestEntry.RegionAndTypeComputed}. ReportRequestId:'{reportRequestEntry.RequestReportId}'.",
+					_logger.Info($"AmazonMWS RequestReport succeeded for {reportRequestEntry.EntryIdentityDescription}. ReportRequestId:'{reportRequestEntry.RequestReportId}'.",
 						new RequestInfo(timestamp, requestId));
 				}
 
@@ -91,21 +91,21 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    catch (MarketplaceWebServiceException e) when (e.StatusCode == HttpStatusCode.BadRequest && IsAmazonErrorCodeFatal(e.ErrorCode))
 		    {
 			    reportRequestService.Delete(reportRequestEntry);
-				_logger.Error($"AmazonMWS RequestReport failed for {reportRequestEntry.RegionAndTypeComputed}. The entry will now be removed from queue", e);
+				_logger.Error($"AmazonMWS RequestReport failed for {reportRequestEntry.EntryIdentityDescription}. The entry will now be removed from queue", e);
 			}
 		    catch (MarketplaceWebServiceException e) when (IsAmazonErrorCodeNonFatal(e.ErrorCode))
 		    {
 			    reportRequestEntry.ReportRequestRetryCount++;
 			    reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
 			    reportRequestService.Update(reportRequestEntry);
-				_logger.Warn($"AmazonMWS RequestReport failed for {reportRequestEntry.RegionAndTypeComputed}. Report request will be retried. ReportRequestRetryCount is now : {reportRequestEntry.ReportRequestRetryCount}.");
+				_logger.Warn($"AmazonMWS RequestReport failed for {reportRequestEntry.EntryIdentityDescription}. Report request will be retried. ReportRequestRetryCount is now : {reportRequestEntry.ReportRequestRetryCount}.");
 		    }
 		    catch (Exception e)
 		    {
 				reportRequestEntry.ReportRequestRetryCount++;
 			    reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
 			    reportRequestService.Update(reportRequestEntry);
-				_logger.Warn($"AmazonMWS RequestReport failed for {reportRequestEntry.RegionAndTypeComputed}. Report request will be retried. ReportRequestRetryCount is now : {reportRequestEntry.ReportRequestRetryCount}.");
+				_logger.Warn($"AmazonMWS RequestReport failed for {reportRequestEntry.EntryIdentityDescription}. Report request will be retried. ReportRequestRetryCount is now : {reportRequestEntry.ReportRequestRetryCount}.");
 			}
 		    finally
 			{
@@ -190,7 +190,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 					reportRequestService.Delete(entryToDelete.Entry);
 					reportRequestService.SaveChanges();
 
-					_logger.Warn($"Report request entry {entryToDelete.Entry.RegionAndTypeComputed} deleted from queue. {entryToDelete.ReportRequestEntryDeleteReason.ToString()} exceeded");
+					_logger.Warn($"Report request entry {entryToDelete.Entry.EntryIdentityDescription} deleted from queue. {entryToDelete.ReportRequestEntryDeleteReason.ToString()} exceeded");
 				}
 			}
 			
@@ -234,7 +234,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
                 reportRequestEntry.LastAmazonReportProcessingStatus = reportGenerationInfo.ReportProcessingStatus;
 
-                var genericProcessingInfo = $"ProcessingStatus returned by Amazon for {reportRequestEntry.RegionAndTypeComputed} is '{reportGenerationInfo.ReportProcessingStatus}'.";
+                var genericProcessingInfo = $"ProcessingStatus returned by Amazon for {reportRequestEntry.EntryIdentityDescription} is '{reportGenerationInfo.ReportProcessingStatus}'.";
 
 				if (reportGenerationInfo.ReportProcessingStatus == AmazonReportProcessingStatus.Done)
 				{
@@ -286,7 +286,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		public void DownloadGeneratedReportFromAmazon(IReportRequestEntryService reportRequestService, ReportRequestEntry reportRequestEntry)
 	    {
 			var missingInformationExceptionMessage = "Cannot request report from amazon due to missing report request information";
-			_logger.Info($"Attempting to download the next report in queue from Amazon: {reportRequestEntry.RegionAndTypeComputed}.");
+			_logger.Info($"Attempting to download the next report in queue from Amazon: {reportRequestEntry.EntryIdentityDescription}.");
 			reportRequestEntry.IsLocked = false;
 
 			if (string.IsNullOrEmpty(reportRequestEntry?.GeneratedReportId)) throw new ArgumentException($"{missingInformationExceptionMessage}: GeneratedReportId is missing");
@@ -311,7 +311,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				var requestId = response?.ResponseHeaderMetadata?.RequestId ?? "unknown";
 			    var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
 			    _logger.Info(
-				    $"Report download from Amazon has succeeded for {reportRequestEntry.RegionAndTypeComputed}.",
+				    $"Report download from Amazon has succeeded for {reportRequestEntry.EntryIdentityDescription}.",
 				    new RequestInfo(timestamp, requestId));
 			    reportResultStream.Position = 0;
 
@@ -319,7 +319,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				var hasValidHash = MD5ChecksumHelper.IsChecksumCorrect(reportResultStream, md5Hash);
 			    if (hasValidHash)
 			    {
-				    _logger.Info($"Checksum verification succeeded for report {reportRequestEntry.RegionAndTypeComputed}");
+				    _logger.Info($"Checksum verification succeeded for report {reportRequestEntry.EntryIdentityDescription}");
 				    reportRequestEntry.ReportDownloadRetryCount = 0;
 
 					using (var streamReader = new StreamReader(reportResultStream))
@@ -331,7 +331,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			    else
 			    {
 				    reportRequestEntry.ReportDownloadRetryCount++;
-					_logger.Warn($"Checksum verification failed for report {reportRequestEntry.RegionAndTypeComputed}. Report download will be retried. ReportDownloadRetryCount is now : '{reportRequestEntry.ReportDownloadRetryCount}'.");
+					_logger.Warn($"Checksum verification failed for report {reportRequestEntry.EntryIdentityDescription}. Report download will be retried. ReportDownloadRetryCount is now : '{reportRequestEntry.ReportDownloadRetryCount}'.");
 				}
 
 			    reportRequestService.Update(reportRequestEntry);
@@ -339,21 +339,21 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    catch (MarketplaceWebServiceException e) when (e.StatusCode == HttpStatusCode.BadRequest && IsAmazonErrorCodeFatal(e.ErrorCode))
 		    {
 			    reportRequestService.Delete(reportRequestEntry);
-			    _logger.Error($"AmazonMWS report download failed for {reportRequestEntry.RegionAndTypeComputed}! The entry will now be removed from queue", e);
+			    _logger.Error($"AmazonMWS report download failed for {reportRequestEntry.EntryIdentityDescription}! The entry will now be removed from queue", e);
 			}
 		    catch (MarketplaceWebServiceException e) when (IsAmazonErrorCodeNonFatal(e.ErrorCode))
 			{
 				reportRequestEntry.ReportDownloadRetryCount++;
 				reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
 				reportRequestService.Update(reportRequestEntry);
-				_logger.Warn($"AmazonMWS report download failed for {reportRequestEntry.RegionAndTypeComputed} Report download will be retried. ReportDownloadRetryCount is now : '{reportRequestEntry.ReportDownloadRetryCount}'.");
+				_logger.Warn($"AmazonMWS report download failed for {reportRequestEntry.EntryIdentityDescription} Report download will be retried. ReportDownloadRetryCount is now : '{reportRequestEntry.ReportDownloadRetryCount}'.");
 			}
 			catch (Exception e)
 		    {
 			    reportRequestEntry.ReportDownloadRetryCount++;
 			    reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
 			    reportRequestService.Update(reportRequestEntry);
-				_logger.Warn($"AmazonMWS report download failed for {reportRequestEntry.RegionAndTypeComputed}!");
+				_logger.Warn($"AmazonMWS report download failed for {reportRequestEntry.EntryIdentityDescription}!");
 		    }
 		    finally
 		    {
@@ -392,7 +392,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			    if (entriesIdsAlreadyMarkedAsDeleted.Exists(e => e == entry.Id)) continue;
 			    entriesIdsAlreadyMarkedAsDeleted.Add(entry.Id);
 			    reportRequestService.Delete(entry);
-			    _logger.Warn($"Report request entry {entry.RegionAndTypeComputed} deleted from queue. {deleteReason}");
+			    _logger.Warn($"Report request entry {entry.EntryIdentityDescription} deleted from queue. {deleteReason}");
 		    }
 	    }
 	    private bool IsMatchForRegionAndMerchantId(ReportRequestEntry e) => e.AmazonRegion == _region && e.MerchantId == _merchantId;

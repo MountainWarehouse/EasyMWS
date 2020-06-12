@@ -94,19 +94,19 @@ namespace MountainWarehouse.EasyMWS.Processors
                     var handledArgs = feedSubmissionEntry.TargetHandlerArgs == null ? null : new ReadOnlyDictionary<string, object>(JsonConvert.DeserializeObject<Dictionary<string, object>>(feedSubmissionEntry.TargetHandlerArgs));
                     var eventArgs = new FeedUploadedEventArgs(processingReportContent,feedType, handlerId, handledArgs);
 
-                    _logger.Info($"Attempting publish FeedUploaded for the next submitted feed in queue : {feedSubmissionEntry.RegionAndTypeComputed}");
+                    _logger.Info($"Attempting publish FeedUploaded for the next submitted feed in queue : {feedSubmissionEntry.EntryIdentityDescription}");
                     OnFeedUploaded(eventArgs);
                     feedSubmissionService.Delete(feedSubmissionEntry);
 				}
 				catch (SqlException e)
 				{
-					_logger.Error($"Event publishing failed for {feedSubmissionEntry.RegionAndTypeComputed} due to an internal error '{e.Message}'. The event publishing will be retried at the next poll request", e);
+					_logger.Error($"Event publishing failed for {feedSubmissionEntry.EntryIdentityDescription} due to an internal error '{e.Message}'. The event publishing will be retried at the next poll request", e);
 					feedSubmissionEntry.IsLocked = false;
 					feedSubmissionService.Update(feedSubmissionEntry);
 				}
 				catch (Exception e)
 				{
-					_logger.Error($"Event publishing failed for {feedSubmissionEntry.RegionAndTypeComputed}. Current retry count is :{feedSubmissionEntry.FeedSubmissionRetryCount}. {e.Message}", e);
+					_logger.Error($"Event publishing failed for {feedSubmissionEntry.EntryIdentityDescription}. Current retry count is :{feedSubmissionEntry.FeedSubmissionRetryCount}. {e.Message}", e);
 					feedSubmissionEntry.InvokeCallbackRetryCount++;
 					feedSubmissionEntry.IsLocked = false;
 					feedSubmissionService.Update(feedSubmissionEntry);
@@ -151,7 +151,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				feedSubmissionService.Create(feedSubmission);
 				feedSubmissionService.SaveChanges();
 
-				_logger.Info($"The following feed was queued for submission to Amazon {feedSubmission.RegionAndTypeComputed}.");
+				_logger.Info($"The following feed was queued for submission to Amazon {feedSubmission.EntryIdentityDescription}.");
 			}
 			catch (Exception e)
 			{
