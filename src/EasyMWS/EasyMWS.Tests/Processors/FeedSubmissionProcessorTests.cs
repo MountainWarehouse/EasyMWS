@@ -120,10 +120,23 @@ namespace EasyMWS.Tests.Processors
 				{
 					entriesBeingUpdated.Add(entryBeingUpdated);
 				});
+			_feedSubmissionServiceMock
+				.Setup(fssm => fssm.Lock(It.IsAny<FeedSubmissionEntry>()))
+				.Callback<FeedSubmissionEntry>((entryBeingLocked) =>
+				{
+					entryBeingLocked.IsLocked = true;
+				});
+			_feedSubmissionServiceMock
+				.Setup(fssm => fssm.Unlock(It.IsAny<FeedSubmissionEntry>()))
+				.Callback<FeedSubmissionEntry>((entryBeingLocked) =>
+				{
+					entryBeingLocked.IsLocked = false;
+				});
 
 			var result = _feedSubmissionProcessor.RequestFeedSubmissionStatusesFromAmazon(_feedSubmissionServiceMock.Object, testRequestIdList, "testMerchant");
 
 			_feedSubmissionServiceMock.Verify(fssm => fssm.Update(It.IsAny<FeedSubmissionEntry>()), Times.Exactly(3));
+			_feedSubmissionServiceMock.Verify(fssm => fssm.Unlock(It.IsAny<FeedSubmissionEntry>()), Times.Exactly(3));
 			Assert.IsTrue(entriesBeingUpdated.All(e => e.IsLocked == false));
 			_feedSubmissionServiceMock.Verify(fssm => fssm.SaveChanges(), Times.Once);
 		}
@@ -147,10 +160,23 @@ namespace EasyMWS.Tests.Processors
 				{
 					entriesBeingUpdated.Add(entryBeingUpdated);
 				});
+			_feedSubmissionServiceMock
+				.Setup(fssm => fssm.Lock(It.IsAny<FeedSubmissionEntry>()))
+				.Callback<FeedSubmissionEntry>((entryBeingLocked) =>
+				{
+					entryBeingLocked.IsLocked = true;
+				});
+			_feedSubmissionServiceMock
+				.Setup(fssm => fssm.Unlock(It.IsAny<FeedSubmissionEntry>()))
+				.Callback<FeedSubmissionEntry>((entryBeingLocked) =>
+				{
+					entryBeingLocked.IsLocked = false;
+				});
 
 			var result = _feedSubmissionProcessor.RequestFeedSubmissionStatusesFromAmazon(_feedSubmissionServiceMock.Object, testRequestIdList, "testMerchant");
 
 			_feedSubmissionServiceMock.Verify(fssm => fssm.Update(It.IsAny<FeedSubmissionEntry>()), Times.Exactly(3));
+			_feedSubmissionServiceMock.Verify(fssm => fssm.Unlock(It.IsAny<FeedSubmissionEntry>()), Times.Exactly(3));
 			Assert.IsTrue(entriesBeingUpdated.All(e => e.IsLocked == false));
 			_feedSubmissionServiceMock.Verify(fssm => fssm.SaveChanges(), Times.Once);
 		}

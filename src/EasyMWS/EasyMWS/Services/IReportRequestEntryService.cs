@@ -11,6 +11,8 @@ namespace MountainWarehouse.EasyMWS.Services
 {
 	internal interface IReportRequestEntryService
 	{
+		void Lock(ReportRequestEntry entry);
+		void Unlock(ReportRequestEntry entry);
 		void Create(ReportRequestEntry entry);
 		Task CreateAsync(ReportRequestEntry entry);
 		void Update(ReportRequestEntry entry);
