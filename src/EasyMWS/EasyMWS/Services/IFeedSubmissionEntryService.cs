@@ -10,7 +10,9 @@ namespace MountainWarehouse.EasyMWS.Services
 {
     internal interface IFeedSubmissionEntryService
     {
-	    void Create(FeedSubmissionEntry entry);
+		void Lock(FeedSubmissionEntry entry);
+		void Unlock(FeedSubmissionEntry entry);
+		void Create(FeedSubmissionEntry entry);
 	    void Update(FeedSubmissionEntry entry);
 	    void Delete(FeedSubmissionEntry entry);
 	    void DeleteRange(IEnumerable<FeedSubmissionEntry> entries);

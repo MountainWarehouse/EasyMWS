@@ -24,6 +24,32 @@ namespace MountainWarehouse.EasyMWS.Services
 		public FeedSubmissionEntryService(EasyMwsOptions options = null, IEasyMwsLogger logger = null) =>
 			(_feedRepo, _logger, _options) = (_feedRepo ?? new FeedSubmissionEntryRepository(options?.LocalDbConnectionStringOverride), logger, options);
 
+		public void Lock(FeedSubmissionEntry entry)
+		{
+			if (entry.IsLocked)
+			{
+				_logger.Debug($"An attempt was made to lock entry {entry.EntryIdentityDescription}, but it is already locked.");
+			}
+			else
+			{
+				entry.IsLocked = true;
+				_logger.Debug($"The following entry is marked as locked: {entry.EntryIdentityDescription}.");
+			}
+		}
+
+		public void Unlock(FeedSubmissionEntry entry)
+		{
+			if (!entry.IsLocked)
+			{
+				_logger.Debug($"An attempt was made to unlock entry {entry.EntryIdentityDescription}, but it is already unlocked.");
+			}
+			else
+			{
+				entry.IsLocked = false;
+				_logger.Debug($"The following entry is now marked as unlocked: {entry.EntryIdentityDescription}.");
+			}
+		}
+
 		public void Create(FeedSubmissionEntry entry) => _feedRepo.Create(entry);
 		public void Update(FeedSubmissionEntry entry) => _feedRepo.Update(entry);
 		public void Delete(FeedSubmissionEntry entry)
@@ -68,7 +94,7 @@ namespace MountainWarehouse.EasyMWS.Services
 
 			if(entry != null && markEntryAsLocked)
 			{
-				entry.IsLocked = true;
+				Lock(entry);
 				Update(entry);
 				SaveChanges();
 			}
@@ -87,7 +113,7 @@ namespace MountainWarehouse.EasyMWS.Services
 			{
 				foreach (var entry in entries)
 				{
-					entry.IsLocked = true;
+					Lock(entry);
 					Update(entry);
 				}
 				SaveChanges();
@@ -107,7 +133,7 @@ namespace MountainWarehouse.EasyMWS.Services
 
 			if (entry != null && markEntryAsLocked)
 			{
-				entry.IsLocked = true;
+				Lock(entry);
 				Update(entry);
 				SaveChanges();
 			}
@@ -126,7 +152,7 @@ namespace MountainWarehouse.EasyMWS.Services
 			{
 				foreach (var entry in entries)
 				{
-					entry.IsLocked = true;
+					Lock(entry);
 					Update(entry);
 				}
 				SaveChanges();

@@ -3,6 +3,7 @@ using System.Linq;
 using Moq;
 using MountainWarehouse.EasyMWS.Data;
 using MountainWarehouse.EasyMWS.Enums;
+using MountainWarehouse.EasyMWS.Logging;
 using MountainWarehouse.EasyMWS.Model;
 using MountainWarehouse.EasyMWS.Processors;
 using MountainWarehouse.EasyMWS.Repositories;
@@ -20,6 +21,7 @@ namespace EasyMWS.Tests.Services
 	    private readonly string _merchantId = "TestMerchantId";
 	    private readonly AmazonRegion _region = AmazonRegion.Europe;
 	    private EasyMwsOptions _options;
+		private Mock<IEasyMwsLogger> _loggerMock;
 
         [SetUp]
         public void Setup()
@@ -43,9 +45,10 @@ namespace EasyMWS.Tests.Services
                 }
             };
 
-            _feedSubmissionCallbackRepoMock = new Mock<IFeedSubmissionEntryRepository>();
+			_loggerMock = new Mock<IEasyMwsLogger>();
+			_feedSubmissionCallbackRepoMock = new Mock<IFeedSubmissionEntryRepository>();
             _feedSubmissionCallbackRepoMock.Setup(x => x.GetAll()).Returns(_feedSubmissionEntries.AsQueryable());
-            _feedSubmissionEntryService = new FeedSubmissionEntryService(_feedSubmissionCallbackRepoMock.Object, _options);
+            _feedSubmissionEntryService = new FeedSubmissionEntryService(_feedSubmissionCallbackRepoMock.Object, _options, _loggerMock.Object);
         }
 
         [Test]

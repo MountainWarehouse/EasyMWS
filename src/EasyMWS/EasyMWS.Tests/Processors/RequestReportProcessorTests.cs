@@ -428,10 +428,23 @@ namespace EasyMWS.Tests.Processors
 				{
 					entriesBeingUpdated.Add(entryBeingUpdated);
 				});
+			_reportRequestServiceMock
+				.Setup(fssm => fssm.Lock(It.IsAny<ReportRequestEntry>()))
+				.Callback<ReportRequestEntry>((entryBeingLocked) =>
+				{
+					entryBeingLocked.IsLocked = true;
+				});
+			_reportRequestServiceMock
+				.Setup(fssm => fssm.Unlock(It.IsAny<ReportRequestEntry>()))
+				.Callback<ReportRequestEntry>((entryBeingLocked) =>
+				{
+					entryBeingLocked.IsLocked = false;
+				});
 
 			var result = _requestReportProcessor.GetReportProcessingStatusesFromAmazon(_reportRequestServiceMock.Object, testRequestIdList, "");
 
 			_reportRequestServiceMock.Verify(fssm => fssm.Update(It.IsAny<ReportRequestEntry>()), Times.Exactly(3));
+			_reportRequestServiceMock.Verify(fssm => fssm.Unlock(It.IsAny<ReportRequestEntry>()), Times.Exactly(3));
 			Assert.IsTrue(entriesBeingUpdated.All(e => e.IsLocked == false));
 			_reportRequestServiceMock.Verify(fssm => fssm.SaveChanges(), Times.Once);
 		}
@@ -455,10 +468,23 @@ namespace EasyMWS.Tests.Processors
 				{
 					entriesBeingUpdated.Add(entryBeingUpdated);
 				});
+			_reportRequestServiceMock
+				.Setup(fssm => fssm.Lock(It.IsAny<ReportRequestEntry>()))
+				.Callback<ReportRequestEntry>((entryBeingLocked) =>
+				{
+					entryBeingLocked.IsLocked = true;
+				});
+			_reportRequestServiceMock
+				.Setup(fssm => fssm.Unlock(It.IsAny<ReportRequestEntry>()))
+				.Callback<ReportRequestEntry>((entryBeingLocked) =>
+				{
+					entryBeingLocked.IsLocked = false;
+				});
 
 			var result = _requestReportProcessor.GetReportProcessingStatusesFromAmazon(_reportRequestServiceMock.Object, testRequestIdList, "");
 
 			_reportRequestServiceMock.Verify(fssm => fssm.Update(It.IsAny<ReportRequestEntry>()), Times.Exactly(3));
+			_reportRequestServiceMock.Verify(fssm => fssm.Unlock(It.IsAny<ReportRequestEntry>()), Times.Exactly(3));
 			Assert.IsTrue(entriesBeingUpdated.All(e => e.IsLocked == false));
 			_reportRequestServiceMock.Verify(fssm => fssm.SaveChanges(), Times.Once);
 		}

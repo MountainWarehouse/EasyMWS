@@ -40,6 +40,13 @@ namespace MountainWarehouse.EasyMWS.Logging
 			handler?.Invoke(this, eventArgs);
 		}
 
+		public void Debug(string message, RequestInfo includeRequestInfo = null)
+		{
+			if (!_isEnabled) return;
+
+			Log(LogLevel.Debug, message, includeRequestInfo);
+		}
+
 		public void Info(string message, RequestInfo includeRequestInfo = null)
 		{
 			if (!_isEnabled) return;
@@ -101,6 +108,5 @@ namespace MountainWarehouse.EasyMWS.Logging
 			EventHandler<LogAvailableEventArgs> handler = LogAvailable;
 			handler?.Invoke(this, eventArgs);
 		}
-
 	}
 }

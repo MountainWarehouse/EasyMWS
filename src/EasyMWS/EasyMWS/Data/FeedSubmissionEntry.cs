@@ -1,22 +1,21 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using MountainWarehouse.EasyMWS.CallbackLogic;
 using MountainWarehouse.EasyMWS.Enums;
 using MountainWarehouse.EasyMWS.Model;
 using Newtonsoft.Json;
 
 namespace MountainWarehouse.EasyMWS.Data
 {
-    public class FeedSubmissionEntry : IRestrictionableInvocationEntry
+	public class FeedSubmissionEntry : IRestrictionableInvocationEntry
     {
 	    private string _regionAndType;
 
 	    [NotMapped]
-	    public string RegionAndTypeComputed
+	    public string EntryIdentityDescription
 	    {
 		    // this field is populated based on ReportRequestData which, once set in the ctor, should never change again for the same entity.
-			get { return _regionAndType = _regionAndType ?? $"(FeedType:{FeedType},Region:{AmazonRegion.ToString()})"; }
+			get { return _regionAndType = _regionAndType ?? $"(FeedType:{FeedType},Region:{AmazonRegion.ToString()},FeedSubmissionId:{FeedSubmissionId},EntryId:{Id})"; }
 	    }
 
 	    [Key]
