@@ -57,13 +57,17 @@ It tries to do that by abstracting away the request/check/download cycle for dow
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.1.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="2.1.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.1.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.1.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="3.1.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="3.1.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
-	  <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.1.0" />
-	  <PackageReference Include="Microsoft.Extensions.Configuration.Xml" Version="2.1.0" />
+	  <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.1" />
+	  <PackageReference Include="Microsoft.Extensions.Configuration.Xml" Version="3.1.1" />
     <DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="2.0.1" />
   </ItemGroup>
 
