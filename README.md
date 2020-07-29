@@ -11,34 +11,34 @@ EasyMws also provides access to logs describing the internal processing it is do
 
 ## Downloading reports from Amazon MWS using EasyMWS
 
-An EasyMws client instance needs to be initialised for the desired Amazon region, e.g. Europe or NorthAmerica.
-A separate EasyMws client instance will be needed for each different Amazon region to be worked with.
-Note : Only one EasyMws client instance per region needs to be running at any given time for that region (in order to avoid EasyMws internal concurrency issues).
-Note : Multiple EasyMws client instances can be running at the same time on the same database, provided they are corresponding to different regions.
+An EasyMws client instance needs to be initialised for the desired Amazon region, e.g. Europe or NorthAmerica.  
+A separate EasyMws client instance will be needed for each different Amazon region to be worked with.  
+Note : Only one EasyMws client instance per region needs to be running at any given time for that region (in order to avoid EasyMws internal concurrency issues).  
+Note : Multiple EasyMws client instances can be running at the same time on the same database, provided they are corresponding to different regions.  
 
-EasyMws currently contains a reference to the Microsoft.EntityFrameworkCore package which is being used to maintain a persistent internal state.
-This means that EasyMws requires a valid connection string to be configured in the entry-point project which calls the EasyMwsClient, the name of the connection string should be "EasyMwsContext".
-EasyMws will create 4 tables in the Database specified in the "EasyMwsContext" connection string, needed in order to handle the report and feed requests.
-Note : It is not recommended to edit these the contents of these tables, due to a high risk of putting the data in an inconsistent state.
+EasyMws currently contains a reference to the Microsoft.EntityFrameworkCore package which is being used to maintain a persistent internal state.  
+This means that EasyMws requires a valid connection string to be configured in the entry-point project which calls the EasyMwsClient, the name of the connection string should be "EasyMwsContext".  
+EasyMws will create 4 tables in the Database specified in the "EasyMwsContext" connection string, needed in order to handle the report and feed requests.  
+Note : It is not recommended to edit these the contents of these tables, due to a high risk of putting the data in an inconsistent state.  
 
-EasyMWS provides factories that can be used to generate requests for downloading reports from Amazon MWS. 
-Note : the EasyMws report request factories are defined in the following namespace : MountainWarehouse.EasyMWS.Factories.Reports
-Example : The MountainWarehouse.EasyMWS.Factories.Reports.IInventoryReportsFactory class provides access to ready to use report request objects for Amazon inventory reports.
+EasyMWS provides factories that can be used to generate requests for downloading reports from Amazon MWS.  
+Note : the EasyMws report request factories are defined in the following namespace : MountainWarehouse.EasyMWS.Factories.Reports  
+Example : The MountainWarehouse.EasyMWS.Factories.Reports.IInventoryReportsFactory class provides access to ready to use report request objects for Amazon inventory reports.  
 
-A user can create requests to download reports from amazon and can add these requests to an internal EasyMWS queue.
-Note : The report request objects can either be obtained using the EasyMws report request factories mentioned above, or they can be created manually.
-Note : To add a report request to the EasyMws internal queue, the EasyMwsClient.QueueReport method needs to be called.
+A user can create requests to download reports from amazon and can add these requests to an internal EasyMWS queue.  
+Note : The report request objects can either be obtained using the EasyMws report request factories mentioned above, or they can be created manually.  
+Note : To add a report request to the EasyMws internal queue, the EasyMwsClient.QueueReport method needs to be called.  
 
-In order to gain access to the report content, an event handler needs to be registered for the IEasyMwsClient.ReportDownloaded dot net event.
-The ReportDownloaded event args contains a stream property named ReportContent whcih provides access to the report content.
+In order to gain access to the report content, an event handler needs to be registered for the IEasyMwsClient.ReportDownloaded dot net event.  
+The ReportDownloaded event args contains a stream property named ReportContent whcih provides access to the report content.  
 
-The EasyMwsClient.Poll method needs to be called recurrently in order to drive the internal lifecycle of EasyMws for requesting reports from amazon.
-Warning : Do not call the Poll method too often, otherwise there is a high risk of causing amazon request throttling.
-Note : A call every ~1 minute is recommended to minimize the risk of amazon request throttling.
-Note : amazon request throttling basically means that too many requests were made to the same amazon API endpoint within a short time window which ends up in the amazon MWS API temporarily refusing to process anymore requests - if this happens the best thing to do is to wait for a while before making another request)
-Note : for more information can be found in the Amazon MWS API documentation, https://docs.developer.amazonservices.com/en_US/dev_guide/DG_Throttling.html.
+The EasyMwsClient.Poll method needs to be called recurrently in order to drive the internal lifecycle of EasyMws for requesting reports from amazon.  
+Warning : Do not call the Poll method too often, otherwise there is a high risk of causing amazon request throttling.  
+Note : A call every ~1 minute is recommended to minimize the risk of amazon request throttling.  
+Note : amazon request throttling basically means that too many requests were made to the same amazon API endpoint within a short time window which ends up in the amazon MWS API temporarily refusing to process anymore requests - if this happens the best thing to do is to wait for a while before making another request)  
+Note : for more information can be found in the Amazon MWS API documentation, https://docs.developer.amazonservices.com/en_US/dev_guide/DG_Throttling.html.  
 
-Once the entire lifecycle for a report request has been completed, by repeatedly invoking the Poll method, the report will be downloaded from amazon and EasyMws will fire the ReportDownloaded event to provide access to the report content.
+Once the entire lifecycle for a report request has been completed, by repeatedly invoking the Poll method, the report will be downloaded from amazon and EasyMws will fire the ReportDownloaded event to provide access to the report content.  
 
 ```
 public static void Main(string[] args)
