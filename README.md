@@ -263,7 +263,7 @@ Submission ID: '{e.FeedSubmissionId}'";
 ```
 
 
-## Sample - getting logs from EasyMWS and overriding EasyMWS default settings
+## Getting logs from EasyMWS and overriding EasyMWS default settings
 
 ```
 public static void Main(string[] args)
