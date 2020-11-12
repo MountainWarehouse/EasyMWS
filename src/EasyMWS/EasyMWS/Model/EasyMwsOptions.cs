@@ -287,15 +287,20 @@ namespace MountainWarehouse.EasyMWS.Model
 	/// </summary>
 	public enum RetryPeriodType
 	{
-		/// <summary>
-		/// T(k+1) = T(k) + RetryInterval. Example of retry time-steps with InitialDelay=3 and RetryInterval=2 : 3, 5, 7, 9, 11, ...
-		/// </summary>
-		ArithmeticProgression,
+        /// <summary>
+        /// T(k+1) = T(k) + RetryInterval. Example of wait-times before the next retry for InitialDelay=5 and RetryInterval=10min : 5, 10, 10, 10, ...
+        /// </summary>
+        ArithmeticProgression,
 
 		/// <summary>
-		/// T(k+1) = T(k) + [RetryInterval * (k-1)]. Example  of retry time-steps with InitialDelay=1 and RetryInterval=2 : 1, 3, 7, 13, ...
+		/// T(k+1) = T(k) + [RetryInterval * (k-1)]. Example  of wait-times before the next retry for InitialDelay=5 and RetryInterval=10min : 5, 10, 20, 30, ...
 		/// </summary>
-		GeometricProgression
+		GeometricProgression,
+
+        /// <summary>
+        /// T(k) = RetryInterval * k^2. Example of wait-times before the next retry for InitialDelay=5 and RetryInterval=10min : 5, 10, 40, 90, 160, 250, 360... 
+        /// </summary>
+        ExponentialProgression,
 	}
 
 }

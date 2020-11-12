@@ -29,16 +29,21 @@ namespace MountainWarehouse.EasyMWS.Helpers
 			    switch (retryType)
 			    {
 				    case RetryPeriodType.ArithmeticProgression:
-				    {
-					    timeOfNextRetry = timeOfLastRetry.Add(retryInterval);
-					    break;
-				    }
+						{
+							timeOfNextRetry = timeOfLastRetry.Add(retryInterval);
+							break;
+						}
 
 				    case RetryPeriodType.GeometricProgression:
-				    {
-					    timeOfNextRetry = timeOfLastRetry.Add(TimeSpan.FromTicks(retryInterval.Ticks * (currentRetryCount - 1)));
-					    break;
-				    }
+						{
+							timeOfNextRetry = timeOfLastRetry.Add(TimeSpan.FromTicks(retryInterval.Ticks * (currentRetryCount - 1)));
+							break;
+						}
+					case RetryPeriodType.ExponentialProgression:
+						{
+							timeOfNextRetry = timeOfLastRetry.Add(TimeSpan.FromTicks(retryInterval.Ticks * Convert.ToInt64(Math.Pow(currentRetryCount, 2))));
+							break;
+						}
 				    default:
 					    throw new ArgumentOutOfRangeException("Retry period type not supported!");
 			    }
