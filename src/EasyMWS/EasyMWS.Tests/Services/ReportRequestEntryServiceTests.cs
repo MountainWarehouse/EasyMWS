@@ -384,5 +384,47 @@ namespace EasyMWS.Tests.Services
 			Assert.IsTrue(listPendingReports.Contains("Report2"));
 		    Assert.IsTrue(listPendingReports.Contains("Report3"));
 	    }
+
+		[Test]
+		public void GetAllPendingReportFromQueue_When_ReturnMoreThan20ValidEntriesExist_Then_Only20EntriesAreReturned()
+		{
+			var merchantIdToRequest = $"{_merchantId}_valid";
+			for (int i = 0; i < 50; i++)
+			{
+				_reportRequestEntries.Add(new ReportRequestEntry
+				{
+					AmazonRegion = AmazonRegion.Europe,
+					MerchantId = merchantIdToRequest,
+					Id = i,
+					RequestReportId = $"Report{i}",
+					GeneratedReportId = null
+				});
+			}
+
+			for (int i = 50; i < 100; i++)
+            {
+				_reportRequestEntries.Add(new ReportRequestEntry 
+				{
+					AmazonRegion = AmazonRegion.Europe,
+					MerchantId = _merchantId,
+					Id = i,
+					RequestReportId = $"Report{i}",
+					GeneratedReportId = $"GeneratedIdTest{i}"
+				});
+			}
+
+			var expectedNumberOfEntriesToBeReturned = 20;
+
+			// Act
+			var listPendingReports = _reportRequestEntryService.GetAllPendingReportFromQueue(merchantIdToRequest, AmazonRegion.Europe).ToList();
+
+			// Assert
+			Assert.AreEqual(expectedNumberOfEntriesToBeReturned, listPendingReports.Count());
+
+            for (int i = 0; i < expectedNumberOfEntriesToBeReturned; i++)
+            {
+				Assert.IsTrue(listPendingReports.Contains($"Report{i}"));
+			}
+		}
 	}
 }
