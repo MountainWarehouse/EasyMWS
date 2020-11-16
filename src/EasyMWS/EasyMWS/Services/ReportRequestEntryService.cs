@@ -126,7 +126,10 @@ namespace MountainWarehouse.EasyMWS.Services
 		{
 			var entries = Where(rre => rre.AmazonRegion == region && rre.MerchantId == merchantId
 									 && rre.RequestReportId != null && rre.GeneratedReportId == null && rre.IsLocked == false);
-			var entriesIds = entries.Select(r => r.RequestReportId).ToList();
+
+			var entriesIds = entries.Select(r => r.RequestReportId)
+				.Take(20)
+				.ToList();
 
 			if (entries.Any() && markEntriesAsLocked)
 			{
