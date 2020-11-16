@@ -321,16 +321,6 @@ The library was build using [.NET Standard 2.0](https://blogs.msdn.microsoft.com
 - Supporting platforms : .NET Framework 4.6.1, .NET Core 2.0 or later.
 - Visual Studio 2017 15.3 or later. If you only need to consume the library, you can do that even in Visual Studio 2015 but you'll need NuGet client 3.6 or higher (download from [Nuget.org/downloads](https://www.nuget.org/downloads)). More information [here](https://github.com/dotnet/announcements/issues/24).
 
-Library dependencies  (all the dependencies are available on the NuGet platform):
-- .NETStandard 2.0.3
-- Microsoft.EntityFrameworkCore 3.1.1
-- Microsoft.EntityFrameworkCore.SqlServer 3.1.1
-- Microsoft.EntityFrameworkCore.Proxies 3.1.1
-- Microsoft.EntityFrameworkCore.Tools 3.1.1
-- Microsoft.Extensions.Configuration.Json 3.1.1
-- Microsoft.Extensions.Configuration.Xml 3.1.1
-- System.Configuration.ConfigurationManager 4.5.0
-
 
 Package available on NuGet.org at [this location](https://www.nuget.org/packages/MountainWarehouse.EasyMWS/). tags : Amazon, MWS, MarketplaceWebService.
 
