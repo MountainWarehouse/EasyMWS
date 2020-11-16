@@ -236,5 +236,49 @@ namespace EasyMWS.Tests.Services
 			Assert.AreEqual(2, listSubmittedFeeds.Count());
 			Assert.IsTrue(listSubmittedFeeds.Count(sf => sf == "FeedSubmissionId4" || sf == "FeedSubmissionId5") == 2);
 		}
+
+		[Test]
+		public void GetAllPendingReportFromQueue_When_ReturnMoreThan20ValidEntriesExist_Then_Only20EntriesAreReturned()
+		{
+			var propertiesContainer = new FeedSubmissionPropertiesContainer("testFeedContent", "testFeedType");
+			var serializedPropertiesContainer = JsonConvert.SerializeObject(propertiesContainer);
+			var merchantIdToRequest = $"{_merchantId}_valid";
+			for (int i = 0; i < 50; i++)
+			{
+				_feedSubmissionEntries.Add(new FeedSubmissionEntry(serializedPropertiesContainer)
+				{
+					AmazonRegion = AmazonRegion.Europe,
+					MerchantId = merchantIdToRequest,
+					Id = i,
+					FeedSubmissionId = $"FeedSubmissionId{i}",
+					IsProcessingComplete = false
+				});
+			}
+
+			for (int i = 50; i < 100; i++)
+			{
+				_feedSubmissionEntries.Add(new FeedSubmissionEntry(serializedPropertiesContainer)
+				{
+					AmazonRegion = AmazonRegion.NorthAmerica,
+					MerchantId = _merchantId,
+					Id = i,
+					FeedSubmissionId = $"FeedSubmissionId{i}",
+					IsProcessingComplete = false
+				});
+			}
+
+			var expectedNumberOfEntriesToBeReturned = 20;
+
+			// Act
+			var listPendingReports = _feedSubmissionEntryService.GetIdsForSubmittedFeedsFromQueue(merchantIdToRequest, AmazonRegion.Europe).ToList();
+
+			// Assert
+			Assert.AreEqual(expectedNumberOfEntriesToBeReturned, listPendingReports.Count());
+
+			for (int i = 0; i < expectedNumberOfEntriesToBeReturned; i++)
+			{
+				Assert.IsTrue(listPendingReports.Contains($"FeedSubmissionId{i}"));
+			}
+		}
 	}
 }
