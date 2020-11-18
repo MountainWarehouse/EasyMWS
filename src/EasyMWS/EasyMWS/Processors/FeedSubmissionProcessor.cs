@@ -69,7 +69,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				feedSubmission.FeedSubmissionRetryCount++;
 				feedSubmission.LastSubmitted = DateTime.UtcNow;
 				feedSubmissionService.Update(feedSubmission);
-				_logger.Warn($"AmazonMWS SubmitFeed failed for {feedSubmission.EntryIdentityDescription}. Feed submission will be retried. FeedSubmissionRetryCount is now : {feedSubmission.FeedSubmissionRetryCount}.");
+				_logger.Warn($"AmazonMWS SubmitFeed failed for {feedSubmission.EntryIdentityDescription}. Feed submission will be retried. FeedSubmissionRetryCount is now : {feedSubmission.FeedSubmissionRetryCount}.", e);
 			}
 			void HandleFatalException(Exception e)
 			{
@@ -195,13 +195,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 			catch (MarketplaceWebServiceException e)
 			{
-				_logger.Warn($"AmazonMWS GetFeedSubmissionList failed! The operation will be executed again at the next poll request.");
+				_logger.Warn($"AmazonMWS GetFeedSubmissionList failed! The operation will be executed again at the next poll request.", e);
 				UnlockFeedSubmissionEntries(feedSubmissionIdList);
 				return null;
 			}
 			catch (Exception e)
 			{
-				_logger.Warn($"AmazonMWS GetFeedSubmissionList failed! The operation will be executed again at the next poll request.");
+				_logger.Warn($"AmazonMWS GetFeedSubmissionList failed! The operation will be executed again at the next poll request.", e);
 				UnlockFeedSubmissionEntries(feedSubmissionIdList);
 				return null;
 			}
@@ -312,14 +312,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 				feedSubmissionEntry.ReportDownloadRetryCount++;
 				feedSubmissionEntry.LastSubmitted = DateTime.UtcNow;
 				feedSubmissionService.Update(feedSubmissionEntry);
-				_logger.Warn($"AmazonMWS feed submission report download failed for {feedSubmissionEntry.EntryIdentityDescription}! Report download will be retried. ReportDownloadRetryCount is now : {feedSubmissionEntry.ReportDownloadRetryCount}.");
+				_logger.Warn($"AmazonMWS feed submission report download failed for {feedSubmissionEntry.EntryIdentityDescription}! Report download will be retried. ReportDownloadRetryCount is now : {feedSubmissionEntry.ReportDownloadRetryCount}.", e);
 			}
 			catch (Exception e)
 			{
 				feedSubmissionEntry.ReportDownloadRetryCount++;
 				feedSubmissionEntry.LastSubmitted = DateTime.UtcNow;
 				feedSubmissionService.Update(feedSubmissionEntry);
-				_logger.Warn($"AmazonMWS feed submission report download failed for {feedSubmissionEntry.EntryIdentityDescription}! Report download will be retried. ReportDownloadRetryCount is now : {feedSubmissionEntry.ReportDownloadRetryCount}.");
+				_logger.Warn($"AmazonMWS feed submission report download failed for {feedSubmissionEntry.EntryIdentityDescription}! Report download will be retried. ReportDownloadRetryCount is now : {feedSubmissionEntry.ReportDownloadRetryCount}.", e);
 			}
 			finally
 			{

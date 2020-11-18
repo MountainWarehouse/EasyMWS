@@ -98,14 +98,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 			    reportRequestEntry.ReportRequestRetryCount++;
 			    reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
 			    reportRequestService.Update(reportRequestEntry);
-				_logger.Warn($"AmazonMWS RequestReport failed for {reportRequestEntry.EntryIdentityDescription}. Report request will be retried. ReportRequestRetryCount is now : {reportRequestEntry.ReportRequestRetryCount}.");
+				_logger.Warn($"AmazonMWS RequestReport failed for {reportRequestEntry.EntryIdentityDescription}. Report request will be retried. ReportRequestRetryCount is now : {reportRequestEntry.ReportRequestRetryCount}.", e);
 		    }
 		    catch (Exception e)
 		    {
 				reportRequestEntry.ReportRequestRetryCount++;
 			    reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
 			    reportRequestService.Update(reportRequestEntry);
-				_logger.Warn($"AmazonMWS RequestReport failed for {reportRequestEntry.EntryIdentityDescription}. Report request will be retried. ReportRequestRetryCount is now : {reportRequestEntry.ReportRequestRetryCount}.");
+				_logger.Warn($"AmazonMWS RequestReport failed for {reportRequestEntry.EntryIdentityDescription}. Report request will be retried. ReportRequestRetryCount is now : {reportRequestEntry.ReportRequestRetryCount}.", e);
 			}
 		    finally
 			{
@@ -164,13 +164,13 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    }
 		    catch (MarketplaceWebServiceException e)
 		    {
-				_logger.Warn($"AmazonMWS GetReportRequestList failed! The operation will be executed again at the next poll request.");
+				_logger.Warn($"AmazonMWS GetReportRequestList failed! The operation will be executed again at the next poll request.", e);
 				UnlockReportRequestEntries(requestIdList);
 				return null;
 			}
 			catch (Exception e)
 		    {
-				_logger.Warn($"AmazonMWS GetReportRequestList failed! The operation will be executed again at the next poll request.");
+				_logger.Warn($"AmazonMWS GetReportRequestList failed! The operation will be executed again at the next poll request.", e);
 				UnlockReportRequestEntries(requestIdList);
 				return null;
 			}
@@ -346,14 +346,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 				reportRequestEntry.ReportDownloadRetryCount++;
 				reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
 				reportRequestService.Update(reportRequestEntry);
-				_logger.Warn($"AmazonMWS report download failed for {reportRequestEntry.EntryIdentityDescription} Report download will be retried. ReportDownloadRetryCount is now : '{reportRequestEntry.ReportDownloadRetryCount}'.");
+				_logger.Warn($"AmazonMWS report download failed for {reportRequestEntry.EntryIdentityDescription} Report download will be retried. ReportDownloadRetryCount is now : '{reportRequestEntry.ReportDownloadRetryCount}'.", e);
 			}
 			catch (Exception e)
 		    {
 			    reportRequestEntry.ReportDownloadRetryCount++;
 			    reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
 			    reportRequestService.Update(reportRequestEntry);
-				_logger.Warn($"AmazonMWS report download failed for {reportRequestEntry.EntryIdentityDescription}!");
+				_logger.Warn($"AmazonMWS report download failed for {reportRequestEntry.EntryIdentityDescription}!", e);
 		    }
 		    finally
 		    {
