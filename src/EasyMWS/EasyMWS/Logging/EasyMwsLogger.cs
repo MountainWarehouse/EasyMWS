@@ -19,7 +19,7 @@ namespace MountainWarehouse.EasyMWS.Logging
 		}
 
 		public event EventHandler<LogAvailableEventArgs> LogAvailable;
-		public void Log(LogLevel level, string message, RequestInfo requestInfo = null)
+		public void Log(LogLevel level, string message, RequestInfo requestInfo = null, Exception ex = null)
 		{
 			if (!_isEnabled) return;
 
@@ -30,11 +30,23 @@ namespace MountainWarehouse.EasyMWS.Logging
 				RequestInfo = requestInfo
 			};
 
-			var eventArgs = new LogAvailableEventArgs(level,
-				$"{JsonConvert.SerializeObject(messageObject, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.None})}")
+			LogAvailableEventArgs eventArgs;
+			if (ex == null)
 			{
-				RequestInfo = requestInfo
-			};
+				eventArgs = new LogAvailableEventArgs(level,
+				$"{JsonConvert.SerializeObject(messageObject, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.None })}")
+				{
+					RequestInfo = requestInfo
+				};
+			}
+			else
+			{
+				eventArgs = new LogAvailableEventArgs(level,
+					$"{JsonConvert.SerializeObject(messageObject, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.None })}", ex)
+				{
+					RequestInfo = requestInfo
+				};
+			}
 
 			EventHandler<LogAvailableEventArgs> handler = LogAvailable;
 			handler?.Invoke(this, eventArgs);
@@ -70,6 +82,8 @@ namespace MountainWarehouse.EasyMWS.Logging
 			{
 				Application = string.Empty,
 				Message = string.Empty,
+				StackTrace = string.Empty,
+				InnerExceptionString = new Exception(),
 				RequestInfo = requestInfo,
 			};
 
@@ -86,6 +100,8 @@ namespace MountainWarehouse.EasyMWS.Logging
 				{
 					Application = "EasyMws",
 					Message = message,
+					StackTrace = e.StackTrace,
+					InnerExceptionString = e.InnerException,
 					RequestInfo = requestInfo
 				};
 			}
@@ -95,6 +111,8 @@ namespace MountainWarehouse.EasyMWS.Logging
 				{
 					Application = "EasyMws",
 					Message = $"{message} {e.Message}",
+					StackTrace = e.StackTrace,
+					InnerExceptionString = e.InnerException,
 					RequestInfo = requestInfo
 				};
 			}
@@ -108,5 +126,59 @@ namespace MountainWarehouse.EasyMWS.Logging
 			EventHandler<LogAvailableEventArgs> handler = LogAvailable;
 			handler?.Invoke(this, eventArgs);
 		}
-	}
+
+        public void Warn(string message, Exception e)
+        {
+			if (!_isEnabled) return;
+
+			RequestInfo requestInfo = null;
+			var messageObject = new
+			{
+				Application = string.Empty,
+				Message = string.Empty,
+				StackTrace = string.Empty,
+				InnerExceptionString = new Exception(),
+				RequestInfo = requestInfo,
+			};
+
+			if (e is MarketplaceWebServiceException mwsWebServiceException)
+			{
+				requestInfo = new RequestInfo(
+					mwsWebServiceException.ResponseHeaderMetadata?.Timestamp,
+					mwsWebServiceException.RequestId,
+					mwsWebServiceException.StatusCode,
+					mwsWebServiceException.ErrorType,
+					mwsWebServiceException.ErrorCode);
+
+				messageObject = new
+				{
+					Application = "EasyMws",
+					Message = message,
+					StackTrace = e.StackTrace,
+					InnerExceptionString = e.InnerException,
+					RequestInfo = requestInfo
+				};
+			}
+			else
+			{
+				messageObject = new
+				{
+					Application = "EasyMws",
+					Message = $"{message} {e.Message}",
+					StackTrace = e.StackTrace,
+					InnerExceptionString = e.InnerException,
+					RequestInfo = requestInfo
+				};
+			}
+
+
+			var eventArgs = new LogAvailableEventArgs(LogLevel.Warn, $"{JsonConvert.SerializeObject(messageObject, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.None })}", e)
+			{
+				RequestInfo = requestInfo
+			};
+
+			EventHandler<LogAvailableEventArgs> handler = LogAvailable;
+			handler?.Invoke(this, eventArgs);
+		}
+    }
 }
