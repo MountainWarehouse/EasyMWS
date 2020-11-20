@@ -113,22 +113,24 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 	    }
 
-	    public List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> GetReportProcessingStatusesFromAmazon(
+		public void UnlockReportRequestEntries(IReportRequestEntryService reportRequestService, IEnumerable<string> reportRequestIds)
+		{
+			foreach (var reportRequestId in reportRequestIds)
+			{
+				var reportRequestEntry = reportRequestService.FirstOrDefault(fsc => fsc.RequestReportId == reportRequestId);
+				if (reportRequestEntry != null)
+				{
+					reportRequestService.Unlock(reportRequestEntry);
+					reportRequestService.Update(reportRequestEntry);
+				}
+			}
+			reportRequestService.SaveChanges();
+		}
+
+		public List<(string ReportRequestId, string GeneratedReportId, string ReportProcessingStatus)> GetReportProcessingStatusesFromAmazon(
 			IReportRequestEntryService reportRequestService, IEnumerable<string> requestIdList, string merchant)
 	    {
-			void UnlockReportRequestEntries(IEnumerable<string> reportRequestIds)
-			{
-				foreach (var reportRequestId in reportRequestIds)
-				{
-					var reportRequestEntry = reportRequestService.FirstOrDefault(fsc => fsc.RequestReportId == reportRequestId);
-					if (reportRequestEntry != null)
-					{
-						reportRequestService.Unlock(reportRequestEntry);
-						reportRequestService.Update(reportRequestEntry);
-					}
-				}
-				reportRequestService.SaveChanges();
-			}
+			
 
 			_logger.Debug($"Attempting to request report processing statuses for all reports in queue.");
 
@@ -165,13 +167,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 		    catch (MarketplaceWebServiceException e)
 		    {
 				_logger.Warn($"AmazonMWS GetReportRequestList failed! The operation will be executed again at the next poll request.", e);
-				UnlockReportRequestEntries(requestIdList);
 				return null;
 			}
 			catch (Exception e)
 		    {
 				_logger.Warn($"AmazonMWS GetReportRequestList failed! The operation will be executed again at the next poll request.", e);
-				UnlockReportRequestEntries(requestIdList);
 				return null;
 			}
 	    }
@@ -230,7 +230,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				var reportRequestEntry = reportRequestService.FirstOrDefault(rrc => rrc.RequestReportId == reportGenerationInfo.ReportRequestId && rrc.GeneratedReportId == null);
                 if (reportRequestEntry == null) continue;
-				reportRequestService.Unlock(reportRequestEntry);
 
 				reportRequestEntry.LastAmazonReportProcessingStatus = reportGenerationInfo.ReportProcessingStatus;
 
