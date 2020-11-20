@@ -17,6 +17,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 
 		event EventHandler<ReportRequestFailedEventArgs> ReportEntryWasMarkedForDelete;
+		void UnlockReportRequestEntries(IReportRequestEntryService reportRequestService, IEnumerable<string> reportRequestIds);
 	}
 }
 		
