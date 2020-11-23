@@ -24,29 +24,29 @@ namespace MountainWarehouse.EasyMWS.Services
 		public FeedSubmissionEntryService(EasyMwsOptions options = null, IEasyMwsLogger logger = null) =>
 			(_feedRepo, _logger, _options) = (_feedRepo ?? new FeedSubmissionEntryRepository(options?.LocalDbConnectionStringOverride), logger, options);
 
-		public void Lock(FeedSubmissionEntry entry)
+		public void Lock(FeedSubmissionEntry entry, string reason)
 		{
 			if (entry.IsLocked)
 			{
-				_logger.Debug($"An attempt was made to lock entry {entry.EntryIdentityDescription}, but it is already locked.");
+				_logger.Debug($"{DateTime.UtcNow}: FeedSubmission Entry lock attempt: {entry.EntryIdentityDescription}, but it is already locked. Reason: {reason}.");
 			}
 			else
 			{
 				entry.IsLocked = true;
-				_logger.Debug($"The following entry is marked as locked: {entry.EntryIdentityDescription}.");
+				_logger.Debug($"{DateTime.UtcNow}: FeedSubmission Entry locked: {entry.EntryIdentityDescription}. Reason: {reason}.");
 			}
 		}
 
-		public void Unlock(FeedSubmissionEntry entry)
+		public void Unlock(FeedSubmissionEntry entry, string reason)
 		{
 			if (!entry.IsLocked)
 			{
-				_logger.Debug($"An attempt was made to unlock entry {entry.EntryIdentityDescription}, but it is already unlocked.");
+				_logger.Debug($"{DateTime.UtcNow}: FeedSubmission Entry unlock attempt: {entry.EntryIdentityDescription}, but it is already unlocked. Reason: {reason}.");
 			}
 			else
 			{
 				entry.IsLocked = false;
-				_logger.Debug($"The following entry is now marked as unlocked: {entry.EntryIdentityDescription}.");
+				_logger.Debug($"{DateTime.UtcNow}: FeedSubmission Entry unlocked: {entry.EntryIdentityDescription}. Reason: {reason}.");
 			}
 		}
 
@@ -94,7 +94,7 @@ namespace MountainWarehouse.EasyMWS.Services
 
 			if(entry != null && markEntryAsLocked)
 			{
-				Lock(entry);
+				Lock(entry, "Locking single feed submission entry - ready for being submitted to amazon.");
 				Update(entry);
 				SaveChanges();
 			}
@@ -115,7 +115,7 @@ namespace MountainWarehouse.EasyMWS.Services
 			{
 				foreach (var entry in entries)
 				{
-					Lock(entry);
+					Lock(entry, "Locking multiple feed submission entries - ready for having their amazon processing status updated.");
 					Update(entry);
 				}
 				SaveChanges();
@@ -135,7 +135,7 @@ namespace MountainWarehouse.EasyMWS.Services
 
 			if (entry != null && markEntryAsLocked)
 			{
-				Lock(entry);
+				Lock(entry, "Locking single feed submission entry - ready for feed processing report download from amazon.");
 				Update(entry);
 				SaveChanges();
 			}
@@ -154,7 +154,7 @@ namespace MountainWarehouse.EasyMWS.Services
 			{
 				foreach (var entry in entries)
 				{
-					Lock(entry);
+					Lock(entry, "Locking multiple feed submission entries - ready for callback invocation.");
 					Update(entry);
 				}
 				SaveChanges();

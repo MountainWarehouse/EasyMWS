@@ -49,7 +49,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 			var reportRequestData = reportRequestEntry.GetPropertiesContainer();
 
 			_logger.Debug($"Attempting to request the next report in queue from Amazon: {reportRequestEntry.EntryIdentityDescription}.");
-			reportRequestService.Unlock(reportRequestEntry);
 
 			var reportRequest = new RequestReportRequest
 			{
@@ -66,7 +65,10 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 		    try
 		    {
-			    var reportResponse = _marketplaceWebServiceClient.RequestReport(reportRequest);
+				reportRequestService.Unlock(reportRequestEntry, "Unlocking single report request entry - attempt to request report from amazon has been completed.");
+				reportRequestService.Update(reportRequestEntry);
+
+				var reportResponse = _marketplaceWebServiceClient.RequestReport(reportRequest);
 			    reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
 			    reportRequestEntry.RequestReportId = reportResponse?.RequestReportResult?.ReportRequestInfo?.ReportRequestId;
 
@@ -85,8 +87,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 					_logger.Info($"AmazonMWS RequestReport succeeded for {reportRequestEntry.EntryIdentityDescription}. ReportRequestId:'{reportRequestEntry.RequestReportId}'.",
 						new RequestInfo(timestamp, requestId));
 				}
-
-			    reportRequestService.Update(reportRequestEntry);
 			}
 		    catch (MarketplaceWebServiceException e) when (e.StatusCode == HttpStatusCode.BadRequest && IsAmazonErrorCodeFatal(e.ErrorCode))
 		    {
@@ -95,16 +95,15 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		    catch (MarketplaceWebServiceException e) when (IsAmazonErrorCodeNonFatal(e.ErrorCode))
 		    {
-			    reportRequestEntry.ReportRequestRetryCount++;
+				reportRequestEntry.ReportRequestRetryCount++;
 			    reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
-			    reportRequestService.Update(reportRequestEntry);
 				_logger.Warn($"AmazonMWS RequestReport failed for {reportRequestEntry.EntryIdentityDescription}. Report request will be retried. ReportRequestRetryCount is now : {reportRequestEntry.ReportRequestRetryCount}.", e);
 		    }
 		    catch (Exception e)
 		    {
+
 				reportRequestEntry.ReportRequestRetryCount++;
 			    reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
-			    reportRequestService.Update(reportRequestEntry);
 				_logger.Warn($"AmazonMWS RequestReport failed for {reportRequestEntry.EntryIdentityDescription}. Report request will be retried. ReportRequestRetryCount is now : {reportRequestEntry.ReportRequestRetryCount}.", e);
 			}
 		    finally
@@ -120,7 +119,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				var reportRequestEntry = reportRequestService.FirstOrDefault(fsc => fsc.RequestReportId == reportRequestId);
 				if (reportRequestEntry != null)
 				{
-					reportRequestService.Unlock(reportRequestEntry);
+					reportRequestService.Unlock(reportRequestEntry, "Unlocking multiple report request entries - amazon processing status update has been completed.");
 					reportRequestService.Update(reportRequestEntry);
 				}
 			}
@@ -286,7 +285,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 	    {
 			var missingInformationExceptionMessage = "Cannot request report from amazon due to missing report request information";
 			_logger.Debug($"Attempting to download the next report in queue from Amazon: {reportRequestEntry.EntryIdentityDescription}.");
-			reportRequestService.Unlock(reportRequestEntry);
 
 			if (string.IsNullOrEmpty(reportRequestEntry?.GeneratedReportId)) throw new ArgumentException($"{missingInformationExceptionMessage}: GeneratedReportId is missing");
 
@@ -300,10 +298,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 
             if (!string.IsNullOrEmpty(_mWSAuthToken)) getReportRequest.MWSAuthToken = _mWSAuthToken;
 
-
             try
 		    {
-			    var response = _marketplaceWebServiceClient.GetReport(getReportRequest);
+				reportRequestService.Unlock(reportRequestEntry, "Unlocking single report request entry - request to download report from amazon has been completed.");
+				reportRequestService.Update(reportRequestEntry);
+
+				var response = _marketplaceWebServiceClient.GetReport(getReportRequest);
 			    reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
 
 				
@@ -332,8 +332,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 				    reportRequestEntry.ReportDownloadRetryCount++;
 					_logger.Warn($"Checksum verification failed for report {reportRequestEntry.EntryIdentityDescription}. Report download will be retried. ReportDownloadRetryCount is now : '{reportRequestEntry.ReportDownloadRetryCount}'.");
 				}
-
-			    reportRequestService.Update(reportRequestEntry);
 			}
 		    catch (MarketplaceWebServiceException e) when (e.StatusCode == HttpStatusCode.BadRequest && IsAmazonErrorCodeFatal(e.ErrorCode))
 		    {
@@ -344,14 +342,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				reportRequestEntry.ReportDownloadRetryCount++;
 				reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
-				reportRequestService.Update(reportRequestEntry);
 				_logger.Warn($"AmazonMWS report download failed for {reportRequestEntry.EntryIdentityDescription} Report download will be retried. ReportDownloadRetryCount is now : '{reportRequestEntry.ReportDownloadRetryCount}'.", e);
 			}
 			catch (Exception e)
 		    {
 			    reportRequestEntry.ReportDownloadRetryCount++;
 			    reportRequestEntry.LastAmazonRequestDate = DateTime.UtcNow;
-			    reportRequestService.Update(reportRequestEntry);
 				_logger.Warn($"AmazonMWS report download failed for {reportRequestEntry.EntryIdentityDescription}!", e);
 		    }
 		    finally

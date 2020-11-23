@@ -601,7 +601,7 @@ namespace EasyMWS.Tests.Processors
 					Details = new FeedSubmissionDetails { FeedContent = GenerateValidArchive(feedContent).ToArray() }
 				});
 
-			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
 			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Once);
 			_feedSubmissionServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
 		}
@@ -924,7 +924,7 @@ namespace EasyMWS.Tests.Processors
 				Details = new FeedSubmissionDetails { FeedContent = expectedZippedContent.ToArray() }
 			});
 
-			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Never);
+			_feedSubmissionServiceMock.Verify(fscs => fscs.Update(It.IsAny<FeedSubmissionEntry>()), Times.Once);
 			_feedSubmissionServiceMock.Verify(fscs => fscs.Delete(It.IsAny<FeedSubmissionEntry>()), Times.Once);
 			_feedSubmissionServiceMock.Verify(fscs => fscs.SaveChanges(), Times.Once);
 			Assert.NotNull(entryBeingDeleted);
