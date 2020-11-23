@@ -68,7 +68,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				feedSubmission.FeedSubmissionRetryCount++;
 				feedSubmission.LastSubmitted = DateTime.UtcNow;
-				feedSubmissionService.Update(feedSubmission);
+
 				_logger.Warn($"AmazonMWS SubmitFeed failed for {feedSubmission.EntryIdentityDescription}. Feed submission will be retried. FeedSubmissionRetryCount is now : {feedSubmission.FeedSubmissionRetryCount}.", e);
 			}
 			void HandleFatalException(Exception e)
@@ -88,7 +88,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 			if (string.IsNullOrEmpty(feedSubmission?.FeedType)) throw new ArgumentException($"{missingInformationExceptionMessage}: Feed type is missing");
 
 			_logger.Debug($"Attempting to submit the next feed in queue to Amazon: {feedSubmission.EntryIdentityDescription}.");
-			feedSubmissionService.Unlock(feedSubmission);
 
 			var feedSubmissionData = feedSubmission.GetPropertiesContainer();
 
@@ -108,6 +107,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 
                 try
 				{
+					feedSubmissionService.Unlock(feedSubmission, "Unlocking single feed submission entry - finished attempt to submit feed to amazon.");
+					feedSubmissionService.Update(feedSubmission);
+
 					var response = _marketplaceWebServiceClient.SubmitFeed(submitFeedRequest);
 					feedSubmission.LastSubmitted = DateTime.UtcNow;
 
@@ -119,8 +121,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 					{
 						HandleSubmitFeedSuccess(response);
 					}
-
-					feedSubmissionService.Update(feedSubmission);
 				}
 				catch (MarketplaceWebServiceException e) when (e.StatusCode == HttpStatusCode.BadRequest && IsAmazonErrorCodeFatal(e.ErrorCode))
 				{
@@ -149,7 +149,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				var feedSubmissionEntry = feedSubmissionService.FirstOrDefault(fsc => fsc.FeedSubmissionId == submissionId);
 				if (feedSubmissionEntry != null)
 				{
-					feedSubmissionService.Unlock(feedSubmissionEntry);
+					feedSubmissionService.Unlock(feedSubmissionEntry, "Unlocking multiple feed submission entries - amazon processing status update has been completed.");
 					feedSubmissionService.Update(feedSubmissionEntry);
 				}
 			}
@@ -255,7 +255,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 			if (string.IsNullOrEmpty(feedSubmissionEntry.FeedSubmissionId)) throw new ArgumentException($"{missingInformationExceptionMessage}: FeedSubmissionId is missing");
 
 			_logger.Debug($"Attempting to request the feed submission result for the next feed in queue from Amazon: {feedSubmissionEntry.EntryIdentityDescription}.");
-			feedSubmissionService.Unlock(feedSubmissionEntry);
 
 			var reportResultStream = new MemoryStream();
 			var request = new GetFeedSubmissionResultRequest
@@ -269,6 +268,9 @@ namespace MountainWarehouse.EasyMWS.Processors
 
             try
 			{
+				feedSubmissionService.Unlock(feedSubmissionEntry, "Unlocking single feed submission entry - attempt to download feed processing report from amazon has been completed.");
+				feedSubmissionService.Update(feedSubmissionEntry);
+
 				var response = _marketplaceWebServiceClient.GetFeedSubmissionResult(request);
 				feedSubmissionEntry.LastSubmitted = DateTime.UtcNow;
 
@@ -296,8 +298,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 					feedSubmissionEntry.ReportDownloadRetryCount++;
 					_logger.Warn($"Checksum verification failed for feed submission report for {feedSubmissionEntry.EntryIdentityDescription}");
 				}
-
-				feedSubmissionService.Update(feedSubmissionEntry);
 			}
 			catch (MarketplaceWebServiceException e) when (e.StatusCode == HttpStatusCode.BadRequest && IsAmazonErrorCodeFatal(e.ErrorCode))
 			{
@@ -308,14 +308,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				feedSubmissionEntry.ReportDownloadRetryCount++;
 				feedSubmissionEntry.LastSubmitted = DateTime.UtcNow;
-				feedSubmissionService.Update(feedSubmissionEntry);
 				_logger.Warn($"AmazonMWS feed submission report download failed for {feedSubmissionEntry.EntryIdentityDescription}! Report download will be retried. ReportDownloadRetryCount is now : {feedSubmissionEntry.ReportDownloadRetryCount}.", e);
 			}
 			catch (Exception e)
 			{
 				feedSubmissionEntry.ReportDownloadRetryCount++;
 				feedSubmissionEntry.LastSubmitted = DateTime.UtcNow;
-				feedSubmissionService.Update(feedSubmissionEntry);
 				_logger.Warn($"AmazonMWS feed submission report download failed for {feedSubmissionEntry.EntryIdentityDescription}! Report download will be retried. ReportDownloadRetryCount is now : {feedSubmissionEntry.ReportDownloadRetryCount}.", e);
 			}
 			finally

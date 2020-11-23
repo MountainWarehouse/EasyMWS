@@ -104,14 +104,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 				catch (SqlException e)
 				{
 					_logger.Error($"Event publishing failed for {feedSubmissionEntry.EntryIdentityDescription} due to an internal error '{e.Message}'. The event publishing will be retried at the next poll request", e);
-					feedSubmissionService.Unlock(feedSubmissionEntry);
+					feedSubmissionService.Unlock(feedSubmissionEntry, "Unlocking single feed submission entry - an SQL exception occurred while trying to invoke callback.");
 					feedSubmissionService.Update(feedSubmissionEntry);
 				}
 				catch (Exception e)
 				{
 					_logger.Error($"Event publishing failed for {feedSubmissionEntry.EntryIdentityDescription}. Current retry count is :{feedSubmissionEntry.FeedSubmissionRetryCount}. {e.Message}", e);
 					feedSubmissionEntry.InvokeCallbackRetryCount++;
-					feedSubmissionService.Unlock(feedSubmissionEntry);
+					feedSubmissionService.Unlock(feedSubmissionEntry, "Unlocking single feed submission entry - an exception occurred while trying to invoke callback.");
 					feedSubmissionService.Update(feedSubmissionEntry);
 				}
 			}
@@ -148,7 +148,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 					}
 				};
 
-				feedSubmissionService.Unlock(feedSubmission);
+				feedSubmissionService.Unlock(feedSubmission, "Unlocking single feed submission entry - newly created, ready for processing.");
 				feedSubmissionService.Create(feedSubmission);
 				feedSubmissionService.SaveChanges();
 
