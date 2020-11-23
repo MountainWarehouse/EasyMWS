@@ -124,12 +124,12 @@ namespace MountainWarehouse.EasyMWS.Services
 
 		public IEnumerable<string> GetAllPendingReportFromQueue(string merchantId, AmazonRegion region, bool markEntriesAsLocked = true)
 		{
-			var entries = Where(rre => rre.AmazonRegion == region && rre.MerchantId == merchantId
-									 && rre.RequestReportId != null && rre.GeneratedReportId == null && rre.IsLocked == false);
-
-			var entriesIds = entries.Select(r => r.RequestReportId)
+			var entries = 
+				Where(rre => rre.AmazonRegion == region && rre.MerchantId == merchantId
+									 && rre.RequestReportId != null && rre.GeneratedReportId == null && rre.IsLocked == false)
 				.Take(20)
 				.ToList();
+
 
 			if (entries.Any() && markEntriesAsLocked)
 			{
@@ -141,7 +141,7 @@ namespace MountainWarehouse.EasyMWS.Services
 				SaveChanges();
 			}
 
-			return entriesIds;
+			return entries.Select(r => r.RequestReportId);
 		}
 
 		public IEnumerable<ReportRequestEntry> GetAllFromQueueOfReportsReadyForCallback(string merchantId, AmazonRegion region, bool markEntriesAsLocked = true)
