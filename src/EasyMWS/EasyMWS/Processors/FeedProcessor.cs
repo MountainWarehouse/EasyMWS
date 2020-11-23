@@ -184,9 +184,12 @@ namespace MountainWarehouse.EasyMWS.Processors
 				return;
 
 			var feedSubmissionResults = _feedSubmissionProcessor.RequestFeedSubmissionStatusesFromAmazon(feedSubmissionService, feedSubmissionIds, _merchantId);
-			if (feedSubmissionResults == null) return;
+			if (feedSubmissionResults != null)
+			{
+				_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(feedSubmissionService, feedSubmissionResults);
+			}
 
-			_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(feedSubmissionService, feedSubmissionResults);
+			_feedSubmissionProcessor.UnlockFeedSubmissionEntries(feedSubmissionService, feedSubmissionIds);
 		}
 
 		public void DownloadNextFeedSubmissionResultFromAmazon(IFeedSubmissionEntryService feedSubmissionService)

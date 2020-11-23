@@ -210,6 +210,8 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				_requestReportProcessor.QueueReportsAccordingToProcessingStatus(reportRequestService, reportRequestStatuses);
 			}
+
+			_requestReportProcessor.UnlockReportRequestEntries(reportRequestService, pendingReportsRequestIds);
 		}
 	}
 }

@@ -142,22 +142,22 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
+		public void UnlockFeedSubmissionEntries(IFeedSubmissionEntryService feedSubmissionService, IEnumerable<string> feedSubmissionIds)
+		{
+			foreach (var submissionId in feedSubmissionIds)
+			{
+				var feedSubmissionEntry = feedSubmissionService.FirstOrDefault(fsc => fsc.FeedSubmissionId == submissionId);
+				if (feedSubmissionEntry != null)
+				{
+					feedSubmissionService.Unlock(feedSubmissionEntry);
+					feedSubmissionService.Update(feedSubmissionEntry);
+				}
+			}
+			feedSubmissionService.SaveChanges();
+		}
+
 		public List<(string FeedSubmissionId, string FeedProcessingStatus)> RequestFeedSubmissionStatusesFromAmazon(IFeedSubmissionEntryService feedSubmissionService, IEnumerable<string> feedSubmissionIdList, string merchant)
 		{
-			void UnlockFeedSubmissionEntries(IEnumerable<string> feedSubmissionIds)
-			{
-				foreach (var submissionId in feedSubmissionIds)
-				{
-					var feedSubmissionEntry = feedSubmissionService.FirstOrDefault(fsc => fsc.FeedSubmissionId == submissionId);
-					if (feedSubmissionEntry != null)
-					{
-						feedSubmissionService.Unlock(feedSubmissionEntry);
-						feedSubmissionService.Update(feedSubmissionEntry);
-					}
-				}
-				feedSubmissionService.SaveChanges();
-			}
-
 			List<(string FeedSubmissionId, string IsProcessingComplete)> GetProcessingStatusesPerSubmissionIdFromResponse(GetFeedSubmissionListResponse response)
 			{
 				var responseInfo = new List<(string FeedSubmissionId, string IsProcessingComplete)>();
@@ -196,13 +196,11 @@ namespace MountainWarehouse.EasyMWS.Processors
 			catch (MarketplaceWebServiceException e)
 			{
 				_logger.Warn($"AmazonMWS GetFeedSubmissionList failed! The operation will be executed again at the next poll request.", e);
-				UnlockFeedSubmissionEntries(feedSubmissionIdList);
 				return null;
 			}
 			catch (Exception e)
 			{
 				_logger.Warn($"AmazonMWS GetFeedSubmissionList failed! The operation will be executed again at the next poll request.", e);
-				UnlockFeedSubmissionEntries(feedSubmissionIdList);
 				return null;
 			}
 		}
@@ -215,7 +213,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				var feedSubmissionEntry = feedSubmissionService.FirstOrDefault(fsc => fsc.FeedSubmissionId == feedSubmissionInfo.FeedSubmissionId);
                 if (feedSubmissionEntry == null) continue;
-				feedSubmissionService.Unlock(feedSubmissionEntry);
 
 				feedSubmissionEntry.LastAmazonFeedProcessingStatus = feedSubmissionInfo.FeedProcessingStatus;
 
