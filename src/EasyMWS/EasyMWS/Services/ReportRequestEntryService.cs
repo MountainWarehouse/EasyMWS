@@ -24,29 +24,29 @@ namespace MountainWarehouse.EasyMWS.Services
 		internal ReportRequestEntryService(EasyMwsOptions options = null, IEasyMwsLogger logger = null) => (_reportRequestEntryRepository, _logger, _options) =
 			(_reportRequestEntryRepository ?? new ReportRequestEntryRepository(options?.LocalDbConnectionStringOverride), logger, options);
 
-		public void Lock(ReportRequestEntry entry)
+		public void Lock(ReportRequestEntry entry, string reason)
 		{
 			if (entry.IsLocked)
 			{
-				_logger.Debug($"An attempt was made to lock entry {entry.EntryIdentityDescription}, but it is already locked.");
+				_logger.Debug($"{DateTime.UtcNow}: ReportRequest Entry lock attempt: {entry.EntryIdentityDescription}, but it is already locked. Reason: {reason}.");
 			}
 			else
 			{
 				entry.IsLocked = true;
-				_logger.Debug($"The following entry is marked as locked: {entry.EntryIdentityDescription}.");
+				_logger.Debug($"{DateTime.UtcNow}: ReportRequest Entry locked: {entry.EntryIdentityDescription}. Reason: {reason}.");
 			}
 		}
 
-		public void Unlock(ReportRequestEntry entry)
+		public void Unlock(ReportRequestEntry entry, string reason)
 		{
 			if (!entry.IsLocked)
 			{
-				_logger.Debug($"An attempt was made to unlock entry {entry.EntryIdentityDescription}, but it is already unlocked.");
+				_logger.Debug($"{DateTime.UtcNow}: ReportRequest Entry unlock attempt: {entry.EntryIdentityDescription}, but it is already unlocked. Reason: {reason}.");
 			}
 			else
 			{
 				entry.IsLocked = false;
-				_logger.Debug($"The following entry is now marked as unlocked: {entry.EntryIdentityDescription}.");
+				_logger.Debug($"{DateTime.UtcNow}: ReportRequest Entry unlocked: {entry.EntryIdentityDescription}. Reason: {reason}.");
 			}
 		}
 
@@ -94,7 +94,7 @@ namespace MountainWarehouse.EasyMWS.Services
 
 			if (entry != null && markEntryAsLocked)
 			{
-				Lock(entry);
+				Lock(entry, "Locking single report request entry - ready for initial submission to amazon.");
 				Update(entry);
 				SaveChanges();
 			}
@@ -114,7 +114,7 @@ namespace MountainWarehouse.EasyMWS.Services
 
 			if (entry != null && markEntryAsLocked)
 			{
-				Lock(entry);
+				Lock(entry, "Locking single report request entry - ready to download report from amazon");
 				Update(entry);
 				SaveChanges();
 			}
@@ -135,7 +135,7 @@ namespace MountainWarehouse.EasyMWS.Services
 			{
 				foreach (var entry in entries)
 				{
-					Lock(entry);
+					Lock(entry, "Locking multiple report request entries - ready for getting report processing statuses from amazon");
 					Update(entry);
 				}
 				SaveChanges();
@@ -158,7 +158,7 @@ namespace MountainWarehouse.EasyMWS.Services
 			{
 				foreach (var entry in entries)
 				{
-					Lock(entry);
+					Lock(entry, "Locking multiple report request entries - ready for callback invocation");
 					Update(entry);
 				}
 				SaveChanges();

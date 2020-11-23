@@ -220,7 +220,7 @@ namespace EasyMWS.Tests.Processors
 					MerchantId = _merchantId
 				});
 
-			_reportRequestServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
 			_reportRequestServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
 			_reportRequestServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
 		}
@@ -718,7 +718,7 @@ namespace EasyMWS.Tests.Processors
 					MerchantId = _merchantId
 				});
 
-			_reportRequestServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Never);
+			_reportRequestServiceMock.Verify(rrp => rrp.Update(It.IsAny<ReportRequestEntry>()), Times.Once);
 			_reportRequestServiceMock.Verify(rrp => rrp.Delete(It.IsAny<ReportRequestEntry>()), Times.Once);
 			_reportRequestServiceMock.Verify(rrp => rrp.SaveChanges(), Times.Once);
 		}

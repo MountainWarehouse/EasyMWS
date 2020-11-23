@@ -99,42 +99,42 @@ namespace MountainWarehouse.EasyMWS.Processors
 			{
 				try
 				{
-                    var reportType = reportEntry.ReportType;
-                    var handledId = reportEntry.TargetHandlerId;
-                    var handlerArgs = (reportEntry.TargetHandlerArgs == null) ? null : new ReadOnlyDictionary<string, object>(JsonConvert.DeserializeObject<Dictionary<string, object>>(reportEntry.TargetHandlerArgs));
+					var reportType = reportEntry.ReportType;
+					var handledId = reportEntry.TargetHandlerId;
+					var handlerArgs = (reportEntry.TargetHandlerArgs == null) ? null : new ReadOnlyDictionary<string, object>(JsonConvert.DeserializeObject<Dictionary<string, object>>(reportEntry.TargetHandlerArgs));
 
-                    if (reportEntry.Details == null && reportEntry.LastAmazonReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData && !_options.EventPublishingOptions.EventPublishingForReportStatusDoneNoData)
-                    {
-                        _logger.Debug($"An attempt will not be made to publish event ReportDownloaded for the following report in queue : {reportEntry.EntryIdentityDescription}, because AmazonProcessingStatus for this report is _DONE_NO_DATA_ but EventPublishingForReportStatusDoneNoData EasyMwsOption is FALSE.");
-                    }
-                    else if (reportEntry.Details == null && reportEntry.LastAmazonReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData && _options.EventPublishingOptions.EventPublishingForReportStatusDoneNoData)
-                    {
-                        _logger.Warn($"Attempting to publish event ReportDownloaded for the following report in queue : {reportEntry.EntryIdentityDescription}, but the AmazonProcessingStatus for this report is _DONE_NO_DATA_ therefore the Stream argument will be null at invocation time.");
-                        var eventArgs = new ReportDownloadedEventArgs(null, reportType, handledId, handlerArgs);
-                        OnReportDownloaded(eventArgs);
-                    }
-                    else
-                    {
-                        _logger.Debug($"Attempting to publish event ReportDownloaded for the next downloaded report in queue : {reportEntry.EntryIdentityDescription}.");
-                        var reportContent = ZipHelper.ExtractArchivedSingleFileToStream(reportEntry.Details?.ReportContent);
-                        var eventArgs = new ReportDownloadedEventArgs(reportContent, reportType, handledId, handlerArgs);
-                        OnReportDownloaded(eventArgs);
-                    }
+					if (reportEntry.Details == null && reportEntry.LastAmazonReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData && !_options.EventPublishingOptions.EventPublishingForReportStatusDoneNoData)
+					{
+						_logger.Debug($"An attempt will not be made to publish event ReportDownloaded for the following report in queue : {reportEntry.EntryIdentityDescription}, because AmazonProcessingStatus for this report is _DONE_NO_DATA_ but EventPublishingForReportStatusDoneNoData EasyMwsOption is FALSE.");
+					}
+					else if (reportEntry.Details == null && reportEntry.LastAmazonReportProcessingStatus == AmazonReportProcessingStatus.DoneNoData && _options.EventPublishingOptions.EventPublishingForReportStatusDoneNoData)
+					{
+						_logger.Warn($"Attempting to publish event ReportDownloaded for the following report in queue : {reportEntry.EntryIdentityDescription}, but the AmazonProcessingStatus for this report is _DONE_NO_DATA_ therefore the Stream argument will be null at invocation time.");
+						var eventArgs = new ReportDownloadedEventArgs(null, reportType, handledId, handlerArgs);
+						OnReportDownloaded(eventArgs);
+					}
+					else
+					{
+						_logger.Debug($"Attempting to publish event ReportDownloaded for the next downloaded report in queue : {reportEntry.EntryIdentityDescription}.");
+						var reportContent = ZipHelper.ExtractArchivedSingleFileToStream(reportEntry.Details?.ReportContent);
+						var eventArgs = new ReportDownloadedEventArgs(reportContent, reportType, handledId, handlerArgs);
+						OnReportDownloaded(eventArgs);
+					}
 
-                    reportRequestService.Delete(reportEntry);
+					reportRequestService.Delete(reportEntry);
 					_logger.Info($"Event publishing has succeeded for {reportEntry.EntryIdentityDescription}.");
 				}
-				catch(SqlException e)
+				catch (SqlException e)
 				{
 					_logger.Error($"ReportDownloaded event publishing failed for {reportEntry.EntryIdentityDescription} due to an internal error '{e.Message}'. The event publishing will be retried at the next poll request", e);
-					reportRequestService.Unlock(reportEntry);
+					reportRequestService.Unlock(reportEntry, "Unlocking single report request entry - an SQL exception occurred while trying to invoke callback.");
 					reportRequestService.Update(reportEntry);
 				}
 				catch (Exception e)
 				{
 					_logger.Error($"ReportDownloaded event publishing failed for {reportEntry.EntryIdentityDescription}. Current retry count is :{reportEntry.InvokeCallbackRetryCount}. {e.Message}", e);
 					reportEntry.InvokeCallbackRetryCount++;
-					reportRequestService.Unlock(reportEntry);
+					reportRequestService.Unlock(reportEntry, "Unlocking single report request entry - an exception occurred while trying to invoke callback.");
 					reportRequestService.Update(reportEntry);
 				}
 			}
@@ -169,7 +169,7 @@ namespace MountainWarehouse.EasyMWS.Processors
                     InstanceId = _options?.EventPublishingOptions?.RestrictInvocationToOriginatingInstance?.HashedInstanceId,
                 };
 
-				reportRequestService.Unlock(reportRequest);
+				reportRequestService.Unlock(reportRequest, "Unlocking single report request entry - newly created, ready for processing.");
 				reportRequestService.Create(reportRequest);
 				reportRequestService.SaveChanges();
 
