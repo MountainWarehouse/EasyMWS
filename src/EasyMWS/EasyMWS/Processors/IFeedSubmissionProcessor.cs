@@ -19,6 +19,5 @@ namespace MountainWarehouse.EasyMWS.Processors
 		void CleanUpFeedSubmissionQueue(IFeedSubmissionEntryService feedSubmissionService);
 
 		event EventHandler<FeedRequestFailedEventArgs> FeedEntryWasMarkedForDelete;
-		void UnlockFeedSubmissionEntries(IFeedSubmissionEntryService feedSubmissionService, IEnumerable<string> feedSubmissionIds);
 	}
 }
