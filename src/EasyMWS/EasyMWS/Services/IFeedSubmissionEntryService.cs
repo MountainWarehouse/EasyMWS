@@ -10,6 +10,8 @@ namespace MountainWarehouse.EasyMWS.Services
 {
     internal interface IFeedSubmissionEntryService
     {
+		void UnlockMultipleEntries(List<FeedSubmissionEntry> entries, string reason);
+		void LockMultipleEntries(List<FeedSubmissionEntry> entries, string reason);
 		void Lock(FeedSubmissionEntry entry, string reason);
 		void Unlock(FeedSubmissionEntry entry, string reason);
 		void Create(FeedSubmissionEntry entry);
@@ -24,7 +26,7 @@ namespace MountainWarehouse.EasyMWS.Services
 	    FeedSubmissionEntry FirstOrDefault(Func<FeedSubmissionEntry, bool> predicate);
 	    FeedSubmissionEntry GetNextFromQueueOfFeedsToSubmit(string merchantId, AmazonRegion region, bool markEntryAsLocked = true);
 
-	    IEnumerable<string> GetIdsForSubmittedFeedsFromQueue(string merchantId, AmazonRegion region, bool markEntriesAsLocked = true);
+	    IEnumerable<FeedSubmissionEntry> GetAllSubmittedFeedsFromQueue(string merchantId, AmazonRegion region, bool markEntriesAsLocked = true);
 
 	    FeedSubmissionEntry GetNextFromQueueOfProcessingCompleteFeeds(string merchantId, AmazonRegion region, bool markEntryAsLocked = true);
 	    IEnumerable<FeedSubmissionEntry> GetAllFromQueueOfFeedsReadyForCallback(string merchantId, AmazonRegion region, bool markEntriesAsLocked = true);
