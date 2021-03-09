@@ -148,6 +148,72 @@ namespace EasyMWS.Tests.ReportProcessors
 				rrp => rrp.SubmitFeedToAmazon(It.IsAny<IFeedSubmissionEntryService>(),It.IsAny<FeedSubmissionEntry>()), Times.Once);
 		}
 
+		[Test]
+		public void RequestFeedSubmissionStatusesAllFromAmazon_GivenMultipleEntriesReadyToHaveTheirStatusUpdatedFromAmazon_ThenAttemptToUpdateTheStatusOfAllSuchEntries()
+		{
+			// arrange
+			var numberOfEntriesToBeUpdated = 176;
+			var expectedBatches = 176 / 20 + 1;
+			var entriesToBeUpdated = new List<FeedSubmissionEntry>();
+            for (int i = 0; i < numberOfEntriesToBeUpdated; i++)
+            {
+				entriesToBeUpdated.Add(GetNewEntryReadyToHaveItsStatusUpdatedFromAmazon($"EntryToBeUpdated_SubmissionId_{i}"));
+			}
+
+			_feedSubmissionServiceMock
+				.Setup(_ => _.GetAllSubmittedFeedsFromQueue(It.IsAny<string>(), It.IsAny<AmazonRegion>(), It.IsAny<bool>()))
+				.Returns(entriesToBeUpdated);
+
+			var entriesMarkedAsLocked = new List<FeedSubmissionEntry>();
+			_feedSubmissionServiceMock
+				.Setup(_ => _.LockMultipleEntries(It.IsAny<List<FeedSubmissionEntry>>(), It.IsAny<string>()))
+				.Callback<List<FeedSubmissionEntry>, string>((entriesMarkedAsLockedArg, reasonArg) => 
+				{
+					entriesMarkedAsLocked.AddRange(entriesMarkedAsLockedArg);
+				});
+
+			var entriesMarkedAsUnlocked = new List<FeedSubmissionEntry>();
+			_feedSubmissionServiceMock
+				.Setup(_ => _.UnlockMultipleEntries(It.IsAny<List<FeedSubmissionEntry>>(), It.IsAny<string>()))
+				.Callback<List<FeedSubmissionEntry>, string>((entriesMarkedAsUnlockedArg, reasonArg) =>
+				{
+					entriesMarkedAsUnlocked.AddRange(entriesMarkedAsUnlockedArg);
+				});
+
+			var entriesHavingTheirStatusUpdateRequested = new List<string>();
+			_feedSubmissionProcessorMock
+				.Setup(_ => _.RequestFeedSubmissionStatusesFromAmazon(It.IsAny<IFeedSubmissionEntryService>(), It.IsAny<IEnumerable<string>>(), It.IsAny<string>()))
+				.Callback<IFeedSubmissionEntryService, IEnumerable<string>, string>((fseService, feedSubmissionsToUpdate, merchandId) => 
+				{
+					entriesHavingTheirStatusUpdateRequested.AddRange(feedSubmissionsToUpdate);
+				});
+
+			// act
+			_feedProcessor.RequestFeedSubmissionStatusesAllFromAmazon(_feedSubmissionServiceMock.Object);
+
+			// assert
+			Assert.IsNotEmpty(entriesMarkedAsLocked);
+			Assert.IsTrue(entriesMarkedAsLocked.All(actualLockedEntry => entriesToBeUpdated.SingleOrDefault(givenEntry => givenEntry.FeedSubmissionId == actualLockedEntry.FeedSubmissionId) != null));
+
+			Assert.IsNotEmpty(entriesMarkedAsUnlocked);
+			Assert.IsTrue(entriesMarkedAsUnlocked.All(actualUnlockedEntry => entriesToBeUpdated.SingleOrDefault(givenEntry => givenEntry.FeedSubmissionId == actualUnlockedEntry.FeedSubmissionId) != null));
+
+			_feedSubmissionProcessorMock.Verify(_ => _.RequestFeedSubmissionStatusesFromAmazon(It.IsAny<IFeedSubmissionEntryService>(), It.IsAny<IEnumerable<string>>(), It.IsAny<string>()), Times.Exactly(expectedBatches));
+
+			Assert.IsNotEmpty(entriesHavingTheirStatusUpdateRequested);
+			Assert.IsTrue(entriesHavingTheirStatusUpdateRequested.All(actualUpdatedSubmissionId => entriesToBeUpdated.SingleOrDefault(givenEntry => givenEntry.FeedSubmissionId == actualUpdatedSubmissionId) != null));
+		}
+
+		private FeedSubmissionEntry GetNewEntryReadyToHaveItsStatusUpdatedFromAmazon(string feedSubmissionId = null)
+			=> new FeedSubmissionEntry
+			{
+				AmazonRegion = _amazonRegion,
+				MerchantId = _merchantId,
+				FeedSubmissionId = feedSubmissionId ?? Guid.NewGuid().ToString(),
+				IsProcessingComplete = false,
+				IsLocked = false
+			};
+		
 		#endregion
 	}
 }

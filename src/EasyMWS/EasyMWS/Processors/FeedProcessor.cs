@@ -71,7 +71,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			SubmitNextFeedInQueueToAmazon(feedSubmissionService);
 
-			RequestFeedSubmissionStatusesFromAmazon(feedSubmissionService);
+			RequestFeedSubmissionStatusesAllFromAmazon(feedSubmissionService);
 
 			DownloadNextFeedSubmissionResultFromAmazon(feedSubmissionService);
 
@@ -176,20 +176,34 @@ namespace MountainWarehouse.EasyMWS.Processors
 			_feedSubmissionProcessor.SubmitFeedToAmazon(feedSubmissionService, feedSubmission);
 		}
 
-		public void RequestFeedSubmissionStatusesFromAmazon(IFeedSubmissionEntryService feedSubmissionService)
+		public void RequestFeedSubmissionStatusesAllFromAmazon(IFeedSubmissionEntryService feedSubmissionService)
 		{
-			var feedSubmissionIds = feedSubmissionService.GetIdsForSubmittedFeedsFromQueue(_merchantId, _region).ToList();
+			var allFeedSubmissions = feedSubmissionService.GetAllSubmittedFeedsFromQueue(_merchantId, _region).ToList();
+			const int batchSize = 20;
+			var numberOfBatches = (allFeedSubmissions.Count + batchSize - 1) / batchSize;
 
-			if (!feedSubmissionIds.Any())
+            for (int batchNumber = 0; batchNumber < numberOfBatches; batchNumber++)
+            {
+				var nextBatchOfEntriesToProcess = allFeedSubmissions.Skip(batchSize * batchNumber).Take(batchSize).ToList();
+				RequestFeedSubmissionStatusesBatchFromAmazon(feedSubmissionService, nextBatchOfEntriesToProcess);
+			}
+		}
+
+		public void RequestFeedSubmissionStatusesBatchFromAmazon(IFeedSubmissionEntryService feedSubmissionService, List<FeedSubmissionEntry> feedSubmissionsBatch)
+		{
+			if (!feedSubmissionsBatch.Any())
 				return;
 
+			feedSubmissionService.LockMultipleEntries(feedSubmissionsBatch, "Amazon status update has started");
+
+			var feedSubmissionIds = feedSubmissionsBatch.Select(_ => _.FeedSubmissionId);
 			var feedSubmissionResults = _feedSubmissionProcessor.RequestFeedSubmissionStatusesFromAmazon(feedSubmissionService, feedSubmissionIds, _merchantId);
 			if (feedSubmissionResults != null)
 			{
 				_feedSubmissionProcessor.QueueFeedsAccordingToProcessingStatus(feedSubmissionService, feedSubmissionResults);
 			}
 
-			_feedSubmissionProcessor.UnlockFeedSubmissionEntries(feedSubmissionService, feedSubmissionIds);
+			feedSubmissionService.UnlockMultipleEntries(feedSubmissionsBatch, "Amazon status update has been completed");
 		}
 
 		public void DownloadNextFeedSubmissionResultFromAmazon(IFeedSubmissionEntryService feedSubmissionService)

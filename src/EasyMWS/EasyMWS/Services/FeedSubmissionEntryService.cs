@@ -37,6 +37,32 @@ namespace MountainWarehouse.EasyMWS.Services
 			}
 		}
 
+		public void UnlockMultipleEntries(List<FeedSubmissionEntry> entries, string reason)
+        {
+			if (entries.Any())
+			{
+				foreach (var entry in entries)
+				{
+					Unlock(entry, $"Unlocking Multiple FeedSubmission entries - {reason}");
+					Update(entry);
+				}
+				SaveChanges();
+			}
+		}
+
+		public void LockMultipleEntries(List<FeedSubmissionEntry> entries, string reason)
+		{
+			if (entries.Any())
+			{
+				foreach (var entry in entries)
+				{
+					Lock(entry, $"Locking Multiple FeedSubmission entries  - {reason}");
+					Update(entry);
+				}
+				SaveChanges();
+			}
+		}
+
 		public void Unlock(FeedSubmissionEntry entry, string reason)
 		{
 			if (!entry.IsLocked)
@@ -103,25 +129,14 @@ namespace MountainWarehouse.EasyMWS.Services
 		}
 
 
-		public IEnumerable<string> GetIdsForSubmittedFeedsFromQueue(string merchantId, AmazonRegion region, bool markEntriesAsLocked = true)
+		public IEnumerable<FeedSubmissionEntry> GetAllSubmittedFeedsFromQueue(string merchantId, AmazonRegion region, bool markEntriesAsLocked = true)
 		{
 			var entries = 
 				Where(fse => fse.AmazonRegion == region && fse.MerchantId == merchantId
 						  && fse.FeedSubmissionId != null && fse.IsProcessingComplete == false && fse.IsLocked == false)
-				.Take(20)
 				.ToList();
 
-			if (entries.Any() && markEntriesAsLocked)
-			{
-				foreach (var entry in entries)
-				{
-					Lock(entry, "Locking multiple feed submission entries - ready for having their amazon processing status updated.");
-					Update(entry);
-				}
-				SaveChanges();
-			}
-
-			return entries.Select(f => f.FeedSubmissionId);
+			return entries;
 		}
 
 		public FeedSubmissionEntry GetNextFromQueueOfProcessingCompleteFeeds(string merchantId, AmazonRegion region, bool markEntryAsLocked = true)

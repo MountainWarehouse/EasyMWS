@@ -142,20 +142,6 @@ namespace MountainWarehouse.EasyMWS.Processors
 			}
 		}
 
-		public void UnlockFeedSubmissionEntries(IFeedSubmissionEntryService feedSubmissionService, IEnumerable<string> feedSubmissionIds)
-		{
-			foreach (var submissionId in feedSubmissionIds)
-			{
-				var feedSubmissionEntry = feedSubmissionService.FirstOrDefault(fsc => fsc.FeedSubmissionId == submissionId);
-				if (feedSubmissionEntry != null)
-				{
-					feedSubmissionService.Unlock(feedSubmissionEntry, "Unlocking multiple feed submission entries - amazon processing status update has been completed.");
-					feedSubmissionService.Update(feedSubmissionEntry);
-				}
-			}
-			feedSubmissionService.SaveChanges();
-		}
-
 		public List<(string FeedSubmissionId, string FeedProcessingStatus)> RequestFeedSubmissionStatusesFromAmazon(IFeedSubmissionEntryService feedSubmissionService, IEnumerable<string> feedSubmissionIdList, string merchant)
 		{
 			List<(string FeedSubmissionId, string IsProcessingComplete)> GetProcessingStatusesPerSubmissionIdFromResponse(GetFeedSubmissionListResponse response)
