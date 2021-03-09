@@ -180,7 +180,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 		{
 			var allFeedSubmissions = feedSubmissionService.GetAllSubmittedFeedsFromQueue(_merchantId, _region).ToList();
 			const int batchSize = 20;
-			var numberOfBatches = allFeedSubmissions.Count / batchSize + 1;
+			var numberOfBatches = (allFeedSubmissions.Count + batchSize - 1) / batchSize;
 
             for (int batchNumber = 0; batchNumber < numberOfBatches; batchNumber++)
             {
