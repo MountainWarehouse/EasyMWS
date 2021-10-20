@@ -86,6 +86,10 @@ namespace MountainWarehouse.EasyMWS.Client
         /// Hourly request quota: 60 requests/hour. Maximum request quota: 10 requests. Restore rate: 1 request/minute.<br/>
         /// </summary>
         /// <param name="reportTypeList">The settlement report type. Can be obtained using SettlementReportTypes class.<br/>More info available here : https://docs.developer.amazonservices.com/en_US/reports/Reports_ReportType.html#ReportTypeCategories__SettlementReports</param>
+        /// <param name="availableFromDate"></param>
+        /// <param name="availableToDate"></param>
+        /// <param name="isAcknowledged">To keep track of which reports you have already received, it is a good practice to acknowledge reports after you have received and stored them successfully. <br/>Then, when you submit a GetReportList request, you can specify to receive only reports that have not yet been acknowledged.<br/> To retrieve reports that have been lost, set the Acknowledged to false - This action returns a list of all reports within the previous 90 days that match the query parameters. <br/> More info: https://docs.developer.amazonservices.com/en_UK/reports/Reports_UpdateReportAcknowledgements.html</param>
+        /// <returns></returns>
         Task<IEnumerable<SettlementReportDetails>> ListSettlementReportsAsync(List<string> reportTypeList, DateTime? availableFromDate = null, DateTime? availableToDate = null, bool? isAcknowledged = null);
 
         /// <summary>
@@ -94,8 +98,11 @@ namespace MountainWarehouse.EasyMWS.Client
         /// Calls the Amazon MWS GetReportList operation, which is subject to request throttling. For more details see https://docs.developer.amazonservices.com/en_US/reports/Reports_GetReportList.html <br/>
         /// Hourly request quota: 60 requests/hour. Maximum request quota: 10 requests. Restore rate: 1 request/minute.<br/>
         /// </summary>
-        /// <param name="reportsToQuery">The settlement report type. Can be obtained using SettlementReportTypes class.<br/>More info available here : https://docs.developer.amazonservices.com/en_US/reports/Reports_ReportType.html#ReportTypeCategories__SettlementReports</param>
-        IEnumerable<SettlementReportDetails> ListSettlementReports(List<string> reportsToQuery, DateTime? availableFromDate = null, DateTime? availableToDate = null, bool? isAcknowledged = null);
+        /// <param name="reportTypeList">The settlement report type. Can be obtained using SettlementReportTypes class.<br/>More info available here : https://docs.developer.amazonservices.com/en_US/reports/Reports_ReportType.html#ReportTypeCategories__SettlementReports</param>
+        /// <param name="availableFromDate"></param>
+        /// <param name="availableToDate"></param>
+        /// <param name="isAcknowledged">To keep track of which reports you have already received, it is a good practice to acknowledge reports after you have received and stored them successfully. <br/>Then, when you submit a GetReportList request, you can specify to receive only reports that have not yet been acknowledged.<br/> To retrieve reports that have been lost, set the Acknowledged to false - This action returns a list of all reports within the previous 90 days that match the query parameters. <br/> More info: https://docs.developer.amazonservices.com/en_UK/reports/Reports_UpdateReportAcknowledgements.html</param>
+        IEnumerable<SettlementReportDetails> ListSettlementReports(List<string> reportTypeList, DateTime? availableFromDate = null, DateTime? availableToDate = null, bool? isAcknowledged = null);
 
         /// <summary>
         /// Event which is invoked as soon as a requested report has been downloaded from Amazon<br/>
