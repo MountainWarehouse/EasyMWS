@@ -1,5 +1,18 @@
 # EasyMWS
 
+
+## Deprecation notice !
+As per current guidance, Amazon Marketplaces Web Service (MWS) will no longer be available after March 31, 2024. All MWS developers must migrate to Selling Partner API (SP-API) to avoid service disruptions.
+
+EasyMWS is a library which integrates with Amazon MWS so it will also stop working as well on the same date.
+
+There are no plans to make EasyMWS compatible with Amazon SP-API, so the current recommendation is to migrate away to an alternative solution.
+### Useful resources
+- https://developer-docs.amazon.com/sp-api/page/migration-hub
+- https://github.com/amzn/selling-partner-api-docs
+- https://github.com/abuzuhri/Amazon-SP-API-CSharp
+
+
 ## Description
 
 EasyMWS is a .NET library that intends to simplify the interaction with the Amazon Marketplace Web Services API.
@@ -7,7 +20,6 @@ EasyMWS is a .NET library that intends to simplify the interaction with the Amaz
 It tries to do that by abstracting away the request/check/download cycle for downloading reports / submitting feeds.
 
 EasyMws also provides access to logs describing the internal processing it is doing.
-
 
 ## Downloading reports from Amazon MWS using EasyMWS
 
