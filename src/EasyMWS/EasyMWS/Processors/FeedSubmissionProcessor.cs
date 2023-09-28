@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -56,28 +57,28 @@ namespace MountainWarehouse.EasyMWS.Processors
 				var timestamp = response?.ResponseHeaderMetadata?.Timestamp ?? "unknown";
 				feedSubmission.FeedSubmissionId = response?.SubmitFeedResult?.FeedSubmissionInfo?.FeedSubmissionId;
 				feedSubmission.FeedSubmissionRetryCount = 0;
-				_logger.Info($"AmazonMWS feed submission has succeeded for {feedSubmission.EntryIdentityDescription}. FeedSubmissionId:'{feedSubmission.FeedSubmissionId}'.",
+				_logger.Info($"MWS.SubmitFeed feed submission has succeeded for {feedSubmission.EntryIdentityDescription}. FeedSubmissionId:'{feedSubmission.FeedSubmissionId}'.",
 					new RequestInfo(timestamp, requestId));
 			}
 			void HandleMissingFeedSubmissionId()
 			{
 				feedSubmission.FeedSubmissionRetryCount++;
-				_logger.Warn($"SubmitFeed did not generate a FeedSubmissionId for {feedSubmission.EntryIdentityDescription}. Feed submission will be retried. FeedSubmissionRetryCount is now : {feedSubmission.FeedSubmissionRetryCount}.");
+				_logger.Warn($"MWS.SubmitFeed did not generate a FeedSubmissionId for {feedSubmission.EntryIdentityDescription}. Feed submission will be retried. FeedSubmissionRetryCount is now : {feedSubmission.FeedSubmissionRetryCount}.");
 			}
 			void HandleNonFatalOrGenericException(Exception e)
 			{
 				feedSubmission.FeedSubmissionRetryCount++;
 				feedSubmission.LastSubmitted = DateTime.UtcNow;
 
-				_logger.Warn($"AmazonMWS SubmitFeed failed for {feedSubmission.EntryIdentityDescription}. Feed submission will be retried. FeedSubmissionRetryCount is now : {feedSubmission.FeedSubmissionRetryCount}.", e);
+				_logger.Warn($"MWS.SubmitFeed failed for {feedSubmission.EntryIdentityDescription}. Feed submission will be retried. FeedSubmissionRetryCount is now : {feedSubmission.FeedSubmissionRetryCount}.", e);
 			}
 			void HandleFatalException(Exception e)
 			{
 				feedSubmissionService.Delete(feedSubmission);
-				_logger.Error($"AmazonMWS SubmitFeed failed for {feedSubmission.EntryIdentityDescription}. The entry will now be removed from queue", e);
+				_logger.Error($"MWS.SubmitFeed failed for {feedSubmission.EntryIdentityDescription}. The entry will now be removed from queue", e);
 			}
 
-			var missingInformationExceptionMessage = "Cannot submit queued feed to amazon due to missing feed submission information";
+			var missingInformationExceptionMessage = "Cannot call MWS.SubmitFeed for queued feed to amazon due to missing feed submission information";
 
 			if (feedSubmission == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Feed submission entry is null");
 			if (feedSubmission.FeedSubmissionData == null) throw new ArgumentNullException($"{missingInformationExceptionMessage}: Feed submission data is null");
@@ -87,9 +88,10 @@ namespace MountainWarehouse.EasyMWS.Processors
 
 			if (string.IsNullOrEmpty(feedSubmission?.FeedType)) throw new ArgumentException($"{missingInformationExceptionMessage}: Feed type is missing");
 
-			_logger.Debug($"Attempting to submit the next feed in queue to Amazon: {feedSubmission.EntryIdentityDescription}.");
+			_logger.Info($"Started MWS.SubmitFeed for the next feed in queue to Amazon: {feedSubmission.EntryIdentityDescription}.");
+            var stopwatch = Stopwatch.StartNew();
 
-			var feedSubmissionData = feedSubmission.GetPropertiesContainer();
+            var feedSubmissionData = feedSubmission.GetPropertiesContainer();
 
 			using (var stream = ZipHelper.ExtractArchivedSingleFileToStream(feedContentZip))
 			{
@@ -107,13 +109,14 @@ namespace MountainWarehouse.EasyMWS.Processors
 
                 try
 				{
-					feedSubmissionService.Unlock(feedSubmission, "Unlocking single feed submission entry - finished attempt to submit feed to amazon.");
-					feedSubmissionService.Update(feedSubmission);
-
 					var response = _marketplaceWebServiceClient.SubmitFeed(submitFeedRequest);
 					feedSubmission.LastSubmitted = DateTime.UtcNow;
 
-					if (string.IsNullOrEmpty(response?.SubmitFeedResult?.FeedSubmissionInfo?.FeedSubmissionId))
+                    stopwatch.Stop();
+                    feedSubmissionService.Unlock(feedSubmission, $"Finished MWS.SubmitFeed call - Unlocking single feed submission entry - TotalTime: {stopwatch.Elapsed}");
+                    feedSubmissionService.Update(feedSubmission);
+
+                    if (string.IsNullOrEmpty(response?.SubmitFeedResult?.FeedSubmissionInfo?.FeedSubmissionId))
 					{
 						HandleMissingFeedSubmissionId();
 					}
@@ -137,7 +140,7 @@ namespace MountainWarehouse.EasyMWS.Processors
 				finally
 				{
 					stream.Dispose();
-					feedSubmissionService.SaveChanges();
+                    feedSubmissionService.SaveChanges();
 				}
 			}
 		}
