@@ -104,11 +104,11 @@ namespace MountainWarehouse.EasyMWS.Services
 		}
 
 		public void SaveChanges() => _feedRepo.SaveChanges();
-		public IEnumerable<FeedSubmissionEntry> GetAll() => _feedRepo.GetAll().OrderBy(x => x.Id);
-		public IEnumerable<FeedSubmissionEntry> Where(Func<FeedSubmissionEntry, bool> predicate) => _feedRepo.GetAll().OrderBy(x => x.Id).Where(predicate);
-		public FeedSubmissionEntry First() => _feedRepo.GetAll().OrderBy(x => x.Id).First();
-		public FeedSubmissionEntry FirstOrDefault() => _feedRepo.GetAll().OrderBy(x => x.Id).FirstOrDefault();
-		public FeedSubmissionEntry FirstOrDefault(Func<FeedSubmissionEntry, bool> predicate) => _feedRepo.GetAll().OrderBy(x => x.Id).FirstOrDefault(predicate);
+		public IEnumerable<FeedSubmissionEntry> GetAll() => _feedRepo.GetAll().OrderBy(x => x.DateCreated);
+		public IEnumerable<FeedSubmissionEntry> Where(Func<FeedSubmissionEntry, bool> predicate) => _feedRepo.GetAll().OrderBy(x => x.DateCreated).Where(predicate);
+		public FeedSubmissionEntry First() => _feedRepo.GetAll().OrderBy(x => x.DateCreated).First();
+		public FeedSubmissionEntry FirstOrDefault() => _feedRepo.GetAll().OrderBy(x => x.DateCreated).FirstOrDefault();
+		public FeedSubmissionEntry FirstOrDefault(Func<FeedSubmissionEntry, bool> predicate) => _feedRepo.GetAll().OrderBy(x => x.DateCreated).FirstOrDefault(predicate);
 		public FeedSubmissionEntry GetNextFromQueueOfFeedsToSubmit(string merchantId, AmazonRegion region, bool markEntryAsLocked = true)
 		{
 			var entry = FirstOrDefault(fse => fse.AmazonRegion == region && fse.MerchantId == merchantId
